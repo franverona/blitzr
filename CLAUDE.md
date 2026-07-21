@@ -238,7 +238,12 @@ mate` relative to **whoever is to move** in the given position, not always White
   of past analysis runs.
 - **Scope**: per-game only. There's no bulk "analyze all synced games" job or a cross-game
   "your most common blunders" aggregate yet — both are natural follow-ups once individual games
-  can be analyzed, but weren't part of what Phase 3 asked for.
+  can be analyzed, but weren't part of what Phase 3 asked for. Showing the engine's suggested
+  best move next to a blunder (for learning what to have played instead) is another one — UCI's
+  `bestmove` line already comes back from every search in `StockfishEngine.evaluate()`
+  (`lib/stockfish/client.ts`), it's just discarded today as the signal to resolve the eval
+  promise; returning it (converted from long algebraic, e.g. `e2e4`, to SAN via chess.js) is the
+  main piece of work.
 
 ## Testing
 
