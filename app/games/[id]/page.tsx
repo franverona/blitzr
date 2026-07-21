@@ -1,7 +1,10 @@
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { getGame } from '../../actions'
+import { getGame, listRepertoire } from '../../actions'
 import { Board } from '@/components/Board'
 import { formatDateTime } from '@/lib/dates'
+import { diffGameAgainstRepertoire } from '@/lib/repertoire'
+import type { MyColor, RepertoireDiffResult } from '@/lib/types'
 
 export default async function GamePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -9,6 +12,10 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
   if (!game) notFound()
 
   const date = formatDateTime(game.endTime)
+  const repertoireNodes = await listRepertoire(game.myColor)
+  const diff = game.movesSan
+    ? diffGameAgainstRepertoire(game.movesSan, game.myColor, repertoireNodes)
+    : null
 
   return (
     <div className="flex flex-col gap-4">
@@ -35,6 +42,15 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
         </a>
       </div>
 
+      {diff && (
+        <RepertoireDiff
+          diff={diff}
+          color={game.myColor}
+          hasRepertoire={repertoireNodes.length > 0}
+          totalPlies={game.movesSan?.length ?? 0}
+        />
+      )}
+
       {game.movesSan ? (
         <Board
           initialFen={game.initialFen}
@@ -53,5 +69,64 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
         </div>
       )}
     </div>
+  )
+}
+
+function plyLabel(ply: number): string {
+  const moveNumber = Math.ceil(ply / 2)
+  return ply % 2 === 1 ? `${moveNumber}.` : `${moveNumber}…`
+}
+
+function RepertoireDiff({
+  diff,
+  color,
+  hasRepertoire,
+  totalPlies,
+}: {
+  diff: RepertoireDiffResult
+  color: MyColor
+  hasRepertoire: boolean
+  totalPlies: number
+}) {
+  if (!hasRepertoire) {
+    return (
+      <p className="text-sm text-zinc-500 dark:text-zinc-400">
+        No {color} repertoire defined yet —{' '}
+        <Link
+          href={`/repertoire?color=${color}`}
+          className="text-blue-600 hover:underline dark:text-blue-400"
+        >
+          build one
+        </Link>
+        .
+      </p>
+    )
+  }
+
+  if (diff.deviationPly !== null) {
+    return (
+      <p className="text-sm text-amber-600 dark:text-amber-400">
+        In book for {diff.inBookPlies} {diff.inBookPlies === 1 ? 'move' : 'moves'}, then deviated on{' '}
+        {plyLabel(diff.deviationPly)} — played{' '}
+        <span className="font-medium">{diff.deviationMove}</span>, repertoire has{' '}
+        <span className="font-medium">{diff.expectedMoves?.join(' or ')}</span>.
+      </p>
+    )
+  }
+
+  if (diff.inBookPlies === totalPlies && totalPlies > 0) {
+    return (
+      <p className="text-sm text-emerald-600 dark:text-emerald-400">
+        Followed your repertoire the entire game ({diff.inBookPlies}{' '}
+        {diff.inBookPlies === 1 ? 'move' : 'moves'}).
+      </p>
+    )
+  }
+
+  return (
+    <p className="text-sm text-zinc-500 dark:text-zinc-400">
+      In book for {diff.inBookPlies} {diff.inBookPlies === 1 ? 'move' : 'moves'}, then left prepared
+      territory.
+    </p>
   )
 }

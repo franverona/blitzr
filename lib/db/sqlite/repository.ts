@@ -1,6 +1,6 @@
 import { Kysely } from 'kysely'
-import type { DbSchema, GameRepository, GamesTable } from '../types'
-import type { ArchiveSyncStatus, Game } from '../../types'
+import type { DbSchema, GameRepository, GamesTable, RepertoireMovesTable } from '../types'
+import type { ArchiveSyncStatus, Game, RepertoireColor, RepertoireNode } from '../../types'
 import { ensureSchema } from './migrate'
 
 function rowToGame(row: GamesTable): Game {
@@ -58,6 +58,18 @@ function gameToRow(game: Game): GamesTable {
     eco_url: game.ecoUrl,
     archive_ym: game.archiveYm,
     created_at: game.createdAt,
+  }
+}
+
+function rowToRepertoireNode(row: RepertoireMovesTable): RepertoireNode {
+  return {
+    id: row.id,
+    color: row.color as RepertoireColor,
+    parentId: row.parent_id,
+    ply: row.ply,
+    moveSan: row.move_san,
+    fen: row.fen,
+    createdAt: row.created_at,
   }
 }
 
@@ -141,5 +153,34 @@ export class SqliteGameRepository implements GameRepository {
         oc.column('archive_ym').doUpdateSet({ status, game_count: gameCount, synced_at: syncedAt }),
       )
       .execute()
+  }
+
+  async listRepertoireNodes(color: RepertoireColor): Promise<RepertoireNode[]> {
+    const db = await this.ready()
+    const rows = await db
+      .selectFrom('repertoire_moves')
+      .selectAll()
+      .where('color', '=', color)
+      .execute()
+    return rows.map(rowToRepertoireNode)
+  }
+
+  async addRepertoireNode(node: RepertoireNode): Promise<void> {
+    const db = await this.ready()
+    const row: RepertoireMovesTable = {
+      id: node.id,
+      color: node.color,
+      parent_id: node.parentId,
+      ply: node.ply,
+      move_san: node.moveSan,
+      fen: node.fen,
+      created_at: node.createdAt,
+    }
+    await db.insertInto('repertoire_moves').values(row).execute()
+  }
+
+  async deleteRepertoireNode(id: string): Promise<void> {
+    const db = await this.ready()
+    await db.deleteFrom('repertoire_moves').where('id', '=', id).execute()
   }
 }
