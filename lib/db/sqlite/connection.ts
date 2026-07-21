@@ -18,6 +18,8 @@ export function getSqliteRaw(): Database.Database {
 
     const db = new Database(path.join(dataDir, 'blitzr.db'))
     db.pragma('journal_mode = WAL')
+    // Needed for repertoire_moves' ON DELETE CASCADE (pruning a node drops its subtree).
+    db.pragma('foreign_keys = ON')
 
     globalForDb.sqliteRaw = db
   }

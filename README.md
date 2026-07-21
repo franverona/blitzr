@@ -118,3 +118,10 @@ pnpm format:check    # Prettier (check)
   unauthenticated and public, so there's no secret to leak — `.env.example` documents the one
   variable you need.
 - `data/*.db` (your synced games) is gitignored and never committed.
+
+## Credits
+
+- Chess piece icons (`components/PieceGlyph.tsx`) are the "light" (white) pieces from
+  [Wikimedia Commons' SVG chess piece set](https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces),
+  originally by [Cburnett](https://commons.wikimedia.org/wiki/User:Cburnett), used under the
+  BSD license.

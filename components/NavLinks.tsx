@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 const LINKS = [
   { href: '/', label: 'Games' },
   { href: '/openings', label: 'Openings' },
+  { href: '/repertoire', label: 'Repertoire' },
 ]
 
 export function NavLinks() {

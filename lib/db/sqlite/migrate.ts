@@ -61,4 +61,21 @@ async function runMigrations(db: Kysely<DbSchema>): Promise<void> {
       synced_at TEXT NOT NULL
     )
   `.execute(db)
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS repertoire_moves (
+      id TEXT PRIMARY KEY,
+      color TEXT NOT NULL,
+      parent_id TEXT REFERENCES repertoire_moves(id) ON DELETE CASCADE,
+      ply INTEGER NOT NULL,
+      move_san TEXT NOT NULL,
+      fen TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    )
+  `.execute(db)
+
+  await sql`
+    CREATE INDEX IF NOT EXISTS repertoire_moves_color_parent_idx
+    ON repertoire_moves (color, parent_id)
+  `.execute(db)
 }

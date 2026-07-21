@@ -4,7 +4,14 @@ import { revalidatePath } from 'next/cache'
 import { getRepository } from '@/lib/db'
 import { buildOpeningFamilies } from '@/lib/openings'
 import { syncAllArchives } from '@/lib/sync'
-import type { ArchiveSyncStatus, Game, OpeningFamily, SyncResult } from '@/lib/types'
+import type {
+  ArchiveSyncStatus,
+  Game,
+  OpeningFamily,
+  RepertoireColor,
+  RepertoireNode,
+  SyncResult,
+} from '@/lib/types'
 
 export async function listGames(
   params: { limit?: number; offset?: number } = {},
@@ -30,4 +37,18 @@ export async function syncGames(): Promise<SyncResult> {
   revalidatePath('/')
   revalidatePath('/openings')
   return result
+}
+
+export async function listRepertoire(color: RepertoireColor): Promise<RepertoireNode[]> {
+  return getRepository().listRepertoireNodes(color)
+}
+
+export async function addRepertoireMove(node: RepertoireNode): Promise<void> {
+  await getRepository().addRepertoireNode(node)
+  revalidatePath('/repertoire')
+}
+
+export async function deleteRepertoireMove(id: string): Promise<void> {
+  await getRepository().deleteRepertoireNode(id)
+  revalidatePath('/repertoire')
 }

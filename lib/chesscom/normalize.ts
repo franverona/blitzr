@@ -36,7 +36,7 @@ export function ecoNameFromUrl(url: string): string {
 
 // Extracted independently of chess.js's PGN parser so headers (incl. ECO) are
 // still available even for games whose movetext chess.js can't validate.
-function parsePgnHeaders(pgn: string): Record<string, string> {
+export function parsePgnHeaders(pgn: string): Record<string, string> {
   const headers: Record<string, string> = {}
   for (const match of pgn.matchAll(/^\[(\w+)\s+"(.*)"\]$/gm)) {
     headers[match[1]] = match[2]

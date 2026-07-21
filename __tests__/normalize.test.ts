@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { ecoNameFromUrl, normalizeGame, normalizeResult } from '@/lib/chesscom/normalize'
+import {
+  ecoNameFromUrl,
+  normalizeGame,
+  normalizeResult,
+  parsePgnHeaders,
+} from '@/lib/chesscom/normalize'
 import type { ChesscomGame } from '@/lib/chesscom/client'
 
 describe('normalizeResult', () => {
@@ -35,6 +40,21 @@ describe('ecoNameFromUrl', () => {
 
   it('returns the decoded slug unchanged when no move-number token is found', () => {
     expect(ecoNameFromUrl('https://www.chess.com/openings/Italian-Game')).toBe('Italian Game')
+  })
+})
+
+describe('parsePgnHeaders', () => {
+  it('extracts header tag/value pairs', () => {
+    const pgn = '[Event "Play vs Coach"]\n[White "fverona"]\n[Black "Coach-David"]\n\n1. e4 *'
+    expect(parsePgnHeaders(pgn)).toEqual({
+      Event: 'Play vs Coach',
+      White: 'fverona',
+      Black: 'Coach-David',
+    })
+  })
+
+  it('returns an empty object when there are no headers', () => {
+    expect(parsePgnHeaders('1. e4 e5 *')).toEqual({})
   })
 })
 
