@@ -11,11 +11,11 @@ const SCHOLARS_MATE_FEN = 'r1bqkb1r/pppp1Qpp/2n2n2/4p3/2B1P3/8/PPPP1PPP/RNB1K1NR
 
 describe('terminalEval', () => {
   it('scores a position where white is checkmated as a win for black', () => {
-    expect(terminalEval(FOOLS_MATE_FEN)).toEqual({ cp: null, mate: -1 })
+    expect(terminalEval(FOOLS_MATE_FEN)).toEqual({ cp: null, mate: -1, bestMove: null })
   })
 
   it('scores a position where black is checkmated as a win for white', () => {
-    expect(terminalEval(SCHOLARS_MATE_FEN)).toEqual({ cp: null, mate: 1 })
+    expect(terminalEval(SCHOLARS_MATE_FEN)).toEqual({ cp: null, mate: 1, bestMove: null })
   })
 
   it('returns null (ask the engine) for a normal, non-terminal position', () => {

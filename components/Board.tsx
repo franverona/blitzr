@@ -25,6 +25,7 @@ export function Board({
 
   const lastPly = positions.length - 1
   const [ply, setPly] = useState(lastPly)
+  const bestMove = evals?.[ply]?.bestMove
 
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
@@ -41,6 +42,15 @@ export function Board({
                 lightSquareStyle: { backgroundColor: '#eeeed2' },
                 darkSquareNotationStyle: { color: '#eeeed2' },
                 lightSquareNotationStyle: { color: '#769656' },
+                arrows: bestMove
+                  ? [
+                      {
+                        startSquare: bestMove.from,
+                        endSquare: bestMove.to,
+                        color: 'rgba(234, 179, 8, 0.9)',
+                      },
+                    ]
+                  : [],
               }}
             />
           </div>

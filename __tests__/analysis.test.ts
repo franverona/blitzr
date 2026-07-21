@@ -10,11 +10,11 @@ import {
 import type { Blunder, PositionEval } from '@/lib/types'
 
 function cp(value: number): PositionEval {
-  return { cp: value, mate: null }
+  return { cp: value, mate: null, bestMove: null }
 }
 
 function mate(n: number): PositionEval {
-  return { cp: null, mate: n }
+  return { cp: null, mate: n, bestMove: null }
 }
 
 describe('findBlunders', () => {

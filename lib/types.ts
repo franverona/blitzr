@@ -87,13 +87,23 @@ export interface RepertoireDiffResult {
   expectedMoves: string[] | null
 }
 
+/** The engine's suggested move from a position: `from`/`to` for drawing a
+ *  board arrow, `san` for display in text (blunder lists, etc). */
+export interface BestMove {
+  from: string
+  to: string
+  san: string
+}
+
 /** A single position's engine evaluation, always from White's perspective
  *  (UCI reports "score cp/mate" from the side-to-move's perspective, so this
  *  is normalized before storage — see lib/stockfish/client.ts). Exactly one
- *  of cp/mate is non-null. */
+ *  of cp/mate is non-null. `bestMove` is null for a terminal position with
+ *  no legal moves. */
 export interface PositionEval {
   cp: number | null
   mate: number | null
+  bestMove: BestMove | null
 }
 
 export interface GameAnalysis {

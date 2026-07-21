@@ -13,10 +13,10 @@ export function terminalEval(fen: string): PositionEval | null {
     // The side to move just got checkmated — bad for them, so from White's
     // perspective this is a win for White if Black is the one mated.
     const blackToMove = fen.split(' ')[1] === 'b'
-    return { cp: null, mate: blackToMove ? 1 : -1 }
+    return { cp: null, mate: blackToMove ? 1 : -1, bestMove: null }
   }
   if (chess.isStalemate()) {
-    return { cp: 0, mate: null }
+    return { cp: 0, mate: null, bestMove: null }
   }
   return null
 }

@@ -74,6 +74,9 @@ export function GameAnalysisPanel({
               <li key={b.ply}>
                 {plyLabel(b.ply)} {b.moveSan}: {formatEval(b.evalBefore)} →{' '}
                 {formatEval(b.evalAfter)} ({formatSwing(b)})
+                {b.evalBefore.bestMove && b.evalBefore.bestMove.san !== b.moveSan && (
+                  <> — better was {b.evalBefore.bestMove.san}</>
+                )}
               </li>
             ))}
           </ul>
@@ -121,6 +124,11 @@ function EvalHelp() {
           at least 2 pawns worse than the best available move, for whoever just played it. This is
           relative to the best move, not to whether that side was already ahead or behind — a losing
           position can still get worse, and that still counts.
+        </p>
+        <p>
+          <span className="font-medium text-zinc-400">Better was …</span> — what Stockfish would
+          have played instead, from the position right before the blunder. The same suggestion is
+          drawn as a yellow arrow on the board at whichever position you&rsquo;re currently viewing.
         </p>
       </div>
     </details>

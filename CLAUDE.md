@@ -220,6 +220,12 @@ mate` relative to **whoever is to move** in the given position, not always White
   - **Movetime is 300ms per position** (`go movetime 300`) — a full game analyzes in roughly
     (positions × 0.3s), acceptable for on-demand single-game analysis from a button click, not
     fast enough to run automatically across an entire synced history.
+  - **`bestMove`**: the `bestmove` UCI line (long algebraic, e.g. `e2e4`) is parsed via chess.js
+    (`parseBestMove()`) into `{from, to, san}` before being attached to the `PositionEval` —
+    `from`/`to` drive a board arrow (`Board.tsx` passes them straight to react-chessboard's
+    `options.arrows`), `san` is for text display (blunder lists). `parseBestMove()` is a pure
+    function (fen + UCI move in, `BestMove | null` out) and is unit-tested directly — the rest
+    of `evaluate()` needs a real Worker and isn't.
 - **Terminal positions are scored directly, not asked of the engine**
   (`terminalEval()` in `lib/stockfish/analyze.ts`): a position with zero legal moves
   (checkmate/stalemate) gives Stockfish nothing to search, and its `score mate 0`-style output
@@ -233,17 +239,21 @@ mate` relative to **whoever is to move** in the given position, not always White
   swing into or out of a forced mate always crosses the threshold, without needing to compare
   mate-in-N counts to centipawns directly.
 - **Storage**: `game_analysis` stores one row per game — `evals` is a JSON array of
-  `{cp, mate}`, one per position (same indexing as `movesSan`/`buildPositions()`'s output).
-  Re-analyzing a game overwrites its previous result (`onConflict` upsert), there's no history
-  of past analysis runs.
+  `{cp, mate, bestMove}`, one per position (same indexing as `movesSan`/`buildPositions()`'s
+  output). Re-analyzing a game overwrites its previous result (`onConflict` upsert), there's no
+  history of past analysis runs. `evals` is an opaque JSON blob (`JSON.parse`/`JSON.stringify` in
+  `lib/db/sqlite/repository.ts`), so adding `bestMove` needed no migration — analyses saved
+  before this field existed just parse back without it (falsy, so display code that checks
+  `evals[i].bestMove` skips it silently rather than crashing); re-analyzing backfills it.
+- **Best move**: `evals[i].bestMove` is what the engine recommends _from_ position `i` — i.e.
+  what should have been played instead of `movesSan[i]`. Shown two places: as a yellow arrow on
+  the board as you step through ply-by-ply (`Board.tsx`, synced to the currently viewed
+  position, via react-chessboard's `options.arrows`), and as SAN text next to each blunder in
+  `GameAnalysisPanel.tsx` (using `evalBefore.bestMove.san`, the recommendation from right before
+  the blunder was played). `null` for terminal positions (no legal moves).
 - **Scope**: per-game only. There's no bulk "analyze all synced games" job or a cross-game
   "your most common blunders" aggregate yet — both are natural follow-ups once individual games
-  can be analyzed, but weren't part of what Phase 3 asked for. Showing the engine's suggested
-  best move next to a blunder (for learning what to have played instead) is another one — UCI's
-  `bestmove` line already comes back from every search in `StockfishEngine.evaluate()`
-  (`lib/stockfish/client.ts`), it's just discarded today as the signal to resolve the eval
-  promise; returning it (converted from long algebraic, e.g. `e2e4`, to SAN via chess.js) is the
-  main piece of work.
+  can be analyzed, but weren't part of what Phase 3 asked for.
 
 ## Testing
 

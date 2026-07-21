@@ -1,4 +1,5 @@
-import type { PositionEval } from '../types'
+import { Chess } from 'chess.js'
+import type { BestMove, PositionEval } from '../types'
 
 // The "lite single-threaded" build — no COOP/COEP headers required, unlike
 // the multi-threaded build, and fast enough for on-demand per-game analysis.
@@ -7,6 +8,22 @@ const ENGINE_URL = '/stockfish/stockfish-18-lite-single.js'
 
 function isWhiteToMove(fen: string): boolean {
   return fen.split(' ')[1] === 'w'
+}
+
+// UCI moves are long algebraic ("e2e4", "e7e8q" for promotion) — keep the
+// from/to squares for drawing a board arrow, and also convert to SAN ("e4",
+// "e8=Q") for display in text (blunder lists, etc).
+export function parseBestMove(fen: string, uciMove: string): BestMove | null {
+  if (uciMove === '(none)') return null
+  const chess = new Chess(fen)
+  const from = uciMove.slice(0, 2)
+  const to = uciMove.slice(2, 4)
+  try {
+    const move = chess.move({ from, to, promotion: uciMove.length > 4 ? uciMove[4] : undefined })
+    return { from, to, san: move.san }
+  } catch {
+    return null
+  }
 }
 
 /**
@@ -44,7 +61,7 @@ export class StockfishEngine {
     const whiteToMove = isWhiteToMove(fen)
 
     return new Promise((resolve) => {
-      let latest: PositionEval = { cp: 0, mate: null }
+      let latest: Omit<PositionEval, 'bestMove'> = { cp: 0, mate: null }
 
       const onMessage = (event: MessageEvent<string>) => {
         const line = event.data
@@ -59,9 +76,10 @@ export class StockfishEngine {
           latest = { cp: whiteToMove ? cp : -cp, mate: null }
         }
 
-        if (line.startsWith('bestmove')) {
+        const bestMoveMatch = line.match(/^bestmove (\S+)/)
+        if (bestMoveMatch) {
           this.worker.removeEventListener('message', onMessage)
-          resolve(latest)
+          resolve({ ...latest, bestMove: parseBestMove(fen, bestMoveMatch[1]) })
         }
       }
 
