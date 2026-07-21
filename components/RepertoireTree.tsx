@@ -1,9 +1,10 @@
 import { buildRepertoireIndex } from '@/lib/repertoire'
 import type { RepertoireNode } from '@/lib/types'
+import { PieceMoveLabel } from './PieceMoveLabel'
 
-function moveLabel(node: RepertoireNode): string {
-  const moveNumber = Math.ceil(node.ply / 2)
-  return node.ply % 2 === 1 ? `${moveNumber}. ${node.moveSan}` : `${moveNumber}… ${node.moveSan}`
+function moveNumberLabel(ply: number): string {
+  const moveNumber = Math.ceil(ply / 2)
+  return ply % 2 === 1 ? `${moveNumber}.` : `${moveNumber}…`
 }
 
 export function RepertoireTree({
@@ -21,14 +22,14 @@ export function RepertoireTree({
 
   if (roots.length === 0) {
     return (
-      <p className="text-sm text-zinc-500 lg:max-w-[280px]">
+      <p className="text-sm text-zinc-500 lg:flex-1">
         No moves recorded yet — drag a piece on the board to start building this repertoire.
       </p>
     )
   }
 
   return (
-    <div className="w-full overflow-y-auto rounded border border-zinc-800 bg-zinc-900 p-2 text-sm lg:max-h-[560px] lg:max-w-[280px]">
+    <div className="w-full overflow-y-auto rounded border border-zinc-800 bg-zinc-900 py-2 text-sm lg:max-h-140 lg:flex-1">
       {roots.map((node) => (
         <TreeNode
           key={node.id}
@@ -68,7 +69,8 @@ function TreeNode({
           isActive ? 'bg-[#769656]/50 font-medium text-white' : 'text-zinc-300 hover:bg-zinc-800'
         }`}
       >
-        {moveLabel(node)}
+        <span className="mr-1 text-zinc-500">{moveNumberLabel(node.ply)}</span>
+        <PieceMoveLabel san={node.moveSan} />
       </button>
       {children.map((child) => (
         <TreeNode

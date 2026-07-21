@@ -4,7 +4,13 @@ import { getGame, listRepertoire } from '../../actions'
 import { Board } from '@/components/Board'
 import { formatDateTime } from '@/lib/dates'
 import { diffGameAgainstRepertoire } from '@/lib/repertoire'
-import type { MyColor, RepertoireDiffResult } from '@/lib/types'
+import type { MyColor, MyResult, RepertoireDiffResult } from '@/lib/types'
+
+function pgnResult(color: MyColor, result: MyResult): string {
+  if (result === 'draw') return '1/2-1/2'
+  const whiteWon = result === 'win' ? color === 'white' : color !== 'white'
+  return whiteWon ? '1-0' : '0-1'
+}
 
 export default async function GamePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -56,6 +62,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
           initialFen={game.initialFen}
           movesSan={game.movesSan}
           boardOrientation={game.myColor}
+          result={pgnResult(game.myColor, game.myResult)}
         />
       ) : (
         <div className="flex flex-col gap-2">
