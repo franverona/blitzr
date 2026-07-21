@@ -178,7 +178,7 @@ function MoveList({
                       : 'text-zinc-200 hover:bg-zinc-800/60'
                   }`}
                 >
-                  <PieceMoveLabel san={move.san} />
+                  <PieceMoveLabel san={move.san} color={side} />
                 </button>
               )
             })}
