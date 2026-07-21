@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Chess } from 'chess.js'
 import { Chessboard } from 'react-chessboard'
+import { buildPositions } from '@/lib/positions'
 import { PieceMoveLabel } from './PieceMoveLabel'
 
 export function Board({
@@ -16,15 +16,7 @@ export function Board({
   boardOrientation: 'white' | 'black'
   result?: string
 }) {
-  const positions = useMemo(() => {
-    const chess = new Chess(initialFen)
-    const fens = [chess.fen()]
-    for (const move of movesSan) {
-      chess.move(move)
-      fens.push(chess.fen())
-    }
-    return fens
-  }, [initialFen, movesSan])
+  const positions = useMemo(() => buildPositions(initialFen, movesSan), [initialFen, movesSan])
 
   const lastPly = positions.length - 1
   const [ply, setPly] = useState(lastPly)

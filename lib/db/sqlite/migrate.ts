@@ -78,4 +78,12 @@ async function runMigrations(db: Kysely<DbSchema>): Promise<void> {
     CREATE INDEX IF NOT EXISTS repertoire_moves_color_parent_idx
     ON repertoire_moves (color, parent_id)
   `.execute(db)
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS game_analysis (
+      game_id TEXT PRIMARY KEY REFERENCES games(id) ON DELETE CASCADE,
+      evals TEXT NOT NULL,
+      analyzed_at TEXT NOT NULL
+    )
+  `.execute(db)
 }
