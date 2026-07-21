@@ -85,6 +85,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
           movesSan={game.movesSan}
           boardOrientation={game.myColor}
           result={pgnResult(game.myColor, game.myResult)}
+          evals={analysis?.evals}
         />
       ) : (
         <div className="flex flex-col gap-2">

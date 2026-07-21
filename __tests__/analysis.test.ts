@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { biggestBlunder, findBlunders, formatEval } from '@/lib/analysis'
+import {
+  biggestBlunder,
+  describeEval,
+  evalBarPercent,
+  findBlunders,
+  formatEval,
+} from '@/lib/analysis'
 import type { PositionEval } from '@/lib/types'
 
 function cp(value: number): PositionEval {
@@ -83,5 +89,49 @@ describe('formatEval', () => {
   it('formats mate scores for both sides', () => {
     expect(formatEval(mate(3))).toBe('M3')
     expect(formatEval(mate(-2))).toBe('-M2')
+  })
+})
+
+describe('evalBarPercent', () => {
+  it('splits the bar evenly at an equal eval', () => {
+    expect(evalBarPercent(cp(0))).toBeCloseTo(50, 1)
+  })
+
+  it('favors white for a positive eval', () => {
+    expect(evalBarPercent(cp(300))).toBeGreaterThan(50)
+  })
+
+  it('favors black for a negative eval', () => {
+    expect(evalBarPercent(cp(-300))).toBeLessThan(50)
+  })
+
+  it('saturates near full/empty for a large eval rather than reaching 0/100', () => {
+    const percent = evalBarPercent(cp(2000))
+    expect(percent).toBeGreaterThan(90)
+    expect(percent).toBeLessThan(100)
+  })
+
+  it('nearly fills the bar for a white mate and nearly empties it for a black mate', () => {
+    expect(evalBarPercent(mate(2))).toBe(99)
+    expect(evalBarPercent(mate(-2))).toBe(1)
+  })
+})
+
+describe('describeEval', () => {
+  it('calls a small eval equal', () => {
+    expect(describeEval(cp(20))).toBe('Equal position')
+  })
+
+  it('describes a slight edge, a clear edge, and a winning position per side', () => {
+    expect(describeEval(cp(100))).toBe('Slight edge for White')
+    expect(describeEval(cp(-100))).toBe('Slight edge for Black')
+    expect(describeEval(cp(250))).toBe('White is better')
+    expect(describeEval(cp(500))).toBe('White is winning')
+    expect(describeEval(cp(-900))).toBe('Black is completely winning')
+  })
+
+  it('describes forced mates for both sides', () => {
+    expect(describeEval(mate(4))).toBe('White has a forced mate')
+    expect(describeEval(mate(-1))).toBe('Black has a forced mate')
   })
 })

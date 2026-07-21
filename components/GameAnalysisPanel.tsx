@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { saveGameAnalysis } from '@/app/actions'
-import { biggestBlunder, findBlunders, formatEval } from '@/lib/analysis'
+import { biggestBlunder, describeEval, findBlunders, formatEval } from '@/lib/analysis'
 import { plyLabel } from '@/lib/san'
 import { analyzeGame } from '@/lib/stockfish/analyze'
 import type { GameAnalysis } from '@/lib/types'
@@ -67,7 +67,7 @@ export function GameAnalysisPanel({
           <p className="text-sm text-amber-600 dark:text-amber-400">
             {blunders.length} {blunders.length === 1 ? 'blunder' : 'blunders'} found. Biggest:{' '}
             {plyLabel(worst!.ply)} {worst!.moveSan} ({formatEval(worst!.evalBefore)} →{' '}
-            {formatEval(worst!.evalAfter)}).
+            {formatEval(worst!.evalAfter)}, {describeEval(worst!.evalAfter).toLowerCase()}).
           </p>
           <ul className="flex flex-col gap-0.5 text-sm text-zinc-400">
             {blunders.map((b) => (

@@ -61,3 +61,32 @@ export function formatEval(evaluation: PositionEval): string {
   const sign = pawns > 0 ? '+' : ''
   return `${sign}${pawns.toFixed(1)}`
 }
+
+/**
+ * How much of an eval bar White's fill should cover, 0-100. Uses the same
+ * logistic curve Lichess uses to turn centipawns into win chances, so the
+ * bar reads intuitively — a +1 pawn edge looks like a real but modest edge,
+ * +8 looks all but decided — instead of a raw linear centipawn scale where
+ * +30 and +10 would look nearly identical.
+ */
+export function evalBarPercent(evaluation: PositionEval): number {
+  if (evaluation.mate !== null) return evaluation.mate > 0 ? 99 : 1
+  const winChances = 2 / (1 + Math.exp(-0.00368208 * (evaluation.cp ?? 0))) - 1
+  return ((winChances + 1) / 2) * 100
+}
+
+/** A plain-language read of an eval, e.g. "White is winning", for anyone who doesn't
+ * think in centipawns yet. */
+export function describeEval(evaluation: PositionEval): string {
+  if (evaluation.mate !== null) {
+    return evaluation.mate > 0 ? 'White has a forced mate' : 'Black has a forced mate'
+  }
+  const cp = evaluation.cp ?? 0
+  if (Math.abs(cp) < 50) return 'Equal position'
+  const side = cp > 0 ? 'White' : 'Black'
+  const abs = Math.abs(cp)
+  if (abs < 150) return `Slight edge for ${side}`
+  if (abs < 300) return `${side} is better`
+  if (abs < 700) return `${side} is winning`
+  return `${side} is completely winning`
+}
