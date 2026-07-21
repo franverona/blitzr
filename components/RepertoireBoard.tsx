@@ -190,7 +190,7 @@ export function RepertoireBoard({
                 onClick={() => setPath((p) => [...p.slice(0, -1), sibling])}
                 className={`rounded px-2 py-0.5 ${
                   sibling.id === currentNode?.id
-                    ? 'bg-emerald-700/50 font-medium text-white'
+                    ? 'bg-[#769656]/50 font-medium text-white'
                     : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
                 }`}
               >

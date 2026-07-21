@@ -144,7 +144,7 @@ function MoveList({
         onClick={() => onSelect(0)}
         className={`border-b border-zinc-800 px-3 py-1.5 text-left text-sm ${
           ply === 0
-            ? 'bg-emerald-700/50 font-semibold text-white'
+            ? 'bg-[#769656]/50 font-semibold text-white'
             : 'text-zinc-400 hover:bg-zinc-800/60'
         }`}
       >
@@ -169,7 +169,7 @@ function MoveList({
                   onClick={() => onSelect(move.ply)}
                   className={`flex-1 px-2 py-1.5 text-left ${
                     isActive
-                      ? 'bg-emerald-700/50 font-semibold text-white'
+                      ? 'bg-[#769656]/50 font-semibold text-white'
                       : 'text-zinc-200 hover:bg-zinc-800/60'
                   }`}
                 >

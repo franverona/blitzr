@@ -64,8 +64,8 @@ function TreeNode({
     <div style={{ paddingLeft: ancestors.length * 14 }}>
       <button
         onClick={() => onSelectPath(path)}
-        className={`block w-full rounded px-1.5 py-0.5 text-left ${
-          isActive ? 'bg-emerald-700/50 font-medium text-white' : 'text-zinc-300 hover:bg-zinc-800'
+        className={`block w-full px-2 py-1 text-left ${
+          isActive ? 'bg-[#769656]/50 font-medium text-white' : 'text-zinc-300 hover:bg-zinc-800'
         }`}
       >
         {moveLabel(node)}
