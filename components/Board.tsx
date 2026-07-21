@@ -3,15 +3,18 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Chess } from 'chess.js'
 import { Chessboard } from 'react-chessboard'
+import { PieceMoveLabel } from './PieceMoveLabel'
 
 export function Board({
   initialFen,
   movesSan,
   boardOrientation,
+  result,
 }: {
   initialFen: string
   movesSan: string[]
   boardOrientation: 'white' | 'black'
+  result?: string
 }) {
   const positions = useMemo(() => {
     const chess = new Chess(initialFen)
@@ -69,7 +72,7 @@ export function Board({
         </div>
       </div>
 
-      <MoveList movesSan={movesSan} ply={ply} onSelect={setPly} />
+      <MoveList movesSan={movesSan} ply={ply} onSelect={setPly} result={result} />
     </div>
   )
 }
@@ -125,10 +128,12 @@ function MoveList({
   movesSan,
   ply,
   onSelect,
+  result,
 }: {
   movesSan: string[]
   ply: number
   onSelect: (ply: number) => void
+  result?: string
 }) {
   const pairs = useMemo(() => buildMovePairs(movesSan), [movesSan])
   const activeRef = useRef<HTMLButtonElement>(null)
@@ -138,21 +143,21 @@ function MoveList({
   }, [ply])
 
   return (
-    <div className="flex w-full flex-col overflow-hidden rounded border border-zinc-800 bg-zinc-900 lg:max-w-[280px]">
+    <div className="flex w-full flex-col overflow-hidden rounded border border-zinc-800 bg-zinc-900 lg:flex-1">
       <button
         ref={ply === 0 ? activeRef : undefined}
         onClick={() => onSelect(0)}
         className={`border-b border-zinc-800 px-3 py-1.5 text-left text-sm ${
           ply === 0
-            ? 'bg-emerald-700/50 font-semibold text-white'
+            ? 'bg-[#769656]/50 font-semibold text-white'
             : 'text-zinc-400 hover:bg-zinc-800/60'
         }`}
       >
         Starting position
       </button>
-      <ol className="max-h-[480px] divide-y divide-zinc-800/60 overflow-y-auto text-sm">
-        {pairs.map((pair) => (
-          <li key={pair.moveNumber} className="flex">
+      <ol className="max-h-[480px] overflow-y-auto text-sm">
+        {pairs.map((pair, i) => (
+          <li key={pair.moveNumber} className={`flex ${i % 2 === 1 ? 'bg-zinc-800/25' : ''}`}>
             <span className="w-8 shrink-0 px-2 py-1.5 text-zinc-500 tabular-nums">
               {pair.moveNumber}.
             </span>
@@ -169,16 +174,21 @@ function MoveList({
                   onClick={() => onSelect(move.ply)}
                   className={`flex-1 px-2 py-1.5 text-left ${
                     isActive
-                      ? 'bg-emerald-700/50 font-semibold text-white'
+                      ? 'bg-[#769656]/50 font-semibold text-white'
                       : 'text-zinc-200 hover:bg-zinc-800/60'
                   }`}
                 >
-                  {move.san}
+                  <PieceMoveLabel san={move.san} color={side} />
                 </button>
               )
             })}
           </li>
         ))}
+        {result && (
+          <li className="px-2 py-1.5 font-medium text-zinc-400">
+            <span className="pl-8">{result}</span>
+          </li>
+        )}
       </ol>
     </div>
   )
