@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { Chess } from 'chess.js'
 import { Chessboard } from 'react-chessboard'
 import { addRepertoireMove, deleteRepertoireMove, listRepertoire } from '@/app/actions'
@@ -17,21 +17,43 @@ export function RepertoireBoard({
   color: RepertoireColor
   initialNodes: RepertoireNode[]
 }) {
-  const [nodes, setNodes] = useState(initialNodes)
-  const [path, setPath] = useState<RepertoireNode[]>([])
+  const [nodes, setNodesState] = useState(initialNodes)
+  const [path, setPathState] = useState<RepertoireNode[]>([])
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
 
+  // React state updates aren't applied synchronously, so two clicks fired
+  // back-to-back (faster than a render) can both read the *same* pre-update
+  // path/nodes — the second move then gets recorded with the wrong parent/ply,
+  // or against an already-stale board position. Refs give attemptMove an
+  // always-current value to read from regardless of render timing.
+  const nodesRef = useRef(nodes)
+  const pathRef = useRef(path)
+
+  function setNodes(updater: (prev: RepertoireNode[]) => RepertoireNode[]) {
+    nodesRef.current = updater(nodesRef.current)
+    setNodesState(nodesRef.current)
+  }
+
+  function setPath(updater: RepertoireNode[] | ((prev: RepertoireNode[]) => RepertoireNode[])) {
+    pathRef.current = typeof updater === 'function' ? updater(pathRef.current) : updater
+    setPathState(pathRef.current)
+  }
+
   const index = useMemo(() => buildRepertoireIndex(nodes), [nodes])
   const currentNode = path[path.length - 1] ?? null
-  const children = index.get(currentNode?.id ?? null) ?? []
   const currentFen = currentNode?.fen ?? START_FEN
   const parentId = path.length >= 2 ? path[path.length - 2].id : null
   const siblings = path.length === 0 ? (index.get(null) ?? []) : (index.get(parentId) ?? [])
 
   function attemptMove(from: string, to: string): boolean {
-    const chess = new Chess(currentFen)
+    const currentPath = pathRef.current
+    const current = currentPath[currentPath.length - 1] ?? null
+    const kids = buildRepertoireIndex(nodesRef.current).get(current?.id ?? null) ?? []
+    const fen = current?.fen ?? START_FEN
+
+    const chess = new Chess(fen)
     let move
     try {
       // ponytail: always promote to queen — underpromotion essentially never
@@ -43,7 +65,7 @@ export function RepertoireBoard({
     }
     if (!move) return false
 
-    const existing = children.find((n) => n.moveSan === move.san)
+    const existing = kids.find((n) => n.moveSan === move.san)
     if (existing) {
       setPath((p) => [...p, existing])
       return true
@@ -52,8 +74,8 @@ export function RepertoireBoard({
     const node: RepertoireNode = {
       id: crypto.randomUUID(),
       color,
-      parentId: currentNode?.id ?? null,
-      ply: path.length + 1,
+      parentId: current?.id ?? null,
+      ply: currentPath.length + 1,
       moveSan: move.san,
       fen: chess.fen(),
       createdAt: new Date().toISOString(),
@@ -102,7 +124,7 @@ export function RepertoireBoard({
     try {
       await deleteRepertoireMove(currentNode.id)
       const fresh = await listRepertoire(color)
-      setNodes(fresh)
+      setNodes(() => fresh)
       setPath((p) => p.slice(0, -1))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete.')
