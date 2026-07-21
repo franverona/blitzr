@@ -8,7 +8,14 @@ const eslintConfig = defineConfig([
   ...nextTs,
   // Disables ESLint rules that conflict with Prettier — must be last.
   prettier,
-  globalIgnores(['.next/**', 'out/**', 'build/**', 'next-env.d.ts']),
+  globalIgnores([
+    '.next/**',
+    'out/**',
+    'build/**',
+    'next-env.d.ts',
+    // Vendored engine assets copied by scripts/setup-stockfish.js, not our code.
+    'public/stockfish/**',
+  ]),
 ])
 
 export default eslintConfig

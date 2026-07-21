@@ -7,7 +7,9 @@ import { syncAllArchives } from '@/lib/sync'
 import type {
   ArchiveSyncStatus,
   Game,
+  GameAnalysis,
   OpeningFamily,
+  PositionEval,
   RepertoireColor,
   RepertoireNode,
   SyncResult,
@@ -51,4 +53,13 @@ export async function addRepertoireMove(node: RepertoireNode): Promise<void> {
 export async function deleteRepertoireMove(id: string): Promise<void> {
   await getRepository().deleteRepertoireNode(id)
   revalidatePath('/repertoire')
+}
+
+export async function getGameAnalysis(gameId: string): Promise<GameAnalysis | undefined> {
+  return getRepository().getGameAnalysis(gameId)
+}
+
+export async function saveGameAnalysis(gameId: string, evals: PositionEval[]): Promise<void> {
+  await getRepository().saveGameAnalysis({ gameId, evals, analyzedAt: new Date().toISOString() })
+  revalidatePath(`/games/${gameId}`)
 }

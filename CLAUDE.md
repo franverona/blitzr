@@ -11,10 +11,10 @@ ahead of time.
 
 - **Phase 1 (done)**: username config, incremental Chess.com sync into SQLite, browse UI
   (game list, board replay, openings aggregated by ECO). No engine.
-- **Phase 2**: user-defined repertoire (opening trees per color), diff each game against it to
-  flag the first deviating move.
-- **Phase 3**: Stockfish (WASM, in a Web Worker) analysis — recurring blunders, biggest eval
-  drops.
+- **Phase 2 (done)**: user-defined repertoire (opening trees per color), diff each game against
+  it to flag the first deviating move.
+- **Phase 3 (done)**: Stockfish (WASM, in a Web Worker) analysis — per-game blunders and biggest
+  eval drop. A cross-game "recurring blunders" aggregate is a natural follow-up, not yet built.
 - **Phase 4**: spaced-repetition drilling of deviation/blunder positions.
 
 ## Stack
@@ -27,50 +27,82 @@ ahead of time.
 - **TypeScript**
 - **chess.js** for PGN parsing/move validation, **react-chessboard** (v5, `options` prop API)
   for the board UI
+- **Stockfish** (`stockfish` npm package, WASM, "lite single-threaded" build) run in a browser
+  Web Worker — see "Engine analysis" below
 
 ## Project structure
 
 ```
 app/
-  actions.ts              # all DB reads + the sync action (Server Actions)
+  actions.ts              # all DB reads/writes + the sync/analysis triggers (Server Actions)
   page.tsx                 # games list (paginated), with the Sync button
-  layout.tsx                # nav (Games / Openings)
+  layout.tsx                # nav (Games / Openings / Repertoire)
   globals.css
-  games/[id]/page.tsx        # single game — board replay or raw PGN fallback
+  games/[id]/page.tsx        # single game — board replay, repertoire diff, analysis panel,
+                               # or raw PGN fallback for unparseable games
   openings/page.tsx           # ECO family aggregation, expandable to named lines
+  repertoire/page.tsx          # repertoire tree builder (White/Black tabs)
 components/
   GameList.tsx / GameRow.tsx  # games table
-  Board.tsx                    # react-chessboard + ply navigation (client)
-  OpeningsTable.tsx              # family/line aggregation table (client, expand/collapse)
-  SyncButton.tsx                   # triggers the sync Server Action (client)
+  Board.tsx                    # react-chessboard + ply navigation (client), read-only replay
+  RepertoireBoard.tsx            # react-chessboard in edit mode (drag or click-to-move),
+                                   # builds the repertoire tree as you play moves
+  RepertoireTree.tsx               # nested move-tree view with branch switching (client)
+  GameAnalysisPanel.tsx              # triggers Stockfish analysis, shows blunders (client)
+  OpeningsTable.tsx                    # family/line aggregation table (client, expand/collapse)
+  PieceGlyph.tsx / PieceMoveLabel.tsx    # Wikimedia chess piece SVGs, colored by moving side
+  KnightGlyph.tsx / KnightIcon.tsx         # illustrated knight (favicon, White/Black side badge)
+  NavLinks.tsx                              # active-tab nav (client, usePathname)
+  BackButton.tsx                              # router.back(), not a Link — preserves list pagination
+  SyncButton.tsx                                # triggers the sync Server Action (client)
 lib/
   config.ts                # getChesscomUsername() — reads CHESSCOM_USERNAME
-  types.ts                  # domain types: Game, OpeningFamily/Line, ArchiveSyncStatus, SyncResult
-  openings.ts                # buildOpeningFamilies() — pure aggregation, unit-tested
-  sync.ts                     # syncAllArchives() — orchestrates client + normalize + repo
+  types.ts                  # domain types: Game, OpeningFamily/Line, RepertoireNode,
+                              # GameAnalysis/PositionEval/Blunder, ArchiveSyncStatus, SyncResult
+  dates.ts                   # formatDate/formatDateTime — hand-formatted, not Intl (see below)
+  san.ts                       # splitSanPiece, plyLabel — SAN/move-number display helpers
+  positions.ts                  # buildPositions() — walks movesSan into a FEN-per-ply array,
+                                  # shared by board replay and engine analysis
+  openings.ts                    # buildOpeningFamilies() — pure aggregation, unit-tested
+  repertoire.ts                    # buildRepertoireIndex(), diffGameAgainstRepertoire() — pure
+  analysis.ts                       # findBlunders(), biggestBlunder(), formatEval() — pure
+  sync.ts                            # syncAllArchives() — orchestrates client + normalize + repo
   chesscom/
-    client.ts                  # fetchArchives, fetchArchiveMonth — serial, UA header, 429 backoff
-    normalize.ts                 # raw Chess.com game -> Game (result bucketing, my_color, moves_san, eco)
+    client.ts                        # fetchArchives, fetchArchiveMonth — serial, UA header, 429 backoff
+    normalize.ts                       # raw Chess.com game -> Game (result bucketing, my_color,
+                                         # moves_san, eco); parsePgnHeaders() exported for reuse
+  stockfish/
+    client.ts                        # StockfishEngine — thin UCI wrapper around the Worker,
+                                       # normalizes evals to White's POV
+    analyze.ts                        # analyzeGame() orchestrates the per-position loop;
+                                        # terminalEval() scores checkmate/stalemate directly
+                                        # instead of asking the engine (see "Engine analysis")
   db/
     index.ts                # barrel: export { getRepository }
     factory.ts                # getRepository() — reads DB_TYPE, dispatches to a backend
     types.ts                   # Kysely DbSchema (snake_case) + GameRepository interface + DbType
     sqlite/
-      connection.ts             # better-sqlite3 + Kysely singleton, globalThis-cached
+      connection.ts             # better-sqlite3 + Kysely singleton, globalThis-cached;
+                                  # `PRAGMA foreign_keys = ON` (needed for repertoire cascade deletes)
       migrate.ts                  # ensureSchema() — DDL, idempotent
       repository.ts                 # SqliteGameRepository — camelCase Game <-> snake_case row mapping
       index.ts                       # getSqliteRepository(), globalThis-cached
+scripts/
+  setup-stockfish.mjs      # postinstall — copies the engine .js/.wasm from node_modules into
+                             # public/stockfish/ (gitignored; Workers need a real URL to load)
 data/
   blitzr.db             # created at runtime, gitignored
+public/
+  stockfish/            # copied by scripts/setup-stockfish.mjs, gitignored (~7MB .wasm)
 ```
 
 ## Key conventions
 
-- **Server Actions** for all DB reads/writes and the sync trigger — no API routes.
+- **Server Actions** for all DB reads/writes and the sync/analysis triggers — no API routes.
 - **Domain types are camelCase** (`lib/types.ts`); **DB columns are snake_case**
   (`lib/db/types.ts`). Each repository implementation maps between them explicitly (see
-  `gameToRow`/`rowToGame` in `lib/db/sqlite/repository.ts`) — never leak snake_case past the
-  repository layer.
+  `gameToRow`/`rowToGame`, `rowToRepertoireNode`, `rowToGameAnalysis` in
+  `lib/db/sqlite/repository.ts`) — never leak snake_case past the repository layer.
 - `better-sqlite3` is excluded from webpack bundling via `serverExternalPackages` in
   `next.config.ts`.
 - **Migrations** run idempotently in `ensureSchema()` (`lib/db/sqlite/migrate.ts`) — extend the
@@ -79,20 +111,28 @@ data/
 - **Games are immutable once synced**: `upsertGames` uses `ON CONFLICT DO NOTHING`, not an
   update — a finished Chess.com game's data doesn't change, so there's nothing to reconcile on
   re-sync.
-- **`moves_san` is a JSON array column, not a moves table** — board replay and (future)
-  repertoire diffing both walk the array in application code; nothing needs to query at ply
-  granularity in SQL. Revisit only if that changes.
+- **`moves_san` and `game_analysis.evals` are JSON array columns, not ply-indexed tables** —
+  board replay, repertoire diffing, and blunder detection all walk the array in application
+  code; nothing needs to query at ply granularity in SQL. Revisit only if that changes.
 - **Chess.com's per-player `result` string** (`win`/`checkmated`/`resigned`/`agreed`/…) is
   bucketed into `win`/`draw`/`loss` by `normalizeResult()` (`lib/chesscom/normalize.ts`) — see
   that file for the exact draw-outcome set.
-- **PGN headers are parsed independently of chess.js** (`parsePgnHeaders` regex in
-  `normalize.ts`) so ECO/ECOUrl are still available even for games whose movetext chess.js
-  can't validate (e.g. bughouse's piece-drop notation). `movesSan`/`finalFen` are `null` for
-  those games; `app/games/[id]/page.tsx` falls back to showing the raw PGN.
-- **Openings aggregation is a pure function**, not a repository method:
-  `buildOpeningFamilies()` (`lib/openings.ts`) takes `Game[]` and groups by 3-char ECO code
-  (family), nesting each family's distinct named lines (from `ecoName`) underneath. Keeps it
-  backend-agnostic and directly unit-testable.
+- **PGN headers are parsed independently of chess.js** (`parsePgnHeaders()`, exported from
+  `normalize.ts`) so header fields (ECO/ECOUrl/Event/Link/…) are available even for games whose
+  movetext chess.js can't validate (e.g. bughouse's piece-drop notation), and reused elsewhere
+  (e.g. `app/games/[id]/page.tsx` checks `Event === "Play vs Coach"` to hide the Chess.com link
+  for bot games — see "Known Chess.com API quirks"). `movesSan`/`finalFen` are `null` for
+  unparseable games; the game page falls back to showing the raw PGN, and the repertoire diff
+  and analysis panel are skipped entirely (both need `movesSan`).
+- **Date formatting is hand-rolled, not `Intl`/`toLocaleString`** (`lib/dates.ts`) — a
+  server-rendered date and a client-hydrated one can disagree if the server and browser locales
+  differ, causing a hydration mismatch. `formatDate`/`formatDateTime` always render `DD/MM/YYYY`
+  regardless of locale.
+- **Openings aggregation and repertoire diffing are pure functions**, not repository methods:
+  `buildOpeningFamilies()` (`lib/openings.ts`) and `diffGameAgainstRepertoire()`
+  (`lib/repertoire.ts`) take plain data in and return plain data out. Keeps them backend-agnostic
+  and directly unit-testable, and mirrors the same pattern `lib/analysis.ts`'s blunder detection
+  uses for Phase 3.
 
 ## Database backend
 
@@ -105,6 +145,10 @@ data/
   once a second SQL backend actually exists; building it for one implementation is premature.
 - SQLite lives at `./data/blitzr.db`, created automatically on first run. To reset, delete the
   file and re-sync.
+- Tables: `games`, `sync_state`, `repertoire_moves` (branching tree per color, `ON DELETE
+CASCADE` from a node to its subtree — requires the `foreign_keys` pragma, see
+  `sqlite/connection.ts`), `game_analysis` (one row per analyzed game, keyed by `game_id`,
+  `ON DELETE CASCADE` if the game is ever removed).
 
 ## Chess.com ingestion
 
@@ -121,23 +165,108 @@ data/
   user's repertoire is a UI/analysis-layer decision, not an ingestion-time one, so nothing
   synced is ever silently lost.
 
+### Known Chess.com API quirks
+
+- **"Play vs Coach" bot games have a broken `url`/PGN `[Link]`** — both point to an unrelated
+  random game, not the actual bot session (verified directly; Chess.com's own site doesn't
+  resolve it correctly either). There's no other identifier in the API response to derive a
+  correct link from. `app/games/[id]/page.tsx` hides the "View on Chess.com" link when the
+  PGN's `[Event]` header is `"Play vs Coach"`, rather than linking somewhere wrong.
+- **"Play Bots" personality games (e.g. named bots like "Santiago") don't appear in the public
+  API at all** — `/games/archives` and the monthly endpoints only return real Live/Daily games
+  and "Play vs Coach" sessions. Chess.com's own site shows a much larger game count because it
+  includes activity the public Published-Data API simply never exposes. Nothing to fix here;
+  there's no data to sync.
+
+## Repertoire (Phase 2)
+
+- A **branching tree per color** (`repertoire_moves`): each node has a `parent_id` (null =
+  root/first move), a `ply`, a `move_san`, and the resulting `fen`. Multiple children at one
+  node are expected — that's how you prepare more than one reply to different opponent tries,
+  or keep more than one system for yourself.
+- **Built interactively** on `/repertoire` (`RepertoireBoard.tsx`): drag or click-to-move on an
+  editable board records moves into the tree. Node `id`s are generated **client-side**
+  (`crypto.randomUUID()`), not by the server — the client adds a move to its own local state
+  and persists it via a Server Action, without waiting on a round trip or reconciling a
+  server-generated id.
+- **Stale-closure trap**: `RepertoireBoard.tsx` mirrors `path`/`nodes` React state into refs
+  (`pathRef`/`nodesRef`), and reads _those_ inside the move-handling logic instead of the
+  render-scope `path`/`nodes` closures. Two moves played faster than a React re-render used to
+  both read the same pre-update snapshot, corrupting the second move's parent/ply. If you touch
+  this component, keep reading from the refs, not the state variables, inside event handlers.
+- **The diff** (`diffGameAgainstRepertoire()`, `lib/repertoire.ts`): walks a game's actual moves
+  against the tree, following whichever child matches. The first ply with no matching child is
+  a **deviation** only if it was the user's own ply _and_ the tree had children there (they had
+  a prepared choice and played something else). If the mismatch happens on the opponent's ply,
+  or the tree simply has no children there yet, that's not the user leaving their own
+  repertoire — it's an unprepared opponent try, or prep that just runs out.
+
+## Engine analysis (Phase 3)
+
+- **Client-side only** — Stockfish runs in a **browser Web Worker**, not on the server. Next.js
+  Server Actions only persist the result (`getGameAnalysis`/`saveGameAnalysis` in
+  `app/actions.ts`); they never run the engine themselves.
+- **Engine asset**: the `stockfish` npm package (Nathan Rugg / Chess.com's WASM build) ships
+  several flavors; Blitzr uses the **"lite single-threaded"** build (~7MB, no COOP/COEP headers
+  required, unlike the multi-threaded builds). `scripts/setup-stockfish.mjs` copies its `.js`
+  and `.wasm` from `node_modules/stockfish/bin/` into `public/stockfish/` on every `pnpm
+install` (a Worker needs a real URL to load, not something bundled through Turbopack) —
+  `public/stockfish/` is gitignored, same reasoning as `data/*.db`.
+- **`StockfishEngine`** (`lib/stockfish/client.ts`) is a thin UCI wrapper: send a command string
+  via `postMessage`, read UCI output lines back via `onmessage`. UCI reports `score cp`/`score
+mate` relative to **whoever is to move** in the given position, not always White — the
+  wrapper normalizes every returned eval to White's perspective so callers never have to think
+  about whose turn it was.
+  - **Movetime is 300ms per position** (`go movetime 300`) — a full game analyzes in roughly
+    (positions × 0.3s), acceptable for on-demand single-game analysis from a button click, not
+    fast enough to run automatically across an entire synced history.
+- **Terminal positions are scored directly, not asked of the engine**
+  (`terminalEval()` in `lib/stockfish/analyze.ts`): a position with zero legal moves
+  (checkmate/stalemate) gives Stockfish nothing to search, and its `score mate 0`-style output
+  for that edge case was observed to be ambiguous in sign — it made the _checkmating move
+  itself_ look like a huge blunder. `terminalEval()` uses chess.js's `isCheckmate()`/
+  `isStalemate()` to assign an unambiguous eval (mate for whoever delivered it, or an exact
+  0.0 draw) instead of querying the engine for a position that has nothing to search.
+- **Blunder detection** (`findBlunders()`, `lib/analysis.ts`): compares each position's eval to
+  the next, converts both to "how good for the player who just moved" (flipping sign for
+  Black), and flags any swing ≥200 centipawns. Mate scores are mapped to a fixed ±100,000 so a
+  swing into or out of a forced mate always crosses the threshold, without needing to compare
+  mate-in-N counts to centipawns directly.
+- **Storage**: `game_analysis` stores one row per game — `evals` is a JSON array of
+  `{cp, mate}`, one per position (same indexing as `movesSan`/`buildPositions()`'s output).
+  Re-analyzing a game overwrites its previous result (`onConflict` upsert), there's no history
+  of past analysis runs.
+- **Scope**: per-game only. There's no bulk "analyze all synced games" job or a cross-game
+  "your most common blunders" aggregate yet — both are natural follow-ups once individual games
+  can be analyzed, but weren't part of what Phase 3 asked for. Showing the engine's suggested
+  best move next to a blunder (for learning what to have played instead) is another one — UCI's
+  `bestmove` line already comes back from every search in `StockfishEngine.evaluate()`
+  (`lib/stockfish/client.ts`), it's just discarded today as the signal to resolve the eval
+  promise; returning it (converted from long algebraic, e.g. `e2e4`, to SAN via chess.js) is the
+  main piece of work.
+
 ## Testing
 
 - **Vitest** — run with `pnpm test` (or `pnpm test:watch`)
-- Tests live in `__tests__/`: `normalize.test.ts` (result bucketing, ECO name parsing, chess.js
-  fallback behavior), `openings.test.ts` (family/line aggregation)
-- Pure functions (`normalizeResult`, `ecoNameFromUrl`, `buildOpeningFamilies`, `ecoFamilyLabel`)
-  are tested directly against fixtures — no DB or network needed for these
+- Tests live in `__tests__/`, one file per `lib/` module they cover: `normalize.test.ts`,
+  `openings.test.ts`, `repertoire.test.ts`, `analysis.test.ts`, `san.test.ts`, `dates.test.ts`,
+  `stockfish-analyze.test.ts` (just `terminalEval()` — the rest of `analyzeGame()` needs a real
+  browser Worker and isn't unit-tested)
+- Pure functions are tested directly against fixtures — no DB, network, or browser needed for
+  any of them
 
 ## Before considering a feature or fix done
 
-Run all three of the following and fix any failures:
+Run all four of the following and fix any failures:
 
 ```bash
 pnpm exec tsc --noEmit
 pnpm lint
 pnpm test
+pnpm build
 ```
+
+(CI — `.github/workflows/ci.yml` — runs the same four on every push to `main` and every PR.)
 
 ## Running
 
@@ -147,3 +276,11 @@ pnpm build && pnpm start -- -p 9877   # production (pm2 manages this)
 ```
 
 See README.md for full pm2 setup instructions.
+
+## Git workflow
+
+- **Never commit directly to `main`.** Every phase (or standalone fix/change) gets its own
+  branch and at least one PR — `git checkout -b <branch>`, commit there, `gh pr create`.
+- **Conventional commits for both commit messages and PR titles** (`feat: …`, `fix: …`,
+  `chore: …`, `style: …`), lowercase subject — enforced on commits by commitlint
+  (`.husky/commit-msg`), and applied by convention (not enforced by tooling) to PR titles too.

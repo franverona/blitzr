@@ -1,6 +1,18 @@
 import { Kysely } from 'kysely'
-import type { DbSchema, GameRepository, GamesTable, RepertoireMovesTable } from '../types'
-import type { ArchiveSyncStatus, Game, RepertoireColor, RepertoireNode } from '../../types'
+import type {
+  DbSchema,
+  GameAnalysisTable,
+  GameRepository,
+  GamesTable,
+  RepertoireMovesTable,
+} from '../types'
+import type {
+  ArchiveSyncStatus,
+  Game,
+  GameAnalysis,
+  RepertoireColor,
+  RepertoireNode,
+} from '../../types'
 import { ensureSchema } from './migrate'
 
 function rowToGame(row: GamesTable): Game {
@@ -70,6 +82,14 @@ function rowToRepertoireNode(row: RepertoireMovesTable): RepertoireNode {
     moveSan: row.move_san,
     fen: row.fen,
     createdAt: row.created_at,
+  }
+}
+
+function rowToGameAnalysis(row: GameAnalysisTable): GameAnalysis {
+  return {
+    gameId: row.game_id,
+    evals: JSON.parse(row.evals),
+    analyzedAt: row.analyzed_at,
   }
 }
 
@@ -182,5 +202,31 @@ export class SqliteGameRepository implements GameRepository {
   async deleteRepertoireNode(id: string): Promise<void> {
     const db = await this.ready()
     await db.deleteFrom('repertoire_moves').where('id', '=', id).execute()
+  }
+
+  async getGameAnalysis(gameId: string): Promise<GameAnalysis | undefined> {
+    const db = await this.ready()
+    const row = await db
+      .selectFrom('game_analysis')
+      .selectAll()
+      .where('game_id', '=', gameId)
+      .executeTakeFirst()
+    return row ? rowToGameAnalysis(row) : undefined
+  }
+
+  async saveGameAnalysis(analysis: GameAnalysis): Promise<void> {
+    const db = await this.ready()
+    const row: GameAnalysisTable = {
+      game_id: analysis.gameId,
+      evals: JSON.stringify(analysis.evals),
+      analyzed_at: analysis.analyzedAt,
+    }
+    await db
+      .insertInto('game_analysis')
+      .values(row)
+      .onConflict((oc) =>
+        oc.column('game_id').doUpdateSet({ evals: row.evals, analyzed_at: row.analyzed_at }),
+      )
+      .execute()
   }
 }

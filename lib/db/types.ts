@@ -1,4 +1,10 @@
-import type { ArchiveSyncStatus, Game, RepertoireColor, RepertoireNode } from '../types'
+import type {
+  ArchiveSyncStatus,
+  Game,
+  GameAnalysis,
+  RepertoireColor,
+  RepertoireNode,
+} from '../types'
 
 export interface GamesTable {
   id: string
@@ -44,10 +50,17 @@ export interface RepertoireMovesTable {
   created_at: string
 }
 
+export interface GameAnalysisTable {
+  game_id: string
+  evals: string
+  analyzed_at: string
+}
+
 export interface DbSchema {
   games: GamesTable
   sync_state: SyncStateTable
   repertoire_moves: RepertoireMovesTable
+  game_analysis: GameAnalysisTable
 }
 
 export type DbType = 'sqlite'
@@ -75,4 +88,8 @@ export interface GameRepository {
   addRepertoireNode(node: RepertoireNode): Promise<void>
   /** Deletes the node and, via ON DELETE CASCADE, its entire subtree. */
   deleteRepertoireNode(id: string): Promise<void>
+
+  getGameAnalysis(gameId: string): Promise<GameAnalysis | undefined>
+  /** Insert or replace — re-analyzing a game overwrites its previous result. */
+  saveGameAnalysis(analysis: GameAnalysis): Promise<void>
 }

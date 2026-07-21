@@ -86,3 +86,31 @@ export interface RepertoireDiffResult {
   /** The move(s) the repertoire had prepared at the deviation point. */
   expectedMoves: string[] | null
 }
+
+/** A single position's engine evaluation, always from White's perspective
+ *  (UCI reports "score cp/mate" from the side-to-move's perspective, so this
+ *  is normalized before storage — see lib/stockfish/client.ts). Exactly one
+ *  of cp/mate is non-null. */
+export interface PositionEval {
+  cp: number | null
+  mate: number | null
+}
+
+export interface GameAnalysis {
+  gameId: string
+  /** One eval per position, same length/indexing as a game's positions
+   *  array (movesSan.length + 1: index 0 is the starting position). */
+  evals: PositionEval[]
+  analyzedAt: string
+}
+
+export interface Blunder {
+  /** 1-indexed ply of the move that caused the swing. */
+  ply: number
+  moveSan: string
+  evalBefore: PositionEval
+  evalAfter: PositionEval
+  /** How much worse the position got for the player who just moved, in
+   *  centipawns (always positive — that's what makes it a blunder). */
+  swingCp: number
+}

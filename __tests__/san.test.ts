@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { splitSanPiece } from '@/lib/san'
+import { plyLabel, splitSanPiece } from '@/lib/san'
 
 describe('splitSanPiece', () => {
   it('splits a leading piece letter off piece moves', () => {
@@ -16,5 +16,17 @@ describe('splitSanPiece', () => {
     expect(splitSanPiece('a6')).toEqual({ piece: null, rest: 'a6' })
     expect(splitSanPiece('O-O')).toEqual({ piece: null, rest: 'O-O' })
     expect(splitSanPiece('O-O-O')).toEqual({ piece: null, rest: 'O-O-O' })
+  })
+})
+
+describe('plyLabel', () => {
+  it('labels white plies with a period', () => {
+    expect(plyLabel(1)).toBe('1.')
+    expect(plyLabel(3)).toBe('2.')
+  })
+
+  it('labels black plies with an ellipsis', () => {
+    expect(plyLabel(2)).toBe('1…')
+    expect(plyLabel(4)).toBe('2…')
   })
 })

@@ -11,3 +11,9 @@ export function splitSanPiece(san: string): { piece: SanPiece | null; rest: stri
   if (!match) return { piece: null, rest: san }
   return { piece: match[1] as SanPiece, rest: match[2] }
 }
+
+/** Formats a 1-indexed ply as a move-number label, e.g. 1 -> "1.", 2 -> "1…". */
+export function plyLabel(ply: number): string {
+  const moveNumber = Math.ceil(ply / 2)
+  return ply % 2 === 1 ? `${moveNumber}.` : `${moveNumber}…`
+}

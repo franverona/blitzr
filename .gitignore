@@ -48,3 +48,6 @@ next-env.d.ts
 /data/*.db
 /data/*.db-shm
 /data/*.db-wal
+
+# Stockfish engine assets — copied from node_modules by scripts/setup-stockfish.js
+/public/stockfish/

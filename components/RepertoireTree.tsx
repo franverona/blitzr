@@ -1,11 +1,7 @@
 import { buildRepertoireIndex } from '@/lib/repertoire'
+import { plyLabel } from '@/lib/san'
 import type { RepertoireNode } from '@/lib/types'
 import { PieceMoveLabel } from './PieceMoveLabel'
-
-function moveNumberLabel(ply: number): string {
-  const moveNumber = Math.ceil(ply / 2)
-  return ply % 2 === 1 ? `${moveNumber}.` : `${moveNumber}…`
-}
 
 export function RepertoireTree({
   nodes,
@@ -69,7 +65,7 @@ function TreeNode({
           isActive ? 'bg-[#769656]/50 font-medium text-white' : 'text-zinc-300 hover:bg-zinc-800'
         }`}
       >
-        <span className="mr-1 text-zinc-500">{moveNumberLabel(node.ply)}</span>
+        <span className="mr-1 text-zinc-500">{plyLabel(node.ply)}</span>
         <PieceMoveLabel san={node.moveSan} color={node.ply % 2 === 1 ? 'white' : 'black'} />
       </button>
       {children.map((child) => (

@@ -1,11 +1,13 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { getGame, listRepertoire } from '../../actions'
+import { getGame, getGameAnalysis, listRepertoire } from '../../actions'
 import { BackButton } from '@/components/BackButton'
 import { Board } from '@/components/Board'
+import { GameAnalysisPanel } from '@/components/GameAnalysisPanel'
 import { parsePgnHeaders } from '@/lib/chesscom/normalize'
 import { formatDateTime } from '@/lib/dates'
 import { diffGameAgainstRepertoire } from '@/lib/repertoire'
+import { plyLabel } from '@/lib/san'
 import type { MyColor, MyResult, RepertoireDiffResult } from '@/lib/types'
 
 function pgnResult(color: MyColor, result: MyResult): string {
@@ -28,6 +30,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
   const diff = game.movesSan
     ? diffGameAgainstRepertoire(game.movesSan, game.myColor, repertoireNodes)
     : null
+  const analysis = (await getGameAnalysis(id)) ?? null
 
   return (
     <div className="flex flex-col gap-4">
@@ -67,12 +70,22 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
         />
       )}
 
+      {game.movesSan && (
+        <GameAnalysisPanel
+          gameId={game.id}
+          initialFen={game.initialFen}
+          movesSan={game.movesSan}
+          initialAnalysis={analysis}
+        />
+      )}
+
       {game.movesSan ? (
         <Board
           initialFen={game.initialFen}
           movesSan={game.movesSan}
           boardOrientation={game.myColor}
           result={pgnResult(game.myColor, game.myResult)}
+          evals={analysis?.evals}
         />
       ) : (
         <div className="flex flex-col gap-2">
@@ -87,11 +100,6 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
       )}
     </div>
   )
-}
-
-function plyLabel(ply: number): string {
-  const moveNumber = Math.ceil(ply / 2)
-  return ply % 2 === 1 ? `${moveNumber}.` : `${moveNumber}…`
 }
 
 function RepertoireDiff({
