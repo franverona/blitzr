@@ -1,8 +1,11 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Chess } from 'chess.js'
 import { Chessboard } from 'react-chessboard'
+import { describeEval, formatEval } from '@/lib/analysis'
+import { buildPositions } from '@/lib/positions'
+import type { PositionEval } from '@/lib/types'
+import { EvalBar } from './EvalBar'
 import { PieceMoveLabel } from './PieceMoveLabel'
 
 export function Board({
@@ -10,21 +13,15 @@ export function Board({
   movesSan,
   boardOrientation,
   result,
+  evals,
 }: {
   initialFen: string
   movesSan: string[]
   boardOrientation: 'white' | 'black'
   result?: string
+  evals?: PositionEval[]
 }) {
-  const positions = useMemo(() => {
-    const chess = new Chess(initialFen)
-    const fens = [chess.fen()]
-    for (const move of movesSan) {
-      chess.move(move)
-      fens.push(chess.fen())
-    }
-    return fens
-  }, [initialFen, movesSan])
+  const positions = useMemo(() => buildPositions(initialFen, movesSan), [initialFen, movesSan])
 
   const lastPly = positions.length - 1
   const [ply, setPly] = useState(lastPly)
@@ -32,19 +29,27 @@ export function Board({
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
       <div className="flex shrink-0 flex-col gap-3">
-        <div className="w-full max-w-[560px] overflow-hidden rounded shadow-lg">
-          <Chessboard
-            options={{
-              position: positions[ply],
-              boardOrientation,
-              allowDragging: false,
-              darkSquareStyle: { backgroundColor: '#769656' },
-              lightSquareStyle: { backgroundColor: '#eeeed2' },
-              darkSquareNotationStyle: { color: '#eeeed2' },
-              lightSquareNotationStyle: { color: '#769656' },
-            }}
-          />
+        <div className="flex items-stretch gap-2">
+          {evals?.[ply] && <EvalBar evaluation={evals[ply]} boardOrientation={boardOrientation} />}
+          <div className="w-full max-w-[560px] overflow-hidden rounded shadow-lg">
+            <Chessboard
+              options={{
+                position: positions[ply],
+                boardOrientation,
+                allowDragging: false,
+                darkSquareStyle: { backgroundColor: '#769656' },
+                lightSquareStyle: { backgroundColor: '#eeeed2' },
+                darkSquareNotationStyle: { color: '#eeeed2' },
+                lightSquareNotationStyle: { color: '#769656' },
+              }}
+            />
+          </div>
         </div>
+        {evals?.[ply] && (
+          <p className="text-xs text-zinc-400">
+            {describeEval(evals[ply])} ({formatEval(evals[ply])})
+          </p>
+        )}
         <div className="flex items-center gap-2 text-sm">
           <NavButton onClick={() => setPly(0)} disabled={ply === 0} label="Start">
             ⏮
