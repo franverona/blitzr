@@ -9,7 +9,7 @@ export function PieceMoveLabel({ san, color }: { san: string; color: 'white' | '
     <span className="inline-flex items-center gap-1">
       <span
         className="inline-flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-sm"
-        style={{ backgroundColor: '#769656' }}
+        style={{ backgroundColor: color === 'black' ? '#eeeed2' : '#769656' }}
       >
         <PieceGlyph piece={piece} color={color} className="h-3.5 w-3.5" />
       </span>

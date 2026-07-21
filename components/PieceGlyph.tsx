@@ -9,7 +9,7 @@ import type { SanPiece } from '@/lib/san'
 // gray — literal black-on-black would be invisible against this app's dark
 // background, the same issue the white/black side badge (KnightIcon) hit
 // earlier. White highlight details are left as-is either way.
-const DARK_GRAY = '#9ca3af'
+const DARK_GRAY = '#000'
 
 export function PieceGlyph({
   piece,

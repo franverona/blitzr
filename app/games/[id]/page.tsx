@@ -1,7 +1,9 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getGame, listRepertoire } from '../../actions'
+import { BackButton } from '@/components/BackButton'
 import { Board } from '@/components/Board'
+import { parsePgnHeaders } from '@/lib/chesscom/normalize'
 import { formatDateTime } from '@/lib/dates'
 import { diffGameAgainstRepertoire } from '@/lib/repertoire'
 import type { MyColor, MyResult, RepertoireDiffResult } from '@/lib/types'
@@ -18,6 +20,10 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
   if (!game) notFound()
 
   const date = formatDateTime(game.endTime)
+  // "Play vs Coach" bot games get a url/PGN Link from Chess.com's API that
+  // never resolves to the actual game — no correct link exists, so don't
+  // show one rather than link somewhere wrong.
+  const isBotGame = parsePgnHeaders(game.pgn).Event === 'Play vs Coach'
   const repertoireNodes = await listRepertoire(game.myColor)
   const diff = game.movesSan
     ? diffGameAgainstRepertoire(game.movesSan, game.myColor, repertoireNodes)
@@ -25,6 +31,8 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
 
   return (
     <div className="flex flex-col gap-4">
+      <BackButton />
+
       <div>
         <h1 className="text-xl font-semibold">
           {game.whiteUsername} vs {game.blackUsername}
@@ -38,14 +46,16 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
             {game.ecoName} ({game.ecoCode ?? 'no ECO'})
           </p>
         )}
-        <a
-          href={game.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-sm text-blue-600 hover:underline dark:text-blue-400"
-        >
-          View on Chess.com
-        </a>
+        {!isBotGame && (
+          <a
+            href={game.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-blue-600 hover:underline dark:text-blue-400"
+          >
+            View on Chess.com
+          </a>
+        )}
       </div>
 
       {diff && (
