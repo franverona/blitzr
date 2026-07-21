@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { saveGameAnalysis } from '@/app/actions'
-import { biggestBlunder, describeEval, findBlunders, formatEval } from '@/lib/analysis'
+import { biggestBlunder, describeEval, findBlunders, formatEval, formatSwing } from '@/lib/analysis'
 import { plyLabel } from '@/lib/san'
 import { analyzeGame } from '@/lib/stockfish/analyze'
 import type { GameAnalysis } from '@/lib/types'
@@ -73,7 +73,7 @@ export function GameAnalysisPanel({
             {blunders.map((b) => (
               <li key={b.ply}>
                 {plyLabel(b.ply)} {b.moveSan}: {formatEval(b.evalBefore)} →{' '}
-                {formatEval(b.evalAfter)} ({(b.swingCp / 100).toFixed(1)} pawns)
+                {formatEval(b.evalAfter)} ({formatSwing(b)})
               </li>
             ))}
           </ul>

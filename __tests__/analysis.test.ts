@@ -5,8 +5,9 @@ import {
   evalBarPercent,
   findBlunders,
   formatEval,
+  formatSwing,
 } from '@/lib/analysis'
-import type { PositionEval } from '@/lib/types'
+import type { Blunder, PositionEval } from '@/lib/types'
 
 function cp(value: number): PositionEval {
   return { cp: value, mate: null }
@@ -133,5 +134,25 @@ describe('describeEval', () => {
   it('describes forced mates for both sides', () => {
     expect(describeEval(mate(4))).toBe('White has a forced mate')
     expect(describeEval(mate(-1))).toBe('Black has a forced mate')
+  })
+})
+
+describe('formatSwing', () => {
+  function blunder(evalBefore: PositionEval, evalAfter: PositionEval, swingCp: number): Blunder {
+    return { ply: 1, moveSan: 'a6', evalBefore, evalAfter, swingCp }
+  }
+
+  it('formats an ordinary swing in real pawns', () => {
+    expect(formatSwing(blunder(cp(370), cp(580), 210))).toBe('2.1 pawns')
+  })
+
+  it('describes a swing into mate in words instead of the internal sentinel value', () => {
+    // The 98_810 swingCp here is evalToCp's internal ±100,000 mate sentinel
+    // at work, not a real pawn count — formatSwing must not display it raw.
+    expect(formatSwing(blunder(cp(1190), mate(7), 98_810))).toBe('white has a forced mate')
+  })
+
+  it('describes a swing out of a mate in words too', () => {
+    expect(formatSwing(blunder(mate(-2), cp(20), 99_980))).toBe('equal position')
   })
 })

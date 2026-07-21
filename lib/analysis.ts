@@ -90,3 +90,17 @@ export function describeEval(evaluation: PositionEval): string {
   if (abs < 700) return `${side} is winning`
   return `${side} is completely winning`
 }
+
+/**
+ * Describes how bad a blunder's swing was, for display next to a blunder
+ * list entry. `swingCp` isn't real pawns when a mate score is involved —
+ * it's measured against the ±100,000 sentinel `evalToCp` uses internally
+ * just to make sure mate swings always cross the blunder threshold — so a
+ * mate transition is described in words instead of a bogus "988.1 pawns".
+ */
+export function formatSwing(blunder: Blunder): string {
+  if (blunder.evalBefore.mate !== null || blunder.evalAfter.mate !== null) {
+    return describeEval(blunder.evalAfter).toLowerCase()
+  }
+  return `${(blunder.swingCp / 100).toFixed(1)} pawns`
+}
