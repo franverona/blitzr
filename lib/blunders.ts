@@ -1,10 +1,10 @@
 import { findBlunders } from './analysis'
 import { formatDate } from './dates'
 import { whiteToMove } from './drill'
-import { detectHangingPiece } from './hangingPiece'
 import { ecoFamilyLabel } from './openings'
 import { buildPositions } from './positions'
 import { describeMove, splitSanPiece } from './san'
+import { detectBlunderReason } from './tactics'
 import type { BlunderGroupStat, BlunderStats, Game, GameAnalysis, WorstBlunder } from './types'
 
 const WORST_LIST_SIZE = 10
@@ -130,7 +130,7 @@ export function buildBlunderStats(
       // the mover is always `game.myColor` — no parity check needed here.
       reason:
         positions && game
-          ? detectHangingPiece(positions[entry.ply - 1], positions[entry.ply], game.myColor)
+          ? detectBlunderReason(positions[entry.ply - 1], positions[entry.ply], game.myColor)
           : null,
     }
   })

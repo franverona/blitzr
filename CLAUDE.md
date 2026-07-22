@@ -96,6 +96,9 @@ lib/
                                    # no engine/analysis dependency
   hangingPiece.ts                # detectHangingPiece()/describeHangingPieceReason() — v1
                                    # "why was this a blunder" heuristic, hanging pieces only
+  tactics.ts                     # detectFork()/describeForkReason(), plus the
+                                   # detectBlunderReason()/describeBlunderReason() combinator
+                                   # every call site uses (see "Fork detection")
   legalMoves.ts                 # legalDestinations(fen, square) — chess.js wrapper, drives the
                                   # dot/ring legal-move highlighting on interactive boards
   positions.ts                  # buildPositions() — walks movesSan into a FEN-per-ply array,
@@ -299,17 +302,21 @@ ply)` rather than a synthetic id, `ON DELETE CASCADE` on `game_id`).
   old instructions text, centered the same way as `GameAnalysisPanel`'s analysis dialog), and
   the White/Black `ColorTab` links — kept together since none of it needs to live anywhere else
   on the page.
-- **Real-time hanging-piece warning**: reuses `detectHangingPiece()` (`lib/hangingPiece.ts`, see
-  "Hanging-piece reasons" under "Engine analysis") live, not just in post-hoc blunder lists.
-  Since every `RepertoireNode` already carries its own `fen`, the warning is a **derived value,
-  not stored state** — `detectHangingPiece(path[path.length - 2]?.fen ?? START_FEN,
-currentNode.fen, whiteToMove(currentNode.ply) ? 'white' : 'black')` in a `useMemo` keyed on
-  `currentNode`/`parentFen` — so it recomputes correctly for whatever position is current across
-  every kind of navigation (a freshly-added move, Start/Back, a sibling branch, a click in
+- **Real-time hanging-piece/fork warning**: reuses `detectBlunderReason()` (`lib/tactics.ts`, see
+  "Hanging-piece reasons" and "Fork detection" under "Engine analysis") live, not just in post-hoc
+  blunder lists. Since every `RepertoireNode` already carries its own `fen`, the warning is a
+  **derived value, not stored state** — `detectBlunderReason(path[path.length - 2]?.fen ??
+START_FEN, currentNode.fen, whiteToMove(currentNode.ply) ? 'white' : 'black')` in a `useMemo`
+  keyed on `currentNode`/`parentFen` — so it recomputes correctly for whatever position is current
+  across every kind of navigation (a freshly-added move, Start/Back, a sibling branch, a click in
   `RepertoireTree`) with no imperative "clear it" call needed anywhere. Not filtered to the
   account's own moves — a repertoire tree also records anticipated opponent replies, and
-  `describeHangingPieceReason()`'s neutral phrasing (no "you"/"they") already reads fine either
-  way, same precedent as `AnalysisDialog` showing a reason for every blunder in a game.
+  `describeBlunderReason()`'s neutral phrasing (no "you"/"they") already reads fine either way,
+  same precedent as `AnalysisDialog` showing a reason for every blunder in a game. The
+  `hangingReason` variable name (here and in `DrillSession.tsx`) was kept as-is when this broadened
+  from hanging-piece-only — it's already documented at length under both names, and the type
+  change (`HangingPieceReason | null` → `BlunderReason | null`) is what actually signals the
+  broadening.
 
 ## Engine analysis (Phase 3)
 
@@ -423,25 +430,45 @@ mate` relative to **whoever is to move** in the given position, not always White
   capturable for free. Built entirely on chess.js's own `board()`/`isAttacked()` (no new
   dependency, no custom attack-generation code). Deliberately narrow: no static-exchange
   evaluation (an attacker outvalued by what it'd capture still counts) and no pin awareness (a
-  pinned "attacker" still counts) — forks/pins/skewers are a future extension, not this pass.
-  Takes the position **before and after** the blunder move (not just after) so one function
-  catches two distinct cases: the piece that just moved walking into an attacked square, and a
-  _different_ piece the mover stopped defending (a discovered hang) — while a piece already
+  pinned "attacker" still counts) — pins/skewers remain a future extension (fork detection is
+  covered next). Takes the position **before and after** the blunder move (not just after) so one
+  function catches two distinct cases: the piece that just moved walking into an attacked square,
+  and a _different_ piece the mover stopped defending (a discovered hang) — while a piece already
   hanging before the move (a standing weakness, not something this move caused) is filtered out
   by comparing the two. When more than one piece is newly hanging at once, the higher-value one
   is reported. This needs both FENs, which `findBlunders()` (`lib/analysis.ts`) doesn't have (it
   only sees evals), so it's a separate function called wherever `positions` is already available
-  rather than a change to `findBlunders`'s signature — `Blunder` is unchanged. Wired into the
-  same three spots `describeMove()` reached: `GameAnalysisPanel.tsx`'s `AnalysisDialog` (every
-  blunder in the game, computed from `whiteToMove(ply)` since the dialog shows both sides) and
-  `GameSummary()` (the account's own biggest blunder, if it was hanging a piece), plus
-  `WorstBlunder.reason` on `lib/blunders.ts`'s aggregate (computed only for the ≤10 entries that
-  survive the slice, same cost-bounding as `moveDescription` — these are already filtered to the
-  account's own moves, so `moverColor` is just `game.myColor`, no extra parity check).
+  rather than a change to `findBlunders`'s signature — `Blunder` is unchanged.
   `PIECE_VALUES` (`lib/material.ts`) and `PIECE_NAMES` (`lib/san.ts`) are exported and reused
   here rather than duplicated. Not every blunder gets a reason — a swing from something other
-  than a simple hung piece (a bad trade, a positional error, a missed tactic this heuristic
-  doesn't cover) correctly shows no reason line rather than a wrong one.
+  than a simple hung piece or fork (a bad trade, a positional error, a missed tactic neither
+  heuristic covers) correctly shows no reason line rather than a wrong one.
+- **Fork detection** (`detectFork()`/`describeForkReason()`, `lib/tactics.ts`, new file rather
+  than growing `hangingPiece.ts` — a genuinely different algorithm): whether the blundering
+  move newly let an _already-present_ opponent piece attack 2+ of the mover's pieces at once.
+  One-ply lookback only, same scope as hanging-piece detection — not a simulation of "could the
+  opponent maneuver a piece into a forking square next move" (a much more common real-game
+  pattern, e.g. a knight jumping to create a fork, but out of scope for v1). Works by forcing the
+  FEN's turn field to whichever color it needs attack squares for — `chess.moves({square,
+verbose: true})` only generates moves for the side to move, so this is what lets the same
+  per-piece query run for a color that isn't actually on move in the given FEN (en passant is
+  cleared in the process, since it's only ever valid for the side actually to move) — then
+  filtering each piece's captures to 2+ targets with at least one non-pawn (two attacked pawns
+  alone, e.g. a rook on an open file, is common and rarely the actual tactical point). A fork
+  existing both before and after the move (not caused by it) is filtered out the same
+  before/after-by-square way hanging-piece detection already does.
+- **`detectBlunderReason()`/`describeBlunderReason()`** (`lib/tactics.ts`) are what every call
+  site actually uses — `detectHangingPiece()` first, falling back to `detectFork()` — rather than
+  each of the (now 7) call sites running both detectors and merging the results itself. Wired into
+  the same spots `describeMove()` reached: `GameAnalysisPanel.tsx`'s `AnalysisDialog` (every
+  blunder in the game, computed from `whiteToMove(ply)` since the dialog shows both sides) and
+  `GameSummary()` (the account's own biggest blunder), plus `WorstBlunder.reason` on
+  `lib/blunders.ts`'s aggregate (computed only for the ≤10 entries that survive the slice, same
+  cost-bounding as `moveDescription` — these are already filtered to the account's own moves, so
+  `moverColor` is just `game.myColor`, no extra parity check) — plus the two real-time boards, see
+  "Real-time hanging-piece/fork warning" under "Repertoire" and "Drilling". `HangingPieceReason`
+  and `ForkReason` (`lib/types.ts`) are both plain-string, chess.js-agnostic shapes unioned into
+  `BlunderReason` — `WorstBlunder.reason`'s type followed that widening.
 
 ## Drilling (Phase 4)
 
@@ -501,13 +528,13 @@ mate` relative to **whoever is to move** in the given position, not always White
   `Board.tsx`) computed by replaying each SAN in `correctMoves` against the prompt's FEN with a
   throwaway chess.js instance — `DrillPrompt.correctMoves` only stores SAN strings, not
   from/to squares, so this is recomputed at reveal time rather than carried in the data model.
-- **Real-time hanging-piece warning**: same `detectHangingPiece()` reused live as on
+- **Real-time hanging-piece/fork warning**: same `detectBlunderReason()` reused live as on
   `RepertoireBoard.tsx` (see "Repertoire"), but **imperative state here, not derived** — unlike
   `RepertoireBoard`'s FEN-per-node path, `DrillSession`'s board always displays `prompt.fen` (it
   never updates to show the position after a move; the "reveal" is via arrows, not a position
   change), so there's no path structure to derive from. `attemptMove` already gets a chess.js
   `Move` back from `chess.move()`, which carries `before`/`after`/`color` directly — exactly what
-  `detectHangingPiece` needs — so `hangingReason` is set right there and cleared in `handleNext()`
+  `detectBlunderReason` needs — so `hangingReason` is set right there and cleared in `handleNext()`
   alongside the other per-card resets (`answeredRef`, `feedback`, `selectedSquare`). Shown for
   both correct and incorrect answers, not gated on `feedback === 'incorrect'` — a deviation
   card's "correct" move is whatever the repertoire has prepared, which isn't guaranteed hang-free
@@ -651,8 +678,8 @@ client'`. Reuses `PieceGlyph` (white variant, on the same green badge `PieceMove
   deep-linking into the exact position wasn't attempted here; landing on the game and stepping
   through the move list is enough for v1.
 - **`WorstBlunder.moveDescription`/`.reason`** (plain-English text via `describeMove()`,
-  `lib/san.ts`, and the hanging-piece check via `detectHangingPiece()`, `lib/hangingPiece.ts` —
-  see "Hanging-piece reasons" under "Engine analysis") are both computed in `buildBlunderStats()`
+  `lib/san.ts`, and the hanging-piece/fork check via `detectBlunderReason()`, `lib/tactics.ts` —
+  see "Hanging-piece reasons"/"Fork detection" under "Engine analysis") are both computed in `buildBlunderStats()`
   only for the ≤10 entries that survive the sort-and-slice to the worst list, not for every
   blunder counted along the way — the intermediate collection type is
   `BlunderCandidate = Omit<WorstBlunder, 'moveDescription' | 'reason'>`, enriched (via a
@@ -676,7 +703,8 @@ client'`. Reuses `PieceGlyph` (white variant, on the same green badge `PieceMove
 - **Vitest** — run with `pnpm test` (or `pnpm test:watch`)
 - Tests live in `__tests__/`, one file per `lib/` module they cover: `normalize.test.ts`,
   `openings.test.ts`, `repertoire.test.ts`, `analysis.test.ts`, `san.test.ts` (including
-  `describeMove()`/`hintPieceName()`), `material.test.ts`, `hangingPiece.test.ts`, `dates.test.ts`, `drill.test.ts`,
+  `describeMove()`/`hintPieceName()`), `material.test.ts`, `hangingPiece.test.ts`, `tactics.test.ts`,
+  `dates.test.ts`, `drill.test.ts`,
   `blunders.test.ts`, `stockfish-analyze.test.ts` (just `terminalEval()`) and `stockfish-client.test.ts` (just
   `parseBestMove()`) — the rest of `evaluate()`/`analyzeGame()`/`analyzeGames()` needs a real
   browser Worker and isn't unit-tested

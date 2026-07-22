@@ -4,10 +4,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Chess } from 'chess.js'
 import { Chessboard } from 'react-chessboard'
 import { submitDrillAnswer } from '@/app/actions'
-import { describeHangingPieceReason, detectHangingPiece } from '@/lib/hangingPiece'
 import { legalDestinations } from '@/lib/legalMoves'
 import { hintPieceName } from '@/lib/san'
-import type { DrillPrompt, HangingPieceReason } from '@/lib/types'
+import { describeBlunderReason, detectBlunderReason } from '@/lib/tactics'
+import type { BlunderReason, DrillPrompt } from '@/lib/types'
 import { LegalMoveSquare } from './LegalMoveSquare'
 import { PlayerAvatar } from './PlayerAvatar'
 
@@ -82,7 +82,7 @@ export function DrillSession({
   const [feedback, setFeedback] = useState<Feedback>(null)
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null)
   const [tally, setTally] = useState({ correct: 0, incorrect: 0 })
-  const [hangingReason, setHangingReason] = useState<HangingPieceReason | null>(null)
+  const [hangingReason, setHangingReason] = useState<BlunderReason | null>(null)
   const [hintLevel, setHintLevel] = useState(0)
   // The board otherwise always shows `prompt.fen` (the position *before* the
   // move) — set only on a correct answer, so the board actually shows your
@@ -228,7 +228,7 @@ export function DrillSession({
     setFeedback(correct ? 'correct' : 'incorrect')
     if (correct) setCommittedFen(move.after)
     setHangingReason(
-      detectHangingPiece(move.before, move.after, move.color === 'w' ? 'white' : 'black'),
+      detectBlunderReason(move.before, move.after, move.color === 'w' ? 'white' : 'black'),
     )
     setTally((t) =>
       correct ? { ...t, correct: t.correct + 1 } : { ...t, incorrect: t.incorrect + 1 },
@@ -350,7 +350,7 @@ export function DrillSession({
           </div>
           {hangingReason && (
             <p className="text-sm text-amber-600 dark:text-amber-400">
-              {describeHangingPieceReason(hangingReason)}
+              {describeBlunderReason(hangingReason)}
             </p>
           )}
         </div>
