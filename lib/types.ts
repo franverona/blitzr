@@ -147,6 +147,22 @@ export interface HangingPieceReason {
   square: string
 }
 
+/** A single opponent piece newly attacking 2+ of the mover's pieces at
+ *  once — see `lib/tactics.ts` for the detector and `describeForkReason()`
+ *  for the plain-English rendering. Same "plain strings, not chess.js
+ *  types" convention as `HangingPieceReason`. */
+export interface ForkReason {
+  kind: 'fork'
+  attackerPiece: string
+  attackerSquare: string
+  targets: { piece: string; square: string }[]
+}
+
+/** Either simple tactical pattern a blunder might be explained by — see
+ *  `detectBlunderReason()`/`describeBlunderReason()` in `lib/tactics.ts`,
+ *  which every call site uses instead of the two detectors individually. */
+export type BlunderReason = HangingPieceReason | ForkReason
+
 export type DrillSourceType = 'deviation' | 'blunder'
 
 /** A spaced-repetition card, keyed by where it came from rather than a
@@ -191,7 +207,7 @@ export interface WorstBlunder {
   /** Why this was a blunder, if a simple tactical pattern explains it — null
    *  when no such pattern was detected (the eval swing might still be real,
    *  just not attributable to this v1 heuristic). See `lib/hangingPiece.ts`. */
-  reason: HangingPieceReason | null
+  reason: BlunderReason | null
 }
 
 export interface BlunderStats {

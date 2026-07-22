@@ -57,6 +57,10 @@ Open [http://localhost:3000](http://localhost:3000), then click **Sync games** t
 Chess.com history. Re-running sync only fetches months that aren't fully synced yet, plus the
 current month.
 
+The games list explains chess jargon as you hover it — the time class column (bullet/blitz/rapid/
+daily) tells you what each one means in minutes-per-player, the same way ECO codes and repertoire
+terms are explained elsewhere in the app.
+
 SQLite is created automatically at `./data/blitzr.db` on first run — no config needed beyond
 your username. To reset, delete the file and re-sync.
 
@@ -145,10 +149,12 @@ opening"), and once a game's analyzed, a one-line "Biggest moment" summary and a
 material count (a plain piece-value tally — no engine needed, works even before you've
 analyzed) show up alongside the board. Blunder lists spell moves out in plain English too
 ("Queen captures pawn on f6, check"), not just algebraic notation — and where a blunder simply
-hangs a piece (left attacked and undefended, capturable for free), a line explains that too
-("This leaves the queen on f6 hanging — it can be captured for free"). That check is
-intentionally simple (no evaluation of unequal trades, no awareness of pins) — it won't catch
-every kind of mistake, so plenty of blunders show no reason at all, just the eval swing.
+hangs a piece (left attacked and undefended, capturable for free) or lets the opponent fork two
+pieces at once, a line explains that too ("This leaves the queen on f6 hanging — it can be
+captured for free" / "This allows a fork — the knight on b5 now attacks the queen on c7 and the
+rook on a7 at once"). Both checks are intentionally simple (no evaluation of unequal trades, no
+pin awareness, no simulation of a future opponent move creating a fork) — they won't catch every
+kind of mistake, so plenty of blunders show no reason at all, just the eval swing.
 
 ### Reading the evaluation
 

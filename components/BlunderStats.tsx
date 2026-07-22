@@ -1,8 +1,8 @@
 import Link from 'next/link'
 import { formatEval, formatSwing } from '@/lib/analysis'
-import { describeHangingPieceReason } from '@/lib/hangingPiece'
 import { plyLabel } from '@/lib/san'
 import type { SanPiece } from '@/lib/san'
+import { describeBlunderReason } from '@/lib/tactics'
 import type { BlunderStats as BlunderStatsData } from '@/lib/types'
 import { BlunderSeverityBadge } from './BlunderSeverityBadge'
 import { EvalHelp } from './EvalHelp'
@@ -113,7 +113,7 @@ export function BlunderStats({ stats }: { stats: BlunderStatsData }) {
               <div className="text-xs text-zinc-500 dark:text-zinc-500">{b.moveDescription}</div>
               {b.reason && (
                 <div className="text-xs text-zinc-500 dark:text-zinc-500">
-                  {describeHangingPieceReason(b.reason)}
+                  {describeBlunderReason(b.reason)}
                 </div>
               )}
             </li>

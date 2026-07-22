@@ -11,10 +11,10 @@ import {
   formatSwing,
 } from '@/lib/analysis'
 import { whiteToMove } from '@/lib/drill'
-import { describeHangingPieceReason, detectHangingPiece } from '@/lib/hangingPiece'
 import { buildPositions } from '@/lib/positions'
 import { describeMove, plyLabel } from '@/lib/san'
 import { analyzeGame } from '@/lib/stockfish/analyze'
+import { describeBlunderReason, detectBlunderReason } from '@/lib/tactics'
 import type { GameAnalysis, MyColor } from '@/lib/types'
 import { BlunderSeverityBadge } from './BlunderSeverityBadge'
 import { EvalHelp } from './EvalHelp'
@@ -140,13 +140,13 @@ export function GameSummary() {
 
   const isMine = whiteToMove(worst.ply) === (myColor === 'white')
   const moverColor = whiteToMove(worst.ply) ? 'white' : 'black'
-  const reason = detectHangingPiece(positions[worst.ply - 1], positions[worst.ply], moverColor)
+  const reason = detectBlunderReason(positions[worst.ply - 1], positions[worst.ply], moverColor)
   const verb = blunderSeverity(worst.swingCp) === 'blunder' ? 'blundered' : 'made a mistake'
   return (
     <p className="text-sm text-zinc-500 dark:text-zinc-400">
       Biggest moment: {isMine ? 'you' : 'your opponent'} {verb} on {plyLabel(worst.ply)}{' '}
       {worst.moveSan} ({describeMove(positions[worst.ply - 1], worst.moveSan)}).{' '}
-      {reason && describeHangingPieceReason(reason)}
+      {reason && describeBlunderReason(reason)}
     </p>
   )
 }
@@ -192,7 +192,7 @@ function AnalysisDialog({ dialogRef }: { dialogRef: React.RefObject<HTMLDialogEl
             <ul className="flex flex-col gap-1.5 text-sm text-zinc-400">
               {blunders.map((b) => {
                 const moverColor = whiteToMove(b.ply) ? 'white' : 'black'
-                const reason = detectHangingPiece(
+                const reason = detectBlunderReason(
                   positions[b.ply - 1],
                   positions[b.ply],
                   moverColor,
@@ -213,9 +213,7 @@ function AnalysisDialog({ dialogRef }: { dialogRef: React.RefObject<HTMLDialogEl
                       {describeMove(positions[b.ply - 1], b.moveSan)}
                     </div>
                     {reason && (
-                      <div className="text-xs text-zinc-500">
-                        {describeHangingPieceReason(reason)}
-                      </div>
+                      <div className="text-xs text-zinc-500">{describeBlunderReason(reason)}</div>
                     )}
                   </li>
                 )
