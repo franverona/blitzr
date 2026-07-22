@@ -3,8 +3,10 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { Chessboard } from 'react-chessboard'
 import { describeEval, formatEval } from '@/lib/analysis'
+import { whiteToMove } from '@/lib/drill'
 import { formatMaterialDiff, materialDiff } from '@/lib/material'
 import { buildPositions } from '@/lib/positions'
+import { describeBetterMove } from '@/lib/tactics'
 import type { PositionEval } from '@/lib/types'
 import { EvalBar } from './EvalBar'
 import { PieceMoveLabel } from './PieceMoveLabel'
@@ -95,6 +97,17 @@ export function BoardNavControls() {
 export function BoardView() {
   const { ply, positions, boardOrientation, result, movesSan, evals, setPly } = useBoardContext()
   const bestMove = evals?.[ply]?.bestMove
+  // positions[ply] is 0-indexed (ply plies already played), while
+  // whiteToMove() takes the 1-indexed "which move number is this" — ply+1
+  // converts between the two conventions.
+  const betterMove = bestMove
+    ? describeBetterMove(
+        positions[ply],
+        movesSan[ply] ?? '',
+        bestMove,
+        whiteToMove(ply + 1) ? 'white' : 'black',
+      )
+    : null
 
   // react-chessboard's slide animation looks great for a single adjacent-ply
   // step (the ◀/▶ buttons, or clicking the very next move in the list) but
@@ -150,6 +163,7 @@ export function BoardView() {
             </>
           )}
         </p>
+        {betterMove && <p className="text-xs text-amber-400">Better was {betterMove}</p>}
       </div>
 
       <MoveList movesSan={movesSan} ply={ply} onSelect={setPly} result={result} />

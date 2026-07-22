@@ -158,7 +158,9 @@ kind of mistake, so plenty of blunders show no reason at all, just the eval swin
 
 Each blunder also names the engine's suggested move instead, with a plain-English description and
 — when the same simple checks explain it — why it's actually better ("better was Nd7 (Knight to
-d7) — saves the rook on h6, which was hanging").
+d7) — saves the rook on h6, which was hanging"). Stepping through the board on a game's page shows
+the same explanation for whatever move you're currently viewing, right alongside the arrow
+pointing at the engine's suggestion.
 
 ### Reading the evaluation
 

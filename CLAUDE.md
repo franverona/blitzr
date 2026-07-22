@@ -217,6 +217,15 @@ prevPly) { ...; setPrevPly(ply) }`), not a ref — the project's eslint config f
   in the header while the board itself renders further down the tree. Needs the same
   `key={game.id}` on `BoardProvider` as `GameAnalysisProvider` does, for the same reason —
   `useState(lastPly)` only reads its initial ply on mount.
+- **`BoardView` explains the suggested-move arrow, not just draws it**: `describeBetterMove()`
+  (`lib/tactics.ts`, see "Explaining the suggested 'better' move" under "Engine analysis") runs
+  for whatever ply is currently being viewed — every ply with a saved analysis, not just
+  blunders — using `movesSan[ply] ?? ''` for the "did this match what was played" comparison
+  (empty string as a sentinel that can never equal a real SAN, needed at the final ply where
+  there's no next `movesSan` entry to compare against) and `whiteToMove(ply + 1)` for the mover's
+  color (`Board.tsx`'s `ply` is 0-indexed — plies already played — while `whiteToMove()` takes the
+  1-indexed move number, so `ply + 1` converts between the two). Rendered as its own line under
+  the existing Material/eval line, only when non-null.
 - **Legal-move highlighting on interactive boards** (`RepertoireBoard.tsx`, `DrillSession.tsx`):
   `legalDestinations(fen, square)` (`lib/legalMoves.ts`) computes destinations for whatever's
   selected, then a `squareRenderer` (react-chessboard v5) wraps every square in
@@ -491,13 +500,14 @@ verbose: true})` only generates moves for the side to move, so this is what lets
   if this file is touched again. `describeBetterMove()` wraps this with the existing
   `describeMove()` for the mechanical "what it does" half and the two functions' shared
   `targetList()` helper (pulled out of `describeForkReason()`, which used to build the same phrase
-  inline) for the multi-target messages — one function both call sites use so the "better was ..."
-  line is formatted identically everywhere, returning `null` up front when there's no suggestion
-  or it matches what was actually played. Wired into `GameAnalysisPanel.tsx`'s `AnalysisDialog`
-  (its own line now, same as `moveDescription`/`reason`, not crammed into the eval-swing row like
-  the old raw-SAN version was) and a new `WorstBlunder.betterMove` field on `lib/blunders.ts`'s
-  aggregate (same ≤10-entry cost-bounding as `moveDescription`/`reason`), rendered on
-  `/blunders` the same way.
+  inline) for the multi-target messages — one function all three call sites use so the "better
+  was ..." line is formatted identically everywhere, returning `null` up front when there's no
+  suggestion or it matches what was actually played. Wired into `GameAnalysisPanel.tsx`'s
+  `AnalysisDialog` (its own line now, same as `moveDescription`/`reason`, not crammed into the
+  eval-swing row like the old raw-SAN version was), a new `WorstBlunder.betterMove` field on
+  `lib/blunders.ts`'s aggregate (same ≤10-entry cost-bounding as `moveDescription`/`reason`,
+  rendered on `/blunders` the same way), and `Board.tsx`'s `BoardView` — every viewed ply with a
+  saved analysis, not just blunders, alongside the existing suggestion arrow.
 
 ## Drilling (Phase 4)
 
