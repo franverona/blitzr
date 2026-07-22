@@ -295,6 +295,17 @@ ply)` rather than a synthetic id, `ON DELETE CASCADE` on `game_id`).
   old instructions text, centered the same way as `GameAnalysisPanel`'s analysis dialog), and
   the White/Black `ColorTab` links — kept together since none of it needs to live anywhere else
   on the page.
+- **Real-time hanging-piece warning**: reuses `detectHangingPiece()` (`lib/hangingPiece.ts`, see
+  "Hanging-piece reasons" under "Engine analysis") live, not just in post-hoc blunder lists.
+  Since every `RepertoireNode` already carries its own `fen`, the warning is a **derived value,
+  not stored state** — `detectHangingPiece(path[path.length - 2]?.fen ?? START_FEN,
+currentNode.fen, whiteToMove(currentNode.ply) ? 'white' : 'black')` in a `useMemo` keyed on
+  `currentNode`/`parentFen` — so it recomputes correctly for whatever position is current across
+  every kind of navigation (a freshly-added move, Start/Back, a sibling branch, a click in
+  `RepertoireTree`) with no imperative "clear it" call needed anywhere. Not filtered to the
+  account's own moves — a repertoire tree also records anticipated opponent replies, and
+  `describeHangingPieceReason()`'s neutral phrasing (no "you"/"they") already reads fine either
+  way, same precedent as `AnalysisDialog` showing a reason for every blunder in a game.
 
 ## Engine analysis (Phase 3)
 
@@ -486,6 +497,18 @@ mate` relative to **whoever is to move** in the given position, not always White
   `Board.tsx`) computed by replaying each SAN in `correctMoves` against the prompt's FEN with a
   throwaway chess.js instance — `DrillPrompt.correctMoves` only stores SAN strings, not
   from/to squares, so this is recomputed at reveal time rather than carried in the data model.
+- **Real-time hanging-piece warning**: same `detectHangingPiece()` reused live as on
+  `RepertoireBoard.tsx` (see "Repertoire"), but **imperative state here, not derived** — unlike
+  `RepertoireBoard`'s FEN-per-node path, `DrillSession`'s board always displays `prompt.fen` (it
+  never updates to show the position after a move; the "reveal" is via arrows, not a position
+  change), so there's no path structure to derive from. `attemptMove` already gets a chess.js
+  `Move` back from `chess.move()`, which carries `before`/`after`/`color` directly — exactly what
+  `detectHangingPiece` needs — so `hangingReason` is set right there and cleared in `handleNext()`
+  alongside the other per-card resets (`answeredRef`, `feedback`, `selectedSquare`). Shown for
+  both correct and incorrect answers, not gated on `feedback === 'incorrect'` — a deviation
+  card's "correct" move is whatever the repertoire has prepared, which isn't guaranteed hang-free
+  either. Purely informational — doesn't touch SM-2 grading, which stays exactly
+  `correctMoves.includes(move.san)` regardless of this.
 
 ## Blunders aggregate (Phase 5)
 
