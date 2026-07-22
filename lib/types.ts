@@ -135,6 +135,18 @@ export interface Blunder {
   swingCp: number
 }
 
+/** A simple tactical explanation for why a move was a blunder — v1 only
+ *  detects a piece left hanging (attacked, undefended, capturable for free).
+ *  Plain strings rather than chess.js's `Square`/`PieceSymbol` types, same
+ *  "types.ts stays chess.js-agnostic" convention `BestMove` follows — see
+ *  `lib/hangingPiece.ts` for the detector and `describeHangingPieceReason()`
+ *  for the plain-English rendering. */
+export interface HangingPieceReason {
+  kind: 'hanging-piece'
+  piece: string
+  square: string
+}
+
 export type DrillSourceType = 'deviation' | 'blunder'
 
 /** A spaced-repetition card, keyed by where it came from rather than a
@@ -176,6 +188,10 @@ export interface WorstBlunder {
   /** Plain-English rendering of `moveSan`, e.g. "Queen captures pawn on f6,
    *  check" — see `describeMove()` in `lib/san.ts`. */
   moveDescription: string
+  /** Why this was a blunder, if a simple tactical pattern explains it — null
+   *  when no such pattern was detected (the eval swing might still be real,
+   *  just not attributable to this v1 heuristic). See `lib/hangingPiece.ts`. */
+  reason: HangingPieceReason | null
 }
 
 export interface BlunderStats {

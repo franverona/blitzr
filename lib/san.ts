@@ -24,7 +24,7 @@ export function plyLabel(ply: number): string {
 // chess.js's Move.piece/.captured/.promotion are lowercase 'pnbrqk' regardless
 // of color — a separate map from SanPiece above, which is uppercase/no-pawn
 // and exists for icon rendering (color+shape), not plain-English names.
-const PIECE_NAMES: Record<PieceSymbol, string> = {
+export const PIECE_NAMES: Record<PieceSymbol, string> = {
   p: 'Pawn',
   n: 'Knight',
   b: 'Bishop',

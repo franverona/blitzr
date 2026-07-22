@@ -142,7 +142,11 @@ Every game's header also links out to the opening's Chess.com page ("Learn more 
 opening"), and once a game's analyzed, a one-line "Biggest moment" summary and a running
 material count (a plain piece-value tally — no engine needed, works even before you've
 analyzed) show up alongside the board. Blunder lists spell moves out in plain English too
-("Queen captures pawn on f6, check"), not just algebraic notation.
+("Queen captures pawn on f6, check"), not just algebraic notation — and where a blunder simply
+hangs a piece (left attacked and undefended, capturable for free), a line explains that too
+("This leaves the queen on f6 hanging — it can be captured for free"). That check is
+intentionally simple (no evaluation of unequal trades, no awareness of pins) — it won't catch
+every kind of mistake, so plenty of blunders show no reason at all, just the eval swing.
 
 ### Reading the evaluation
 
@@ -173,9 +177,10 @@ next time you visit.
 
 On `/blunders`, every blunder from your own moves — across every game that's been analyzed so
 far — is rolled up into one view: grouped by opening, grouped by moved piece, and a top-10
-"worst blunders" list (each entry in plain English, not just algebraic notation) linking back
-to each game. It's scoped to whatever's been analyzed (analyze more games, individually or with
-**Analyze all**, to fill it in further) rather than implying full coverage of your history.
+"worst blunders" list (each entry in plain English, not just algebraic notation, plus a hung-piece
+explanation when that's what happened) linking back to each game. It's scoped to whatever's been
+analyzed (analyze more games, individually or with **Analyze all**, to fill it in further) rather
+than implying full coverage of your history.
 
 ## Data hygiene
 
