@@ -240,15 +240,17 @@ export function DrillSession({
             card {index + 1} of {sessionPrompts.length}
           </p>
         </div>
-        {!feedback && (
-          <button
-            onClick={handleHint}
-            disabled={hintLevel >= 3}
-            className="shrink-0 rounded-md border border-zinc-700 px-3 py-1.5 text-sm font-medium hover:bg-zinc-800 disabled:opacity-40"
-          >
-            💡 Hint
-          </button>
-        )}
+        {/* `invisible` rather than unmounting on `feedback` — keeps the
+            button's box in the layout so this row's height doesn't change
+            between states, which was shifting the board a couple pixels
+            every time a card got answered. */}
+        <button
+          onClick={handleHint}
+          disabled={hintLevel >= 3 || !!feedback}
+          className={`shrink-0 rounded-md border border-zinc-700 px-3 py-1.5 text-sm font-medium hover:bg-zinc-800 disabled:opacity-40 ${feedback ? 'invisible' : ''}`}
+        >
+          💡 Hint
+        </button>
       </div>
 
       <div className="w-full overflow-hidden rounded shadow-lg">
