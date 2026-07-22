@@ -1,7 +1,7 @@
 import { Chess } from 'chess.js'
 import type { PieceSymbol } from 'chess.js'
 
-const PIECE_VALUES: Partial<Record<PieceSymbol, number>> = {
+export const PIECE_VALUES: Partial<Record<PieceSymbol, number>> = {
   p: 1,
   n: 3,
   b: 3,
