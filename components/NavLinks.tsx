@@ -14,7 +14,7 @@ export function NavLinks() {
   const pathname = usePathname()
 
   return (
-    <>
+    <nav className="flex flex-col gap-0.5">
       {LINKS.map((link) => {
         const isActive = pathname === link.href
         return (
@@ -22,16 +22,16 @@ export function NavLinks() {
             key={link.href}
             href={link.href}
             aria-current={isActive ? 'page' : undefined}
-            className={`border-b-2 pb-0.5 text-sm transition-colors ${
+            className={`rounded-md px-3 py-2 text-sm transition-colors ${
               isActive
-                ? 'border-[#769656] font-medium text-white'
-                : 'border-transparent text-zinc-400 hover:text-zinc-100'
+                ? 'bg-[#769656]/20 font-medium text-zinc-900 dark:text-white'
+                : 'text-zinc-500 hover:bg-zinc-200 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100'
             }`}
           >
             {link.label}
           </Link>
         )
       })}
-    </>
+    </nav>
   )
 }

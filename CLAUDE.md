@@ -37,7 +37,7 @@ ahead of time.
 app/
   actions.ts              # all DB reads/writes + the sync/analysis triggers (Server Actions)
   page.tsx                 # games list (paginated), with the Sync button
-  layout.tsx                # nav (Games / Openings / Repertoire)
+  layout.tsx                # left sidebar nav (fixed width) + full-width main content
   globals.css
   games/[id]/page.tsx        # single game — board replay, repertoire diff, analysis panel,
                                # or raw PGN fallback for unparseable games
@@ -46,13 +46,21 @@ app/
   drill/page.tsx                # spaced-repetition drill deck (see "Drilling")
 components/
   GameList.tsx / GameRow.tsx  # games table
-  Board.tsx                    # react-chessboard + ply navigation (client), read-only replay
+  Board.tsx                    # BoardProvider/BoardNavControls/BoardView (client) — read-only
+                                 # replay board, split via Context the same way as
+                                 # GameAnalysisPanel (see "Engine analysis")
   RepertoireBoard.tsx            # react-chessboard in edit mode (drag or click-to-move),
-                                   # builds the repertoire tree as you play moves
+                                   # builds the repertoire tree as you play moves; also owns the
+                                   # page header (color tabs, Start/Back, HelpButton dialog — see
+                                   # "Repertoire")
   RepertoireTree.tsx               # nested move-tree view with branch switching (client)
-  GameAnalysisPanel.tsx              # triggers Stockfish analysis, shows blunders (client)
+  GameAnalysisPanel.tsx              # Stockfish trigger button (header) + results <dialog>
+                                       # (content), sharing state via Context (client)
   DrillSession.tsx                     # one drill card at a time — move input, grading,
                                          # session summary (client, see "Drilling")
+  LegalMoveSquare.tsx                    # squareRenderer helper (dot/ring/yellow-selected
+                                           # highlighting) shared by RepertoireBoard and
+                                           # DrillSession — see "Board interaction" below
   OpeningsTable.tsx                    # family/line aggregation table (client, expand/collapse)
   PieceGlyph.tsx / PieceMoveLabel.tsx    # Wikimedia chess piece SVGs, colored by moving side
   KnightGlyph.tsx / KnightIcon.tsx         # illustrated knight (favicon, White/Black side badge)
@@ -67,6 +75,8 @@ lib/
                               # ArchiveSyncStatus, SyncResult
   dates.ts                   # formatDate/formatDateTime — hand-formatted, not Intl (see below)
   san.ts                       # splitSanPiece, plyLabel — SAN/move-number display helpers
+  legalMoves.ts                 # legalDestinations(fen, square) — chess.js wrapper, drives the
+                                  # dot/ring legal-move highlighting on interactive boards
   positions.ts                  # buildPositions() — walks movesSan into a FEN-per-ply array,
                                   # shared by board replay and engine analysis
   openings.ts                    # buildOpeningFamilies() — pure aggregation, unit-tested
@@ -144,6 +154,42 @@ public/
   (`lib/repertoire.ts`) take plain data in and return plain data out. Keeps them backend-agnostic
   and directly unit-testable, and mirrors the same pattern `lib/analysis.ts`'s blunder detection
   uses for Phase 3.
+- **The left sidebar (`app/layout.tsx`) is a fixed width, `main` has no `max-w-*`/`mx-auto`
+  constraint** — deliberately, so the board and move list can use as much of the viewport as
+  possible (closer to how chess.com lays out a game page) rather than being centered in a
+  narrower column.
+- **`GameAnalysisProvider` needs `key={game.id}`** (`app/games/[id]/page.tsx`) — it seeds its
+  state with `useState(initialAnalysis)`, which only reads that value on mount. Without the key
+  forcing a full remount on every distinct game, navigating from an analyzed game to an
+  unanalyzed one (same component instance, same tree position, just new props from the
+  revalidated Server Component) would keep showing the _previous_ game's analysis state instead
+  of picking up the new `initialAnalysis`. The same trap bit a `<details>` element's open/closed
+  state here before the analysis results moved into a dialog (native DOM state surviving a
+  client-side navigation the same way) — worth remembering if a `<details>` gets reintroduced
+  anywhere game-specific.
+- **`Board.tsx`'s `Chessboard` only animates adjacent-ply steps** — `showAnimations` is
+  `Math.abs(ply - prevPly) === 1`, not a flat `false`. react-chessboard's slide animation looks
+  right for a single move (◀/▶, or clicking the very next move in the list) but tries to animate
+  every piece that differs between two non-adjacent positions at once for a multi-ply jump
+  (⏮/⏭, or clicking a move further down the list), which reads as a flicker/blink rather than a
+  clean cut — so jumps still swap instantly. `prevPly` is tracked with `useState`, updated
+  during render via React's documented "adjust state when a prop changes" pattern (`if (ply !==
+prevPly) { ...; setPrevPly(ply) }`), not a ref — the project's eslint config flags
+  `ref.current` reads during render (`react-hooks/refs`), so a ref-based "previous value"
+  wouldn't lint clean here.
+- **`Board.tsx` is split the same way as `GameAnalysisPanel.tsx`**: `BoardProvider` owns ply
+  state behind a Context, `BoardNavControls` (⏮◀counter▶⏭, in the page header) and `BoardView`
+  (the board + move list) are separate consumers so the nav row can sit next to `AnalyzeButton`
+  in the header while the board itself renders further down the tree. Needs the same
+  `key={game.id}` on `BoardProvider` as `GameAnalysisProvider` does, for the same reason —
+  `useState(lastPly)` only reads its initial ply on mount.
+- **Legal-move highlighting on interactive boards** (`RepertoireBoard.tsx`, `DrillSession.tsx`):
+  `legalDestinations(fen, square)` (`lib/legalMoves.ts`) computes destinations for whatever's
+  selected, then a `squareRenderer` (react-chessboard v5) wraps every square in
+  `LegalMoveSquare.tsx` to draw a dot (quiet move), a ring (capture), or a light-yellow
+  background (the selected square itself). `squareRenderer`, when provided, fully replaces
+  react-chessboard's own `squareStyles` background handling — don't set both on the same board.
+  The read-only replay board (`Board.tsx`) doesn't use this; it has no selectable squares.
 
 ## Database backend
 
@@ -217,7 +263,18 @@ ply)` rather than a synthetic id, `ON DELETE CASCADE` on `game_id`).
   a **deviation** only if it was the user's own ply _and_ the tree had children there (they had
   a prepared choice and played something else). If the mismatch happens on the opponent's ply,
   or the tree simply has no children there yet, that's not the user leaving their own
-  repertoire — it's an unprepared opponent try, or prep that just runs out.
+  repertoire — it's an unprepared opponent try, or prep that just runs out. The game page
+  (`RepertoireDiff` in `app/games/[id]/page.tsx`) only calls out the _deviation_ and
+  _followed-the-whole-game_ cases — running out of prep without ever deviating renders nothing,
+  since "in book for N moves, then left prepared territory" wasn't a useful enough signal to
+  show on every game to be worth the permanent line (`diff.inBookPlies` is still there if you
+  want it, just not surfaced here).
+- **`RepertoireBoard.tsx` owns the whole page header**, not just the board — `app/repertoire/page.tsx`
+  is just a thin Server Component fetching nodes and rendering it. The header row holds the
+  `<h1>`, Start/Back buttons, a `HelpButton` (circular "?" opening a native `<dialog>` with the
+  old instructions text, centered the same way as `GameAnalysisPanel`'s analysis dialog), and
+  the White/Black `ColorTab` links — kept together since none of it needs to live anywhere else
+  on the page.
 
 ## Engine analysis (Phase 3)
 
@@ -269,6 +326,15 @@ mate` relative to **whoever is to move** in the given position, not always White
   position, via react-chessboard's `options.arrows`), and as SAN text next to each blunder in
   `GameAnalysisPanel.tsx` (using `evalBefore.bestMove.san`, the recommendation from right before
   the blunder was played). `null` for terminal positions (no legal moves).
+- **The Analyze/Re-analyze button lives in the game header (top-right); the results live in a
+  native `<dialog>`** (`GameAnalysisPanel.tsx`), opened via a "View analysis" link next to the
+  button. `GameAnalysisProvider` owns all the client state (analysis/progress/error) and passes
+  it through a Context, since the button and the dialog's trigger aren't adjacent in the tree —
+  `AnalyzeButton` renders both the trigger button and the `<dialog>` together (so one ref can
+  call `showModal()`/`close()`), while `app/games/[id]/page.tsx` places `AnalyzeButton` next to
+  the header and doesn't otherwise reach into the analysis internals. The dialog is centered
+  with `fixed` + `inset-1/2` + negative-translate, not the browser's default `<dialog>` centering
+  — the project's CSS reset strips the default margin `<dialog>` relies on for that.
 - **Scope**: per-game only. There's no bulk "analyze all synced games" job or a cross-game
   "your most common blunders" aggregate yet — both are natural follow-ups once individual games
   can be analyzed, but weren't part of what Phase 3 asked for.

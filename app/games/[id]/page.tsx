@@ -1,15 +1,15 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getGame, getGameAnalysis, listRepertoire } from '../../actions'
-import { Board } from '@/components/Board'
-import { GameAnalysisPanel } from '@/components/GameAnalysisPanel'
+import { BoardNavControls, BoardProvider, BoardView } from '@/components/Board'
+import { AnalyzeButton, GameAnalysisProvider } from '@/components/GameAnalysisPanel'
 import { PlayerAvatar } from '@/components/PlayerAvatar'
 import { fetchPlayerAvatar } from '@/lib/chesscom/client'
 import { parsePgnHeaders } from '@/lib/chesscom/normalize'
 import { formatDateTime } from '@/lib/dates'
 import { diffGameAgainstRepertoire } from '@/lib/repertoire'
 import { plyLabel } from '@/lib/san'
-import type { MyColor, MyResult, RepertoireDiffResult } from '@/lib/types'
+import type { Game, MyColor, MyResult, RepertoireDiffResult } from '@/lib/types'
 
 function pgnResult(color: MyColor, result: MyResult): string {
   if (result === 'draw') return '1/2-1/2'
@@ -22,7 +22,6 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
   const game = await getGame(id)
   if (!game) notFound()
 
-  const date = formatDateTime(game.endTime)
   // "Play vs Coach" bot games get a url/PGN Link from Chess.com's API that
   // never resolves to the actual game — no correct link exists, so don't
   // show one rather than link somewhere wrong.
@@ -37,35 +36,19 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
     fetchPlayerAvatar(game.blackUsername),
   ])
 
-  return (
+  const body = (
     <div className="flex flex-col gap-4">
-      <div>
-        <h1 className="flex items-center gap-2 text-xl font-semibold">
-          <PlayerAvatar username={game.whiteUsername} avatarUrl={whiteAvatar} />
-          {game.whiteUsername}
-          <span className="text-sm font-normal text-zinc-500">vs</span>
-          <PlayerAvatar username={game.blackUsername} avatarUrl={blackAvatar} />
-          {game.blackUsername}
-        </h1>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">
-          {date} · {game.timeClass} · playing {game.myColor} ·{' '}
-          <span className="capitalize">{game.myResult}</span>
-        </p>
-        {game.ecoName && (
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            {game.ecoName} ({game.ecoCode ?? 'no ECO'})
-          </p>
-        )}
-        {!isBotGame && (
-          <a
-            href={game.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-blue-600 hover:underline dark:text-blue-400"
-          >
-            View on Chess.com
-          </a>
-        )}
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <GameHeader
+          game={game}
+          isBotGame={isBotGame}
+          whiteAvatar={whiteAvatar}
+          blackAvatar={blackAvatar}
+        />
+        <div className="flex items-center gap-4">
+          {game.movesSan && <BoardNavControls />}
+          {game.movesSan && <AnalyzeButton />}
+        </div>
       </div>
 
       {diff && (
@@ -77,23 +60,8 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
         />
       )}
 
-      {game.movesSan && (
-        <GameAnalysisPanel
-          gameId={game.id}
-          initialFen={game.initialFen}
-          movesSan={game.movesSan}
-          initialAnalysis={analysis}
-        />
-      )}
-
       {game.movesSan ? (
-        <Board
-          initialFen={game.initialFen}
-          movesSan={game.movesSan}
-          boardOrientation={game.myColor}
-          result={pgnResult(game.myColor, game.myResult)}
-          evals={analysis?.evals}
-        />
+        <BoardView />
       ) : (
         <div className="flex flex-col gap-2">
           <p className="text-sm text-amber-600 dark:text-amber-400">
@@ -104,6 +72,72 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
             {game.pgn}
           </pre>
         </div>
+      )}
+    </div>
+  )
+
+  if (!game.movesSan) return body
+
+  return (
+    <BoardProvider
+      key={game.id}
+      initialFen={game.initialFen}
+      movesSan={game.movesSan}
+      boardOrientation={game.myColor}
+      result={pgnResult(game.myColor, game.myResult)}
+      evals={analysis?.evals}
+    >
+      <GameAnalysisProvider
+        key={game.id}
+        gameId={game.id}
+        initialFen={game.initialFen}
+        movesSan={game.movesSan}
+        initialAnalysis={analysis}
+      >
+        {body}
+      </GameAnalysisProvider>
+    </BoardProvider>
+  )
+}
+
+function GameHeader({
+  game,
+  isBotGame,
+  whiteAvatar,
+  blackAvatar,
+}: {
+  game: Game
+  isBotGame: boolean
+  whiteAvatar: string | null
+  blackAvatar: string | null
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <h1 className="flex items-center gap-2 text-xl font-semibold">
+        <PlayerAvatar username={game.whiteUsername} avatarUrl={whiteAvatar} />
+        {game.whiteUsername}
+        <span className="text-sm font-normal text-zinc-500">vs</span>
+        <PlayerAvatar username={game.blackUsername} avatarUrl={blackAvatar} />
+        {game.blackUsername}
+      </h1>
+      <p className="text-xs text-zinc-500 dark:text-zinc-400">
+        {formatDateTime(game.endTime)} · {game.timeClass} · playing {game.myColor} ·{' '}
+        <span className="capitalize">{game.myResult}</span>
+      </p>
+      {game.ecoName && (
+        <p className="text-xs text-zinc-500 dark:text-zinc-400">
+          {game.ecoName} ({game.ecoCode ?? 'no ECO'})
+        </p>
+      )}
+      {!isBotGame && (
+        <a
+          href={game.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs text-blue-600 hover:underline dark:text-blue-400"
+        >
+          View on Chess.com
+        </a>
       )}
     </div>
   )
@@ -155,10 +189,9 @@ function RepertoireDiff({
     )
   }
 
-  return (
-    <p className="text-sm text-zinc-500 dark:text-zinc-400">
-      In book for {diff.inBookPlies} {diff.inBookPlies === 1 ? 'move' : 'moves'}, then left prepared
-      territory.
-    </p>
-  )
+  // Ran out of prepared prep without ever playing a move the repertoire
+  // didn't cover — not a deviation, and not worth a permanent line on every
+  // game page. `diff.inBookPlies` is still visible on the game if you care
+  // (e.g. via the repertoire tree itself), just not called out here.
+  return null
 }
