@@ -281,6 +281,12 @@ function HelpButton() {
             </button>
           </div>
           <p className="text-sm text-zinc-400">
+            A repertoire is the set of opening moves you&rsquo;ve decided to play and practice, one
+            tree per color. Building it here means picking the move(s) you want to play (or expect
+            from the opponent) at each position you&rsquo;ll actually reach — so your games and
+            drills check you against <em>your own plan</em>, not chess theory in general.
+          </p>
+          <p className="text-sm text-zinc-400">
             Drag, or click a piece then a destination, to record your prep. Playing a move
             that&rsquo;s already in the tree just navigates into it; a new move adds a branch.
             Multiple branches from the same position are fine — that&rsquo;s how you prepare for

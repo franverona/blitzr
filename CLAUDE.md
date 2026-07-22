@@ -63,6 +63,9 @@ components/
                                          # session summary (client, see "Drilling")
   BlunderStats.tsx                       # by-opening table, by-piece chips, worst-blunders list
                                            # (server component, see "Blunders aggregate")
+  EvalHelp.tsx                             # "how to read this" glossary for eval/blunder/swing
+                                             # notation — shared by GameAnalysisPanel and
+                                             # BlunderStats so it's written once
   LegalMoveSquare.tsx                    # squareRenderer helper (dot/ring/yellow-selected
                                            # highlighting) shared by RepertoireBoard and
                                            # DrillSession — see "Board interaction" below
@@ -431,18 +434,32 @@ mate` relative to **whoever is to move** in the given position, not always White
   is `number | null` — `null` when every blunder in that group was a mate-swing, rendered as
   `—` in `BlunderStats.tsx`. The "worst blunders" list doesn't have this problem since it already
   goes through `formatSwing()` (`lib/analysis.ts`), which describes a mate swing in words instead
-  of a raw number — same helper `GameAnalysisPanel.tsx`'s blunder list already uses.
+  of a raw number.
 - **`components/BlunderStats.tsx` is a plain Server Component**, not a client component — unlike
   `OpeningsTable.tsx` it has no expand/collapse state, so there's nothing that needs `'use
-client'`. It uses the light/dark themed table styling `OpeningsTable.tsx` established (this page
-  sits next to Games/Openings in the nav, which support light mode, unlike the board-heavy
-  screens that went dark-only during the UI polish pass) and reuses `PieceGlyph` (white variant,
-  on the same green badge `PieceMoveLabel.tsx` uses) for the by-piece chips — there's no pawn
-  glyph asset, so the `'pawn'`/`'castle'` buckets render as plain text labels instead.
+client'`. Reuses `PieceGlyph` (white variant, on the same green badge `PieceMoveLabel.tsx` uses)
+  for the by-piece chips — there's no pawn glyph asset, so the `'pawn'`/`'castle'` buckets render
+  as plain text labels instead. Note: the light-mode Tailwind classes throughout this file (and
+  `OpeningsTable.tsx`) are vestigial — `app/globals.css` forces dark mode unconditionally
+  (`className="dark"` in `app/layout.tsx`), so `dark:` variants always win regardless of what the
+  base class says. Harmless, just don't read the light-mode classes as meaning this page actually
+  supports a light theme.
 - **Each worst-blunder entry links to `/games/{gameId}`**, not to the specific ply — there's no
   URL-driven initial ply on the game page (`BoardProvider` seeds its ply from `useState`), so
   deep-linking into the exact position wasn't attempted here; landing on the game and stepping
   through the move list is enough for v1.
+- **`EvalHelp` (`components/EvalHelp.tsx`) is a shared "how to read this" glossary**, extracted
+  from `GameAnalysisPanel.tsx` (where it originally lived as a private function) so `/blunders`
+  could reuse the same eval/mate/blunder notation explanations instead of duplicating them —
+  rendered at the bottom of both `AnalysisDialog` and `BlunderStats.tsx`, same `<details>`
+  placement convention in both. Picked up one addition here: a "Swing" bullet defining what
+  "avg swing" means, since that term only appears on the Blunders page and wasn't explained
+  anywhere before. This was written for a beginner-facing pass — the user found the Blunders
+  and Repertoire screens too jargon-heavy, so terminology got explained in place rather than the
+  features being simplified/removed (see also the `<abbr title="...">` tooltips on ECO codes and
+  "in book"/"deviated" in `app/games/[id]/page.tsx`, and the expanded intro paragraph in
+  `RepertoireBoard.tsx`'s `HelpButton` dialog explaining what a repertoire _is_, not just how to
+  build one).
 
 ## Testing
 

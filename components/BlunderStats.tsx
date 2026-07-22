@@ -3,6 +3,7 @@ import { formatEval, formatSwing } from '@/lib/analysis'
 import { plyLabel } from '@/lib/san'
 import type { SanPiece } from '@/lib/san'
 import type { BlunderStats as BlunderStatsData } from '@/lib/types'
+import { EvalHelp } from './EvalHelp'
 import { PieceGlyph } from './PieceGlyph'
 
 const PIECE_KEYS: ReadonlySet<string> = new Set(['K', 'Q', 'R', 'B', 'N'])
@@ -38,7 +39,11 @@ export function BlunderStats({ stats }: { stats: BlunderStatsData }) {
               <tr>
                 <th className="px-3 py-2">Opening</th>
                 <th className="px-3 py-2">Blunders</th>
-                <th className="px-3 py-2">Avg swing</th>
+                <th className="px-3 py-2">
+                  <abbr title="How many pawns worse the position got, on average, across these blunders">
+                    Avg swing
+                  </abbr>
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
@@ -104,6 +109,8 @@ export function BlunderStats({ stats }: { stats: BlunderStatsData }) {
           ))}
         </ul>
       </section>
+
+      <EvalHelp />
     </div>
   )
 }
