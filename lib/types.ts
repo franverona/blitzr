@@ -143,6 +143,37 @@ export interface DrillCard {
   createdAt: string
 }
 
+export interface BlunderGroupStat {
+  key: string
+  label: string
+  count: number
+  /** Average swing in centipawns, over blunders with a real cp swing only —
+   *  null if every blunder in the group was a swing into/out of a forced
+   *  mate (not comparable to a pawn count, see lib/analysis.ts's evalToCp). */
+  avgSwingCp: number | null
+}
+
+/** One own blunder, for the cross-game "worst blunders" list — carries
+ *  enough to both display and link back to its source game. */
+export interface WorstBlunder {
+  gameId: string
+  gameLabel: string
+  ply: number
+  moveSan: string
+  swingCp: number
+  evalBefore: PositionEval
+  evalAfter: PositionEval
+}
+
+export interface BlunderStats {
+  totalGames: number
+  analyzedGames: number
+  totalBlunders: number
+  byOpening: BlunderGroupStat[]
+  byPiece: BlunderGroupStat[]
+  worst: WorstBlunder[]
+}
+
 /** A `DrillCard` hydrated into something a drill session can actually show. */
 export interface DrillPrompt {
   gameId: string
