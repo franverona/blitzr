@@ -1,0 +1,120 @@
+import { findBlunders } from './analysis'
+import { formatDate } from './dates'
+import { whiteToMove } from './drill'
+import { ecoFamilyLabel } from './openings'
+import { splitSanPiece } from './san'
+import type { BlunderGroupStat, BlunderStats, Game, GameAnalysis, WorstBlunder } from './types'
+
+const WORST_LIST_SIZE = 10
+
+interface GroupAcc {
+  label: string
+  count: number
+  // Only real centipawn swings contribute here — a swing into/out of a mate
+  // uses evalToCp's internal ±100,000 sentinel (see lib/analysis.ts), which
+  // would blow up an average if mixed in with genuine pawn values. Tracked
+  // separately from `count` so the average is still over a meaningful unit.
+  swingSum: number
+  swingCount: number
+}
+
+function accumulate(
+  groups: Map<string, GroupAcc>,
+  key: string,
+  label: string,
+  swingCp: number,
+  isMateSwing: boolean,
+) {
+  const existing = groups.get(key) ?? { label, count: 0, swingSum: 0, swingCount: 0 }
+  existing.count++
+  if (!isMateSwing) {
+    existing.swingSum += swingCp
+    existing.swingCount++
+  }
+  groups.set(key, existing)
+}
+
+function toGroupStats(groups: Map<string, GroupAcc>): BlunderGroupStat[] {
+  return Array.from(groups.entries())
+    .map(([key, { label, count, swingSum, swingCount }]) => ({
+      key,
+      label,
+      count,
+      avgSwingCp: swingCount > 0 ? swingSum / swingCount : null,
+    }))
+    .sort((a, b) => b.count - a.count)
+}
+
+/** The piece that moved, for grouping blunders by piece — pawn moves and
+ *  castling have no leading piece letter in SAN, so they get their own
+ *  buckets rather than falling through as "unknown". */
+function pieceKey(moveSan: string): { key: string; label: string } {
+  if (moveSan.startsWith('O-O')) return { key: 'castle', label: 'Castle' }
+  const { piece } = splitSanPiece(moveSan)
+  if (!piece) return { key: 'pawn', label: 'Pawn' }
+  const labels = { K: 'King', Q: 'Queen', R: 'Rook', B: 'Bishop', N: 'Knight' }
+  return { key: piece, label: labels[piece] }
+}
+
+/**
+ * Cross-game blunder aggregate, scoped to whatever games already have a
+ * saved Stockfish analysis (there's no bulk "analyze everything" job) —
+ * mirrors `buildOpeningFamilies` (`lib/openings.ts`): a pure function over
+ * already-stored data, no new persistence.
+ */
+export function buildBlunderStats(
+  games: Game[],
+  analysesByGameId: Map<string, GameAnalysis>,
+): BlunderStats {
+  const byOpening = new Map<string, GroupAcc>()
+  const byPiece = new Map<string, GroupAcc>()
+  const worst: WorstBlunder[] = []
+  let analyzedGames = 0
+  let totalBlunders = 0
+
+  for (const game of games) {
+    if (!game.movesSan) continue
+    const analysis = analysesByGameId.get(game.id)
+    if (!analysis) continue
+    analyzedGames++
+
+    const opponent = game.myColor === 'white' ? game.blackUsername : game.whiteUsername
+    const gameLabel = `vs ${opponent} · ${formatDate(game.endTime)}`
+
+    for (const blunder of findBlunders(analysis.evals, game.movesSan)) {
+      const isMine = whiteToMove(blunder.ply) === (game.myColor === 'white')
+      if (!isMine) continue
+      totalBlunders++
+
+      const isMateSwing = blunder.evalBefore.mate !== null || blunder.evalAfter.mate !== null
+
+      const ecoKey = game.ecoCode ?? 'unknown'
+      const ecoLabel = game.ecoName ? ecoFamilyLabel(game.ecoName) : 'Unknown opening'
+      accumulate(byOpening, ecoKey, ecoLabel, blunder.swingCp, isMateSwing)
+
+      const { key, label } = pieceKey(blunder.moveSan)
+      accumulate(byPiece, key, label, blunder.swingCp, isMateSwing)
+
+      worst.push({
+        gameId: game.id,
+        gameLabel,
+        ply: blunder.ply,
+        moveSan: blunder.moveSan,
+        swingCp: blunder.swingCp,
+        evalBefore: blunder.evalBefore,
+        evalAfter: blunder.evalAfter,
+      })
+    }
+  }
+
+  worst.sort((a, b) => b.swingCp - a.swingCp)
+
+  return {
+    totalGames: games.length,
+    analyzedGames,
+    totalBlunders,
+    byOpening: toGroupStats(byOpening),
+    byPiece: toGroupStats(byPiece),
+    worst: worst.slice(0, WORST_LIST_SIZE),
+  }
+}

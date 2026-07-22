@@ -8,6 +8,7 @@ const LINKS = [
   { href: '/openings', label: 'Openings' },
   { href: '/repertoire', label: 'Repertoire' },
   { href: '/drill', label: 'Drill' },
+  { href: '/blunders', label: 'Blunders' },
 ]
 
 export function NavLinks() {

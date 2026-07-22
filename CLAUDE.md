@@ -14,9 +14,11 @@ ahead of time.
 - **Phase 2 (done)**: user-defined repertoire (opening trees per color), diff each game against
   it to flag the first deviating move.
 - **Phase 3 (done)**: Stockfish (WASM, in a Web Worker) analysis — per-game blunders and biggest
-  eval drop. A cross-game "recurring blunders" aggregate is a natural follow-up, not yet built.
+  eval drop.
 - **Phase 4 (done)**: spaced-repetition drilling (`/drill`) of repertoire deviations and your own
   blunders, via a card per drillable position scheduled with SM-2.
+- **Phase 5 (done)**: cross-game "recurring blunders" aggregate (`/blunders`), grouped by opening
+  and by piece, scoped to whatever games already have a saved analysis.
 
 ## Stack
 
@@ -44,6 +46,7 @@ app/
   openings/page.tsx           # ECO family aggregation, expandable to named lines
   repertoire/page.tsx          # repertoire tree builder (White/Black tabs)
   drill/page.tsx                # spaced-repetition drill deck (see "Drilling")
+  blunders/page.tsx              # cross-game blunder aggregate (see "Blunders aggregate")
 components/
   GameList.tsx / GameRow.tsx  # games table
   Board.tsx                    # BoardProvider/BoardNavControls/BoardView (client) — read-only
@@ -58,6 +61,8 @@ components/
                                        # (content), sharing state via Context (client)
   DrillSession.tsx                     # one drill card at a time — move input, grading,
                                          # session summary (client, see "Drilling")
+  BlunderStats.tsx                       # by-opening table, by-piece chips, worst-blunders list
+                                           # (server component, see "Blunders aggregate")
   LegalMoveSquare.tsx                    # squareRenderer helper (dot/ring/yellow-selected
                                            # highlighting) shared by RepertoireBoard and
                                            # DrillSession — see "Board interaction" below
@@ -84,6 +89,8 @@ lib/
   analysis.ts                       # findBlunders(), biggestBlunder(), formatEval() — pure
   drill.ts                           # candidate-finding, card hydration, SM-2 scheduling — pure
                                        # (see "Drilling")
+  blunders.ts                          # buildBlunderStats() — pure aggregation, unit-tested
+                                         # (see "Blunders aggregate")
   sync.ts                            # syncAllArchives() — orchestrates client + normalize + repo
   chesscom/
     client.ts                        # fetchArchives, fetchArchiveMonth — serial, UA header, 429 backoff
@@ -398,14 +405,53 @@ mate` relative to **whoever is to move** in the given position, not always White
   throwaway chess.js instance — `DrillPrompt.correctMoves` only stores SAN strings, not
   from/to squares, so this is recomputed at reveal time rather than carried in the data model.
 
+## Blunders aggregate (Phase 5)
+
+- **Pure aggregation over already-stored data**, no new table — mirrors `buildOpeningFamilies()`
+  (`lib/openings.ts`): `buildBlunderStats()` (`lib/blunders.ts`) takes every game plus a
+  `gameId -> GameAnalysis` map and returns counts/groupings, computed fresh on every `/blunders`
+  load via `getBlunderStats()` (`app/actions.ts`), which just calls the existing
+  `listAllGames()`/`listAllGameAnalyses()` repository methods (both already existed for the
+  Phase 4 drill deck sync — no new repository work needed here).
+- **Scoped to analyzed games only** — there's no bulk "analyze everything" job, so this only
+  covers whatever's been analyzed one game at a time from a game's page. The page's summary line
+  ("N blunders across M of T synced games analyzed") makes that scope explicit rather than
+  implying full coverage.
+- **Own moves only**, same filter as the drill deck's blunder cards: `whiteToMove()` (exported
+  from `lib/drill.ts` rather than duplicated) checks the blundering ply was actually played by
+  the account's own color, so an opponent's mistake in an analyzed game never counts.
+- **Grouped two ways**: by opening family (keyed by `ecoCode`, labeled via the existing
+  `ecoFamilyLabel()` from `lib/openings.ts` — the same family grouping Openings already uses) and
+  by moved piece (keyed off `splitSanPiece()` from `lib/san.ts`, with `'pawn'`/`'castle'` buckets
+  for moves that have no leading piece letter — pawn moves and `O-O`/`O-O-O`).
+- **`avgSwingCp` excludes mate-sentinel swings, but they still count toward the group's blunder
+  total** — a swing into/out of a forced mate is measured against `evalToCp`'s internal
+  ±100,000 sentinel (`lib/analysis.ts`), not real centipawns; averaging that in with genuine
+  swings produced a nonsense "985 pawns" figure during manual testing. `BlunderGroupStat.avgSwingCp`
+  is `number | null` — `null` when every blunder in that group was a mate-swing, rendered as
+  `—` in `BlunderStats.tsx`. The "worst blunders" list doesn't have this problem since it already
+  goes through `formatSwing()` (`lib/analysis.ts`), which describes a mate swing in words instead
+  of a raw number — same helper `GameAnalysisPanel.tsx`'s blunder list already uses.
+- **`components/BlunderStats.tsx` is a plain Server Component**, not a client component — unlike
+  `OpeningsTable.tsx` it has no expand/collapse state, so there's nothing that needs `'use
+client'`. It uses the light/dark themed table styling `OpeningsTable.tsx` established (this page
+  sits next to Games/Openings in the nav, which support light mode, unlike the board-heavy
+  screens that went dark-only during the UI polish pass) and reuses `PieceGlyph` (white variant,
+  on the same green badge `PieceMoveLabel.tsx` uses) for the by-piece chips — there's no pawn
+  glyph asset, so the `'pawn'`/`'castle'` buckets render as plain text labels instead.
+- **Each worst-blunder entry links to `/games/{gameId}`**, not to the specific ply — there's no
+  URL-driven initial ply on the game page (`BoardProvider` seeds its ply from `useState`), so
+  deep-linking into the exact position wasn't attempted here; landing on the game and stepping
+  through the move list is enough for v1.
+
 ## Testing
 
 - **Vitest** — run with `pnpm test` (or `pnpm test:watch`)
 - Tests live in `__tests__/`, one file per `lib/` module they cover: `normalize.test.ts`,
   `openings.test.ts`, `repertoire.test.ts`, `analysis.test.ts`, `san.test.ts`, `dates.test.ts`,
-  `drill.test.ts`, `stockfish-analyze.test.ts` (just `terminalEval()`) and `stockfish-client.test.ts`
-  (just `parseBestMove()`) — the rest of `evaluate()`/`analyzeGame()` needs a real browser Worker
-  and isn't unit-tested
+  `drill.test.ts`, `blunders.test.ts`, `stockfish-analyze.test.ts` (just `terminalEval()`) and
+  `stockfish-client.test.ts` (just `parseBestMove()`) — the rest of `evaluate()`/`analyzeGame()`
+  needs a real browser Worker and isn't unit-tested
 - Pure functions are tested directly against fixtures — no DB, network, or browser needed for
   any of them
 

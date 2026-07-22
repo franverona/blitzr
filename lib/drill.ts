@@ -18,7 +18,9 @@ export interface DrillCandidate {
   ply: number
 }
 
-function whiteToMove(ply: number): boolean {
+/** Whether the given 1-indexed ply was White's move — shared with
+ *  `lib/blunders.ts`, which needs the same "own moves only" filter. */
+export function whiteToMove(ply: number): boolean {
   return ply % 2 === 1
 }
 
