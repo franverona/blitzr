@@ -2,8 +2,8 @@ import { Chess } from 'chess.js'
 import type { Color, PieceSymbol, Square } from 'chess.js'
 import { describeHangingPieceReason, detectHangingPiece } from './hangingPiece'
 import { PIECE_VALUES } from './material'
-import { PIECE_NAMES } from './san'
-import type { BlunderReason, ForkReason, MyColor } from './types'
+import { describeMove, PIECE_NAMES } from './san'
+import type { BestMove, BlunderReason, ForkReason, MyColor } from './types'
 
 function toColor(color: MyColor): Color {
   return color === 'white' ? 'w' : 'b'
@@ -79,12 +79,15 @@ export function detectFork(
   }
 }
 
-export function describeForkReason(reason: ForkReason): string {
-  const attacker = PIECE_NAMES[reason.attackerPiece as PieceSymbol].toLowerCase()
-  const targets = reason.targets
+function targetList(targets: ForkReason['targets']): string {
+  return targets
     .map((t) => `the ${PIECE_NAMES[t.piece as PieceSymbol].toLowerCase()} on ${t.square}`)
     .join(' and ')
-  return `This allows a fork — the ${attacker} on ${reason.attackerSquare} now attacks ${targets} at once.`
+}
+
+export function describeForkReason(reason: ForkReason): string {
+  const attacker = PIECE_NAMES[reason.attackerPiece as PieceSymbol].toLowerCase()
+  return `This allows a fork — the ${attacker} on ${reason.attackerSquare} now attacks ${targetList(reason.targets)} at once.`
 }
 
 /** Tries `detectHangingPiece` first, falling back to `detectFork` — the one
@@ -105,4 +108,70 @@ export function describeBlunderReason(reason: BlunderReason): string {
   return reason.kind === 'hanging-piece'
     ? describeHangingPieceReason(reason)
     : describeForkReason(reason)
+}
+
+/**
+ * Why the engine's suggested move is better, if a simple tactical pattern
+ * explains it — reuses `detectHangingPiece`/`detectFork` on the *candidate*
+ * move rather than the one actually played. Checking with the FEN order
+ * swapped turns "newly hanging/forked after" into "no longer hanging/forked
+ * after" — `detectHangingPiece(fenAfter, fenBefore, moverColor)` diffs
+ * hanging squares in `fenBefore` against `fenAfter` in the reverse of its
+ * normal direction, so what it reports as "new" is really "resolved."
+ * Checked defensive-first (saving/escaping explains a forced move) then
+ * offensive (winning/forking is a bonus); returns null for a quiet
+ * improvement neither detector explains, same as the two detectors
+ * themselves not explaining every blunder.
+ */
+export function explainBestMove(
+  fenBefore: string,
+  bestMoveSan: string,
+  moverColor: MyColor,
+): string | null {
+  let fenAfter: string
+  try {
+    fenAfter = new Chess(fenBefore).move(bestMoveSan).after
+  } catch {
+    return null
+  }
+  const opponent: MyColor = moverColor === 'white' ? 'black' : 'white'
+
+  const saved = detectHangingPiece(fenAfter, fenBefore, moverColor)
+  if (saved) {
+    return `Saves the ${PIECE_NAMES[saved.piece as PieceSymbol].toLowerCase()} on ${saved.square}, which was hanging.`
+  }
+
+  const escaped = detectFork(fenAfter, fenBefore, moverColor)
+  if (escaped) return `Gets ${targetList(escaped.targets)} out of the fork.`
+
+  const wins = detectHangingPiece(fenBefore, fenAfter, opponent)
+  if (wins) {
+    return `Leaves the opponent's ${PIECE_NAMES[wins.piece as PieceSymbol].toLowerCase()} on ${wins.square} hanging.`
+  }
+
+  const forks = detectFork(fenBefore, fenAfter, opponent)
+  if (forks) return `Forks ${targetList(forks.targets)} at once.`
+
+  return null
+}
+
+/**
+ * The full "better was ..." line — the mechanical description via the
+ * existing `describeMove()` plus the tactical "why" above, when there is
+ * one. Null when there's no engine suggestion or it matches what was
+ * actually played, so callers can render conditionally without repeating
+ * that check themselves.
+ */
+export function describeBetterMove(
+  fenBefore: string,
+  moveSan: string,
+  bestMove: BestMove | null,
+  moverColor: MyColor,
+): string | null {
+  if (!bestMove || bestMove.san === moveSan) return null
+  const description = describeMove(fenBefore, bestMove.san)
+  const explanation = explainBestMove(fenBefore, bestMove.san, moverColor)
+  return explanation
+    ? `${bestMove.san} (${description}) — ${explanation}`
+    : `${bestMove.san} (${description})`
 }

@@ -156,6 +156,10 @@ rook on a7 at once"). Both checks are intentionally simple (no evaluation of une
 pin awareness, no simulation of a future opponent move creating a fork) — they won't catch every
 kind of mistake, so plenty of blunders show no reason at all, just the eval swing.
 
+Each blunder also names the engine's suggested move instead, with a plain-English description and
+— when the same simple checks explain it — why it's actually better ("better was Nd7 (Knight to
+d7) — saves the rook on h6, which was hanging").
+
 ### Reading the evaluation
 
 - **Centipawns (cp)**, shown as e.g. `+1.4` or `-0.8`: material/positional advantage in units of
