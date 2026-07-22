@@ -122,7 +122,9 @@ On `/repertoire`, build an opening tree per color by playing moves on an editabl
 move you play is added as a node, and you can branch to prepare more than one reply to an
 opponent's try. Every synced game is then diffed against your tree: the game page flags the
 first move where you left your own prepared line (an opponent playing something you haven't
-prepped for isn't a deviation — only _your own_ moves count).
+prepped for isn't a deviation — only _your own_ moves count). While you're building it, playing
+a move that leaves a piece hanging shows the same plain-English warning as the analysis pages,
+right there on the board.
 
 ## Engine analysis (Stockfish)
 
@@ -169,9 +171,10 @@ On `/drill`, every repertoire deviation and every blunder from your own moves be
 you're shown the position right before the mistake and have to find the move that should have
 been played (any of your repertoire's prepared replies for a deviation card, the engine's
 suggested move for a blunder card). Get it right and the card comes back further out; get it
-wrong and it comes back tomorrow, with the correct move revealed as an arrow. The deck stays in
-sync automatically — build more repertoire or analyze more games, and new cards just show up
-next time you visit.
+wrong and it comes back tomorrow, with the correct move revealed as an arrow. Whatever move you
+actually play, right or wrong, also gets checked for a hung piece, same as the Repertoire board.
+The deck stays in sync automatically — build more repertoire or analyze more games, and new
+cards just show up next time you visit.
 
 ## Blunders
 

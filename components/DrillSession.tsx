@@ -4,8 +4,9 @@ import { useMemo, useRef, useState } from 'react'
 import { Chess } from 'chess.js'
 import { Chessboard } from 'react-chessboard'
 import { submitDrillAnswer } from '@/app/actions'
+import { describeHangingPieceReason, detectHangingPiece } from '@/lib/hangingPiece'
 import { legalDestinations } from '@/lib/legalMoves'
-import type { DrillPrompt } from '@/lib/types'
+import type { DrillPrompt, HangingPieceReason } from '@/lib/types'
 import { LegalMoveSquare } from './LegalMoveSquare'
 
 type Feedback = 'correct' | 'incorrect' | null
@@ -56,6 +57,7 @@ export function DrillSession({
   const [feedback, setFeedback] = useState<Feedback>(null)
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null)
   const [tally, setTally] = useState({ correct: 0, incorrect: 0 })
+  const [hangingReason, setHangingReason] = useState<HangingPieceReason | null>(null)
 
   // `feedback` state can't be trusted to guard against a double-fire within
   // the same tick (React state updates aren't visible to a second call in
@@ -121,6 +123,9 @@ export function DrillSession({
     answeredRef.current = true
     const correct = activePrompt.correctMoves.includes(move.san)
     setFeedback(correct ? 'correct' : 'incorrect')
+    setHangingReason(
+      detectHangingPiece(move.before, move.after, move.color === 'w' ? 'white' : 'black'),
+    )
     setTally((t) =>
       correct ? { ...t, correct: t.correct + 1 } : { ...t, incorrect: t.incorrect + 1 },
     )
@@ -161,6 +166,7 @@ export function DrillSession({
   function handleNext() {
     answeredRef.current = false
     setFeedback(null)
+    setHangingReason(null)
     setSelectedSquare(null)
     setIndex((i) => i + 1)
   }
@@ -202,20 +208,27 @@ export function DrillSession({
       </div>
 
       {feedback && (
-        <div className="flex items-center gap-3">
-          <p
-            className={`text-sm ${feedback === 'correct' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-400'}`}
-          >
-            {feedback === 'correct'
-              ? 'Correct!'
-              : `Not quite — the move was ${prompt.correctMoves.join(' or ')}.`}
-          </p>
-          <button
-            onClick={handleNext}
-            className="rounded-md border border-zinc-700 px-3 py-1.5 text-sm font-medium hover:bg-zinc-800"
-          >
-            Next
-          </button>
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-3">
+            <p
+              className={`text-sm ${feedback === 'correct' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-400'}`}
+            >
+              {feedback === 'correct'
+                ? 'Correct!'
+                : `Not quite — the move was ${prompt.correctMoves.join(' or ')}.`}
+            </p>
+            <button
+              onClick={handleNext}
+              className="rounded-md border border-zinc-700 px-3 py-1.5 text-sm font-medium hover:bg-zinc-800"
+            >
+              Next
+            </button>
+          </div>
+          {hangingReason && (
+            <p className="text-sm text-amber-600 dark:text-amber-400">
+              {describeHangingPieceReason(hangingReason)}
+            </p>
+          )}
         </div>
       )}
     </div>
