@@ -58,7 +58,8 @@ components/
                                    # "Repertoire")
   RepertoireTree.tsx               # nested move-tree view with branch switching (client)
   GameAnalysisPanel.tsx              # Stockfish trigger button (header) + results <dialog>
-                                       # (content), sharing state via Context (client)
+                                       # (content) + GameSummary (biggest-blunder recap),
+                                       # sharing state via Context (client)
   DrillSession.tsx                     # one drill card at a time — move input, grading,
                                          # session summary (client, see "Drilling")
   BlunderStats.tsx                       # by-opening table, by-piece chips, worst-blunders list
@@ -85,7 +86,10 @@ lib/
                               # GameAnalysis/PositionEval/Blunder, DrillCard/DrillPrompt,
                               # ArchiveSyncStatus, SyncResult
   dates.ts                   # formatDate/formatDateTime — hand-formatted, not Intl (see below)
-  san.ts                       # splitSanPiece, plyLabel — SAN/move-number display helpers
+  san.ts                       # splitSanPiece, plyLabel, describeMove() — SAN/move-number display
+                                 # helpers; describeMove() turns SAN into a plain-English sentence
+  material.ts                    # materialDiff()/formatMaterialDiff() — pure piece-value count,
+                                   # no engine/analysis dependency
   legalMoves.ts                 # legalDestinations(fen, square) — chess.js wrapper, drives the
                                   # dot/ring legal-move highlighting on interactive boards
   positions.ts                  # buildPositions() — walks movesSan into a FEN-per-ply array,
@@ -368,6 +372,34 @@ mate` relative to **whoever is to move** in the given position, not always White
     Games page stops the run the same way Cancel does.
   - Still client-side only, like single-game analysis — the loop runs on the Games page and stops
     if that page unmounts; there's no background/server-side job that survives navigation.
+- **Plain-English move descriptions** (`describeMove(fenBefore, san)`, `lib/san.ts`) replay a
+  single SAN move via chess.js to read off `piece`/`captured`/`promotion`/the `isCapture()`/
+  `isCastle*()`/`isPromotion()` descriptor methods, and produce a sentence like "Queen captures
+  pawn on f6, check" — added beneath the raw SAN wherever a blunder list shows it
+  (`GameAnalysisPanel.tsx`'s dialog, `BlunderStats.tsx`'s worst-blunders list), since those are
+  exactly the spots that read as jargon-heavy to someone who doesn't have SAN memorized. Note
+  chess.js's `isCapture()` is **false** for en passant — `isEnPassant()` is a distinct flag not
+  combined with the regular capture flag, so `describeMove()` checks both to still describe an
+  en passant capture as a capture.
+- **`GameSummary()`** (`GameAnalysisPanel.tsx`, rendered in `app/games/[id]/page.tsx` under
+  `RepertoireDiff`) is a one-line plain-language recap — the single biggest blunder in the game
+  (`biggestBlunder(findBlunders(...))`, both already existed), whether it was the account's own
+  move or the opponent's (`whiteToMove()` from `lib/drill.ts` compared against `game.myColor`),
+  and what the move was via `describeMove()`. Renders nothing until there's a saved analysis,
+  same "quietly do nothing when not applicable yet" pattern `RepertoireDiff` already uses.
+  `AnalysisContextValue` grew a `positions` field (computed once in `GameAnalysisProvider`, a FEN
+  per ply) so both `GameSummary` and `AnalysisDialog` can call `describeMove()` without each
+  recomputing `buildPositions()` themselves.
+- **Material count** (`materialDiff()`/`formatMaterialDiff()`, `lib/material.ts`) is a plain piece
+  count (P1/N3/B3/R5/Q9, no engine involved), shown in `Board.tsx`'s `BoardView` next to the eval
+  description. Unlike the eval bar/description this doesn't need a saved analysis, so it always
+  renders — a beginner-friendlier first read than a centipawn eval bar, and still useful on a
+  game that's never been analyzed. Scoped to the read-only replay board only for now, not
+  `RepertoireBoard`/`DrillSession`.
+- **Opening link**: `Game.ecoUrl` (from Chess.com's PGN header, already used internally by
+  `lib/openings.ts`) is now surfaced as a "Learn more about this opening" link in `GameHeader`
+  (`app/games/[id]/page.tsx`), next to the ECO code — it existed in the data all along and was
+  simply never rendered anywhere.
 
 ## Drilling (Phase 4)
 
@@ -469,6 +501,12 @@ client'`. Reuses `PieceGlyph` (white variant, on the same green badge `PieceMove
   URL-driven initial ply on the game page (`BoardProvider` seeds its ply from `useState`), so
   deep-linking into the exact position wasn't attempted here; landing on the game and stepping
   through the move list is enough for v1.
+- **`WorstBlunder.moveDescription`** (plain-English text via `describeMove()`, `lib/san.ts`) is
+  computed in `buildBlunderStats()` only for the ≤10 entries that survive the sort-and-slice to
+  the worst list, not for every blunder counted along the way — the intermediate collection type
+  is `BlunderCandidate = Omit<WorstBlunder, 'moveDescription'>`, enriched with a description (via
+  a `gameId -> Game` lookup to rebuild that specific game's positions) only after slicing, to keep
+  the per-blunder FEN-replay cost bounded to what's actually displayed.
 - **`EvalHelp` (`components/EvalHelp.tsx`) is a shared "how to read this" glossary**, extracted
   from `GameAnalysisPanel.tsx` (where it originally lived as a private function) so `/blunders`
   could reuse the same eval/mate/blunder notation explanations instead of duplicating them —
@@ -486,10 +524,11 @@ client'`. Reuses `PieceGlyph` (white variant, on the same green badge `PieceMove
 
 - **Vitest** — run with `pnpm test` (or `pnpm test:watch`)
 - Tests live in `__tests__/`, one file per `lib/` module they cover: `normalize.test.ts`,
-  `openings.test.ts`, `repertoire.test.ts`, `analysis.test.ts`, `san.test.ts`, `dates.test.ts`,
-  `drill.test.ts`, `blunders.test.ts`, `stockfish-analyze.test.ts` (just `terminalEval()`) and
-  `stockfish-client.test.ts` (just `parseBestMove()`) — the rest of `evaluate()`/`analyzeGame()`
-  needs a real browser Worker and isn't unit-tested
+  `openings.test.ts`, `repertoire.test.ts`, `analysis.test.ts`, `san.test.ts` (including
+  `describeMove()`), `material.test.ts`, `dates.test.ts`, `drill.test.ts`, `blunders.test.ts`,
+  `stockfish-analyze.test.ts` (just `terminalEval()`) and `stockfish-client.test.ts` (just
+  `parseBestMove()`) — the rest of `evaluate()`/`analyzeGame()`/`analyzeGames()` needs a real
+  browser Worker and isn't unit-tested
 - Pure functions are tested directly against fixtures — no DB, network, or browser needed for
   any of them
 

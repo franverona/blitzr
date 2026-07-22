@@ -2,10 +2,16 @@ import { findBlunders } from './analysis'
 import { formatDate } from './dates'
 import { whiteToMove } from './drill'
 import { ecoFamilyLabel } from './openings'
-import { splitSanPiece } from './san'
+import { buildPositions } from './positions'
+import { describeMove, splitSanPiece } from './san'
 import type { BlunderGroupStat, BlunderStats, Game, GameAnalysis, WorstBlunder } from './types'
 
 const WORST_LIST_SIZE = 10
+
+/** Pre-description shape collected while walking every game's blunders —
+ *  `moveDescription` is only computed for the handful that survive the sort
+ *  + slice to `WORST_LIST_SIZE`, not for every blunder counted along the way. */
+type BlunderCandidate = Omit<WorstBlunder, 'moveDescription'>
 
 interface GroupAcc {
   label: string
@@ -68,7 +74,7 @@ export function buildBlunderStats(
 ): BlunderStats {
   const byOpening = new Map<string, GroupAcc>()
   const byPiece = new Map<string, GroupAcc>()
-  const worst: WorstBlunder[] = []
+  const worst: BlunderCandidate[] = []
   let analyzedGames = 0
   let totalBlunders = 0
 
@@ -109,12 +115,24 @@ export function buildBlunderStats(
 
   worst.sort((a, b) => b.swingCp - a.swingCp)
 
+  const gamesById = new Map(games.map((g) => [g.id, g]))
+  const topWorst: WorstBlunder[] = worst.slice(0, WORST_LIST_SIZE).map((entry) => {
+    const game = gamesById.get(entry.gameId)
+    const positions = game?.movesSan ? buildPositions(game.initialFen, game.movesSan) : null
+    return {
+      ...entry,
+      moveDescription: positions
+        ? describeMove(positions[entry.ply - 1], entry.moveSan)
+        : entry.moveSan,
+    }
+  })
+
   return {
     totalGames: games.length,
     analyzedGames,
     totalBlunders,
     byOpening: toGroupStats(byOpening),
     byPiece: toGroupStats(byPiece),
-    worst: worst.slice(0, WORST_LIST_SIZE),
+    worst: topWorst,
   }
 }

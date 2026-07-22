@@ -173,6 +173,9 @@ export interface WorstBlunder {
   swingCp: number
   evalBefore: PositionEval
   evalAfter: PositionEval
+  /** Plain-English rendering of `moveSan`, e.g. "Queen captures pawn on f6,
+   *  check" — see `describeMove()` in `lib/san.ts`. */
+  moveDescription: string
 }
 
 export interface BlunderStats {

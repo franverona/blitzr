@@ -16,7 +16,7 @@ function makeGame(overrides: Partial<Game>): Game {
     url: '',
     pgn: '',
     movesSan: [],
-    initialFen: '',
+    initialFen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
     finalFen: null,
     timeControl: '180',
     timeClass: 'blitz',
@@ -78,8 +78,8 @@ describe('buildBlunderStats', () => {
     // lib/analysis.ts) — mixing that into a pawns average would produce a
     // nonsense "985 pawns" figure, so avgSwingCp must skip it.
     const normal = makeGame({ ecoCode: 'B20', movesSan: ['e4'] })
-    const intoMate = makeGame({ ecoCode: 'B20', movesSan: ['Rxe6??'] })
-    const onlyMate = makeGame({ ecoCode: 'C00', movesSan: ['Qh5??'] })
+    const intoMate = makeGame({ ecoCode: 'B20', movesSan: ['Nc3'] })
+    const onlyMate = makeGame({ ecoCode: 'C00', movesSan: ['Nf3'] })
     const analyses = new Map([
       [normal.id, makeAnalysis(normal.id, [cp(0), cp(-260)])],
       [intoMate.id, makeAnalysis(intoMate.id, [cp(50), mate(-3)])],
@@ -96,11 +96,18 @@ describe('buildBlunderStats', () => {
   it('groups own blunders by piece, with pawn and castle buckets for moves with no piece letter', () => {
     const queenBlunder = makeGame({ movesSan: ['e4', 'e5', 'Qh5??'] })
     const pawnBlunder = makeGame({ movesSan: ['a4??'] })
-    const castleBlunder = makeGame({ movesSan: ['O-O??'] })
+    // Castling needs the kingside actually cleared first — an isolated
+    // "O-O??" as move 1 isn't legal, so this plays it out for real.
+    const castleBlunder = makeGame({
+      movesSan: ['Nf3', 'Nc6', 'g3', 'd6', 'Bg2', 'd5', 'O-O??'],
+    })
     const analyses = new Map([
       [queenBlunder.id, makeAnalysis(queenBlunder.id, [cp(20), cp(30), cp(40), cp(-260)])],
       [pawnBlunder.id, makeAnalysis(pawnBlunder.id, [cp(0), cp(-260)])],
-      [castleBlunder.id, makeAnalysis(castleBlunder.id, [cp(0), cp(-250)])],
+      [
+        castleBlunder.id,
+        makeAnalysis(castleBlunder.id, [cp(0), cp(0), cp(0), cp(0), cp(0), cp(0), cp(0), cp(-250)]),
+      ],
     ])
 
     const stats = buildBlunderStats([queenBlunder, pawnBlunder, castleBlunder], analyses)
@@ -129,6 +136,14 @@ describe('buildBlunderStats', () => {
     const stats = buildBlunderStats([analyzed, notAnalyzed], analyses)
     expect(stats.totalGames).toBe(2)
     expect(stats.analyzedGames).toBe(1)
+  })
+
+  it('attaches a plain-English description to each worst-list entry', () => {
+    const game = makeGame({ movesSan: ['e4', 'e5', 'Qh5??'] })
+    const analyses = new Map([[game.id, makeAnalysis(game.id, [cp(20), cp(30), cp(40), cp(-260)])]])
+
+    const stats = buildBlunderStats([game], analyses)
+    expect(stats.worst[0].moveDescription).toBe('Queen to h5')
   })
 
   it('sorts the worst list by swing descending and caps it at 10', () => {
