@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   biggestBlunder,
+  blunderSeverity,
   describeEval,
   evalBarPercent,
   findBlunders,
@@ -134,6 +135,22 @@ describe('describeEval', () => {
   it('describes forced mates for both sides', () => {
     expect(describeEval(mate(4))).toBe('White has a forced mate')
     expect(describeEval(mate(-1))).toBe('Black has a forced mate')
+  })
+})
+
+describe('blunderSeverity', () => {
+  it('classifies a swing just over the blunder threshold as a mistake', () => {
+    expect(blunderSeverity(200)).toBe('mistake')
+    expect(blunderSeverity(399)).toBe('mistake')
+  })
+
+  it('classifies a swing of 400cp or more as a blunder', () => {
+    expect(blunderSeverity(400)).toBe('blunder')
+    expect(blunderSeverity(1000)).toBe('blunder')
+  })
+
+  it('classifies a mate-sentinel-scale swing as a blunder', () => {
+    expect(blunderSeverity(98_810)).toBe('blunder')
   })
 })
 

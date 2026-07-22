@@ -30,6 +30,13 @@ export function EvalHelp() {
           position can still get worse, and that still counts.
         </p>
         <p>
+          <span className="font-medium text-zinc-400">Mistake / Blunder</span> — two severities
+          within what already counts as a blunder above: under 4 pawns worse is labeled Mistake, 4
+          pawns or worse is labeled Blunder. Both still count as &ldquo;a blunder&rdquo; everywhere
+          else in the app (drilling, the totals above) — this is just a finer read on how bad it
+          was.
+        </p>
+        <p>
           <span className="font-medium text-zinc-400">Swing</span> — how many pawns worse a move
           made the position for whoever played it. &ldquo;Avg swing&rdquo; averages that across a
           group of blunders — a way to see whether a category tends to be near-misses or outright

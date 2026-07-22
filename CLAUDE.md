@@ -71,6 +71,8 @@ components/
   EvalHelp.tsx                             # "how to read this" glossary for eval/blunder/swing
                                              # notation — shared by GameAnalysisPanel and
                                              # BlunderStats so it's written once
+  BlunderSeverityBadge.tsx                   # Mistake/Blunder severity pill, shared by
+                                               # GameAnalysisPanel and BlunderStats
   LegalMoveSquare.tsx                    # squareRenderer helper (dot/ring/yellow-selected
                                            # highlighting) shared by RepertoireBoard and
                                            # DrillSession — see "Board interaction" below
@@ -702,6 +704,16 @@ client'`. Reuses `PieceGlyph` (white variant, on the same green badge `PieceMove
   "in book"/"deviated" in `app/games/[id]/page.tsx`, and the expanded intro paragraph in
   `RepertoireBoard.tsx`'s `HelpButton` dialog explaining what a repertoire _is_, not just how to
   build one).
+- **Move quality tiers** (`blunderSeverity()`, `lib/analysis.ts`): every flagged blunder (still
+  the same 200cp+ `BLUNDER_THRESHOLD_CP` set — this doesn't change what counts as a blunder
+  anywhere, including `/drill` candidates and the `/blunders` aggregate counts/averages) gets a
+  finer display label — "Mistake" for 200–399cp, "Blunder" for 400cp+
+  (`SEVERE_BLUNDER_THRESHOLD_CP`). A mate-sentinel swing (`evalToCp`'s ±100,000) always clears
+  400, so a swing into/out of forced mate always reads as the more severe tier. Shown via a shared
+  `<BlunderSeverityBadge swingCp={...}>` (same colored-pill convention as `RESULT_BADGE_STYLES` in
+  `GameRow.tsx`) in both `GameAnalysisPanel.tsx`'s `AnalysisDialog` blunder list and
+  `BlunderStats.tsx`'s worst-blunders list, and as a severity-aware verb in `GameSummary()`
+  ("blundered" vs "made a mistake"). `EvalHelp` picked up a matching glossary bullet.
 
 ## Testing
 
@@ -712,7 +724,7 @@ client'`. Reuses `PieceGlyph` (white variant, on the same green badge `PieceMove
   `dates.test.ts`, `drill.test.ts`,
   `blunders.test.ts`, `stockfish-analyze.test.ts` (just `terminalEval()`) and `stockfish-client.test.ts` (just
   `parseBestMove()`) — the rest of `evaluate()`/`analyzeGame()`/`analyzeGames()` needs a real
-  browser Worker and isn't unit-tested
+  browser Worker and isn't unit-tested. `analysis.test.ts` also covers `blunderSeverity()`.
 - Pure functions are tested directly against fixtures — no DB, network, or browser needed for
   any of them
 

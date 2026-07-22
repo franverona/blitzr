@@ -2,13 +2,21 @@
 
 import { createContext, useContext, useMemo, useRef, useState } from 'react'
 import { saveGameAnalysis } from '@/app/actions'
-import { biggestBlunder, describeEval, findBlunders, formatEval, formatSwing } from '@/lib/analysis'
+import {
+  biggestBlunder,
+  blunderSeverity,
+  describeEval,
+  findBlunders,
+  formatEval,
+  formatSwing,
+} from '@/lib/analysis'
 import { whiteToMove } from '@/lib/drill'
 import { buildPositions } from '@/lib/positions'
 import { describeMove, plyLabel } from '@/lib/san'
 import { analyzeGame } from '@/lib/stockfish/analyze'
 import { describeBlunderReason, detectBlunderReason } from '@/lib/tactics'
 import type { GameAnalysis, MyColor } from '@/lib/types'
+import { BlunderSeverityBadge } from './BlunderSeverityBadge'
 import { EvalHelp } from './EvalHelp'
 
 interface AnalysisContextValue {
@@ -133,9 +141,10 @@ export function GameSummary() {
   const isMine = whiteToMove(worst.ply) === (myColor === 'white')
   const moverColor = whiteToMove(worst.ply) ? 'white' : 'black'
   const reason = detectBlunderReason(positions[worst.ply - 1], positions[worst.ply], moverColor)
+  const verb = blunderSeverity(worst.swingCp) === 'blunder' ? 'blundered' : 'made a mistake'
   return (
     <p className="text-sm text-zinc-500 dark:text-zinc-400">
-      Biggest moment: {isMine ? 'you' : 'your opponent'} blundered on {plyLabel(worst.ply)}{' '}
+      Biggest moment: {isMine ? 'you' : 'your opponent'} {verb} on {plyLabel(worst.ply)}{' '}
       {worst.moveSan} ({describeMove(positions[worst.ply - 1], worst.moveSan)}).{' '}
       {reason && describeBlunderReason(reason)}
     </p>
@@ -190,12 +199,15 @@ function AnalysisDialog({ dialogRef }: { dialogRef: React.RefObject<HTMLDialogEl
                 )
                 return (
                   <li key={b.ply}>
-                    <div>
-                      {plyLabel(b.ply)} {b.moveSan}: {formatEval(b.evalBefore)} →{' '}
-                      {formatEval(b.evalAfter)} ({formatSwing(b)})
-                      {b.evalBefore.bestMove && b.evalBefore.bestMove.san !== b.moveSan && (
-                        <> — better was {b.evalBefore.bestMove.san}</>
-                      )}
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <BlunderSeverityBadge swingCp={b.swingCp} />
+                      <span>
+                        {plyLabel(b.ply)} {b.moveSan}: {formatEval(b.evalBefore)} →{' '}
+                        {formatEval(b.evalAfter)} ({formatSwing(b)})
+                        {b.evalBefore.bestMove && b.evalBefore.bestMove.san !== b.moveSan && (
+                          <> — better was {b.evalBefore.bestMove.san}</>
+                        )}
+                      </span>
                     </div>
                     <div className="text-xs text-zinc-500">
                       {describeMove(positions[b.ply - 1], b.moveSan)}

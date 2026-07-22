@@ -5,6 +5,17 @@ import type { Blunder, PositionEval } from './types'
 // evalToCp below.
 const BLUNDER_THRESHOLD_CP = 200
 
+export type BlunderSeverity = 'mistake' | 'blunder'
+
+// Blunders are already 200cp+ swings (BLUNDER_THRESHOLD_CP) — this only
+// subdivides that same set into two severities for display; it doesn't
+// change what counts as a blunder anywhere else (drilling, /blunders totals).
+const SEVERE_BLUNDER_THRESHOLD_CP = 400
+
+export function blunderSeverity(swingCp: number): BlunderSeverity {
+  return swingCp >= SEVERE_BLUNDER_THRESHOLD_CP ? 'blunder' : 'mistake'
+}
+
 // Mate scores aren't directly comparable to centipawns, so they're mapped to
 // a value large enough that any swing into or out of a mate always crosses
 // the blunder threshold, while still preserving which side is winning.
