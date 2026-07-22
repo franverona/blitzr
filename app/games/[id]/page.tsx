@@ -126,7 +126,15 @@ function GameHeader({
       </p>
       {game.ecoName && (
         <p className="text-xs text-zinc-500 dark:text-zinc-400">
-          {game.ecoName} ({game.ecoCode ?? 'no ECO'})
+          {game.ecoName} (
+          {game.ecoCode ? (
+            <abbr title="ECO code — a standard reference number for this opening, used to group games by opening regardless of the exact move order">
+              {game.ecoCode}
+            </abbr>
+          ) : (
+            'no ECO'
+          )}
+          )
         </p>
       )}
       {!isBotGame && (
@@ -172,8 +180,12 @@ function RepertoireDiff({
   if (diff.deviationPly !== null) {
     return (
       <p className="text-sm text-amber-600 dark:text-amber-400">
-        In book for {diff.inBookPlies} {diff.inBookPlies === 1 ? 'move' : 'moves'}, then deviated on{' '}
-        {plyLabel(diff.deviationPly)} — played{' '}
+        <abbr title="Still following your prepared moves up to this point">In book</abbr> for{' '}
+        {diff.inBookPlies} {diff.inBookPlies === 1 ? 'move' : 'moves'}, then{' '}
+        <abbr title="Played a different move than the one saved in your repertoire at this point">
+          deviated
+        </abbr>{' '}
+        on {plyLabel(diff.deviationPly)} — played{' '}
         <span className="font-medium">{diff.deviationMove}</span>, repertoire has{' '}
         <span className="font-medium">{diff.expectedMoves?.join(' or ')}</span>.
       </p>
