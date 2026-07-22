@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { buildBlunderStats } from '@/lib/blunders'
 import { getRepository } from '@/lib/db'
 import {
   buildDrillPrompt,
@@ -14,6 +15,7 @@ import { buildOpeningFamilies } from '@/lib/openings'
 import { syncAllArchives } from '@/lib/sync'
 import type {
   ArchiveSyncStatus,
+  BlunderStats,
   DrillCard,
   DrillPrompt,
   DrillSourceType,
@@ -39,6 +41,13 @@ export async function getGame(id: string): Promise<Game | undefined> {
 export async function listOpenings(): Promise<OpeningFamily[]> {
   const games = await getRepository().listAllGames()
   return buildOpeningFamilies(games)
+}
+
+export async function getBlunderStats(): Promise<BlunderStats> {
+  const repo = getRepository()
+  const [games, analyses] = await Promise.all([repo.listAllGames(), repo.listAllGameAnalyses()])
+  const analysesByGameId = new Map(analyses.map((a) => [a.gameId, a]))
+  return buildBlunderStats(games, analysesByGameId)
 }
 
 export async function getArchiveSyncStatus(): Promise<ArchiveSyncStatus[]> {
