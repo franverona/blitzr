@@ -33,7 +33,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     >
       <body className="flex min-h-full flex-col bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
         <header className="border-b border-zinc-200 dark:border-zinc-800">
-          <nav className="mx-auto flex max-w-4xl items-center gap-6 px-4 py-3">
+          <nav className="mx-auto flex max-w-7xl items-center gap-6 px-4 py-3">
             <Link href="/" className="flex items-center gap-2 text-lg font-semibold tracking-tight">
               <Image src="/icon.svg" alt="" width={24} height={24} />
               Blitzr
@@ -41,7 +41,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             <NavLinks />
           </nav>
         </header>
-        <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-6">{children}</main>
+        <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6">{children}</main>
       </body>
     </html>
   )

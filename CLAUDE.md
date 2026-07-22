@@ -56,9 +56,10 @@ components/
   OpeningsTable.tsx                    # family/line aggregation table (client, expand/collapse)
   PieceGlyph.tsx / PieceMoveLabel.tsx    # Wikimedia chess piece SVGs, colored by moving side
   KnightGlyph.tsx / KnightIcon.tsx         # illustrated knight (favicon, White/Black side badge)
-  NavLinks.tsx                              # active-tab nav (client, usePathname)
-  BackButton.tsx                              # router.back(), not a Link — preserves list pagination
-  SyncButton.tsx                                # triggers the sync Server Action (client)
+  PlayerAvatar.tsx                           # Chess.com profile avatar (plain <img>), initial-letter
+                                               # fallback when a player has none or the fetch fails
+  NavLinks.tsx                                 # active-tab nav (client, usePathname)
+  SyncButton.tsx                                  # triggers the sync Server Action (client)
 lib/
   config.ts                # getChesscomUsername() — reads CHESSCOM_USERNAME
   types.ts                  # domain types: Game, OpeningFamily/Line, RepertoireNode,
@@ -173,6 +174,11 @@ ply)` rather than a synthetic id, `ON DELETE CASCADE` on `game_id`).
   (correspondence) games are synced like everything else. Filtering what counts toward the
   user's repertoire is a UI/analysis-layer decision, not an ingestion-time one, so nothing
   synced is ever silently lost.
+- **Player avatars aren't synced/stored** — `fetchPlayerAvatar()` (`lib/chesscom/client.ts`)
+  hits `/pub/player/{username}` live on every game page view and is never cached, since it's
+  purely decorative for a low-traffic single-user app. It swallows any failure (unknown user,
+  bot with no public profile, rate limit) and returns `null` rather than breaking the page —
+  `PlayerAvatar.tsx` falls back to an initial-letter badge in that case.
 
 ### Known Chess.com API quirks
 
