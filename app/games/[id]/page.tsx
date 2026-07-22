@@ -1,9 +1,10 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getGame, getGameAnalysis, listRepertoire } from '../../actions'
-import { BackButton } from '@/components/BackButton'
 import { Board } from '@/components/Board'
 import { GameAnalysisPanel } from '@/components/GameAnalysisPanel'
+import { PlayerAvatar } from '@/components/PlayerAvatar'
+import { fetchPlayerAvatar } from '@/lib/chesscom/client'
 import { parsePgnHeaders } from '@/lib/chesscom/normalize'
 import { formatDateTime } from '@/lib/dates'
 import { diffGameAgainstRepertoire } from '@/lib/repertoire'
@@ -31,14 +32,20 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
     ? diffGameAgainstRepertoire(game.movesSan, game.myColor, repertoireNodes)
     : null
   const analysis = (await getGameAnalysis(id)) ?? null
+  const [whiteAvatar, blackAvatar] = await Promise.all([
+    fetchPlayerAvatar(game.whiteUsername),
+    fetchPlayerAvatar(game.blackUsername),
+  ])
 
   return (
     <div className="flex flex-col gap-4">
-      <BackButton />
-
       <div>
-        <h1 className="text-xl font-semibold">
-          {game.whiteUsername} vs {game.blackUsername}
+        <h1 className="flex items-center gap-2 text-xl font-semibold">
+          <PlayerAvatar username={game.whiteUsername} avatarUrl={whiteAvatar} />
+          {game.whiteUsername}
+          <span className="text-sm font-normal text-zinc-500">vs</span>
+          <PlayerAvatar username={game.blackUsername} avatarUrl={blackAvatar} />
+          {game.blackUsername}
         </h1>
         <p className="text-sm text-zinc-500 dark:text-zinc-400">
           {date} · {game.timeClass} · playing {game.myColor} ·{' '}

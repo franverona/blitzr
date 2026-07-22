@@ -1,6 +1,7 @@
 import { Kysely } from 'kysely'
 import type {
   DbSchema,
+  DrillCardsTable,
   GameAnalysisTable,
   GameRepository,
   GamesTable,
@@ -8,6 +9,8 @@ import type {
 } from '../types'
 import type {
   ArchiveSyncStatus,
+  DrillCard,
+  DrillSourceType,
   Game,
   GameAnalysis,
   RepertoireColor,
@@ -90,6 +93,34 @@ function rowToGameAnalysis(row: GameAnalysisTable): GameAnalysis {
     gameId: row.game_id,
     evals: JSON.parse(row.evals),
     analyzedAt: row.analyzed_at,
+  }
+}
+
+function rowToDrillCard(row: DrillCardsTable): DrillCard {
+  return {
+    gameId: row.game_id,
+    sourceType: row.source_type as DrillSourceType,
+    ply: row.ply,
+    dueAt: row.due_at,
+    intervalDays: row.interval_days,
+    easeFactor: row.ease_factor,
+    repetitions: row.repetitions,
+    lastReviewedAt: row.last_reviewed_at,
+    createdAt: row.created_at,
+  }
+}
+
+function drillCardToRow(card: DrillCard): DrillCardsTable {
+  return {
+    game_id: card.gameId,
+    source_type: card.sourceType,
+    ply: card.ply,
+    due_at: card.dueAt,
+    interval_days: card.intervalDays,
+    ease_factor: card.easeFactor,
+    repetitions: card.repetitions,
+    last_reviewed_at: card.lastReviewedAt,
+    created_at: card.createdAt,
   }
 }
 
@@ -228,5 +259,50 @@ export class SqliteGameRepository implements GameRepository {
         oc.column('game_id').doUpdateSet({ evals: row.evals, analyzed_at: row.analyzed_at }),
       )
       .execute()
+  }
+
+  async listAllGameAnalyses(): Promise<GameAnalysis[]> {
+    const db = await this.ready()
+    const rows = await db.selectFrom('game_analysis').selectAll().execute()
+    return rows.map(rowToGameAnalysis)
+  }
+
+  async listDrillCards(): Promise<DrillCard[]> {
+    const db = await this.ready()
+    const rows = await db.selectFrom('drill_cards').selectAll().execute()
+    return rows.map(rowToDrillCard)
+  }
+
+  async upsertDrillCard(card: DrillCard): Promise<void> {
+    const db = await this.ready()
+    const row = drillCardToRow(card)
+    await db
+      .insertInto('drill_cards')
+      .values(row)
+      .onConflict((oc) =>
+        oc.columns(['game_id', 'source_type', 'ply']).doUpdateSet({
+          due_at: row.due_at,
+          interval_days: row.interval_days,
+          ease_factor: row.ease_factor,
+          repetitions: row.repetitions,
+          last_reviewed_at: row.last_reviewed_at,
+        }),
+      )
+      .execute()
+  }
+
+  async deleteDrillCards(
+    keys: { gameId: string; sourceType: DrillSourceType; ply: number }[],
+  ): Promise<void> {
+    if (keys.length === 0) return
+    const db = await this.ready()
+    for (const key of keys) {
+      await db
+        .deleteFrom('drill_cards')
+        .where('game_id', '=', key.gameId)
+        .where('source_type', '=', key.sourceType)
+        .where('ply', '=', key.ply)
+        .execute()
+    }
   }
 }

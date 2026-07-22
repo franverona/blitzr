@@ -40,16 +40,23 @@ export function GameAnalysisPanel({
 
   if (!analysis) {
     return (
-      <div className="flex flex-col items-start gap-2">
-        <button
-          onClick={handleAnalyze}
-          disabled={progress !== null}
-          className="rounded-md border border-zinc-700 px-3 py-1.5 text-sm font-medium hover:bg-zinc-800 disabled:opacity-50"
-        >
-          {progress ? `Analyzing… (${progress.done}/${progress.total})` : 'Analyze with Stockfish'}
-        </button>
-        {error && <p className="text-sm text-rose-400">{error}</p>}
-      </div>
+      <details open>
+        <summary className="cursor-pointer text-sm font-medium select-none">
+          Stockfish analysis
+        </summary>
+        <div className="mt-2 flex flex-col items-start gap-2">
+          <button
+            onClick={handleAnalyze}
+            disabled={progress !== null}
+            className="rounded-md border border-zinc-700 px-3 py-1.5 text-sm font-medium hover:bg-zinc-800 disabled:opacity-50"
+          >
+            {progress
+              ? `Analyzing… (${progress.done}/${progress.total})`
+              : 'Analyze with Stockfish'}
+          </button>
+          {error && <p className="text-sm text-rose-400">{error}</p>}
+        </div>
+      </details>
     )
   }
 
@@ -57,43 +64,48 @@ export function GameAnalysisPanel({
   const worst = biggestBlunder(blunders)
 
   return (
-    <div className="flex flex-col items-start gap-2">
-      {blunders.length === 0 ? (
-        <p className="text-sm text-emerald-600 dark:text-emerald-400">
-          No blunders found by Stockfish — clean game.
-        </p>
-      ) : (
-        <div className="flex flex-col gap-1">
-          <p className="text-sm text-amber-600 dark:text-amber-400">
-            {blunders.length} {blunders.length === 1 ? 'blunder' : 'blunders'} found. Biggest:{' '}
-            {plyLabel(worst!.ply)} {worst!.moveSan} ({formatEval(worst!.evalBefore)} →{' '}
-            {formatEval(worst!.evalAfter)}, {describeEval(worst!.evalAfter).toLowerCase()}).
+    <details open>
+      <summary className="cursor-pointer text-sm font-medium select-none">
+        Stockfish analysis
+      </summary>
+      <div className="mt-2 flex flex-col items-start gap-2">
+        {blunders.length === 0 ? (
+          <p className="text-sm text-emerald-600 dark:text-emerald-400">
+            No blunders found by Stockfish — clean game.
           </p>
-          <ul className="flex flex-col gap-0.5 text-sm text-zinc-400">
-            {blunders.map((b) => (
-              <li key={b.ply}>
-                {plyLabel(b.ply)} {b.moveSan}: {formatEval(b.evalBefore)} →{' '}
-                {formatEval(b.evalAfter)} ({formatSwing(b)})
-                {b.evalBefore.bestMove && b.evalBefore.bestMove.san !== b.moveSan && (
-                  <> — better was {b.evalBefore.bestMove.san}</>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+        ) : (
+          <div className="flex flex-col gap-1">
+            <p className="text-sm text-amber-600 dark:text-amber-400">
+              {blunders.length} {blunders.length === 1 ? 'blunder' : 'blunders'} found. Biggest:{' '}
+              {plyLabel(worst!.ply)} {worst!.moveSan} ({formatEval(worst!.evalBefore)} →{' '}
+              {formatEval(worst!.evalAfter)}, {describeEval(worst!.evalAfter).toLowerCase()}).
+            </p>
+            <ul className="flex flex-col gap-0.5 text-sm text-zinc-400">
+              {blunders.map((b) => (
+                <li key={b.ply}>
+                  {plyLabel(b.ply)} {b.moveSan}: {formatEval(b.evalBefore)} →{' '}
+                  {formatEval(b.evalAfter)} ({formatSwing(b)})
+                  {b.evalBefore.bestMove && b.evalBefore.bestMove.san !== b.moveSan && (
+                    <> — better was {b.evalBefore.bestMove.san}</>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
-      <EvalHelp />
+        <EvalHelp />
 
-      <button
-        onClick={handleAnalyze}
-        disabled={progress !== null}
-        className="text-xs text-zinc-500 hover:text-zinc-300"
-      >
-        {progress ? `Re-analyzing… (${progress.done}/${progress.total})` : 'Re-analyze'}
-      </button>
-      {error && <p className="text-sm text-rose-400">{error}</p>}
-    </div>
+        <button
+          onClick={handleAnalyze}
+          disabled={progress !== null}
+          className="text-xs text-zinc-500 hover:text-zinc-300"
+        >
+          {progress ? `Re-analyzing… (${progress.done}/${progress.total})` : 'Re-analyze'}
+        </button>
+        {error && <p className="text-sm text-rose-400">{error}</p>}
+      </div>
+    </details>
   )
 }
 

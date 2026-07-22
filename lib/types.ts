@@ -124,3 +124,36 @@ export interface Blunder {
    *  centipawns (always positive — that's what makes it a blunder). */
   swingCp: number
 }
+
+export type DrillSourceType = 'deviation' | 'blunder'
+
+/** A spaced-repetition card, keyed by where it came from rather than a
+ *  synthetic id — everything about *what* to show (FEN, accepted moves) is
+ *  re-derived from the source game/repertoire/analysis at drill time, only
+ *  the review schedule itself is durable state (see lib/drill.ts). */
+export interface DrillCard {
+  gameId: string
+  sourceType: DrillSourceType
+  ply: number
+  dueAt: string
+  intervalDays: number
+  easeFactor: number
+  repetitions: number
+  lastReviewedAt: string | null
+  createdAt: string
+}
+
+/** A `DrillCard` hydrated into something a drill session can actually show. */
+export interface DrillPrompt {
+  gameId: string
+  sourceType: DrillSourceType
+  ply: number
+  fen: string
+  color: MyColor
+  /** One or more SAN moves that count as correct — deviation cards accept
+   *  any of the repertoire's prepared replies, blunder cards accept only
+   *  the engine's suggested move. */
+  correctMoves: string[]
+  /** For display above the board, e.g. "vs OMENrus98 · 17/07/2026". */
+  gameLabel: string
+}

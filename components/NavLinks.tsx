@@ -7,6 +7,7 @@ const LINKS = [
   { href: '/', label: 'Games' },
   { href: '/openings', label: 'Openings' },
   { href: '/repertoire', label: 'Repertoire' },
+  { href: '/drill', label: 'Drill' },
 ]
 
 export function NavLinks() {

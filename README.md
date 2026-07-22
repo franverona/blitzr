@@ -17,22 +17,22 @@ your own Chess.com username.
 
 It ingests your Chess.com games via their public [Published-Data
 API](https://www.chess.com/news/view/published-data-api), figures out which openings you
-actually play, flags the moment you deviate from a repertoire you define yourself, and runs
-Stockfish in your browser to find your blunders — a later phase will drill you on those exact
-positions with spaced repetition.
+actually play, flags the moment you deviate from a repertoire you define yourself, runs
+Stockfish in your browser to find your blunders, and drills you on those exact positions —
+deviations and blunders alike — with spaced repetition.
 
 **Blitzr is unaffiliated with Chess.com.** It uses Chess.com's public, unauthenticated
 Published-Data API under their terms. It does not use Chess.com's name, logos, or marks in
 any way that implies endorsement or affiliation.
 
-## Status: Phase 3
+## Status: Phase 4
 
 - [x] Config for your Chess.com username
 - [x] Incremental sync of your games into SQLite
 - [x] Browse UI — game list, board replay, openings aggregated by ECO
 - [x] Phase 2 — intended repertoire + deviation detection
 - [x] Phase 3 — Stockfish (WASM) analysis, blunder detection
-- [ ] Phase 4 — spaced-repetition drilling
+- [x] Phase 4 — spaced-repetition drilling
 
 ## Stack
 
@@ -145,6 +145,16 @@ not automatic — analyzing your whole history in one go isn't built (yet).
 - If you're new to reading engine evals, the [chessprogramming.org Evaluation
   page](https://www.chessprogramming.org/Evaluation) covers the same centipawn/mate-score
   convention Stockfish (and Blitzr) uses.
+
+## Drilling
+
+On `/drill`, every repertoire deviation and every blunder from your own moves becomes a card:
+you're shown the position right before the mistake and have to find the move that should have
+been played (any of your repertoire's prepared replies for a deviation card, the engine's
+suggested move for a blunder card). Get it right and the card comes back further out; get it
+wrong and it comes back tomorrow, with the correct move revealed as an arrow. The deck stays in
+sync automatically — build more repertoire or analyze more games, and new cards just show up
+next time you visit.
 
 ## Data hygiene
 

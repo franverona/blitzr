@@ -1,5 +1,7 @@
 import type {
   ArchiveSyncStatus,
+  DrillCard,
+  DrillSourceType,
   Game,
   GameAnalysis,
   RepertoireColor,
@@ -56,11 +58,24 @@ export interface GameAnalysisTable {
   analyzed_at: string
 }
 
+export interface DrillCardsTable {
+  game_id: string
+  source_type: string
+  ply: number
+  due_at: string
+  interval_days: number
+  ease_factor: number
+  repetitions: number
+  last_reviewed_at: string | null
+  created_at: string
+}
+
 export interface DbSchema {
   games: GamesTable
   sync_state: SyncStateTable
   repertoire_moves: RepertoireMovesTable
   game_analysis: GameAnalysisTable
+  drill_cards: DrillCardsTable
 }
 
 export type DbType = 'sqlite'
@@ -92,4 +107,15 @@ export interface GameRepository {
   getGameAnalysis(gameId: string): Promise<GameAnalysis | undefined>
   /** Insert or replace — re-analyzing a game overwrites its previous result. */
   saveGameAnalysis(analysis: GameAnalysis): Promise<void>
+  /** Unpaginated — used by the drill deck sync, which needs every analyzed
+   *  game to find blunder candidates, mirroring listAllGames(). */
+  listAllGameAnalyses(): Promise<GameAnalysis[]>
+
+  listDrillCards(): Promise<DrillCard[]>
+  /** Insert or replace, keyed by (gameId, sourceType, ply) — used both for
+   *  new cards and for persisting an updated review schedule. */
+  upsertDrillCard(card: DrillCard): Promise<void>
+  deleteDrillCards(
+    keys: { gameId: string; sourceType: DrillSourceType; ply: number }[],
+  ): Promise<void>
 }

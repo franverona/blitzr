@@ -69,3 +69,16 @@ export async function fetchArchiveMonth(
   )
   return data.games
 }
+
+/** Purely decorative, so any failure (unknown user, bot with no public
+ *  profile, rate limit) just means no avatar rather than a broken page. */
+export async function fetchPlayerAvatar(username: string): Promise<string | null> {
+  try {
+    const data = await getJson<{ avatar?: string }>(
+      `${BASE_URL}/player/${encodeURIComponent(username)}`,
+    )
+    return data.avatar ?? null
+  } catch {
+    return null
+  }
+}

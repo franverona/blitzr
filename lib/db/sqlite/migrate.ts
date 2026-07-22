@@ -86,4 +86,21 @@ async function runMigrations(db: Kysely<DbSchema>): Promise<void> {
       analyzed_at TEXT NOT NULL
     )
   `.execute(db)
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS drill_cards (
+      game_id TEXT NOT NULL REFERENCES games(id) ON DELETE CASCADE,
+      source_type TEXT NOT NULL,
+      ply INTEGER NOT NULL,
+      due_at TEXT NOT NULL,
+      interval_days REAL NOT NULL,
+      ease_factor REAL NOT NULL,
+      repetitions INTEGER NOT NULL,
+      last_reviewed_at TEXT,
+      created_at TEXT NOT NULL,
+      PRIMARY KEY (game_id, source_type, ply)
+    )
+  `.execute(db)
+
+  await sql`CREATE INDEX IF NOT EXISTS drill_cards_due_at_idx ON drill_cards (due_at)`.execute(db)
 }
