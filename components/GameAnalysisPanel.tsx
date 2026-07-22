@@ -40,7 +40,7 @@ export function GameAnalysisPanel({
 
   if (!analysis) {
     return (
-      <details open>
+      <details>
         <summary className="cursor-pointer text-sm font-medium select-none">
           Stockfish analysis
         </summary>
@@ -64,7 +64,7 @@ export function GameAnalysisPanel({
   const worst = biggestBlunder(blunders)
 
   return (
-    <details open>
+    <details>
       <summary className="cursor-pointer text-sm font-medium select-none">
         Stockfish analysis
       </summary>

@@ -38,6 +38,14 @@ export function Board({
                 position: positions[ply],
                 boardOrientation,
                 allowDragging: false,
+                // Jumping to an arbitrary ply (clicking a move in the list, or
+                // the ⏮/⏭ buttons) isn't a single move — react-chessboard's
+                // default slide/cross-fade animation tries to animate every
+                // piece that differs between the two positions at once,
+                // which reads as a flicker/blink rather than a clean cut for
+                // anything but an adjacent-ply step. Just swap positions
+                // instantly instead.
+                showAnimations: false,
                 darkSquareStyle: { backgroundColor: '#769656' },
                 lightSquareStyle: { backgroundColor: '#eeeed2' },
                 darkSquareNotationStyle: { color: '#eeeed2' },

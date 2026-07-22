@@ -79,6 +79,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
 
       {game.movesSan && (
         <GameAnalysisPanel
+          key={game.id}
           gameId={game.id}
           initialFen={game.initialFen}
           movesSan={game.movesSan}

@@ -31,17 +31,18 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       lang="en"
       className={`dark ${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
-        <header className="border-b border-zinc-200 dark:border-zinc-800">
-          <nav className="mx-auto flex max-w-7xl items-center gap-6 px-4 py-3">
-            <Link href="/" className="flex items-center gap-2 text-lg font-semibold tracking-tight">
-              <Image src="/icon.svg" alt="" width={24} height={24} />
-              Blitzr
-            </Link>
-            <NavLinks />
-          </nav>
-        </header>
-        <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6">{children}</main>
+      <body className="flex min-h-full bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
+        <aside className="flex w-40 shrink-0 flex-col gap-4 border-r border-zinc-200 px-2 py-4 dark:border-zinc-800">
+          <Link
+            href="/"
+            className="flex items-center gap-2 px-2 text-lg font-semibold tracking-tight"
+          >
+            <Image src="/icon.svg" alt="" width={24} height={24} />
+            Blitzr
+          </Link>
+          <NavLinks />
+        </aside>
+        <main className="min-w-0 flex-1 px-6 py-6">{children}</main>
       </body>
     </html>
   )

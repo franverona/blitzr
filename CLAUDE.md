@@ -37,7 +37,7 @@ ahead of time.
 app/
   actions.ts              # all DB reads/writes + the sync/analysis triggers (Server Actions)
   page.tsx                 # games list (paginated), with the Sync button
-  layout.tsx                # nav (Games / Openings / Repertoire)
+  layout.tsx                # left sidebar nav (fixed width) + full-width main content
   globals.css
   games/[id]/page.tsx        # single game — board replay, repertoire diff, analysis panel,
                                # or raw PGN fallback for unparseable games
@@ -141,6 +141,23 @@ public/
   (`lib/repertoire.ts`) take plain data in and return plain data out. Keeps them backend-agnostic
   and directly unit-testable, and mirrors the same pattern `lib/analysis.ts`'s blunder detection
   uses for Phase 3.
+- **The left sidebar (`app/layout.tsx`) is a fixed width, `main` has no `max-w-*`/`mx-auto`
+  constraint** — deliberately, so the board and move list can use as much of the viewport as
+  possible (closer to how chess.com lays out a game page) rather than being centered in a
+  narrower column.
+- **A `<details>` element's open/closed state is native DOM state, not React state** — if the
+  same component instance survives a client-side navigation (same position in the tree, same
+  key), a user's manual toggle persists even though the JSX still says the same thing every
+  render, because React only reapplies an attribute when the _value_ it computes changes, not
+  when the underlying DOM was mutated natively out from under it. `GameAnalysisPanel.tsx`'s
+  `<details>` hit this across game-to-game navigation; fixed by giving it `key={game.id}` in
+  `app/games/[id]/page.tsx` so it fully remounts (and its `<details>` — no `open` attribute, so
+  closed by default — starts fresh) on every distinct game.
+- **`Board.tsx`'s `Chessboard` sets `showAnimations: false`** — jumping to an arbitrary ply
+  (clicking a move in the list, the ⏮/⏭ buttons) isn't a single move, and react-chessboard's
+  default slide/cross-fade animation tries to animate every piece that differs between the two
+  positions at once, which reads as a flicker/blink rather than a clean cut for anything but an
+  adjacent-ply step.
 
 ## Database backend
 
