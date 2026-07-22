@@ -164,11 +164,16 @@ public/
   state here before the analysis results moved into a dialog (native DOM state surviving a
   client-side navigation the same way) — worth remembering if a `<details>` gets reintroduced
   anywhere game-specific.
-- **`Board.tsx`'s `Chessboard` sets `showAnimations: false`** — jumping to an arbitrary ply
-  (clicking a move in the list, the ⏮/⏭ buttons) isn't a single move, and react-chessboard's
-  default slide/cross-fade animation tries to animate every piece that differs between the two
-  positions at once, which reads as a flicker/blink rather than a clean cut for anything but an
-  adjacent-ply step.
+- **`Board.tsx`'s `Chessboard` only animates adjacent-ply steps** — `showAnimations` is
+  `Math.abs(ply - prevPly) === 1`, not a flat `false`. react-chessboard's slide animation looks
+  right for a single move (◀/▶, or clicking the very next move in the list) but tries to animate
+  every piece that differs between two non-adjacent positions at once for a multi-ply jump
+  (⏮/⏭, or clicking a move further down the list), which reads as a flicker/blink rather than a
+  clean cut — so jumps still swap instantly. `prevPly` is tracked with `useState`, updated
+  during render via React's documented "adjust state when a prop changes" pattern (`if (ply !==
+prevPly) { ...; setPrevPly(ply) }`), not a ref — the project's eslint config flags
+  `ref.current` reads during render (`react-hooks/refs`), so a ref-based "previous value"
+  wouldn't lint clean here.
 - **`Board.tsx` is split the same way as `GameAnalysisPanel.tsx`**: `BoardProvider` owns ply
   state behind a Context, `BoardNavControls` (⏮◀counter▶⏭, in the page header) and `BoardView`
   (the board + move list) are separate consumers so the nav row can sit next to `AnalyzeButton`

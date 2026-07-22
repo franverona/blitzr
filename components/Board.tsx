@@ -95,6 +95,22 @@ export function BoardView() {
   const { ply, positions, boardOrientation, result, movesSan, evals, setPly } = useBoardContext()
   const bestMove = evals?.[ply]?.bestMove
 
+  // react-chessboard's slide animation looks great for a single adjacent-ply
+  // step (the ◀/▶ buttons, or clicking the very next move in the list) but
+  // tries to animate every piece that differs at once for a multi-ply jump
+  // (Start/End, or clicking a move further down the list), which reads as a
+  // flicker/blink rather than a clean cut. Only animate the adjacent case;
+  // swap instantly for everything else. `prevPly` is updated during render
+  // (React's documented "adjust state when a prop changes" pattern) rather
+  // than a ref, so the comparison stays render-safe instead of reading
+  // ref.current mid-render.
+  const [prevPly, setPrevPly] = useState(ply)
+  const [isAdjacentStep, setIsAdjacentStep] = useState(false)
+  if (ply !== prevPly) {
+    setIsAdjacentStep(Math.abs(ply - prevPly) === 1)
+    setPrevPly(ply)
+  }
+
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
       <div className="flex shrink-0 flex-col gap-3">
@@ -106,14 +122,7 @@ export function BoardView() {
                 position: positions[ply],
                 boardOrientation,
                 allowDragging: false,
-                // Jumping to an arbitrary ply (clicking a move in the list, or
-                // the ⏮/⏭ buttons) isn't a single move — react-chessboard's
-                // default slide/cross-fade animation tries to animate every
-                // piece that differs between the two positions at once,
-                // which reads as a flicker/blink rather than a clean cut for
-                // anything but an adjacent-ply step. Just swap positions
-                // instantly instead.
-                showAnimations: false,
+                showAnimations: isAdjacentStep,
                 darkSquareStyle: { backgroundColor: '#769656' },
                 lightSquareStyle: { backgroundColor: '#eeeed2' },
                 darkSquareNotationStyle: { color: '#eeeed2' },
