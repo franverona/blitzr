@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { Chessboard } from 'react-chessboard'
 import { describeEval, formatEval } from '@/lib/analysis'
 import { buildPositions } from '@/lib/positions'
@@ -8,23 +8,91 @@ import type { PositionEval } from '@/lib/types'
 import { EvalBar } from './EvalBar'
 import { PieceMoveLabel } from './PieceMoveLabel'
 
-export function Board({
+interface BoardContextValue {
+  ply: number
+  setPly: (updater: number | ((ply: number) => number)) => void
+  positions: string[]
+  lastPly: number
+  boardOrientation: 'white' | 'black'
+  result?: string
+  movesSan: string[]
+  evals?: PositionEval[]
+}
+
+// The nav controls (⏮◀▶⏭) live in the page header, next to the analysis
+// button, while the board + move list live further down — same
+// Context-sharing shape as GameAnalysisPanel's button/dialog split, for the
+// same reason: the two positions in the tree aren't adjacent.
+const BoardContext = createContext<BoardContextValue | null>(null)
+
+function useBoardContext(): BoardContextValue {
+  const ctx = useContext(BoardContext)
+  if (!ctx) throw new Error('Must be used within <BoardProvider>')
+  return ctx
+}
+
+export function BoardProvider({
   initialFen,
   movesSan,
   boardOrientation,
   result,
   evals,
+  children,
 }: {
   initialFen: string
   movesSan: string[]
   boardOrientation: 'white' | 'black'
   result?: string
   evals?: PositionEval[]
+  children: React.ReactNode
 }) {
   const positions = useMemo(() => buildPositions(initialFen, movesSan), [initialFen, movesSan])
-
   const lastPly = positions.length - 1
   const [ply, setPly] = useState(lastPly)
+
+  return (
+    <BoardContext.Provider
+      value={{ ply, setPly, positions, lastPly, boardOrientation, result, movesSan, evals }}
+    >
+      {children}
+    </BoardContext.Provider>
+  )
+}
+
+export function BoardNavControls() {
+  const { ply, setPly, lastPly } = useBoardContext()
+
+  return (
+    <div className="flex items-center gap-2 text-sm">
+      <NavButton onClick={() => setPly(0)} disabled={ply === 0} label="Start">
+        ⏮
+      </NavButton>
+      <NavButton
+        onClick={() => setPly((p) => Math.max(0, p - 1))}
+        disabled={ply === 0}
+        label="Previous move"
+      >
+        ◀
+      </NavButton>
+      <span className="min-w-16 text-center text-zinc-400 tabular-nums">
+        {ply} / {lastPly}
+      </span>
+      <NavButton
+        onClick={() => setPly((p) => Math.min(lastPly, p + 1))}
+        disabled={ply === lastPly}
+        label="Next move"
+      >
+        ▶
+      </NavButton>
+      <NavButton onClick={() => setPly(lastPly)} disabled={ply === lastPly} label="End">
+        ⏭
+      </NavButton>
+    </div>
+  )
+}
+
+export function BoardView() {
+  const { ply, positions, boardOrientation, result, movesSan, evals, setPly } = useBoardContext()
   const bestMove = evals?.[ply]?.bestMove
 
   return (
@@ -32,7 +100,7 @@ export function Board({
       <div className="flex shrink-0 flex-col gap-3">
         <div className="flex items-stretch gap-2">
           {evals?.[ply] && <EvalBar evaluation={evals[ply]} boardOrientation={boardOrientation} />}
-          <div className="w-full max-w-[560px] overflow-hidden rounded shadow-lg">
+          <div className="w-full max-w-160 overflow-hidden rounded shadow-lg">
             <Chessboard
               options={{
                 position: positions[ply],
@@ -68,31 +136,6 @@ export function Board({
             {describeEval(evals[ply])} ({formatEval(evals[ply])})
           </p>
         )}
-        <div className="flex items-center gap-2 text-sm">
-          <NavButton onClick={() => setPly(0)} disabled={ply === 0} label="Start">
-            ⏮
-          </NavButton>
-          <NavButton
-            onClick={() => setPly((p) => Math.max(0, p - 1))}
-            disabled={ply === 0}
-            label="Previous move"
-          >
-            ◀
-          </NavButton>
-          <span className="min-w-16 text-center text-zinc-400 tabular-nums">
-            {ply} / {lastPly}
-          </span>
-          <NavButton
-            onClick={() => setPly((p) => Math.min(lastPly, p + 1))}
-            disabled={ply === lastPly}
-            label="Next move"
-          >
-            ▶
-          </NavButton>
-          <NavButton onClick={() => setPly(lastPly)} disabled={ply === lastPly} label="End">
-            ⏭
-          </NavButton>
-        </div>
       </div>
 
       <MoveList movesSan={movesSan} ply={ply} onSelect={setPly} result={result} />
@@ -166,7 +209,7 @@ function MoveList({
   }, [ply])
 
   return (
-    <div className="flex w-full flex-col overflow-hidden rounded border border-zinc-800 bg-zinc-900 lg:flex-1">
+    <div className="flex w-full flex-col overflow-hidden rounded border border-zinc-800 bg-zinc-900 lg:max-w-xs lg:flex-1">
       <button
         ref={ply === 0 ? activeRef : undefined}
         onClick={() => onSelect(0)}

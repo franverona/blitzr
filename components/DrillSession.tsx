@@ -1,10 +1,12 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { Chess } from 'chess.js'
 import { Chessboard } from 'react-chessboard'
 import { submitDrillAnswer } from '@/app/actions'
+import { legalDestinations } from '@/lib/legalMoves'
 import type { DrillPrompt } from '@/lib/types'
+import { LegalMoveSquare } from './LegalMoveSquare'
 
 type Feedback = 'correct' | 'incorrect' | null
 
@@ -63,6 +65,19 @@ export function DrillSession({
   // logical move.
   const answeredRef = useRef(false)
 
+  // Indexed even when `index` is out of range (session-complete screen) —
+  // array indexing out of bounds is `undefined`, not a throw, so these hooks
+  // can stay unconditional above the early returns below.
+  const prompt = sessionPrompts[index] as DrillPrompt | undefined
+  const legalMoves = useMemo(
+    () => (selectedSquare && prompt ? legalDestinations(prompt.fen, selectedSquare) : []),
+    [selectedSquare, prompt],
+  )
+  const legalMoveMap = useMemo(
+    () => new Map(legalMoves.map((m) => [m.to, m.isCapture])),
+    [legalMoves],
+  )
+
   if (sessionPrompts.length === 0) {
     return (
       <p className="text-sm text-zinc-500 dark:text-zinc-400">
@@ -73,7 +88,7 @@ export function DrillSession({
     )
   }
 
-  if (index >= sessionPrompts.length) {
+  if (!prompt) {
     return (
       <div className="flex flex-col gap-2">
         <p className="text-lg font-medium">Session complete</p>
@@ -84,11 +99,15 @@ export function DrillSession({
     )
   }
 
-  const prompt = sessionPrompts[index]
+  // Reassigned to a variable TS narrows to non-optional at the closures
+  // below — `prompt` itself stays a union type inside nested function
+  // declarations since TS doesn't carry the `if (!prompt)` narrowing across
+  // them.
+  const activePrompt = prompt
 
   function attemptMove(from: string, to: string): boolean {
     if (answeredRef.current) return false
-    const chess = new Chess(prompt.fen)
+    const chess = new Chess(activePrompt.fen)
     let move
     try {
       // ponytail: always promote to queen, same call as RepertoireBoard —
@@ -100,12 +119,17 @@ export function DrillSession({
     if (!move) return false
 
     answeredRef.current = true
-    const correct = prompt.correctMoves.includes(move.san)
+    const correct = activePrompt.correctMoves.includes(move.san)
     setFeedback(correct ? 'correct' : 'incorrect')
     setTally((t) =>
       correct ? { ...t, correct: t.correct + 1 } : { ...t, incorrect: t.incorrect + 1 },
     )
-    submitDrillAnswer(prompt.gameId, prompt.sourceType, prompt.ply, correct).catch(() => {})
+    submitDrillAnswer(
+      activePrompt.gameId,
+      activePrompt.sourceType,
+      activePrompt.ply,
+      correct,
+    ).catch(() => {})
     return true
   }
 
@@ -151,7 +175,7 @@ export function DrillSession({
         card {index + 1} of {sessionPrompts.length}
       </p>
 
-      <div className="w-full max-w-[480px] overflow-hidden rounded shadow-lg">
+      <div className="w-full max-w-160 overflow-hidden rounded shadow-lg">
         <Chessboard
           options={{
             position: prompt.fen,
@@ -159,9 +183,15 @@ export function DrillSession({
             allowDragging: !feedback,
             onPieceDrop: handleDrop,
             onSquareClick: handleSquareClick,
-            squareStyles: selectedSquare
-              ? { [selectedSquare]: { boxShadow: 'inset 0 0 0 3px #eeeed2' } }
-              : undefined,
+            squareRenderer: ({ square, children }) => (
+              <LegalMoveSquare
+                isSelected={square === selectedSquare}
+                isLegalMove={legalMoveMap.has(square)}
+                isCapture={legalMoveMap.get(square) ?? false}
+              >
+                {children}
+              </LegalMoveSquare>
+            ),
             darkSquareStyle: { backgroundColor: '#769656' },
             lightSquareStyle: { backgroundColor: '#eeeed2' },
             darkSquareNotationStyle: { color: '#eeeed2' },
