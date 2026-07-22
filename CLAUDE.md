@@ -15,7 +15,8 @@ ahead of time.
   it to flag the first deviating move.
 - **Phase 3 (done)**: Stockfish (WASM, in a Web Worker) analysis — per-game blunders and biggest
   eval drop. A cross-game "recurring blunders" aggregate is a natural follow-up, not yet built.
-- **Phase 4**: spaced-repetition drilling of deviation/blunder positions.
+- **Phase 4 (done)**: spaced-repetition drilling (`/drill`) of repertoire deviations and your own
+  blunders, via a card per drillable position scheduled with SM-2.
 
 ## Stack
 
@@ -42,6 +43,7 @@ app/
                                # or raw PGN fallback for unparseable games
   openings/page.tsx           # ECO family aggregation, expandable to named lines
   repertoire/page.tsx          # repertoire tree builder (White/Black tabs)
+  drill/page.tsx                # spaced-repetition drill deck (see "Drilling")
 components/
   GameList.tsx / GameRow.tsx  # games table
   Board.tsx                    # react-chessboard + ply navigation (client), read-only replay
@@ -49,16 +51,20 @@ components/
                                    # builds the repertoire tree as you play moves
   RepertoireTree.tsx               # nested move-tree view with branch switching (client)
   GameAnalysisPanel.tsx              # triggers Stockfish analysis, shows blunders (client)
+  DrillSession.tsx                     # one drill card at a time — move input, grading,
+                                         # session summary (client, see "Drilling")
   OpeningsTable.tsx                    # family/line aggregation table (client, expand/collapse)
   PieceGlyph.tsx / PieceMoveLabel.tsx    # Wikimedia chess piece SVGs, colored by moving side
   KnightGlyph.tsx / KnightIcon.tsx         # illustrated knight (favicon, White/Black side badge)
-  NavLinks.tsx                              # active-tab nav (client, usePathname)
-  BackButton.tsx                              # router.back(), not a Link — preserves list pagination
-  SyncButton.tsx                                # triggers the sync Server Action (client)
+  PlayerAvatar.tsx                           # Chess.com profile avatar (plain <img>), initial-letter
+                                               # fallback when a player has none or the fetch fails
+  NavLinks.tsx                                 # active-tab nav (client, usePathname)
+  SyncButton.tsx                                  # triggers the sync Server Action (client)
 lib/
   config.ts                # getChesscomUsername() — reads CHESSCOM_USERNAME
   types.ts                  # domain types: Game, OpeningFamily/Line, RepertoireNode,
-                              # GameAnalysis/PositionEval/Blunder, ArchiveSyncStatus, SyncResult
+                              # GameAnalysis/PositionEval/Blunder, DrillCard/DrillPrompt,
+                              # ArchiveSyncStatus, SyncResult
   dates.ts                   # formatDate/formatDateTime — hand-formatted, not Intl (see below)
   san.ts                       # splitSanPiece, plyLabel — SAN/move-number display helpers
   positions.ts                  # buildPositions() — walks movesSan into a FEN-per-ply array,
@@ -66,6 +72,8 @@ lib/
   openings.ts                    # buildOpeningFamilies() — pure aggregation, unit-tested
   repertoire.ts                    # buildRepertoireIndex(), diffGameAgainstRepertoire() — pure
   analysis.ts                       # findBlunders(), biggestBlunder(), formatEval() — pure
+  drill.ts                           # candidate-finding, card hydration, SM-2 scheduling — pure
+                                       # (see "Drilling")
   sync.ts                            # syncAllArchives() — orchestrates client + normalize + repo
   chesscom/
     client.ts                        # fetchArchives, fetchArchiveMonth — serial, UA header, 429 backoff
@@ -148,7 +156,9 @@ public/
 - Tables: `games`, `sync_state`, `repertoire_moves` (branching tree per color, `ON DELETE
 CASCADE` from a node to its subtree — requires the `foreign_keys` pragma, see
   `sqlite/connection.ts`), `game_analysis` (one row per analyzed game, keyed by `game_id`,
-  `ON DELETE CASCADE` if the game is ever removed).
+  `ON DELETE CASCADE` if the game is ever removed), `drill_cards` (one row per drillable
+  position — spaced-repetition schedule only, see "Drilling"; keyed by `(game_id, source_type,
+ply)` rather than a synthetic id, `ON DELETE CASCADE` on `game_id`).
 
 ## Chess.com ingestion
 
@@ -164,6 +174,11 @@ CASCADE` from a node to its subtree — requires the `foreign_keys` pragma, see
   (correspondence) games are synced like everything else. Filtering what counts toward the
   user's repertoire is a UI/analysis-layer decision, not an ingestion-time one, so nothing
   synced is ever silently lost.
+- **Player avatars aren't synced/stored** — `fetchPlayerAvatar()` (`lib/chesscom/client.ts`)
+  hits `/pub/player/{username}` live on every game page view and is never cached, since it's
+  purely decorative for a low-traffic single-user app. It swallows any failure (unknown user,
+  bot with no public profile, rate limit) and returns `null` rather than breaking the page —
+  `PlayerAvatar.tsx` falls back to an initial-letter badge in that case.
 
 ### Known Chess.com API quirks
 
@@ -255,13 +270,73 @@ mate` relative to **whoever is to move** in the given position, not always White
   "your most common blunders" aggregate yet — both are natural follow-ups once individual games
   can be analyzed, but weren't part of what Phase 3 asked for.
 
+## Drilling (Phase 4)
+
+- **No new position/eval storage** — a drillable position is fully derivable from data that
+  already exists (`games.moves_san`, `repertoire_moves`, `game_analysis.evals`) via the same
+  pure functions Phases 2/3 already built. `drill_cards` stores only the spaced-repetition
+  schedule, keyed by `(gameId, sourceType, ply)` rather than a synthetic id; everything else
+  (the FEN to show, the accepted move(s), board orientation) is recomputed on demand by
+  `buildDrillPrompt()` (`lib/drill.ts`) rather than duplicated into storage.
+- **Two card sources**: `findDeviationCandidates()` — one card per repertoire-tracked game
+  currently at its first deviation ply (reuses `diffGameAgainstRepertoire`); and
+  `findBlunderCandidates()` — one card per blunder in an analyzed game (reuses `findBlunders`),
+  **filtered to plies the user actually played** — `findBlunders` walks the whole game including
+  the opponent's mistakes, which aren't useful to drill ("what should _you_ have played" only
+  makes sense for your own moves).
+- **Correctness check**: deviation cards accept any of the repertoire's prepared moves at that
+  node (multiple prepared replies are valid by design); blunder cards accept only the engine's
+  exact suggested move (`evalBefore.bestMove.san`) — not "anything within N centipawns," which
+  would need Stockfish running live during a drill session.
+- **Deck sync runs on every `/drill` load** (`getDrillDeck()` in `app/actions.ts`), no separate
+  "sync" action — same as how the openings aggregation just recomputes fresh on every load. It
+  diffs current candidates against stored `drill_cards`: new candidates get a fresh card (due
+  immediately), cards no longer matching any candidate get pruned (e.g. the repertoire changed,
+  or a re-analysis changed which moves are blunders).
+- **Scheduling** (`scheduleReview()`, `lib/drill.ts`) is SM-2 (the algorithm behind
+  Anki/SuperMemo) simplified to binary grading — correct/incorrect rather than a 0-5 recall
+  scale, since a drill card here is "did you find the move," not free recall. New cards start at
+  `easeFactor 2.5`, due immediately; correct answers step the interval 1 day → 6 days →
+  `interval × easeFactor` and nudge ease up; an incorrect answer resets to a 1-day interval and
+  nudges ease down (floored at `1.3`).
+- **`DrillSession.tsx` snapshots its `prompts` prop into state on mount** (`useState(prompts)`,
+  read once) instead of using the live prop on every render. `submitDrillAnswer` calls
+  `revalidatePath('/drill')` after every answer, which re-runs the deck sync server-side and can
+  hand the component a _different_ prompts array mid-session (the just-answered card drops off,
+  another becomes due) — reading that directly would let a background revalidation reshuffle an
+  in-progress session's cards out from under its `index`, or, worse, collapse straight to the
+  "nothing due" empty state the moment the last card is answered instead of showing the session
+  summary. `app/drill/page.tsx` always renders `<DrillSession>` unconditionally for the same
+  reason — it used to branch between the empty-state message and `<DrillSession>` based on the
+  live prompt count, which unmounted the in-progress session (and its tally) the instant the
+  count hit zero. The empty-state decision now lives inside `DrillSession`, using its own frozen
+  snapshot, so the component identity — and its state — never gets pulled out from under a
+  session in progress.
+- **Grading is guarded by a ref, not `feedback` state** (`answeredRef` in `DrillSession.tsx`):
+  state updates aren't visible to a second handler call within the same synchronous event-handler
+  pass, so if the underlying board library's click/drop handlers ever end up firing twice for one
+  logical move, a state-only guard wouldn't catch the second call — it'd grade (and
+  `submitDrillAnswer`) the same move twice. A ref flips synchronously on the first successful
+  grade, so a prompt can only ever be graded once no matter how many times the handlers fire.
+- **Move input** mirrors `RepertoireBoard.tsx`'s `attemptMove` pattern (drag or click-to-move,
+  `chess.move({from, to, promotion: 'q'})` in a try/catch) rather than sharing code with it — the
+  surrounding logic differs enough (no tree, grades against `correctMoves` and locks the board
+  instead of always accepting the move) that extracting a shared helper would cost more than it
+  saves.
+- **Reveal arrow**: on an incorrect answer, the accepted move(s) are drawn as arrows
+  (`options.arrows`, same amber `rgba(234, 179, 8, 0.9)` as the engine-suggestion arrow in
+  `Board.tsx`) computed by replaying each SAN in `correctMoves` against the prompt's FEN with a
+  throwaway chess.js instance — `DrillPrompt.correctMoves` only stores SAN strings, not
+  from/to squares, so this is recomputed at reveal time rather than carried in the data model.
+
 ## Testing
 
 - **Vitest** — run with `pnpm test` (or `pnpm test:watch`)
 - Tests live in `__tests__/`, one file per `lib/` module they cover: `normalize.test.ts`,
   `openings.test.ts`, `repertoire.test.ts`, `analysis.test.ts`, `san.test.ts`, `dates.test.ts`,
-  `stockfish-analyze.test.ts` (just `terminalEval()` — the rest of `analyzeGame()` needs a real
-  browser Worker and isn't unit-tested)
+  `drill.test.ts`, `stockfish-analyze.test.ts` (just `terminalEval()`) and `stockfish-client.test.ts`
+  (just `parseBestMove()`) — the rest of `evaluate()`/`analyzeGame()` needs a real browser Worker
+  and isn't unit-tested
 - Pure functions are tested directly against fixtures — no DB, network, or browser needed for
   any of them
 

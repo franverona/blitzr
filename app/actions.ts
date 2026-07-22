@@ -2,10 +2,21 @@
 
 import { revalidatePath } from 'next/cache'
 import { getRepository } from '@/lib/db'
+import {
+  buildDrillPrompt,
+  findBlunderCandidates,
+  findDeviationCandidates,
+  newCardSchedule,
+  scheduleReview,
+} from '@/lib/drill'
+import type { DrillCandidate } from '@/lib/drill'
 import { buildOpeningFamilies } from '@/lib/openings'
 import { syncAllArchives } from '@/lib/sync'
 import type {
   ArchiveSyncStatus,
+  DrillCard,
+  DrillPrompt,
+  DrillSourceType,
   Game,
   GameAnalysis,
   OpeningFamily,
@@ -62,4 +73,91 @@ export async function getGameAnalysis(gameId: string): Promise<GameAnalysis | un
 export async function saveGameAnalysis(gameId: string, evals: PositionEval[]): Promise<void> {
   await getRepository().saveGameAnalysis({ gameId, evals, analyzedAt: new Date().toISOString() })
   revalidatePath(`/games/${gameId}`)
+}
+
+function cardKey(c: { gameId: string; sourceType: DrillSourceType; ply: number }): string {
+  return `${c.gameId}:${c.sourceType}:${c.ply}`
+}
+
+/**
+ * Syncs the drill deck against current game/repertoire/analysis data (new
+ * candidates get a fresh card, cards that no longer match anything — e.g.
+ * the repertoire changed — get pruned) and returns every prompt that's
+ * currently due. Runs on every /drill load rather than behind a separate
+ * "sync" action — it's a cheap local recompute, same as how the openings
+ * aggregation just runs fresh on every page load.
+ */
+export async function getDrillDeck(): Promise<{ prompts: DrillPrompt[]; totalCards: number }> {
+  const repo = getRepository()
+  const [games, whiteNodes, blackNodes, analyses, existingCards] = await Promise.all([
+    repo.listAllGames(),
+    repo.listRepertoireNodes('white'),
+    repo.listRepertoireNodes('black'),
+    repo.listAllGameAnalyses(),
+    repo.listDrillCards(),
+  ])
+
+  const gamesById = new Map(games.map((g) => [g.id, g]))
+  const repertoireByColor = new Map<RepertoireColor, RepertoireNode[]>([
+    ['white', whiteNodes],
+    ['black', blackNodes],
+  ])
+  const analysesByGameId = new Map(analyses.map((a) => [a.gameId, a]))
+
+  const candidates: DrillCandidate[] = [
+    ...findDeviationCandidates(games, repertoireByColor),
+    ...findBlunderCandidates(games, analysesByGameId),
+  ]
+  const candidateKeys = new Set(candidates.map(cardKey))
+  const existingByKey = new Map(existingCards.map((c) => [cardKey(c), c]))
+
+  const stale = existingCards.filter((c) => !candidateKeys.has(cardKey(c)))
+  const now = new Date()
+  const newCards: DrillCard[] = candidates
+    .filter((c) => !existingByKey.has(cardKey(c)))
+    .map((c) => ({ ...c, ...newCardSchedule(now), createdAt: now.toISOString() }))
+
+  await Promise.all([
+    ...(stale.length > 0 ? [repo.deleteDrillCards(stale)] : []),
+    ...newCards.map((c) => repo.upsertDrillCard(c)),
+  ])
+
+  const liveCards = [...existingCards.filter((c) => candidateKeys.has(cardKey(c))), ...newCards]
+  const dueCards = liveCards.filter((c) => c.dueAt <= now.toISOString())
+
+  const prompts = dueCards
+    .map((card) => {
+      const game = gamesById.get(card.gameId)
+      return game ? buildDrillPrompt(card, game, repertoireByColor, analysesByGameId) : null
+    })
+    .filter((p): p is DrillPrompt => p !== null)
+
+  return { prompts, totalCards: liveCards.length }
+}
+
+export async function submitDrillAnswer(
+  gameId: string,
+  sourceType: DrillSourceType,
+  ply: number,
+  correct: boolean,
+): Promise<void> {
+  const repo = getRepository()
+  const cards = await repo.listDrillCards()
+  const current = cards.find(
+    (c) => c.gameId === gameId && c.sourceType === sourceType && c.ply === ply,
+  )
+  const now = new Date()
+  const next = scheduleReview(
+    current ?? { intervalDays: 0, easeFactor: 2.5, repetitions: 0 },
+    correct,
+    now,
+  )
+  await repo.upsertDrillCard({
+    gameId,
+    sourceType,
+    ply,
+    ...next,
+    createdAt: current?.createdAt ?? now.toISOString(),
+  })
+  revalidatePath('/drill')
 }
