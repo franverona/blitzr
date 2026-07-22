@@ -14,7 +14,7 @@ import { whiteToMove } from '@/lib/drill'
 import { buildPositions } from '@/lib/positions'
 import { describeMove, plyLabel } from '@/lib/san'
 import { analyzeGame } from '@/lib/stockfish/analyze'
-import { describeBlunderReason, detectBlunderReason } from '@/lib/tactics'
+import { describeBetterMove, describeBlunderReason, detectBlunderReason } from '@/lib/tactics'
 import type { GameAnalysis, MyColor } from '@/lib/types'
 import { BlunderSeverityBadge } from './BlunderSeverityBadge'
 import { EvalHelp } from './EvalHelp'
@@ -197,6 +197,12 @@ function AnalysisDialog({ dialogRef }: { dialogRef: React.RefObject<HTMLDialogEl
                   positions[b.ply],
                   moverColor,
                 )
+                const betterMove = describeBetterMove(
+                  positions[b.ply - 1],
+                  b.moveSan,
+                  b.evalBefore.bestMove,
+                  moverColor,
+                )
                 return (
                   <li key={b.ply}>
                     <div className="flex flex-wrap items-center gap-1.5">
@@ -204,9 +210,6 @@ function AnalysisDialog({ dialogRef }: { dialogRef: React.RefObject<HTMLDialogEl
                       <span>
                         {plyLabel(b.ply)} {b.moveSan}: {formatEval(b.evalBefore)} →{' '}
                         {formatEval(b.evalAfter)} ({formatSwing(b)})
-                        {b.evalBefore.bestMove && b.evalBefore.bestMove.san !== b.moveSan && (
-                          <> — better was {b.evalBefore.bestMove.san}</>
-                        )}
                       </span>
                     </div>
                     <div className="text-xs text-zinc-500">
@@ -214,6 +217,9 @@ function AnalysisDialog({ dialogRef }: { dialogRef: React.RefObject<HTMLDialogEl
                     </div>
                     {reason && (
                       <div className="text-xs text-zinc-500">{describeBlunderReason(reason)}</div>
+                    )}
+                    {betterMove && (
+                      <div className="text-xs text-zinc-500">Better was {betterMove}</div>
                     )}
                   </li>
                 )

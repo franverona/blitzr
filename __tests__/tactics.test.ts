@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import {
-  detectBlunderReason,
+  describeBetterMove,
   describeBlunderReason,
   describeForkReason,
+  detectBlunderReason,
   detectFork,
+  explainBestMove,
 } from '@/lib/tactics'
 
 describe('detectFork', () => {
@@ -93,5 +95,77 @@ describe('describeBlunderReason', () => {
         targets: [{ piece: 'q', square: 'c7' }],
       }),
     ).toBe('This allows a fork — the knight on b5 now attacks the queen on c7 at once.')
+  })
+})
+
+describe('explainBestMove', () => {
+  it('explains that the suggested move saves a piece that was hanging', () => {
+    // The knight on f3 is already hanging to the bishop on b7 — Nd4 steps
+    // off the a8-h1 diagonal to safety.
+    const fen = 'k7/1b6/8/8/8/5N2/8/4K3 w - - 0 1'
+    expect(explainBestMove(fen, 'Nd4', 'white')).toBe('Saves the knight on f3, which was hanging.')
+  })
+
+  it('explains that the suggested move escapes an existing fork', () => {
+    // White's knight on d5 already forks the queen (c7) and rook (b4) — a
+    // bishop on d6 individually defends both, so neither is independently
+    // "hanging" (isolating this from the saves-a-hanging-piece branch above).
+    // Qc8 pulls the queen out of the fork's range.
+    const fen = '6k1/2q5/3b4/3N4/1r6/8/8/6K1 b - - 0 1'
+    const explanation = explainBestMove(fen, 'Qc8', 'black')
+    expect(explanation).toMatch(/^Gets .+ out of the fork\.$/)
+    expect(explanation).toContain('the queen on c7')
+    expect(explanation).toContain('the rook on b4')
+  })
+
+  it('explains that the suggested move wins material by attacking a hanging enemy piece', () => {
+    // The rook on b1 doesn't yet attack the undefended knight on a7; Ra1
+    // moves onto the open a-file and newly attacks it.
+    const fen = '7k/n7/8/8/8/8/8/1R4K1 w - - 0 1'
+    expect(explainBestMove(fen, 'Ra1', 'white')).toBe("Leaves the opponent's knight on a7 hanging.")
+  })
+
+  it('explains that the suggested move creates a new fork', () => {
+    // The knight on d4 (safe from both the queen and rook, unlike c3 which
+    // sits on the queen's file) doesn't yet fork anything; Nb5 newly
+    // attacks both the queen (c7) and the rook (a7) at once. The queen and
+    // rook mutually defend each other along the 7th rank, so neither is
+    // independently hanging — isolating this from the wins-material branch.
+    const fen = '6k1/r1q5/8/8/3N4/8/8/6K1 w - - 0 1'
+    const explanation = explainBestMove(fen, 'Nb5', 'white')
+    expect(explanation).toMatch(/^Forks .+ at once\.$/)
+    expect(explanation).toContain('the queen on c7')
+    expect(explanation).toContain('the rook on a7')
+  })
+
+  it('returns null for a quiet move none of the heuristics explain', () => {
+    const fen = '7k/8/8/8/8/8/8/R6K w - - 0 1'
+    expect(explainBestMove(fen, 'Ra5', 'white')).toBeNull()
+  })
+})
+
+describe('describeBetterMove', () => {
+  const fen = 'r5k1/2q5/8/1N6/8/8/8/6K1 w - - 0 1'
+
+  it('returns null when there is no engine suggestion', () => {
+    expect(describeBetterMove(fen, 'Kg2', null, 'white')).toBeNull()
+  })
+
+  it('returns null when the suggestion matches what was actually played', () => {
+    expect(describeBetterMove(fen, 'Kg2', { from: 'g1', to: 'g2', san: 'Kg2' }, 'white')).toBeNull()
+  })
+
+  it('combines the mechanical description with a tactical explanation when one applies', () => {
+    const before = '7k/n7/8/8/8/8/8/1R4K1 w - - 0 1'
+    expect(describeBetterMove(before, 'Kg2', { from: 'b1', to: 'a1', san: 'Ra1' }, 'white')).toBe(
+      "Ra1 (Rook to a1) — Leaves the opponent's knight on a7 hanging.",
+    )
+  })
+
+  it('omits the explanation clause when no tactical pattern applies', () => {
+    const before = '7k/8/8/8/8/8/8/R6K w - - 0 1'
+    expect(describeBetterMove(before, 'Kg2', { from: 'a1', to: 'a5', san: 'Ra5' }, 'white')).toBe(
+      'Ra5 (Rook to a5)',
+    )
   })
 })
