@@ -83,13 +83,15 @@ components/
 lib/
   config.ts                # getChesscomUsername() — reads CHESSCOM_USERNAME
   types.ts                  # domain types: Game, OpeningFamily/Line, RepertoireNode,
-                              # GameAnalysis/PositionEval/Blunder, DrillCard/DrillPrompt,
-                              # ArchiveSyncStatus, SyncResult
+                              # GameAnalysis/PositionEval/Blunder/HangingPieceReason,
+                              # DrillCard/DrillPrompt, ArchiveSyncStatus, SyncResult
   dates.ts                   # formatDate/formatDateTime — hand-formatted, not Intl (see below)
   san.ts                       # splitSanPiece, plyLabel, describeMove() — SAN/move-number display
                                  # helpers; describeMove() turns SAN into a plain-English sentence
   material.ts                    # materialDiff()/formatMaterialDiff() — pure piece-value count,
                                    # no engine/analysis dependency
+  hangingPiece.ts                # detectHangingPiece()/describeHangingPieceReason() — v1
+                                   # "why was this a blunder" heuristic, hanging pieces only
   legalMoves.ts                 # legalDestinations(fen, square) — chess.js wrapper, drives the
                                   # dot/ring legal-move highlighting on interactive boards
   positions.ts                  # buildPositions() — walks movesSan into a FEN-per-ply array,
@@ -400,6 +402,31 @@ mate` relative to **whoever is to move** in the given position, not always White
   `lib/openings.ts`) is now surfaced as a "Learn more about this opening" link in `GameHeader`
   (`app/games/[id]/page.tsx`), next to the ECO code — it existed in the data all along and was
   simply never rendered anywhere.
+- **Hanging-piece reasons** (`detectHangingPiece()`/`describeHangingPieceReason()`,
+  `lib/hangingPiece.ts`) say _why_ a move was a blunder, not just that it was one — v1 only
+  detects the single most common beginner mistake: a piece left attacked and undefended,
+  capturable for free. Built entirely on chess.js's own `board()`/`isAttacked()` (no new
+  dependency, no custom attack-generation code). Deliberately narrow: no static-exchange
+  evaluation (an attacker outvalued by what it'd capture still counts) and no pin awareness (a
+  pinned "attacker" still counts) — forks/pins/skewers are a future extension, not this pass.
+  Takes the position **before and after** the blunder move (not just after) so one function
+  catches two distinct cases: the piece that just moved walking into an attacked square, and a
+  _different_ piece the mover stopped defending (a discovered hang) — while a piece already
+  hanging before the move (a standing weakness, not something this move caused) is filtered out
+  by comparing the two. When more than one piece is newly hanging at once, the higher-value one
+  is reported. This needs both FENs, which `findBlunders()` (`lib/analysis.ts`) doesn't have (it
+  only sees evals), so it's a separate function called wherever `positions` is already available
+  rather than a change to `findBlunders`'s signature — `Blunder` is unchanged. Wired into the
+  same three spots `describeMove()` reached: `GameAnalysisPanel.tsx`'s `AnalysisDialog` (every
+  blunder in the game, computed from `whiteToMove(ply)` since the dialog shows both sides) and
+  `GameSummary()` (the account's own biggest blunder, if it was hanging a piece), plus
+  `WorstBlunder.reason` on `lib/blunders.ts`'s aggregate (computed only for the ≤10 entries that
+  survive the slice, same cost-bounding as `moveDescription` — these are already filtered to the
+  account's own moves, so `moverColor` is just `game.myColor`, no extra parity check).
+  `PIECE_VALUES` (`lib/material.ts`) and `PIECE_NAMES` (`lib/san.ts`) are exported and reused
+  here rather than duplicated. Not every blunder gets a reason — a swing from something other
+  than a simple hung piece (a bad trade, a positional error, a missed tactic this heuristic
+  doesn't cover) correctly shows no reason line rather than a wrong one.
 
 ## Drilling (Phase 4)
 
@@ -501,11 +528,13 @@ client'`. Reuses `PieceGlyph` (white variant, on the same green badge `PieceMove
   URL-driven initial ply on the game page (`BoardProvider` seeds its ply from `useState`), so
   deep-linking into the exact position wasn't attempted here; landing on the game and stepping
   through the move list is enough for v1.
-- **`WorstBlunder.moveDescription`** (plain-English text via `describeMove()`, `lib/san.ts`) is
-  computed in `buildBlunderStats()` only for the ≤10 entries that survive the sort-and-slice to
-  the worst list, not for every blunder counted along the way — the intermediate collection type
-  is `BlunderCandidate = Omit<WorstBlunder, 'moveDescription'>`, enriched with a description (via
-  a `gameId -> Game` lookup to rebuild that specific game's positions) only after slicing, to keep
+- **`WorstBlunder.moveDescription`/`.reason`** (plain-English text via `describeMove()`,
+  `lib/san.ts`, and the hanging-piece check via `detectHangingPiece()`, `lib/hangingPiece.ts` —
+  see "Hanging-piece reasons" under "Engine analysis") are both computed in `buildBlunderStats()`
+  only for the ≤10 entries that survive the sort-and-slice to the worst list, not for every
+  blunder counted along the way — the intermediate collection type is
+  `BlunderCandidate = Omit<WorstBlunder, 'moveDescription' | 'reason'>`, enriched (via a
+  `gameId -> Game` lookup to rebuild that specific game's positions) only after slicing, to keep
   the per-blunder FEN-replay cost bounded to what's actually displayed.
 - **`EvalHelp` (`components/EvalHelp.tsx`) is a shared "how to read this" glossary**, extracted
   from `GameAnalysisPanel.tsx` (where it originally lived as a private function) so `/blunders`
@@ -525,8 +554,8 @@ client'`. Reuses `PieceGlyph` (white variant, on the same green badge `PieceMove
 - **Vitest** — run with `pnpm test` (or `pnpm test:watch`)
 - Tests live in `__tests__/`, one file per `lib/` module they cover: `normalize.test.ts`,
   `openings.test.ts`, `repertoire.test.ts`, `analysis.test.ts`, `san.test.ts` (including
-  `describeMove()`), `material.test.ts`, `dates.test.ts`, `drill.test.ts`, `blunders.test.ts`,
-  `stockfish-analyze.test.ts` (just `terminalEval()`) and `stockfish-client.test.ts` (just
+  `describeMove()`), `material.test.ts`, `hangingPiece.test.ts`, `dates.test.ts`, `drill.test.ts`,
+  `blunders.test.ts`, `stockfish-analyze.test.ts` (just `terminalEval()`) and `stockfish-client.test.ts` (just
   `parseBestMove()`) — the rest of `evaluate()`/`analyzeGame()`/`analyzeGames()` needs a real
   browser Worker and isn't unit-tested
 - Pure functions are tested directly against fixtures — no DB, network, or browser needed for

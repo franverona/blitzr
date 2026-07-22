@@ -1,6 +1,7 @@
 import { findBlunders } from './analysis'
 import { formatDate } from './dates'
 import { whiteToMove } from './drill'
+import { detectHangingPiece } from './hangingPiece'
 import { ecoFamilyLabel } from './openings'
 import { buildPositions } from './positions'
 import { describeMove, splitSanPiece } from './san'
@@ -9,9 +10,10 @@ import type { BlunderGroupStat, BlunderStats, Game, GameAnalysis, WorstBlunder }
 const WORST_LIST_SIZE = 10
 
 /** Pre-description shape collected while walking every game's blunders —
- *  `moveDescription` is only computed for the handful that survive the sort
- *  + slice to `WORST_LIST_SIZE`, not for every blunder counted along the way. */
-type BlunderCandidate = Omit<WorstBlunder, 'moveDescription'>
+ *  `moveDescription`/`reason` are only computed for the handful that survive
+ *  the sort + slice to `WORST_LIST_SIZE`, not for every blunder counted along
+ *  the way. */
+type BlunderCandidate = Omit<WorstBlunder, 'moveDescription' | 'reason'>
 
 interface GroupAcc {
   label: string
@@ -124,6 +126,12 @@ export function buildBlunderStats(
       moveDescription: positions
         ? describeMove(positions[entry.ply - 1], entry.moveSan)
         : entry.moveSan,
+      // `worst` entries are already filtered to the account's own moves, so
+      // the mover is always `game.myColor` — no parity check needed here.
+      reason:
+        positions && game
+          ? detectHangingPiece(positions[entry.ply - 1], positions[entry.ply], game.myColor)
+          : null,
     }
   })
 

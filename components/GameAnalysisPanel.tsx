@@ -4,6 +4,7 @@ import { createContext, useContext, useMemo, useRef, useState } from 'react'
 import { saveGameAnalysis } from '@/app/actions'
 import { biggestBlunder, describeEval, findBlunders, formatEval, formatSwing } from '@/lib/analysis'
 import { whiteToMove } from '@/lib/drill'
+import { describeHangingPieceReason, detectHangingPiece } from '@/lib/hangingPiece'
 import { buildPositions } from '@/lib/positions'
 import { describeMove, plyLabel } from '@/lib/san'
 import { analyzeGame } from '@/lib/stockfish/analyze'
@@ -130,10 +131,13 @@ export function GameSummary() {
   }
 
   const isMine = whiteToMove(worst.ply) === (myColor === 'white')
+  const moverColor = whiteToMove(worst.ply) ? 'white' : 'black'
+  const reason = detectHangingPiece(positions[worst.ply - 1], positions[worst.ply], moverColor)
   return (
     <p className="text-sm text-zinc-500 dark:text-zinc-400">
       Biggest moment: {isMine ? 'you' : 'your opponent'} blundered on {plyLabel(worst.ply)}{' '}
-      {worst.moveSan} ({describeMove(positions[worst.ply - 1], worst.moveSan)}).
+      {worst.moveSan} ({describeMove(positions[worst.ply - 1], worst.moveSan)}).{' '}
+      {reason && describeHangingPieceReason(reason)}
     </p>
   )
 }
@@ -177,20 +181,33 @@ function AnalysisDialog({ dialogRef }: { dialogRef: React.RefObject<HTMLDialogEl
               {formatEval(worst!.evalAfter)}, {describeEval(worst!.evalAfter).toLowerCase()}).
             </p>
             <ul className="flex flex-col gap-1.5 text-sm text-zinc-400">
-              {blunders.map((b) => (
-                <li key={b.ply}>
-                  <div>
-                    {plyLabel(b.ply)} {b.moveSan}: {formatEval(b.evalBefore)} →{' '}
-                    {formatEval(b.evalAfter)} ({formatSwing(b)})
-                    {b.evalBefore.bestMove && b.evalBefore.bestMove.san !== b.moveSan && (
-                      <> — better was {b.evalBefore.bestMove.san}</>
+              {blunders.map((b) => {
+                const moverColor = whiteToMove(b.ply) ? 'white' : 'black'
+                const reason = detectHangingPiece(
+                  positions[b.ply - 1],
+                  positions[b.ply],
+                  moverColor,
+                )
+                return (
+                  <li key={b.ply}>
+                    <div>
+                      {plyLabel(b.ply)} {b.moveSan}: {formatEval(b.evalBefore)} →{' '}
+                      {formatEval(b.evalAfter)} ({formatSwing(b)})
+                      {b.evalBefore.bestMove && b.evalBefore.bestMove.san !== b.moveSan && (
+                        <> — better was {b.evalBefore.bestMove.san}</>
+                      )}
+                    </div>
+                    <div className="text-xs text-zinc-500">
+                      {describeMove(positions[b.ply - 1], b.moveSan)}
+                    </div>
+                    {reason && (
+                      <div className="text-xs text-zinc-500">
+                        {describeHangingPieceReason(reason)}
+                      </div>
                     )}
-                  </div>
-                  <div className="text-xs text-zinc-500">
-                    {describeMove(positions[b.ply - 1], b.moveSan)}
-                  </div>
-                </li>
-              ))}
+                  </li>
+                )
+              })}
             </ul>
           </div>
         )}
