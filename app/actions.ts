@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { buildBlunderStats } from '@/lib/blunders'
+import { fetchPlayerAvatar } from '@/lib/chesscom/client'
 import { formatDate } from '@/lib/dates'
 import { getRepository } from '@/lib/db'
 import {
@@ -10,9 +11,10 @@ import {
   findDeviationCandidates,
   newCardSchedule,
   scheduleReview,
+  selectSessionCards,
 } from '@/lib/drill'
 import type { DrillCandidate } from '@/lib/drill'
-import { buildOpeningFamilies } from '@/lib/openings'
+import { buildOpeningFamilies, ecoFamilyLabel } from '@/lib/openings'
 import { syncAllArchives } from '@/lib/sync'
 import type {
   ArchiveSyncStatus,
@@ -113,15 +115,29 @@ function cardKey(c: { gameId: string; sourceType: DrillSourceType; ply: number }
   return `${c.gameId}:${c.sourceType}:${c.ply}`
 }
 
+/** Same "group by family, not exact ECO code" convention `lib/blunders.ts`
+ *  already uses for its by-opening grouping. */
+function openingLabel(game: Game): string {
+  return game.ecoName ? ecoFamilyLabel(game.ecoName) : 'Unknown opening'
+}
+
 /**
  * Syncs the drill deck against current game/repertoire/analysis data (new
  * candidates get a fresh card, cards that no longer match anything — e.g.
- * the repertoire changed — get pruned) and returns every prompt that's
- * currently due. Runs on every /drill load rather than behind a separate
- * "sync" action — it's a cheap local recompute, same as how the openings
- * aggregation just runs fresh on every page load.
+ * the repertoire changed — get pruned) and returns the next session's
+ * prompts (capped, most-overdue first). Runs on every /drill load rather
+ * than behind a separate "sync" action — it's a cheap local recompute, same
+ * as how the openings aggregation just runs fresh on every page load.
  */
-export async function getDrillDeck(): Promise<{ prompts: DrillPrompt[]; totalCards: number }> {
+export async function getDrillDeck(filters?: {
+  sourceType?: DrillSourceType
+  opening?: string
+}): Promise<{
+  prompts: DrillPrompt[]
+  totalCards: number
+  dueCount: number
+  availableOpenings: string[]
+}> {
   const repo = getRepository()
   const [games, whiteNodes, blackNodes, analyses, existingCards] = await Promise.all([
     repo.listAllGames(),
@@ -157,16 +173,56 @@ export async function getDrillDeck(): Promise<{ prompts: DrillPrompt[]; totalCar
   ])
 
   const liveCards = [...existingCards.filter((c) => candidateKeys.has(cardKey(c))), ...newCards]
-  const dueCards = liveCards.filter((c) => c.dueAt <= now.toISOString())
+  const dueCardsAll = liveCards.filter((c) => c.dueAt <= now.toISOString())
 
-  const prompts = dueCards
+  const matchesFilters = (card: DrillCard) => {
+    if (filters?.sourceType && card.sourceType !== filters.sourceType) return false
+    if (filters?.opening) {
+      const game = gamesById.get(card.gameId)
+      if (!game || openingLabel(game) !== filters.opening) return false
+    }
+    return true
+  }
+  const filteredDue = dueCardsAll.filter(matchesFilters)
+  const sessionCards = selectSessionCards(filteredDue)
+
+  const rawPrompts = sessionCards
     .map((card) => {
       const game = gamesById.get(card.gameId)
       return game ? buildDrillPrompt(card, game, repertoireByColor, analysesByGameId) : null
     })
     .filter((p): p is DrillPrompt => p !== null)
 
-  return { prompts, totalCards: liveCards.length }
+  // buildDrillPrompt() stays pure (no I/O) — avatars are fetched here, once
+  // per unique opponent rather than once per card, same "resolve
+  // server-side" split the game page uses for fetchPlayerAvatar().
+  const opponentUsernames = [...new Set(rawPrompts.map((p) => p.opponentUsername))]
+  const avatarEntries = await Promise.all(
+    opponentUsernames.map(
+      async (username) => [username, await fetchPlayerAvatar(username)] as const,
+    ),
+  )
+  const avatarByUsername = new Map(avatarEntries)
+  const prompts = rawPrompts.map((p) => ({
+    ...p,
+    opponentAvatarUrl: avatarByUsername.get(p.opponentUsername) ?? null,
+  }))
+
+  const availableOpenings = [
+    ...new Set(
+      liveCards
+        .map((c) => gamesById.get(c.gameId))
+        .filter((g): g is Game => g !== undefined)
+        .map(openingLabel),
+    ),
+  ].sort()
+
+  return {
+    prompts,
+    totalCards: liveCards.length,
+    dueCount: filteredDue.length,
+    availableOpenings,
+  }
 }
 
 export async function submitDrillAnswer(

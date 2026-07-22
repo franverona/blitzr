@@ -216,4 +216,10 @@ export interface DrillPrompt {
   correctMoves: string[]
   /** For display above the board, e.g. "vs OMENrus98 · 17/07/2026". */
   gameLabel: string
+  opponentUsername: string
+  /** Fetched once per unique opponent in `getDrillDeck()` (`app/actions.ts`),
+   *  same "resolve server-side, render client-side" split `PlayerAvatar.tsx`
+   *  already uses on the game page — `buildDrillPrompt()` itself stays pure,
+   *  no network calls. Null if Chess.com has none / the fetch failed. */
+  opponentAvatarUrl: string | null
 }

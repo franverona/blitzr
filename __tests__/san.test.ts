@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { describeMove, plyLabel, splitSanPiece } from '@/lib/san'
+import { describeMove, hintPieceName, plyLabel, splitSanPiece } from '@/lib/san'
 
 describe('splitSanPiece', () => {
   it('splits a leading piece letter off piece moves', () => {
@@ -72,5 +72,25 @@ describe('describeMove', () => {
   it('appends a checkmate suffix', () => {
     const fen = '6k1/5ppp/8/8/8/8/8/3R2K1 w - - 0 1'
     expect(describeMove(fen, 'Rd8#')).toBe('Rook to d8, checkmate')
+  })
+})
+
+describe('hintPieceName', () => {
+  it('names each piece letter', () => {
+    expect(hintPieceName('Nc7')).toBe('knight')
+    expect(hintPieceName('Bxh6+')).toBe('bishop')
+    expect(hintPieceName('Rae1')).toBe('rook')
+    expect(hintPieceName('Qxe6#')).toBe('queen')
+    expect(hintPieceName('Kg8')).toBe('king')
+  })
+
+  it('names a pawn move with no leading piece letter', () => {
+    expect(hintPieceName('e4')).toBe('pawn')
+    expect(hintPieceName('exd5')).toBe('pawn')
+  })
+
+  it('names both castles "castling", not "king"', () => {
+    expect(hintPieceName('O-O')).toBe('castling')
+    expect(hintPieceName('O-O-O')).toBe('castling')
   })
 })

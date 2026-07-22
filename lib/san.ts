@@ -65,3 +65,15 @@ export function describeMove(fenBefore: string, san: string): string {
   if (san.endsWith('+')) return `${description}, check`
   return description
 }
+
+/**
+ * A low-detail hint of what kind of move a SAN move is, e.g. "knight",
+ * "pawn", "castling" — enough to nudge without revealing the square. Reuses
+ * `PIECE_NAMES` (lowercased) rather than a second piece-name map.
+ */
+export function hintPieceName(san: string): string {
+  if (san.startsWith('O-O')) return 'castling'
+  const { piece } = splitSanPiece(san)
+  if (!piece) return 'pawn'
+  return PIECE_NAMES[piece.toLowerCase() as PieceSymbol].toLowerCase()
+}
