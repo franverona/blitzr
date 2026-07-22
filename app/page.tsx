@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { listGames } from './actions'
+import { BulkAnalyzeButton } from '@/components/BulkAnalyzeButton'
 import { GameList } from '@/components/GameList'
 import { SyncButton } from '@/components/SyncButton'
 
@@ -17,9 +18,12 @@ export default async function GamesPage({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-semibold">Games</h1>
-        <SyncButton />
+        <div className="flex flex-wrap items-center gap-2">
+          <BulkAnalyzeButton />
+          <SyncButton />
+        </div>
       </div>
 
       <GameList games={games} />
