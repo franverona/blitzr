@@ -509,6 +509,63 @@ mate` relative to **whoever is to move** in the given position, not always White
   card's "correct" move is whatever the repertoire has prepared, which isn't guaranteed hang-free
   either. Purely informational — doesn't touch SM-2 grading, which stays exactly
   `correctMoves.includes(move.san)` regardless of this.
+- **Progressive hint** (`hintLevel` state, 0-3, in `DrillSession.tsx`): one "Hint" button, shown
+  only while `!feedback`, increments the level by one per click and disables at 3. Resets to 0 in
+  `handleNext()` alongside the other per-card resets.
+  - Level 1: piece name only, via a new `hintPieceName(san)` in `lib/san.ts` (reuses
+    `splitSanPiece`/the already-exported `PIECE_NAMES`, lowercased) — `'castling'` for
+    `O-O`/`O-O-O`, `'pawn'` for no leading letter, else the full piece name. For a deviation
+    card's multiple `correctMoves`, dedupes: `[...new Set(correctMoves.map(hintPieceName))].join(' or ')`.
+  - Level 2: highlights the origin square(s) of `correctMoves` — a new optional `isHintOrigin`
+    prop on `LegalMoveSquare.tsx` (default falsy, so `RepertoireBoard.tsx`'s usage needs no
+    changes), styled `bg-sky-400/40` — a different hue from the existing yellow
+    `isSelected` tint so the two read as distinct signals.
+  - Level 3: the full move as an arrow — reuses `revealArrows()` (already in this file for the
+    incorrect-answer reveal) and the existing `arrows` prop, just OR'd into the same condition
+    that already shows it on an incorrect answer.
+  - Levels 2 and 3 both need the same replayed moves from `revealArrows()`, computed once
+    (`const revealed = feedback === 'incorrect' || hintLevel >= 2 ? revealArrows(prompt) : []`)
+    and sliced per level, rather than calling it twice.
+  - The button itself is sized/styled the same as the Next/Restart buttons (not the smaller
+    utility-button treatment used elsewhere) with a 💡 emoji prefix, and the level-1 piece-name
+    text renders _below_ the board, not above it — both per direct user feedback on the initial
+    pass. Only the piece-name text has its own line; the origin highlight and arrow render on
+    the board itself.
+- **The board now visually reflects a correct answer** (`committedFen` state in
+  `DrillSession.tsx`): previously `position` was hardcoded to `prompt.fen` even after a move was
+  submitted, so a correct move never visually landed — the piece silently stayed put while
+  `feedback` said "Correct!". `committedFen` is set to the chess.js `Move.after` FEN only when
+  `correct` is true, and read as `committedFen ?? prompt.fen`; reset to `null` in `handleNext()`/
+  `handleRestart()`. Deliberately **not** set on an incorrect answer — the reveal arrow is
+  computed from `prompt.fen` (`revealArrows()`), so showing the wrong move actually played would
+  put the board and the arrow out of sync with each other.
+- **Shuffle and restart** (`handleRestart()` in `DrillSession.tsx`, a button on the
+  "Session complete" screen): re-shuffles `sessionPrompts` (a local Fisher-Yates `shuffle()`,
+  module-level in this file — single call site, not a `lib/` export) and resets `index`/`tally`/
+  `feedback`/`hangingReason`/`hintLevel`/`selectedSquare`/`answeredRef` to start the same batch of
+  cards over. `sessionPrompts` gained a setter for this — the very case its original "frozen
+  snapshot" design was meant to allow, since it's still only ever reordering what's already
+  loaded, never accepting fresh server data (which is what the freeze was protecting against —
+  see the comment above the `useState` call). **No new server action** — every answer during the
+  replay still calls `attemptMove` → `submitDrillAnswer` exactly as normal, which is what makes
+  this "actually reset the schedule" (per the user's own framing) rather than ungraded practice:
+  `submitDrillAnswer` (`app/actions.ts`) never checks whether a card is currently due, it just
+  grades whatever it's given, so replaying already-answered cards for real is sufficient — no
+  need for a dedicated "reset `dueAt`" action.
+- **Opponent avatar and centered layout**: `DrillPrompt` gained `opponentUsername` (already
+  computed in `buildDrillPrompt()` for `gameLabel`, just also returned raw) and
+  `opponentAvatarUrl`. `buildDrillPrompt()` itself stays pure/no-I/O — `opponentAvatarUrl` is
+  always `null` coming out of it; `getDrillDeck()` (`app/actions.ts`) fetches each _unique_
+  opponent's avatar once via the existing `fetchPlayerAvatar()` (`lib/chesscom/client.ts`, same
+  one the game page already uses) and merges it into the prompts afterward, so a session with many
+  cards against the same opponent doesn't refetch per card. Rendered via the existing
+  `PlayerAvatar.tsx` next to the `gameLabel` text. Separately, `DrillSession.tsx`'s outer
+  container gained `mx-auto w-full max-w-160` (moved off the board's own wrapper, which just
+  inherits it now) so the whole card — info row, board, feedback — sits centered as one column
+  instead of pinned to the left with empty space on the right; applied to all three render states
+  (empty deck, active session, session complete) for visual consistency. No move-list/sidebar
+  content was added next to the board — unlike `Board.tsx`'s game replay, a drill card has no
+  move history to show, so there's nothing to fill that space with yet.
 
 ## Blunders aggregate (Phase 5)
 
@@ -577,7 +634,7 @@ client'`. Reuses `PieceGlyph` (white variant, on the same green badge `PieceMove
 - **Vitest** — run with `pnpm test` (or `pnpm test:watch`)
 - Tests live in `__tests__/`, one file per `lib/` module they cover: `normalize.test.ts`,
   `openings.test.ts`, `repertoire.test.ts`, `analysis.test.ts`, `san.test.ts` (including
-  `describeMove()`), `material.test.ts`, `hangingPiece.test.ts`, `dates.test.ts`, `drill.test.ts`,
+  `describeMove()`/`hintPieceName()`), `material.test.ts`, `hangingPiece.test.ts`, `dates.test.ts`, `drill.test.ts`,
   `blunders.test.ts`, `stockfish-analyze.test.ts` (just `terminalEval()`) and `stockfish-client.test.ts` (just
   `parseBestMove()`) — the rest of `evaluate()`/`analyzeGame()`/`analyzeGames()` needs a real
   browser Worker and isn't unit-tested

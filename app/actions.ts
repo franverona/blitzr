@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { buildBlunderStats } from '@/lib/blunders'
+import { fetchPlayerAvatar } from '@/lib/chesscom/client'
 import { formatDate } from '@/lib/dates'
 import { getRepository } from '@/lib/db'
 import {
@@ -159,12 +160,27 @@ export async function getDrillDeck(): Promise<{ prompts: DrillPrompt[]; totalCar
   const liveCards = [...existingCards.filter((c) => candidateKeys.has(cardKey(c))), ...newCards]
   const dueCards = liveCards.filter((c) => c.dueAt <= now.toISOString())
 
-  const prompts = dueCards
+  const rawPrompts = dueCards
     .map((card) => {
       const game = gamesById.get(card.gameId)
       return game ? buildDrillPrompt(card, game, repertoireByColor, analysesByGameId) : null
     })
     .filter((p): p is DrillPrompt => p !== null)
+
+  // buildDrillPrompt() stays pure (no I/O) — avatars are fetched here, once
+  // per unique opponent rather than once per card, same "resolve
+  // server-side" split the game page uses for fetchPlayerAvatar().
+  const opponentUsernames = [...new Set(rawPrompts.map((p) => p.opponentUsername))]
+  const avatarEntries = await Promise.all(
+    opponentUsernames.map(
+      async (username) => [username, await fetchPlayerAvatar(username)] as const,
+    ),
+  )
+  const avatarByUsername = new Map(avatarEntries)
+  const prompts = rawPrompts.map((p) => ({
+    ...p,
+    opponentAvatarUrl: avatarByUsername.get(p.opponentUsername) ?? null,
+  }))
 
   return { prompts, totalCards: liveCards.length }
 }

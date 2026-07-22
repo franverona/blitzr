@@ -176,6 +176,12 @@ actually play, right or wrong, also gets checked for a hung piece, same as the R
 The deck stays in sync automatically — build more repertoire or analyze more games, and new
 cards just show up next time you visit.
 
+Stuck on a card? **Hint** reveals progressively more each time you click it — first which piece
+to move, then which square it's on, then the full move as an arrow. Finished a session but don't
+want to wait until tomorrow for the cards you got wrong? **Shuffle and restart** on the
+session-complete screen replays the same cards in a new order — and it's a real do-over, not
+just practice: answering again actually updates that card's schedule, same as a normal answer.
+
 ## Blunders
 
 On `/blunders`, every blunder from your own moves — across every game that's been analyzed so

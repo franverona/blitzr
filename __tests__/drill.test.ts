@@ -131,6 +131,8 @@ describe('buildDrillPrompt', () => {
       color: 'white',
       correctMoves: ['Nf3', 'Bc4'],
       gameLabel: `vs opp · ${formatDate(game.endTime)}`,
+      opponentUsername: 'opp',
+      opponentAvatarUrl: null,
     })
   })
 
@@ -164,6 +166,8 @@ describe('buildDrillPrompt', () => {
       color: 'white',
       correctMoves: ['Nf3'],
       gameLabel: `vs opp · ${formatDate(game.endTime)}`,
+      opponentUsername: 'opp',
+      opponentAvatarUrl: null,
     })
   })
 

@@ -99,6 +99,8 @@ export function buildDrillPrompt(
       color,
       correctMoves: diff.expectedMoves,
       gameLabel,
+      opponentUsername: opponent,
+      opponentAvatarUrl: null,
     }
   }
 
@@ -116,6 +118,8 @@ export function buildDrillPrompt(
     color,
     correctMoves: [bestMove.san],
     gameLabel,
+    opponentUsername: opponent,
+    opponentAvatarUrl: null,
   }
 }
 
