@@ -1,30 +1,40 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { syncGames } from '@/app/actions'
+
+const TOAST_DURATION_MS = 4000
 
 export function SyncButton() {
   const [isPending, startTransition] = useTransition()
-  const [message, setMessage] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [toast, setToast] = useState<{ text: string; isError: boolean } | null>(null)
+
+  useEffect(() => {
+    if (!toast) return
+    const timeout = setTimeout(() => setToast(null), TOAST_DURATION_MS)
+    return () => clearTimeout(timeout)
+  }, [toast])
 
   function handleClick() {
-    setError(null)
-    setMessage(null)
+    setToast(null)
     startTransition(async () => {
       try {
         const result = await syncGames()
-        setMessage(
-          `Synced ${result.archivesSynced} archive${result.archivesSynced === 1 ? '' : 's'}, ${result.gamesUpserted} game${result.gamesUpserted === 1 ? '' : 's'} added.`,
-        )
+        setToast({
+          text: `Synced ${result.archivesSynced} archive${result.archivesSynced === 1 ? '' : 's'}, ${result.gamesUpserted} game${result.gamesUpserted === 1 ? '' : 's'} added.`,
+          isError: false,
+        })
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Sync failed.')
+        setToast({
+          text: err instanceof Error ? err.message : 'Sync failed.',
+          isError: true,
+        })
       }
     })
   }
 
   return (
-    <div className="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-3">
+    <>
       <button
         onClick={handleClick}
         disabled={isPending}
@@ -32,8 +42,19 @@ export function SyncButton() {
       >
         {isPending ? 'Syncing…' : 'Sync games'}
       </button>
-      {message && <span className="text-sm text-zinc-600 dark:text-zinc-400">{message}</span>}
-      {error && <span className="text-sm text-rose-600 dark:text-rose-400">{error}</span>}
-    </div>
+      {toast && (
+        <div
+          role="status"
+          onClick={() => setToast(null)}
+          className={`fixed right-4 bottom-4 z-50 max-w-sm cursor-pointer rounded-md border px-4 py-2.5 text-sm shadow-lg ${
+            toast.isError
+              ? 'border-rose-900 bg-rose-950 text-rose-200'
+              : 'border-zinc-700 bg-zinc-900 text-zinc-100'
+          }`}
+        >
+          {toast.text}
+        </div>
+      )}
+    </>
   )
 }
