@@ -45,7 +45,8 @@ app/
                                # or raw PGN fallback for unparseable games
   openings/page.tsx           # ECO family aggregation, expandable to named lines
   repertoire/page.tsx          # repertoire tree builder (White/Black tabs)
-  drill/page.tsx                # spaced-repetition drill deck (see "Drilling")
+  drill/page.tsx                # spaced-repetition drill deck, reads ?type/?opening
+                                  # (see "Drilling")
   blunders/page.tsx              # cross-game blunder aggregate (see "Blunders aggregate")
 components/
   GameList.tsx / GameRow.tsx  # games table
@@ -61,7 +62,10 @@ components/
                                        # (content) + GameSummary (biggest-blunder recap),
                                        # sharing state via Context (client)
   DrillSession.tsx                     # one drill card at a time — move input, grading,
-                                         # session summary (client, see "Drilling")
+                                         # hints, keyboard shortcuts, session summary (client,
+                                         # see "Drilling")
+  DrillFilters.tsx                       # sourceType tabs + opening select, ?type/?opening
+                                           # (client, see "Drilling")
   BlunderStats.tsx                       # by-opening table, by-piece chips, worst-blunders list
                                            # (server component, see "Blunders aggregate")
   EvalHelp.tsx                             # "how to read this" glossary for eval/blunder/swing
@@ -560,12 +564,50 @@ mate` relative to **whoever is to move** in the given position, not always White
   one the game page already uses) and merges it into the prompts afterward, so a session with many
   cards against the same opponent doesn't refetch per card. Rendered via the existing
   `PlayerAvatar.tsx` next to the `gameLabel` text. Separately, `DrillSession.tsx`'s outer
-  container gained `mx-auto w-full max-w-160` (moved off the board's own wrapper, which just
-  inherits it now) so the whole card — info row, board, feedback — sits centered as one column
-  instead of pinned to the left with empty space on the right; applied to all three render states
-  (empty deck, active session, session complete) for visual consistency. No move-list/sidebar
-  content was added next to the board — unlike `Board.tsx`'s game replay, a drill card has no
-  move history to show, so there's nothing to fill that space with yet.
+  container gained `mx-auto w-full max-w-140` (moved off the board's own wrapper, which just
+  inherits it now; shrunk from an initial `max-w-160` once a full card — board plus the info row,
+  hint text, and feedback line — turned out to still overflow a typical viewport height once
+  answered) so the whole card — info row, board, feedback — sits centered as one column instead
+  of pinned to the left with empty space on the right; applied to all three render states (empty
+  deck, active session, session complete) for visual consistency. No move-list/sidebar content
+  was added next to the board — unlike `Board.tsx`'s game replay, a drill card has no move
+  history to show, so there's nothing to fill that space with yet.
+- **Session cap** (`MAX_SESSION_CARDS = 15`, `selectSessionCards()`, `lib/drill.ts`): a session is
+  the 15 most-overdue due cards (`dueAt` is an ISO string, so a plain lexicographic sort is
+  already chronological), not every currently-due card at once — with a large deck that could
+  otherwise be 40+ cards in one sitting. `getDrillDeck()`'s return grew `dueCount` (post-filter,
+  pre-cap due count), and the session-complete screen shows a "`N` more due — load more" link
+  (a plain `<a href="/drill">`, not `next/link` — a full reload is the simplest way to guarantee
+  `getDrillDeck()` actually re-runs; a soft navigation wouldn't update `DrillSession`'s frozen
+  `sessionPrompts` anyway, same reasoning as the filter `key` below) when there's more waiting
+  than fit in this session.
+- **Deck filters** (`?type=deviation|blunder`, `?opening=<family label>`): same URL-driven
+  pattern `app/repertoire/page.tsx` already uses for `?color=` — `searchParams` read in the
+  Server Component (`app/drill/page.tsx`), passed to `getDrillDeck(filters)`. Filters apply to
+  the due-cards list _before_ the session cap above, so `dueCount` reflects "how many match this
+  filter," not the whole deck. Opening filtering reuses `ecoFamilyLabel()` (`lib/openings.ts`) —
+  same "group by family, not exact ECO code" convention `lib/blunders.ts` already established —
+  via a small `openingLabel(game)` helper in `app/actions.ts`; `availableOpenings` (the dropdown's
+  options) is computed from the _full unfiltered_ live deck so choices don't shift as filters are
+  applied. New `components/DrillFilters.tsx` (`'use client'`, needed for the opening `<select>`'s
+  `onChange` to navigate): sourceType tabs are plain `Link`s, exactly `RepertoireBoard.tsx`'s
+  `ColorTab` pattern. **`<DrillSession key={...sourceType/opening...}>`** in `app/drill/page.tsx`
+  — changing filters is a real navigation with fresh `searchParams`, but `DrillSession`'s
+  `sessionPrompts` only reads its `useState(prompts)` initial value, so without a key tied to the
+  filters it would keep showing the _previous_ filter's frozen session instead of remounting with
+  the new one — same trap `GameAnalysisProvider`/`BoardProvider` already guard against with
+  `key={game.id}`.
+- **Keyboard shortcuts**: Space/Enter → `handleNext()` (only once `feedback` is set — there's no
+  "submit" step for the move itself); `h`/`H` → `handleHint()` (only while `!feedback`). Both
+  handlers are wrapped in `useCallback` (empty deps — they don't close over anything that
+  changes) so the `useEffect` registering the `keydown` listener has a stable, lint-clean
+  dependency array instead of re-subscribing every render. Guards against `event.target` being a
+  `<button>` before acting — pressing Enter/Space on a still-focused button (e.g. right after a
+  mouse click) also triggers that button's own native activation, and without the guard this
+  listener would fire _again_ for the same keypress, double-advancing. In practice this rarely
+  matters even without the guard (disabled/unmounted buttons lose focus automatically, verified
+  live), but it's cheap insurance for whenever a button stays enabled and focused across the
+  keypress.
 
 ## Blunders aggregate (Phase 5)
 

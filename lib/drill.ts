@@ -126,6 +126,15 @@ export function buildDrillPrompt(
 const NEW_CARD_EASE_FACTOR = 2.5
 const MIN_EASE_FACTOR = 1.3
 
+export const MAX_SESSION_CARDS = 15
+
+/** The most-overdue `max` cards, so one session is a manageable batch rather
+ *  than every currently-due card at once. `dueAt` is an ISO string, so a
+ *  lexicographic sort is already a chronological one. */
+export function selectSessionCards(dueCards: DrillCard[], max = MAX_SESSION_CARDS): DrillCard[] {
+  return [...dueCards].sort((a, b) => a.dueAt.localeCompare(b.dueAt)).slice(0, max)
+}
+
 /** Default schedule for a card that's never been reviewed — due immediately. */
 export function newCardSchedule(
   now: Date,

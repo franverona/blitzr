@@ -182,6 +182,12 @@ want to wait until tomorrow for the cards you got wrong? **Shuffle and restart**
 session-complete screen replays the same cards in a new order — and it's a real do-over, not
 just practice: answering again actually updates that card's schedule, same as a normal answer.
 
+A session is capped at 15 cards (the most overdue ones first) rather than throwing every due card
+at you at once — if there's more waiting, the session-complete screen says so with a link to
+load the next batch. Filter the deck by **All / Deviations / Blunders** and by opening if you
+only want to work on one thing at a time. And once you're mid-session: Space or Enter moves on
+to the next card, and H triggers the hint — no mouse needed.
+
 ## Blunders
 
 On `/blunders`, every blunder from your own moves — across every game that's been analyzed so

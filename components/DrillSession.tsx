@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Chess } from 'chess.js'
 import { Chessboard } from 'react-chessboard'
 import { submitDrillAnswer } from '@/app/actions'
@@ -48,9 +48,19 @@ function shuffle<T>(items: T[]): T[] {
 export function DrillSession({
   prompts,
   totalCards,
+  dueCount,
+  filtered,
 }: {
   prompts: DrillPrompt[]
   totalCards: number
+  /** Cards matching the current filter that are due right now, before the
+   *  session cap (`MAX_SESSION_CARDS`, `lib/drill.ts`) trimmed it down to
+   *  `prompts` — lets the session-complete screen say how many more are
+   *  waiting. */
+  dueCount: number
+  /** Whether a sourceType/opening filter is active, so the empty-state
+   *  message can say "no matching cards" instead of the generic one. */
+  filtered: boolean
 }) {
   // Captured once, from the initial load this session started with.
   // submitDrillAnswer revalidates /drill after every answer, which re-runs
@@ -67,6 +77,7 @@ export function DrillSession({
   // revalidation-reshuffle problem this snapshot exists to prevent.
   const [sessionPrompts, setSessionPrompts] = useState(prompts)
   const [sessionTotalCards] = useState(totalCards)
+  const [sessionDueCount] = useState(dueCount)
   const [index, setIndex] = useState(0)
   const [feedback, setFeedback] = useState<Feedback>(null)
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null)
@@ -119,29 +130,76 @@ export function DrillSession({
     answeredRef.current = false
   }
 
+  const handleNext = useCallback(() => {
+    answeredRef.current = false
+    setFeedback(null)
+    setHangingReason(null)
+    setHintLevel(0)
+    setCommittedFen(null)
+    setSelectedSquare(null)
+    setIndex((i) => i + 1)
+  }, [])
+
+  const handleHint = useCallback(() => {
+    setHintLevel((level) => Math.min(3, level + 1))
+  }, [])
+
+  // Neither handler above reads `prompt`, so both — and this listener — can
+  // sit here, before the early returns, keeping the effect unconditional
+  // (rules of hooks) rather than after a conditional return. Ignores the
+  // event when a real <button> already has focus: pressing Enter/Space on a
+  // focused button (e.g. right after clicking it) also triggers the
+  // button's own native activation, and without this guard that would fire
+  // handleNext twice — once from the button, once from this listener.
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.target instanceof HTMLElement && e.target.tagName === 'BUTTON') return
+      if ((e.key === ' ' || e.key === 'Enter') && feedback) {
+        e.preventDefault()
+        handleNext()
+      } else if (e.key.toLowerCase() === 'h' && !feedback) {
+        handleHint()
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [feedback, handleNext, handleHint])
+
   if (sessionPrompts.length === 0) {
     return (
       <p className="mx-auto max-w-140 text-sm text-zinc-500 dark:text-zinc-400">
         {sessionTotalCards === 0
           ? 'Nothing to drill yet — build a repertoire and analyze some games to start building a deck.'
-          : `No cards due right now (${sessionTotalCards} in your deck) — nice work. Check back later.`}
+          : `No ${filtered ? 'matching cards' : 'cards'} due right now (${sessionTotalCards} in your deck) — nice work. Check back later.`}
       </p>
     )
   }
 
   if (!prompt) {
+    const moreDue = sessionDueCount - sessionPrompts.length
     return (
       <div className="mx-auto flex w-full max-w-140 flex-col gap-3">
         <p className="text-lg font-medium">Session complete</p>
         <p className="text-sm text-zinc-400">
           {tally.correct} correct, {tally.incorrect} incorrect out of {sessionPrompts.length}.
         </p>
-        <button
-          onClick={handleRestart}
-          className="w-fit rounded-md border border-zinc-700 px-3 py-1.5 text-sm font-medium hover:bg-zinc-800"
-        >
-          Shuffle and restart
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={handleRestart}
+            className="w-fit rounded-md border border-zinc-700 px-3 py-1.5 text-sm font-medium hover:bg-zinc-800"
+          >
+            Shuffle and restart
+          </button>
+          {moreDue > 0 && (
+            // Plain <a>, not next/link — this needs a full reload so
+            // getDrillDeck() actually re-runs; DrillSession's sessionPrompts
+            // wouldn't pick up a soft-navigation's fresh props anyway (same
+            // reason a filter change needs a new `key`, see app/drill/page.tsx).
+            <a href="/drill" className="text-sm text-blue-600 hover:underline dark:text-blue-400">
+              {moreDue} more due — load more
+            </a>
+          )}
+        </div>
       </div>
     )
   }
@@ -207,20 +265,6 @@ export function DrillSession({
       return
     }
     if (piece) setSelectedSquare(square)
-  }
-
-  function handleNext() {
-    answeredRef.current = false
-    setFeedback(null)
-    setHangingReason(null)
-    setHintLevel(0)
-    setCommittedFen(null)
-    setSelectedSquare(null)
-    setIndex((i) => i + 1)
-  }
-
-  function handleHint() {
-    setHintLevel((level) => Math.min(3, level + 1))
   }
 
   // Level 2 (origin square) and level 3 (full arrow) both need the same
@@ -311,6 +355,8 @@ export function DrillSession({
           )}
         </div>
       )}
+
+      <p className="text-xs text-zinc-600">Space/Enter → Next · H → Hint</p>
     </div>
   )
 }

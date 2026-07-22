@@ -5,10 +5,18 @@ import {
   findDeviationCandidates,
   newCardSchedule,
   scheduleReview,
+  selectSessionCards,
 } from '@/lib/drill'
 import { formatDate } from '@/lib/dates'
 import { buildPositions } from '@/lib/positions'
-import type { Game, GameAnalysis, PositionEval, RepertoireColor, RepertoireNode } from '@/lib/types'
+import type {
+  DrillCard,
+  Game,
+  GameAnalysis,
+  PositionEval,
+  RepertoireColor,
+  RepertoireNode,
+} from '@/lib/types'
 
 const START_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 
@@ -229,5 +237,37 @@ describe('scheduleReview', () => {
   it('sets dueAt to now plus the new interval', () => {
     const schedule = scheduleReview({ intervalDays: 0, easeFactor: 2.5, repetitions: 0 }, true, now)
     expect(schedule.dueAt).toBe(new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString())
+  })
+})
+
+function makeCard(overrides: Partial<DrillCard>): DrillCard {
+  return {
+    gameId: 'g1',
+    sourceType: 'blunder',
+    ply: 1,
+    dueAt: '2024-01-01T00:00:00.000Z',
+    intervalDays: 1,
+    easeFactor: 2.5,
+    repetitions: 0,
+    lastReviewedAt: null,
+    createdAt: '2024-01-01T00:00:00.000Z',
+    ...overrides,
+  }
+}
+
+describe('selectSessionCards', () => {
+  it('sorts by dueAt ascending (most overdue first)', () => {
+    const late = makeCard({ ply: 1, dueAt: '2024-01-03T00:00:00.000Z' })
+    const early = makeCard({ ply: 2, dueAt: '2024-01-01T00:00:00.000Z' })
+    const mid = makeCard({ ply: 3, dueAt: '2024-01-02T00:00:00.000Z' })
+
+    expect(selectSessionCards([late, early, mid], 10)).toEqual([early, mid, late])
+  })
+
+  it('caps the result at max', () => {
+    const cards = Array.from({ length: 5 }, (_, i) =>
+      makeCard({ ply: i + 1, dueAt: `2024-01-0${i + 1}T00:00:00.000Z` }),
+    )
+    expect(selectSessionCards(cards, 2)).toHaveLength(2)
   })
 })
