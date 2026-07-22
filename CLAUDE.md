@@ -118,7 +118,10 @@ public/
   try/catch. No migration-version table.
 - **Games are immutable once synced**: `upsertGames` uses `ON CONFLICT DO NOTHING`, not an
   update — a finished Chess.com game's data doesn't change, so there's nothing to reconcile on
-  re-sync.
+  re-sync. It returns `numInsertedOrUpdatedRows` from Kysely's `InsertResult`, not
+  `games.length` — the latter is the attempted count, not how many were actually new, and since
+  the current month's archive is always re-fetched (see "Incremental sync" below), most of every
+  sync's rows hit the conflict branch and should report as 0 added, not the full archive size.
 - **`moves_san` and `game_analysis.evals` are JSON array columns, not ply-indexed tables** —
   board replay, repertoire diffing, and blunder detection all walk the array in application
   code; nothing needs to query at ply granularity in SQL. Revisit only if that changes.

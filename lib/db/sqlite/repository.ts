@@ -135,12 +135,16 @@ export class SqliteGameRepository implements GameRepository {
   async upsertGames(games: Game[]): Promise<number> {
     if (games.length === 0) return 0
     const db = await this.ready()
-    await db
+    const results = await db
       .insertInto('games')
       .values(games.map(gameToRow))
       .onConflict((oc) => oc.doNothing())
       .execute()
-    return games.length
+    // `results.length` is the attempted count, not how many were actually
+    // new — ON CONFLICT DO NOTHING means most calls (the current month's
+    // archive is always re-fetched) hit rows that already exist.
+    // numInsertedOrUpdatedRows reflects only what was actually inserted.
+    return results.reduce((sum, r) => sum + Number(r.numInsertedOrUpdatedRows ?? 0), 0)
   }
 
   async listGames(
