@@ -5,6 +5,8 @@ import { Chess } from 'chess.js'
 import Link from 'next/link'
 import { Chessboard } from 'react-chessboard'
 import { addRepertoireMove, deleteRepertoireMove, listRepertoire } from '@/app/actions'
+import { whiteToMove } from '@/lib/drill'
+import { describeHangingPieceReason, detectHangingPiece } from '@/lib/hangingPiece'
 import { legalDestinations } from '@/lib/legalMoves'
 import { buildRepertoireIndex } from '@/lib/repertoire'
 import type { RepertoireColor, RepertoireNode } from '@/lib/types'
@@ -48,7 +50,23 @@ export function RepertoireBoard({
   const currentNode = path[path.length - 1] ?? null
   const currentFen = currentNode?.fen ?? START_FEN
   const parentId = path.length >= 2 ? path[path.length - 2].id : null
+  const parentFen = path.length >= 2 ? path[path.length - 2].fen : START_FEN
   const siblings = path.length === 0 ? (index.get(null) ?? []) : (index.get(parentId) ?? [])
+  // Derived, not stored — recomputes for whatever position is current, so it
+  // stays correct across every kind of navigation (new move, Back/Start, a
+  // sibling branch, a click in the tree) without a separate "clear it" call
+  // at each of those sites.
+  const hangingReason = useMemo(
+    () =>
+      currentNode
+        ? detectHangingPiece(
+            parentFen,
+            currentNode.fen,
+            whiteToMove(currentNode.ply) ? 'white' : 'black',
+          )
+        : null,
+    [currentNode, parentFen],
+  )
   const legalMoves = useMemo(
     () => (selectedSquare ? legalDestinations(currentFen, selectedSquare) : []),
     [selectedSquare, currentFen],
@@ -208,6 +226,11 @@ export function RepertoireBoard({
           </div>
 
           {error && <p className="text-sm text-rose-400">{error}</p>}
+          {hangingReason && (
+            <p className="text-sm text-amber-600 dark:text-amber-400">
+              {describeHangingPieceReason(hangingReason)}
+            </p>
+          )}
 
           {siblings.length > 1 && (
             <div className="flex flex-wrap items-center gap-2 text-sm">
