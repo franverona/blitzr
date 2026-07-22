@@ -57,6 +57,10 @@ Open [http://localhost:3000](http://localhost:3000), then click **Sync games** t
 Chess.com history. Re-running sync only fetches months that aren't fully synced yet, plus the
 current month.
 
+The games list explains chess jargon as you hover it — the time class column (bullet/blitz/rapid/
+daily) tells you what each one means in minutes-per-player, the same way ECO codes and repertoire
+terms are explained elsewhere in the app.
+
 SQLite is created automatically at `./data/blitzr.db` on first run — no config needed beyond
 your username. To reset, delete the file and re-sync.
 
