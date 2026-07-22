@@ -25,7 +25,7 @@ export function RepertoireTree({
   }
 
   return (
-    <div className="w-full overflow-y-auto rounded border border-zinc-800 bg-zinc-900 py-2 text-sm lg:max-h-140 lg:max-w-xs lg:flex-1">
+    <div className="w-full overflow-y-auto rounded border border-zinc-800 bg-zinc-900 py-2 text-sm lg:max-h-160 lg:max-w-xs lg:flex-1">
       {roots.map((node) => (
         <TreeNode
           key={node.id}

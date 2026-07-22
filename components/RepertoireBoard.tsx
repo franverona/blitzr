@@ -172,7 +172,7 @@ export function RepertoireBoard({
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
         <div className="flex shrink-0 flex-col gap-3">
-          <div className="w-full max-w-140 overflow-hidden rounded shadow-lg">
+          <div className="w-full max-w-160 overflow-hidden rounded shadow-lg">
             <Chessboard
               options={{
                 position: currentFen,
