@@ -1,11 +1,13 @@
 'use client'
 
-import { createContext, useContext, useRef, useState } from 'react'
+import { createContext, useContext, useMemo, useRef, useState } from 'react'
 import { saveGameAnalysis } from '@/app/actions'
 import { biggestBlunder, describeEval, findBlunders, formatEval, formatSwing } from '@/lib/analysis'
-import { plyLabel } from '@/lib/san'
+import { whiteToMove } from '@/lib/drill'
+import { buildPositions } from '@/lib/positions'
+import { describeMove, plyLabel } from '@/lib/san'
 import { analyzeGame } from '@/lib/stockfish/analyze'
-import type { GameAnalysis } from '@/lib/types'
+import type { GameAnalysis, MyColor } from '@/lib/types'
 import { EvalHelp } from './EvalHelp'
 
 interface AnalysisContextValue {
@@ -14,6 +16,10 @@ interface AnalysisContextValue {
   error: string | null
   handleAnalyze: () => void
   movesSan: string[]
+  myColor: MyColor
+  /** FEN before each ply, same indexing as `movesSan`/`analysis.evals` — computed
+   *  once here rather than by every consumer that needs to describe a move. */
+  positions: string[]
 }
 
 // The button and its results dialog both live in the same corner of the
@@ -32,18 +38,21 @@ export function GameAnalysisProvider({
   gameId,
   initialFen,
   movesSan,
+  myColor,
   initialAnalysis,
   children,
 }: {
   gameId: string
   initialFen: string
   movesSan: string[]
+  myColor: MyColor
   initialAnalysis: GameAnalysis | null
   children: React.ReactNode
 }) {
   const [analysis, setAnalysis] = useState(initialAnalysis)
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const positions = useMemo(() => buildPositions(initialFen, movesSan), [initialFen, movesSan])
 
   async function handleAnalyze() {
     setError(null)
@@ -62,7 +71,9 @@ export function GameAnalysisProvider({
   }
 
   return (
-    <AnalysisContext.Provider value={{ analysis, progress, error, handleAnalyze, movesSan }}>
+    <AnalysisContext.Provider
+      value={{ analysis, progress, error, handleAnalyze, movesSan, myColor, positions }}
+    >
       {children}
     </AnalysisContext.Provider>
   )
@@ -101,8 +112,34 @@ export function AnalyzeButton() {
   )
 }
 
+/** A one-line plain-language recap of the game — the single biggest blunder,
+ *  whose it was, and what it was in plain English via `describeMove()`.
+ *  Renders nothing until the game has a saved analysis, same "quietly do
+ *  nothing when not applicable yet" pattern as `RepertoireDiff`. */
+export function GameSummary() {
+  const { analysis, movesSan, myColor, positions } = useAnalysisContext()
+  if (!analysis) return null
+
+  const worst = biggestBlunder(findBlunders(analysis.evals, movesSan))
+  if (!worst) {
+    return (
+      <p className="text-sm text-zinc-500 dark:text-zinc-400">
+        Clean game — no significant blunders from either side.
+      </p>
+    )
+  }
+
+  const isMine = whiteToMove(worst.ply) === (myColor === 'white')
+  return (
+    <p className="text-sm text-zinc-500 dark:text-zinc-400">
+      Biggest moment: {isMine ? 'you' : 'your opponent'} blundered on {plyLabel(worst.ply)}{' '}
+      {worst.moveSan} ({describeMove(positions[worst.ply - 1], worst.moveSan)}).
+    </p>
+  )
+}
+
 function AnalysisDialog({ dialogRef }: { dialogRef: React.RefObject<HTMLDialogElement | null> }) {
-  const { analysis, movesSan } = useAnalysisContext()
+  const { analysis, movesSan, positions } = useAnalysisContext()
   if (!analysis) return null
 
   const blunders = findBlunders(analysis.evals, movesSan)
@@ -139,14 +176,19 @@ function AnalysisDialog({ dialogRef }: { dialogRef: React.RefObject<HTMLDialogEl
               {plyLabel(worst!.ply)} {worst!.moveSan} ({formatEval(worst!.evalBefore)} →{' '}
               {formatEval(worst!.evalAfter)}, {describeEval(worst!.evalAfter).toLowerCase()}).
             </p>
-            <ul className="flex flex-col gap-0.5 text-sm text-zinc-400">
+            <ul className="flex flex-col gap-1.5 text-sm text-zinc-400">
               {blunders.map((b) => (
                 <li key={b.ply}>
-                  {plyLabel(b.ply)} {b.moveSan}: {formatEval(b.evalBefore)} →{' '}
-                  {formatEval(b.evalAfter)} ({formatSwing(b)})
-                  {b.evalBefore.bestMove && b.evalBefore.bestMove.san !== b.moveSan && (
-                    <> — better was {b.evalBefore.bestMove.san}</>
-                  )}
+                  <div>
+                    {plyLabel(b.ply)} {b.moveSan}: {formatEval(b.evalBefore)} →{' '}
+                    {formatEval(b.evalAfter)} ({formatSwing(b)})
+                    {b.evalBefore.bestMove && b.evalBefore.bestMove.san !== b.moveSan && (
+                      <> — better was {b.evalBefore.bestMove.san}</>
+                    )}
+                  </div>
+                  <div className="text-xs text-zinc-500">
+                    {describeMove(positions[b.ply - 1], b.moveSan)}
+                  </div>
                 </li>
               ))}
             </ul>

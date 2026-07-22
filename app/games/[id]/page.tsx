@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getGame, getGameAnalysis, listRepertoire } from '../../actions'
 import { BoardNavControls, BoardProvider, BoardView } from '@/components/Board'
-import { AnalyzeButton, GameAnalysisProvider } from '@/components/GameAnalysisPanel'
+import { AnalyzeButton, GameAnalysisProvider, GameSummary } from '@/components/GameAnalysisPanel'
 import { PlayerAvatar } from '@/components/PlayerAvatar'
 import { fetchPlayerAvatar } from '@/lib/chesscom/client'
 import { parsePgnHeaders } from '@/lib/chesscom/normalize'
@@ -60,6 +60,8 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
         />
       )}
 
+      {game.movesSan && <GameSummary />}
+
       {game.movesSan ? (
         <BoardView />
       ) : (
@@ -92,6 +94,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
         gameId={game.id}
         initialFen={game.initialFen}
         movesSan={game.movesSan}
+        myColor={game.myColor}
         initialAnalysis={analysis}
       >
         {body}
@@ -135,6 +138,19 @@ function GameHeader({
             'no ECO'
           )}
           )
+          {game.ecoUrl && (
+            <>
+              {' · '}
+              <a
+                href={game.ecoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline dark:text-blue-400"
+              >
+                Learn more about this opening
+              </a>
+            </>
+          )}
         </p>
       )}
       {!isBotGame && (

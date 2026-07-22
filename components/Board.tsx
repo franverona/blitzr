@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { Chessboard } from 'react-chessboard'
 import { describeEval, formatEval } from '@/lib/analysis'
+import { formatMaterialDiff, materialDiff } from '@/lib/material'
 import { buildPositions } from '@/lib/positions'
 import type { PositionEval } from '@/lib/types'
 import { EvalBar } from './EvalBar'
@@ -140,11 +141,15 @@ export function BoardView() {
             />
           </div>
         </div>
-        {evals?.[ply] && (
-          <p className="text-xs text-zinc-400">
-            {describeEval(evals[ply])} ({formatEval(evals[ply])})
-          </p>
-        )}
+        <p className="text-xs text-zinc-400">
+          Material: {formatMaterialDiff(materialDiff(positions[ply]))}
+          {evals?.[ply] && (
+            <>
+              {' '}
+              · {describeEval(evals[ply])} ({formatEval(evals[ply])})
+            </>
+          )}
+        </p>
       </div>
 
       <MoveList movesSan={movesSan} ply={ply} onSelect={setPly} result={result} />

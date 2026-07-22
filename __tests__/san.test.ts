@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { plyLabel, splitSanPiece } from '@/lib/san'
+import { describeMove, plyLabel, splitSanPiece } from '@/lib/san'
 
 describe('splitSanPiece', () => {
   it('splits a leading piece letter off piece moves', () => {
@@ -28,5 +28,49 @@ describe('plyLabel', () => {
   it('labels black plies with an ellipsis', () => {
     expect(plyLabel(2)).toBe('1…')
     expect(plyLabel(4)).toBe('2…')
+  })
+})
+
+describe('describeMove', () => {
+  const START_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+
+  it('describes a quiet move', () => {
+    expect(describeMove(START_FEN, 'e4')).toBe('Pawn to e4')
+  })
+
+  it('describes a capture', () => {
+    const fen = '4k3/8/8/4p3/8/3N4/8/4K3 w - - 0 1'
+    expect(describeMove(fen, 'Nxe5')).toBe('Knight captures Pawn on e5')
+  })
+
+  it('describes an en passant capture as a capture', () => {
+    const fen = '4k3/8/8/3pP3/8/8/8/4K3 w - d6 0 1'
+    expect(describeMove(fen, 'exd6')).toBe('Pawn captures Pawn on d6')
+  })
+
+  it('describes kingside and queenside castling', () => {
+    const fen = 'r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1'
+    expect(describeMove(fen, 'O-O')).toBe('Castles kingside')
+    expect(describeMove(fen, 'O-O-O')).toBe('Castles queenside')
+  })
+
+  it('describes a promotion without a capture', () => {
+    const fen = 'k7/4P3/8/8/8/8/8/4K3 w - - 0 1'
+    expect(describeMove(fen, 'e8=Q')).toBe('Pawn to e8 and promotes to Queen')
+  })
+
+  it('describes a promotion with a capture', () => {
+    const fen = '3n1k2/4P3/8/8/8/8/8/4K3 w - - 0 1'
+    expect(describeMove(fen, 'exd8=Q')).toBe('Pawn captures Knight on d8 and promotes to Queen')
+  })
+
+  it('appends a check suffix', () => {
+    const fen = '4k3/8/8/7Q/8/8/8/4K3 w - - 0 1'
+    expect(describeMove(fen, 'Qe5+')).toBe('Queen to e5, check')
+  })
+
+  it('appends a checkmate suffix', () => {
+    const fen = '6k1/5ppp/8/8/8/8/8/3R2K1 w - - 0 1'
+    expect(describeMove(fen, 'Rd8#')).toBe('Rook to d8, checkmate')
   })
 })

@@ -92,19 +92,22 @@ export function BlunderStats({ stats }: { stats: BlunderStatsData }) {
         <h2 className="text-xs font-semibold tracking-wide text-zinc-500 uppercase dark:text-zinc-400">
           Worst blunders
         </h2>
-        <ul className="flex flex-col gap-1 text-sm">
+        <ul className="flex flex-col gap-1.5 text-sm">
           {stats.worst.map((b) => (
             <li key={`${b.gameId}-${b.ply}`}>
-              <Link
-                href={`/games/${b.gameId}`}
-                className="text-blue-600 hover:underline dark:text-blue-400"
-              >
-                {b.gameLabel}
-              </Link>{' '}
-              <span className="text-zinc-600 dark:text-zinc-400">
-                {plyLabel(b.ply)} {b.moveSan}: {formatEval(b.evalBefore)} →{' '}
-                {formatEval(b.evalAfter)} ({formatSwing(b)})
-              </span>
+              <div>
+                <Link
+                  href={`/games/${b.gameId}`}
+                  className="text-blue-600 hover:underline dark:text-blue-400"
+                >
+                  {b.gameLabel}
+                </Link>{' '}
+                <span className="text-zinc-600 dark:text-zinc-400">
+                  {plyLabel(b.ply)} {b.moveSan}: {formatEval(b.evalBefore)} →{' '}
+                  {formatEval(b.evalAfter)} ({formatSwing(b)})
+                </span>
+              </div>
+              <div className="text-xs text-zinc-500 dark:text-zinc-500">{b.moveDescription}</div>
             </li>
           ))}
         </ul>

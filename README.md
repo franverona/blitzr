@@ -138,6 +138,12 @@ as it goes. Each game's result is saved as soon as that game finishes, so closin
 partway through (or clicking Cancel) doesn't lose what's already done — running it again later
 just picks up wherever it left off.
 
+Every game's header also links out to the opening's Chess.com page ("Learn more about this
+opening"), and once a game's analyzed, a one-line "Biggest moment" summary and a running
+material count (a plain piece-value tally — no engine needed, works even before you've
+analyzed) show up alongside the board. Blunder lists spell moves out in plain English too
+("Queen captures pawn on f6, check"), not just algebraic notation.
+
 ### Reading the evaluation
 
 - **Centipawns (cp)**, shown as e.g. `+1.4` or `-0.8`: material/positional advantage in units of
@@ -167,9 +173,9 @@ next time you visit.
 
 On `/blunders`, every blunder from your own moves — across every game that's been analyzed so
 far — is rolled up into one view: grouped by opening, grouped by moved piece, and a top-10
-"worst blunders" list linking back to each game. It's scoped to whatever's been analyzed
-(analyze more games, individually or with **Analyze all**, to fill it in further) rather than
-implying full coverage of your history.
+"worst blunders" list (each entry in plain English, not just algebraic notation) linking back
+to each game. It's scoped to whatever's been analyzed (analyze more games, individually or with
+**Analyze all**, to fill it in further) rather than implying full coverage of your history.
 
 ## Data hygiene
 
