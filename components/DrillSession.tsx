@@ -121,7 +121,7 @@ export function DrillSession({
 
   if (sessionPrompts.length === 0) {
     return (
-      <p className="mx-auto max-w-160 text-sm text-zinc-500 dark:text-zinc-400">
+      <p className="mx-auto max-w-140 text-sm text-zinc-500 dark:text-zinc-400">
         {sessionTotalCards === 0
           ? 'Nothing to drill yet — build a repertoire and analyze some games to start building a deck.'
           : `No cards due right now (${sessionTotalCards} in your deck) — nice work. Check back later.`}
@@ -131,7 +131,7 @@ export function DrillSession({
 
   if (!prompt) {
     return (
-      <div className="mx-auto flex w-full max-w-160 flex-col gap-3">
+      <div className="mx-auto flex w-full max-w-140 flex-col gap-3">
         <p className="text-lg font-medium">Session complete</p>
         <p className="text-sm text-zinc-400">
           {tally.correct} correct, {tally.incorrect} incorrect out of {sessionPrompts.length}.
@@ -230,7 +230,7 @@ export function DrillSession({
   const hintOriginSquares = new Set(hintLevel >= 2 ? revealed.map((a) => a.startSquare) : [])
 
   return (
-    <div className="mx-auto flex w-full max-w-160 flex-col gap-3">
+    <div className="mx-auto flex w-full max-w-140 flex-col gap-3">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <PlayerAvatar username={prompt.opponentUsername} avatarUrl={prompt.opponentAvatarUrl} />
