@@ -208,6 +208,11 @@ export interface WorstBlunder {
    *  when no such pattern was detected (the eval swing might still be real,
    *  just not attributable to this v1 heuristic). See `lib/hangingPiece.ts`. */
   reason: BlunderReason | null
+  /** The engine's suggested move instead, plain-English description and (if
+   *  detectable) why it's better — see `describeBetterMove()` in
+   *  `lib/tactics.ts`. Null if there's no suggestion or it matches what was
+   *  actually played. */
+  betterMove: string | null
 }
 
 export interface BlunderStats {

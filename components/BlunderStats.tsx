@@ -116,6 +116,11 @@ export function BlunderStats({ stats }: { stats: BlunderStatsData }) {
                   {describeBlunderReason(b.reason)}
                 </div>
               )}
+              {b.betterMove && (
+                <div className="text-xs text-zinc-500 dark:text-zinc-500">
+                  Better was {b.betterMove}
+                </div>
+              )}
             </li>
           ))}
         </ul>

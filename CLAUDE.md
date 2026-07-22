@@ -217,6 +217,15 @@ prevPly) { ...; setPrevPly(ply) }`), not a ref — the project's eslint config f
   in the header while the board itself renders further down the tree. Needs the same
   `key={game.id}` on `BoardProvider` as `GameAnalysisProvider` does, for the same reason —
   `useState(lastPly)` only reads its initial ply on mount.
+- **`BoardView` explains the suggested-move arrow, not just draws it**: `describeBetterMove()`
+  (`lib/tactics.ts`, see "Explaining the suggested 'better' move" under "Engine analysis") runs
+  for whatever ply is currently being viewed — every ply with a saved analysis, not just
+  blunders — using `movesSan[ply] ?? ''` for the "did this match what was played" comparison
+  (empty string as a sentinel that can never equal a real SAN, needed at the final ply where
+  there's no next `movesSan` entry to compare against) and `whiteToMove(ply + 1)` for the mover's
+  color (`Board.tsx`'s `ply` is 0-indexed — plies already played — while `whiteToMove()` takes the
+  1-indexed move number, so `ply + 1` converts between the two). Rendered as its own line under
+  the existing Material/eval line, only when non-null.
 - **Legal-move highlighting on interactive boards** (`RepertoireBoard.tsx`, `DrillSession.tsx`):
   `legalDestinations(fen, square)` (`lib/legalMoves.ts`) computes destinations for whatever's
   selected, then a `squareRenderer` (react-chessboard v5) wraps every square in
@@ -476,6 +485,29 @@ verbose: true})` only generates moves for the side to move, so this is what lets
   "Real-time hanging-piece/fork warning" under "Repertoire" and "Drilling". `HangingPieceReason`
   and `ForkReason` (`lib/types.ts`) are both plain-string, chess.js-agnostic shapes unioned into
   `BlunderReason` — `WorstBlunder.reason`'s type followed that widening.
+- **Explaining the suggested "better" move** (`explainBestMove()`/`describeBetterMove()`,
+  `lib/tactics.ts`): blunder lists already showed the engine's suggested move as raw SAN ("better
+  was Nf3") with no explanation of why. No new detection logic — `explainBestMove()` is just
+  `detectHangingPiece()`/`detectFork()` called on the _candidate_ move (replayed from `fenBefore`
+  via chess.js) instead of the one actually played, checked in this order: did it **save** a
+  piece that was hanging, did it **escape** an existing fork, does it **win** material by newly
+  leaving an opponent piece hanging, does it **create** a new fork against the opponent — first
+  match wins, `null` for a quiet improvement neither detector explains (same "not every move gets
+  a reason" precedent). The "save"/"escape" checks are the same detectors called with the FEN
+  order **swapped** — `detectHangingPiece(fenAfter, fenBefore, moverColor)` diffs hanging squares
+  in the reverse of its normal direction, so what it reports as "new" is really "resolved" (what
+  _stopped_ being hanging/forked, not what newly became so); a non-obvious trick worth remembering
+  if this file is touched again. `describeBetterMove()` wraps this with the existing
+  `describeMove()` for the mechanical "what it does" half and the two functions' shared
+  `targetList()` helper (pulled out of `describeForkReason()`, which used to build the same phrase
+  inline) for the multi-target messages — one function all three call sites use so the "better
+  was ..." line is formatted identically everywhere, returning `null` up front when there's no
+  suggestion or it matches what was actually played. Wired into `GameAnalysisPanel.tsx`'s
+  `AnalysisDialog` (its own line now, same as `moveDescription`/`reason`, not crammed into the
+  eval-swing row like the old raw-SAN version was), a new `WorstBlunder.betterMove` field on
+  `lib/blunders.ts`'s aggregate (same ≤10-entry cost-bounding as `moveDescription`/`reason`,
+  rendered on `/blunders` the same way), and `Board.tsx`'s `BoardView` — every viewed ply with a
+  saved analysis, not just blunders, alongside the existing suggestion arrow.
 
 ## Drilling (Phase 4)
 
@@ -684,14 +716,16 @@ client'`. Reuses `PieceGlyph` (white variant, on the same green badge `PieceMove
   URL-driven initial ply on the game page (`BoardProvider` seeds its ply from `useState`), so
   deep-linking into the exact position wasn't attempted here; landing on the game and stepping
   through the move list is enough for v1.
-- **`WorstBlunder.moveDescription`/`.reason`** (plain-English text via `describeMove()`,
-  `lib/san.ts`, and the hanging-piece/fork check via `detectBlunderReason()`, `lib/tactics.ts` —
-  see "Hanging-piece reasons"/"Fork detection" under "Engine analysis") are both computed in `buildBlunderStats()`
-  only for the ≤10 entries that survive the sort-and-slice to the worst list, not for every
-  blunder counted along the way — the intermediate collection type is
-  `BlunderCandidate = Omit<WorstBlunder, 'moveDescription' | 'reason'>`, enriched (via a
-  `gameId -> Game` lookup to rebuild that specific game's positions) only after slicing, to keep
-  the per-blunder FEN-replay cost bounded to what's actually displayed.
+- **`WorstBlunder.moveDescription`/`.reason`/`.betterMove`** (plain-English text via
+  `describeMove()`, `lib/san.ts`; the hanging-piece/fork check via `detectBlunderReason()`; and
+  the engine-suggestion explanation via `describeBetterMove()` — both `lib/tactics.ts`, see
+  "Hanging-piece reasons"/"Fork detection"/"Explaining the suggested 'better' move" under "Engine
+  analysis") are all computed in `buildBlunderStats()` only for the ≤10 entries that survive the
+  sort-and-slice to the worst list, not for every blunder counted along the way — the intermediate
+  collection type is `BlunderCandidate = Omit<WorstBlunder, 'moveDescription' | 'reason' |
+'betterMove'>`, enriched (via a `gameId -> Game` lookup to rebuild that specific game's
+  positions) only after slicing, to keep the per-blunder FEN-replay cost bounded to what's
+  actually displayed.
 - **`EvalHelp` (`components/EvalHelp.tsx`) is a shared "how to read this" glossary**, extracted
   from `GameAnalysisPanel.tsx` (where it originally lived as a private function) so `/blunders`
   could reuse the same eval/mate/blunder notation explanations instead of duplicating them —

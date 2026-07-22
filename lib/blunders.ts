@@ -4,16 +4,16 @@ import { whiteToMove } from './drill'
 import { ecoFamilyLabel } from './openings'
 import { buildPositions } from './positions'
 import { describeMove, splitSanPiece } from './san'
-import { detectBlunderReason } from './tactics'
+import { describeBetterMove, detectBlunderReason } from './tactics'
 import type { BlunderGroupStat, BlunderStats, Game, GameAnalysis, WorstBlunder } from './types'
 
 const WORST_LIST_SIZE = 10
 
 /** Pre-description shape collected while walking every game's blunders —
- *  `moveDescription`/`reason` are only computed for the handful that survive
- *  the sort + slice to `WORST_LIST_SIZE`, not for every blunder counted along
- *  the way. */
-type BlunderCandidate = Omit<WorstBlunder, 'moveDescription' | 'reason'>
+ *  `moveDescription`/`reason`/`betterMove` are only computed for the handful
+ *  that survive the sort + slice to `WORST_LIST_SIZE`, not for every blunder
+ *  counted along the way. */
+type BlunderCandidate = Omit<WorstBlunder, 'moveDescription' | 'reason' | 'betterMove'>
 
 interface GroupAcc {
   label: string
@@ -131,6 +131,15 @@ export function buildBlunderStats(
       reason:
         positions && game
           ? detectBlunderReason(positions[entry.ply - 1], positions[entry.ply], game.myColor)
+          : null,
+      betterMove:
+        positions && game
+          ? describeBetterMove(
+              positions[entry.ply - 1],
+              entry.moveSan,
+              entry.evalBefore.bestMove,
+              game.myColor,
+            )
           : null,
     }
   })
