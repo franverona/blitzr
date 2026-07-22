@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { buildBlunderStats } from '@/lib/blunders'
+import { formatDate } from '@/lib/dates'
 import { getRepository } from '@/lib/db'
 import {
   buildDrillPrompt,
@@ -26,6 +27,7 @@ import type {
   RepertoireColor,
   RepertoireNode,
   SyncResult,
+  UnanalyzedGame,
 } from '@/lib/types'
 
 export async function listGames(
@@ -82,6 +84,29 @@ export async function getGameAnalysis(gameId: string): Promise<GameAnalysis | un
 export async function saveGameAnalysis(gameId: string, evals: PositionEval[]): Promise<void> {
   await getRepository().saveGameAnalysis({ gameId, evals, analyzedAt: new Date().toISOString() })
   revalidatePath(`/games/${gameId}`)
+  revalidatePath('/blunders')
+}
+
+/** Every synced game with no saved analysis yet, for the bulk "Analyze all"
+ *  action on the Games page — games whose moves couldn't be parsed have no
+ *  positions to analyze and are skipped, same as the per-game Analyze
+ *  button's visibility. */
+export async function getUnanalyzedGames(): Promise<UnanalyzedGame[]> {
+  const repo = getRepository()
+  const [games, analyses] = await Promise.all([repo.listAllGames(), repo.listAllGameAnalyses()])
+  const analyzedIds = new Set(analyses.map((a) => a.gameId))
+
+  return games
+    .filter((g) => g.movesSan && !analyzedIds.has(g.id))
+    .map((g) => {
+      const opponent = g.myColor === 'white' ? g.blackUsername : g.whiteUsername
+      return {
+        id: g.id,
+        initialFen: g.initialFen,
+        movesSan: g.movesSan as string[],
+        gameLabel: `vs ${opponent} · ${formatDate(g.endTime)}`,
+      }
+    })
 }
 
 function cardKey(c: { gameId: string; sourceType: DrillSourceType; ply: number }): string {
