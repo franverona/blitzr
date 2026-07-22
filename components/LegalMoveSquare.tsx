@@ -7,14 +7,21 @@ export function LegalMoveSquare({
   isSelected,
   isLegalMove,
   isCapture,
+  isHintOrigin,
 }: {
   children?: React.ReactNode
   isSelected: boolean
   isLegalMove: boolean
   isCapture: boolean
+  /** Highlights the square of a hinted piece to move (Drill's hint level 2)
+   *  — a distinct hue from `isSelected` so the two read as different kinds
+   *  of signal. Optional: only `DrillSession.tsx` uses this. */
+  isHintOrigin?: boolean
 }) {
   return (
-    <div className={`relative h-full w-full ${isSelected ? 'bg-yellow-300/40' : ''}`}>
+    <div
+      className={`relative h-full w-full ${isSelected ? 'bg-yellow-300/40' : isHintOrigin ? 'bg-sky-400/40' : ''}`}
+    >
       {children}
       {isLegalMove && !isCapture && (
         <span className="pointer-events-none absolute top-1/2 left-1/2 h-[30%] w-[30%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-black/25" />

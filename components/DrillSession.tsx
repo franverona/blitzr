@@ -1,13 +1,15 @@
 'use client'
 
-import { useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Chess } from 'chess.js'
 import { Chessboard } from 'react-chessboard'
 import { submitDrillAnswer } from '@/app/actions'
 import { describeHangingPieceReason, detectHangingPiece } from '@/lib/hangingPiece'
 import { legalDestinations } from '@/lib/legalMoves'
+import { hintPieceName } from '@/lib/san'
 import type { DrillPrompt, HangingPieceReason } from '@/lib/types'
 import { LegalMoveSquare } from './LegalMoveSquare'
+import { PlayerAvatar } from './PlayerAvatar'
 
 type Feedback = 'correct' | 'incorrect' | null
 
@@ -34,12 +36,31 @@ function revealArrows(
   return arrows
 }
 
+function shuffle<T>(items: T[]): T[] {
+  const result = [...items]
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[result[i], result[j]] = [result[j], result[i]]
+  }
+  return result
+}
+
 export function DrillSession({
   prompts,
   totalCards,
+  dueCount,
+  filtered,
 }: {
   prompts: DrillPrompt[]
   totalCards: number
+  /** Cards matching the current filter that are due right now, before the
+   *  session cap (`MAX_SESSION_CARDS`, `lib/drill.ts`) trimmed it down to
+   *  `prompts` — lets the session-complete screen say how many more are
+   *  waiting. */
+  dueCount: number
+  /** Whether a sourceType/opening filter is active, so the empty-state
+   *  message can say "no matching cards" instead of the generic one. */
+  filtered: boolean
 }) {
   // Captured once, from the initial load this session started with.
   // submitDrillAnswer revalidates /drill after every answer, which re-runs
@@ -51,13 +72,25 @@ export function DrillSession({
   // straight to the "nothing due" empty state instead of the session-summary
   // screen the moment the last card is answered. A session works through the
   // fixed batch it started with, full stop.
-  const [sessionPrompts] = useState(prompts)
+  // Gains a setter only for "Shuffle and restart" (below) to reorder — never
+  // to accept fresh server data, which would reintroduce the exact
+  // revalidation-reshuffle problem this snapshot exists to prevent.
+  const [sessionPrompts, setSessionPrompts] = useState(prompts)
   const [sessionTotalCards] = useState(totalCards)
+  const [sessionDueCount] = useState(dueCount)
   const [index, setIndex] = useState(0)
   const [feedback, setFeedback] = useState<Feedback>(null)
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null)
   const [tally, setTally] = useState({ correct: 0, incorrect: 0 })
   const [hangingReason, setHangingReason] = useState<HangingPieceReason | null>(null)
+  const [hintLevel, setHintLevel] = useState(0)
+  // The board otherwise always shows `prompt.fen` (the position *before* the
+  // move) — set only on a correct answer, so the board actually shows your
+  // move landing rather than snapping back to the pre-move position. Left
+  // null on an incorrect answer: the reveal arrow is computed from
+  // `prompt.fen`, so showing the (wrong) move played would put the board and
+  // the arrow out of sync.
+  const [committedFen, setCommittedFen] = useState<string | null>(null)
 
   // `feedback` state can't be trusted to guard against a double-fire within
   // the same tick (React state updates aren't visible to a second call in
@@ -80,23 +113,93 @@ export function DrillSession({
     [legalMoves],
   )
 
+  // No server round-trip — reshuffles the cards already loaded for this
+  // session and starts back at card 1. Answering during the replay still
+  // calls submitDrillAnswer normally (below), which re-grades each card for
+  // real (submitDrillAnswer never checks whether a card is "due"), so this
+  // is a legitimate retry today rather than ungraded practice.
+  function handleRestart() {
+    setSessionPrompts((prev) => shuffle(prev))
+    setIndex(0)
+    setTally({ correct: 0, incorrect: 0 })
+    setFeedback(null)
+    setHangingReason(null)
+    setHintLevel(0)
+    setCommittedFen(null)
+    setSelectedSquare(null)
+    answeredRef.current = false
+  }
+
+  const handleNext = useCallback(() => {
+    answeredRef.current = false
+    setFeedback(null)
+    setHangingReason(null)
+    setHintLevel(0)
+    setCommittedFen(null)
+    setSelectedSquare(null)
+    setIndex((i) => i + 1)
+  }, [])
+
+  const handleHint = useCallback(() => {
+    setHintLevel((level) => Math.min(3, level + 1))
+  }, [])
+
+  // Neither handler above reads `prompt`, so both — and this listener — can
+  // sit here, before the early returns, keeping the effect unconditional
+  // (rules of hooks) rather than after a conditional return. Ignores the
+  // event when a real <button> already has focus: pressing Enter/Space on a
+  // focused button (e.g. right after clicking it) also triggers the
+  // button's own native activation, and without this guard that would fire
+  // handleNext twice — once from the button, once from this listener.
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.target instanceof HTMLElement && e.target.tagName === 'BUTTON') return
+      if ((e.key === ' ' || e.key === 'Enter') && feedback) {
+        e.preventDefault()
+        handleNext()
+      } else if (e.key.toLowerCase() === 'h' && !feedback) {
+        handleHint()
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [feedback, handleNext, handleHint])
+
   if (sessionPrompts.length === 0) {
     return (
-      <p className="text-sm text-zinc-500 dark:text-zinc-400">
+      <p className="mx-auto max-w-140 text-sm text-zinc-500 dark:text-zinc-400">
         {sessionTotalCards === 0
           ? 'Nothing to drill yet — build a repertoire and analyze some games to start building a deck.'
-          : `No cards due right now (${sessionTotalCards} in your deck) — nice work. Check back later.`}
+          : `No ${filtered ? 'matching cards' : 'cards'} due right now (${sessionTotalCards} in your deck) — nice work. Check back later.`}
       </p>
     )
   }
 
   if (!prompt) {
+    const moreDue = sessionDueCount - sessionPrompts.length
     return (
-      <div className="flex flex-col gap-2">
+      <div className="mx-auto flex w-full max-w-140 flex-col gap-3">
         <p className="text-lg font-medium">Session complete</p>
         <p className="text-sm text-zinc-400">
           {tally.correct} correct, {tally.incorrect} incorrect out of {sessionPrompts.length}.
         </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={handleRestart}
+            className="w-fit rounded-md border border-zinc-700 px-3 py-1.5 text-sm font-medium hover:bg-zinc-800"
+          >
+            Shuffle and restart
+          </button>
+          {moreDue > 0 && (
+            // Plain <a>, not next/link — this needs a full reload so
+            // getDrillDeck() actually re-runs; DrillSession's sessionPrompts
+            // wouldn't pick up a soft-navigation's fresh props anyway (same
+            // reason a filter change needs a new `key`, see app/drill/page.tsx).
+            <a href="/drill" className="text-sm text-blue-600 hover:underline dark:text-blue-400">
+              {moreDue} more due — load more
+            </a>
+          )}
+        </div>
       </div>
     )
   }
@@ -123,6 +226,7 @@ export function DrillSession({
     answeredRef.current = true
     const correct = activePrompt.correctMoves.includes(move.san)
     setFeedback(correct ? 'correct' : 'incorrect')
+    if (correct) setCommittedFen(move.after)
     setHangingReason(
       detectHangingPiece(move.before, move.after, move.color === 'w' ? 'white' : 'black'),
     )
@@ -163,28 +267,40 @@ export function DrillSession({
     if (piece) setSelectedSquare(square)
   }
 
-  function handleNext() {
-    answeredRef.current = false
-    setFeedback(null)
-    setHangingReason(null)
-    setSelectedSquare(null)
-    setIndex((i) => i + 1)
-  }
-
-  const arrows = feedback === 'incorrect' ? revealArrows(prompt) : []
+  // Level 2 (origin square) and level 3 (full arrow) both need the same
+  // replayed moves, so compute once and slice what each level shows from it.
+  const revealed = feedback === 'incorrect' || hintLevel >= 2 ? revealArrows(prompt) : []
+  const arrows = feedback === 'incorrect' || hintLevel >= 3 ? revealed : []
+  const hintOriginSquares = new Set(hintLevel >= 2 ? revealed.map((a) => a.startSquare) : [])
 
   return (
-    <div className="flex flex-col gap-3">
-      <p className="text-sm text-zinc-500 dark:text-zinc-400">
-        {prompt.gameLabel} ·{' '}
-        {prompt.sourceType === 'deviation' ? 'Find your prepared move' : 'Find the best move'} ·
-        card {index + 1} of {sessionPrompts.length}
-      </p>
+    <div className="mx-auto flex w-full max-w-140 flex-col gap-3">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <PlayerAvatar username={prompt.opponentUsername} avatarUrl={prompt.opponentAvatarUrl} />
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+            {prompt.gameLabel} ·{' '}
+            {prompt.sourceType === 'deviation' ? 'Find your prepared move' : 'Find the best move'} ·
+            card {index + 1} of {sessionPrompts.length}
+          </p>
+        </div>
+        {/* `invisible` rather than unmounting on `feedback` — keeps the
+            button's box in the layout so this row's height doesn't change
+            between states, which was shifting the board a couple pixels
+            every time a card got answered. */}
+        <button
+          onClick={handleHint}
+          disabled={hintLevel >= 3 || !!feedback}
+          className={`shrink-0 rounded-md border border-zinc-700 px-3 py-1.5 text-sm font-medium hover:bg-zinc-800 disabled:opacity-40 ${feedback ? 'invisible' : ''}`}
+        >
+          💡 Hint
+        </button>
+      </div>
 
-      <div className="w-full max-w-160 overflow-hidden rounded shadow-lg">
+      <div className="w-full overflow-hidden rounded shadow-lg">
         <Chessboard
           options={{
-            position: prompt.fen,
+            position: committedFen ?? prompt.fen,
             boardOrientation: prompt.color,
             allowDragging: !feedback,
             onPieceDrop: handleDrop,
@@ -194,6 +310,7 @@ export function DrillSession({
                 isSelected={square === selectedSquare}
                 isLegalMove={legalMoveMap.has(square)}
                 isCapture={legalMoveMap.get(square) ?? false}
+                isHintOrigin={hintOriginSquares.has(square)}
               >
                 {children}
               </LegalMoveSquare>
@@ -206,6 +323,13 @@ export function DrillSession({
           }}
         />
       </div>
+
+      {hintLevel >= 1 && (
+        <p className="text-sm text-zinc-400">
+          Hint: it&rsquo;s a{' '}
+          {[...new Set(activePrompt.correctMoves.map(hintPieceName))].join(' or ')} move.
+        </p>
+      )}
 
       {feedback && (
         <div className="flex flex-col gap-2">
@@ -231,6 +355,8 @@ export function DrillSession({
           )}
         </div>
       )}
+
+      <p className="text-xs text-zinc-600">Space/Enter → Next · H → Hint</p>
     </div>
   )
 }
