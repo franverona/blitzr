@@ -18,14 +18,15 @@ your own Chess.com username.
 It ingests your Chess.com games via their public [Published-Data
 API](https://www.chess.com/news/view/published-data-api), figures out which openings you
 actually play, flags the moment you deviate from a repertoire you define yourself, runs
-Stockfish in your browser to find your blunders, and drills you on those exact positions —
-deviations and blunders alike — with spaced repetition.
+Stockfish in your browser to find your blunders, drills you on those exact positions —
+deviations and blunders alike — with spaced repetition, and rolls your blunders up across
+every analyzed game so you can see what actually keeps going wrong.
 
 **Blitzr is unaffiliated with Chess.com.** It uses Chess.com's public, unauthenticated
 Published-Data API under their terms. It does not use Chess.com's name, logos, or marks in
 any way that implies endorsement or affiliation.
 
-## Status: Phase 4
+## Status: Phase 5
 
 - [x] Config for your Chess.com username
 - [x] Incremental sync of your games into SQLite
@@ -33,6 +34,7 @@ any way that implies endorsement or affiliation.
 - [x] Phase 2 — intended repertoire + deviation detection
 - [x] Phase 3 — Stockfish (WASM) analysis, blunder detection
 - [x] Phase 4 — spaced-repetition drilling
+- [x] Phase 5 — cross-game recurring-blunders aggregate
 
 ## Stack
 
@@ -128,8 +130,13 @@ On a game's page, **Analyze with Stockfish** runs the engine — entirely in you
 Web Worker — over every position in that game and reports each blunder (a swing of 200+
 centipawns) plus the biggest one. See "Reading the evaluation" below for how to interpret the
 numbers. Nothing is sent to a server; analysis runs client-side and only the result is saved,
-so re-opening the game later shows it without re-running the engine. It's on-demand per game,
-not automatic — analyzing your whole history in one go isn't built (yet).
+so re-opening the game later shows it without re-running the engine.
+
+To analyze more than one game at a time, **Analyze all** on the Games page runs the engine over
+every synced game that doesn't have a saved analysis yet, one after another, showing progress
+as it goes. Each game's result is saved as soon as that game finishes, so closing the tab
+partway through (or clicking Cancel) doesn't lose what's already done — running it again later
+just picks up wherever it left off.
 
 ### Reading the evaluation
 
@@ -155,6 +162,14 @@ suggested move for a blunder card). Get it right and the card comes back further
 wrong and it comes back tomorrow, with the correct move revealed as an arrow. The deck stays in
 sync automatically — build more repertoire or analyze more games, and new cards just show up
 next time you visit.
+
+## Blunders
+
+On `/blunders`, every blunder from your own moves — across every game that's been analyzed so
+far — is rolled up into one view: grouped by opening, grouped by moved piece, and a top-10
+"worst blunders" list linking back to each game. It's scoped to whatever's been analyzed
+(analyze more games, individually or with **Analyze all**, to fill it in further) rather than
+implying full coverage of your history.
 
 ## Data hygiene
 

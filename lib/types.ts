@@ -114,6 +114,16 @@ export interface GameAnalysis {
   analyzedAt: string
 }
 
+/** A synced game with no saved analysis yet — the minimal shape the bulk
+ *  "Analyze all" action (`getUnanalyzedGames()`) needs to hand off to
+ *  `analyzeGames()` (`lib/stockfish/analyze.ts`) and display progress. */
+export interface UnanalyzedGame {
+  id: string
+  initialFen: string
+  movesSan: string[]
+  gameLabel: string
+}
+
 export interface Blunder {
   /** 1-indexed ply of the move that caused the swing. */
   ply: number

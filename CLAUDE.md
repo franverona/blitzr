@@ -38,7 +38,7 @@ ahead of time.
 ```
 app/
   actions.ts              # all DB reads/writes + the sync/analysis triggers (Server Actions)
-  page.tsx                 # games list (paginated), with the Sync button
+  page.tsx                 # games list (paginated), with the Sync and Analyze all buttons
   layout.tsx                # left sidebar nav (fixed width) + full-width main content
   globals.css
   games/[id]/page.tsx        # single game — board replay, repertoire diff, analysis panel,
@@ -76,6 +76,9 @@ components/
                                                # fallback when a player has none or the fetch fails
   NavLinks.tsx                                 # active-tab nav (client, usePathname)
   SyncButton.tsx                                  # triggers the sync Server Action (client)
+  BulkAnalyzeButton.tsx                              # "Analyze all" — runs analyzeGames() across
+                                                       # every unanalyzed game (client, see "Engine
+                                                       # analysis" > "Bulk analysis")
 lib/
   config.ts                # getChesscomUsername() — reads CHESSCOM_USERNAME
   types.ts                  # domain types: Game, OpeningFamily/Line, RepertoireNode,
@@ -102,7 +105,8 @@ lib/
   stockfish/
     client.ts                        # StockfishEngine — thin UCI wrapper around the Worker,
                                        # normalizes evals to White's POV
-    analyze.ts                        # analyzeGame() orchestrates the per-position loop;
+    analyze.ts                        # analyzeGame()/analyzeGames() orchestrate the per-position
+                                        # loop (single game / bulk, sharing one engine);
                                         # terminalEval() scores checkmate/stalemate directly
                                         # instead of asking the engine (see "Engine analysis")
   db/
@@ -345,9 +349,25 @@ mate` relative to **whoever is to move** in the given position, not always White
   the header and doesn't otherwise reach into the analysis internals. The dialog is centered
   with `fixed` + `inset-1/2` + negative-translate, not the browser's default `<dialog>` centering
   — the project's CSS reset strips the default margin `<dialog>` relies on for that.
-- **Scope**: per-game only. There's no bulk "analyze all synced games" job or a cross-game
-  "your most common blunders" aggregate yet — both are natural follow-ups once individual games
-  can be analyzed, but weren't part of what Phase 3 asked for.
+- **Bulk analysis** (`BulkAnalyzeButton.tsx`, "Analyze all" on the Games page) reuses a single
+  `StockfishEngine` across every unanalyzed game instead of spinning up a fresh Worker (~7MB WASM
+  load + UCI handshake) per game — `analyzeGames()` (`lib/stockfish/analyze.ts`) creates one
+  engine, loops a shared `analyzePositions()` helper across each game's positions, and terminates
+  once at the end. `analyzeGame()` (the single-game entry point `GameAnalysisPanel.tsx` uses) is
+  unchanged — just a thin wrapper around the same `analyzePositions()` helper with its own
+  create-and-terminate engine, so this was a pure refactor for existing callers.
+  - Each game's result is saved via `saveGameAnalysis()` as soon as that game finishes, not
+    batched at the end — closing the tab or clicking Cancel mid-run keeps whatever's already
+    saved, and `getUnanalyzedGames()` (`app/actions.ts`) naturally only returns what's still
+    missing on the next "Analyze all" click. No separate resume/progress-persistence mechanism
+    needed.
+  - `analyzeGames()`'s `shouldContinue` callback is checked **between games, not mid-game** — a
+    game already in progress always finishes and gets saved, so there's no partial-game analysis
+    case to special-case in storage. `BulkAnalyzeButton.tsx` backs this with a ref (not state)
+    flipped by both the Cancel button and an unmount cleanup effect, so navigating away from the
+    Games page stops the run the same way Cancel does.
+  - Still client-side only, like single-game analysis — the loop runs on the Games page and stops
+    if that page unmounts; there's no background/server-side job that survives navigation.
 
 ## Drilling (Phase 4)
 
@@ -416,10 +436,11 @@ mate` relative to **whoever is to move** in the given position, not always White
   load via `getBlunderStats()` (`app/actions.ts`), which just calls the existing
   `listAllGames()`/`listAllGameAnalyses()` repository methods (both already existed for the
   Phase 4 drill deck sync — no new repository work needed here).
-- **Scoped to analyzed games only** — there's no bulk "analyze everything" job, so this only
-  covers whatever's been analyzed one game at a time from a game's page. The page's summary line
-  ("N blunders across M of T synced games analyzed") makes that scope explicit rather than
-  implying full coverage.
+- **Scoped to analyzed games only** — covers whatever's been analyzed so far, whether one game at
+  a time from a game's page or in bulk via "Analyze all" on the Games page (see "Bulk analysis"
+  under "Engine analysis"). The page's summary line ("N blunders across M of T synced games
+  analyzed") makes that scope explicit rather than implying full coverage, since a fresh sync can
+  still add games with no analysis yet.
 - **Own moves only**, same filter as the drill deck's blunder cards: `whiteToMove()` (exported
   from `lib/drill.ts` rather than duplicated) checks the blundering ply was actually played by
   the account's own color, so an opponent's mistake in an analyzed game never counts.
