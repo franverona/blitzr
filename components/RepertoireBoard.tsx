@@ -6,9 +6,9 @@ import Link from 'next/link'
 import { Chessboard } from 'react-chessboard'
 import { addRepertoireMove, deleteRepertoireMove, listRepertoire } from '@/app/actions'
 import { whiteToMove } from '@/lib/drill'
-import { describeHangingPieceReason, detectHangingPiece } from '@/lib/hangingPiece'
 import { legalDestinations } from '@/lib/legalMoves'
 import { buildRepertoireIndex } from '@/lib/repertoire'
+import { describeBlunderReason, detectBlunderReason } from '@/lib/tactics'
 import type { RepertoireColor, RepertoireNode } from '@/lib/types'
 import { LegalMoveSquare } from './LegalMoveSquare'
 import { RepertoireTree } from './RepertoireTree'
@@ -59,7 +59,7 @@ export function RepertoireBoard({
   const hangingReason = useMemo(
     () =>
       currentNode
-        ? detectHangingPiece(
+        ? detectBlunderReason(
             parentFen,
             currentNode.fen,
             whiteToMove(currentNode.ply) ? 'white' : 'black',
@@ -228,7 +228,7 @@ export function RepertoireBoard({
           {error && <p className="text-sm text-rose-400">{error}</p>}
           {hangingReason && (
             <p className="text-sm text-amber-600 dark:text-amber-400">
-              {describeHangingPieceReason(hangingReason)}
+              {describeBlunderReason(hangingReason)}
             </p>
           )}
 
