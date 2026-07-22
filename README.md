@@ -145,10 +145,12 @@ opening"), and once a game's analyzed, a one-line "Biggest moment" summary and a
 material count (a plain piece-value tally — no engine needed, works even before you've
 analyzed) show up alongside the board. Blunder lists spell moves out in plain English too
 ("Queen captures pawn on f6, check"), not just algebraic notation — and where a blunder simply
-hangs a piece (left attacked and undefended, capturable for free), a line explains that too
-("This leaves the queen on f6 hanging — it can be captured for free"). That check is
-intentionally simple (no evaluation of unequal trades, no awareness of pins) — it won't catch
-every kind of mistake, so plenty of blunders show no reason at all, just the eval swing.
+hangs a piece (left attacked and undefended, capturable for free) or lets the opponent fork two
+pieces at once, a line explains that too ("This leaves the queen on f6 hanging — it can be
+captured for free" / "This allows a fork — the knight on b5 now attacks the queen on c7 and the
+rook on a7 at once"). Both checks are intentionally simple (no evaluation of unequal trades, no
+pin awareness, no simulation of a future opponent move creating a fork) — they won't catch every
+kind of mistake, so plenty of blunders show no reason at all, just the eval swing.
 
 ### Reading the evaluation
 
