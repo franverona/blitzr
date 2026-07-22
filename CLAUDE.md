@@ -50,7 +50,8 @@ components/
   RepertoireBoard.tsx            # react-chessboard in edit mode (drag or click-to-move),
                                    # builds the repertoire tree as you play moves
   RepertoireTree.tsx               # nested move-tree view with branch switching (client)
-  GameAnalysisPanel.tsx              # triggers Stockfish analysis, shows blunders (client)
+  GameAnalysisPanel.tsx              # Stockfish trigger button (header) + results <dialog>
+                                       # (content), sharing state via Context (client)
   DrillSession.tsx                     # one drill card at a time — move input, grading,
                                          # session summary (client, see "Drilling")
   OpeningsTable.tsx                    # family/line aggregation table (client, expand/collapse)
@@ -145,14 +146,15 @@ public/
   constraint** — deliberately, so the board and move list can use as much of the viewport as
   possible (closer to how chess.com lays out a game page) rather than being centered in a
   narrower column.
-- **A `<details>` element's open/closed state is native DOM state, not React state** — if the
-  same component instance survives a client-side navigation (same position in the tree, same
-  key), a user's manual toggle persists even though the JSX still says the same thing every
-  render, because React only reapplies an attribute when the _value_ it computes changes, not
-  when the underlying DOM was mutated natively out from under it. `GameAnalysisPanel.tsx`'s
-  `<details>` hit this across game-to-game navigation; fixed by giving it `key={game.id}` in
-  `app/games/[id]/page.tsx` so it fully remounts (and its `<details>` — no `open` attribute, so
-  closed by default — starts fresh) on every distinct game.
+- **`GameAnalysisProvider` needs `key={game.id}`** (`app/games/[id]/page.tsx`) — it seeds its
+  state with `useState(initialAnalysis)`, which only reads that value on mount. Without the key
+  forcing a full remount on every distinct game, navigating from an analyzed game to an
+  unanalyzed one (same component instance, same tree position, just new props from the
+  revalidated Server Component) would keep showing the _previous_ game's analysis state instead
+  of picking up the new `initialAnalysis`. The same trap bit a `<details>` element's open/closed
+  state here before the analysis results moved into a dialog (native DOM state surviving a
+  client-side navigation the same way) — worth remembering if a `<details>` gets reintroduced
+  anywhere game-specific.
 - **`Board.tsx`'s `Chessboard` sets `showAnimations: false`** — jumping to an arbitrary ply
   (clicking a move in the list, the ⏮/⏭ buttons) isn't a single move, and react-chessboard's
   default slide/cross-fade animation tries to animate every piece that differs between the two
@@ -283,6 +285,15 @@ mate` relative to **whoever is to move** in the given position, not always White
   position, via react-chessboard's `options.arrows`), and as SAN text next to each blunder in
   `GameAnalysisPanel.tsx` (using `evalBefore.bestMove.san`, the recommendation from right before
   the blunder was played). `null` for terminal positions (no legal moves).
+- **The Analyze/Re-analyze button lives in the game header (top-right); the results live in a
+  native `<dialog>`** (`GameAnalysisPanel.tsx`), opened via a "View analysis" link next to the
+  button. `GameAnalysisProvider` owns all the client state (analysis/progress/error) and passes
+  it through a Context, since the button and the dialog's trigger aren't adjacent in the tree —
+  `AnalyzeButton` renders both the trigger button and the `<dialog>` together (so one ref can
+  call `showModal()`/`close()`), while `app/games/[id]/page.tsx` places `AnalyzeButton` next to
+  the header and doesn't otherwise reach into the analysis internals. The dialog is centered
+  with `fixed` + `inset-1/2` + negative-translate, not the browser's default `<dialog>` centering
+  — the project's CSS reset strips the default margin `<dialog>` relies on for that.
 - **Scope**: per-game only. There's no bulk "analyze all synced games" job or a cross-game
   "your most common blunders" aggregate yet — both are natural follow-ups once individual games
   can be analyzed, but weren't part of what Phase 3 asked for.

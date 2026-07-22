@@ -1,22 +1,44 @@
 'use client'
 
-import { useState } from 'react'
+import { createContext, useContext, useRef, useState } from 'react'
 import { saveGameAnalysis } from '@/app/actions'
 import { biggestBlunder, describeEval, findBlunders, formatEval, formatSwing } from '@/lib/analysis'
 import { plyLabel } from '@/lib/san'
 import { analyzeGame } from '@/lib/stockfish/analyze'
 import type { GameAnalysis } from '@/lib/types'
 
-export function GameAnalysisPanel({
+interface AnalysisContextValue {
+  analysis: GameAnalysis | null
+  progress: { done: number; total: number } | null
+  error: string | null
+  handleAnalyze: () => void
+  movesSan: string[]
+}
+
+// The button and its results dialog both live in the same corner of the
+// page but are still two separate components (button + <dialog>) — a
+// Context keeps them both talking to the one piece of client state without
+// prop-drilling between them.
+const AnalysisContext = createContext<AnalysisContextValue | null>(null)
+
+function useAnalysisContext(): AnalysisContextValue {
+  const ctx = useContext(AnalysisContext)
+  if (!ctx) throw new Error('Must be used within <GameAnalysisProvider>')
+  return ctx
+}
+
+export function GameAnalysisProvider({
   gameId,
   initialFen,
   movesSan,
   initialAnalysis,
+  children,
 }: {
   gameId: string
   initialFen: string
   movesSan: string[]
   initialAnalysis: GameAnalysis | null
+  children: React.ReactNode
 }) {
   const [analysis, setAnalysis] = useState(initialAnalysis)
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null)
@@ -38,37 +60,73 @@ export function GameAnalysisPanel({
     }
   }
 
-  if (!analysis) {
-    return (
-      <details>
-        <summary className="cursor-pointer text-sm font-medium select-none">
-          Stockfish analysis
-        </summary>
-        <div className="mt-2 flex flex-col items-start gap-2">
+  return (
+    <AnalysisContext.Provider value={{ analysis, progress, error, handleAnalyze, movesSan }}>
+      {children}
+    </AnalysisContext.Provider>
+  )
+}
+
+export function AnalyzeButton() {
+  const { analysis, progress, error, handleAnalyze } = useAnalysisContext()
+  const dialogRef = useRef<HTMLDialogElement>(null)
+
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <div className="flex items-center gap-3">
+        {analysis && (
           <button
-            onClick={handleAnalyze}
-            disabled={progress !== null}
-            className="rounded-md border border-zinc-700 px-3 py-1.5 text-sm font-medium hover:bg-zinc-800 disabled:opacity-50"
+            onClick={() => dialogRef.current?.showModal()}
+            className="text-sm text-zinc-400 hover:text-zinc-100"
           >
-            {progress
-              ? `Analyzing… (${progress.done}/${progress.total})`
-              : 'Analyze with Stockfish'}
+            View analysis
           </button>
-          {error && <p className="text-sm text-rose-400">{error}</p>}
-        </div>
-      </details>
-    )
-  }
+        )}
+        <button
+          onClick={handleAnalyze}
+          disabled={progress !== null}
+          className="rounded-md border border-zinc-700 px-3 py-1.5 text-sm font-medium whitespace-nowrap hover:bg-zinc-800 disabled:opacity-50"
+        >
+          {progress
+            ? `${analysis ? 'Re-analyzing' : 'Analyzing'}… (${progress.done}/${progress.total})`
+            : analysis
+              ? 'Re-analyze'
+              : 'Analyze with Stockfish'}
+        </button>
+      </div>
+      {error && <p className="text-sm text-rose-400">{error}</p>}
+      <AnalysisDialog dialogRef={dialogRef} />
+    </div>
+  )
+}
+
+function AnalysisDialog({ dialogRef }: { dialogRef: React.RefObject<HTMLDialogElement | null> }) {
+  const { analysis, movesSan } = useAnalysisContext()
+  if (!analysis) return null
 
   const blunders = findBlunders(analysis.evals, movesSan)
   const worst = biggestBlunder(blunders)
 
   return (
-    <details>
-      <summary className="cursor-pointer text-sm font-medium select-none">
-        Stockfish analysis
-      </summary>
-      <div className="mt-2 flex flex-col items-start gap-2">
+    <dialog
+      ref={dialogRef}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) dialogRef.current?.close()
+      }}
+      className="fixed top-1/2 left-1/2 m-0 max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-lg border border-zinc-700 bg-zinc-900 p-0 text-left text-zinc-100 backdrop:bg-black/60"
+    >
+      <div className="flex flex-col gap-3 p-5">
+        <div className="flex items-center justify-between gap-4">
+          <h2 className="text-sm font-semibold">Stockfish analysis</h2>
+          <button
+            onClick={() => dialogRef.current?.close()}
+            aria-label="Close"
+            className="text-zinc-500 hover:text-zinc-200"
+          >
+            ✕
+          </button>
+        </div>
+
         {blunders.length === 0 ? (
           <p className="text-sm text-emerald-600 dark:text-emerald-400">
             No blunders found by Stockfish — clean game.
@@ -95,17 +153,8 @@ export function GameAnalysisPanel({
         )}
 
         <EvalHelp />
-
-        <button
-          onClick={handleAnalyze}
-          disabled={progress !== null}
-          className="text-xs text-zinc-500 hover:text-zinc-300"
-        >
-          {progress ? `Re-analyzing… (${progress.done}/${progress.total})` : 'Re-analyze'}
-        </button>
-        {error && <p className="text-sm text-rose-400">{error}</p>}
       </div>
-    </details>
+    </dialog>
   )
 }
 
@@ -113,7 +162,7 @@ function EvalHelp() {
   return (
     <details className="text-xs text-zinc-500">
       <summary className="cursor-pointer select-none hover:text-zinc-300">How to read this</summary>
-      <div className="mt-1.5 flex max-w-md flex-col gap-1.5 border-l border-zinc-800 pl-3">
+      <div className="mt-1.5 flex flex-col gap-1.5 border-l border-zinc-800 pl-3">
         <p>
           <span className="font-medium text-zinc-400">22… a6</span> — move 22, played by Black. A
           plain number (<span className="font-medium text-zinc-400">22.</span>) is White&rsquo;s
