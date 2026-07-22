@@ -4,6 +4,7 @@ import { describeHangingPieceReason } from '@/lib/hangingPiece'
 import { plyLabel } from '@/lib/san'
 import type { SanPiece } from '@/lib/san'
 import type { BlunderStats as BlunderStatsData } from '@/lib/types'
+import { BlunderSeverityBadge } from './BlunderSeverityBadge'
 import { EvalHelp } from './EvalHelp'
 import { PieceGlyph } from './PieceGlyph'
 
@@ -96,13 +97,14 @@ export function BlunderStats({ stats }: { stats: BlunderStatsData }) {
         <ul className="flex flex-col gap-1.5 text-sm">
           {stats.worst.map((b) => (
             <li key={`${b.gameId}-${b.ply}`}>
-              <div>
+              <div className="flex flex-wrap items-center gap-1.5">
                 <Link
                   href={`/games/${b.gameId}`}
                   className="text-blue-600 hover:underline dark:text-blue-400"
                 >
                   {b.gameLabel}
-                </Link>{' '}
+                </Link>
+                <BlunderSeverityBadge swingCp={b.swingCp} />
                 <span className="text-zinc-600 dark:text-zinc-400">
                   {plyLabel(b.ply)} {b.moveSan}: {formatEval(b.evalBefore)} →{' '}
                   {formatEval(b.evalAfter)} ({formatSwing(b)})

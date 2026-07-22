@@ -160,7 +160,8 @@ every kind of mistake, so plenty of blunders show no reason at all, just the eva
   delivering it, `-M` for Black.
 - **Blunder**: any move after which the eval swings 200+ centipawns _against_ the player who
   just moved. A move that was already losing and stays losing isn't flagged again — only the
-  swing matters.
+  swing matters. Every blunder is also tagged **Mistake** (200–399cp) or **Blunder** (400cp+) so
+  you can tell a near-miss from a disaster at a glance.
 - If you're new to reading engine evals, the [chessprogramming.org Evaluation
   page](https://www.chessprogramming.org/Evaluation) covers the same centipawn/mate-score
   convention Stockfish (and Blitzr) uses.
