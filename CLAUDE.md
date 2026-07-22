@@ -162,6 +162,11 @@ public/
 - **Chess.com's per-player `result` string** (`win`/`checkmated`/`resigned`/`agreed`/…) is
   bucketed into `win`/`draw`/`loss` by `normalizeResult()` (`lib/chesscom/normalize.ts`) — see
   that file for the exact draw-outcome set.
+- **`GameRow.tsx`'s time-class cell is wrapped in an `<abbr>`** (`TIME_CLASS_TOOLTIPS`) explaining
+  what bullet/blitz/rapid/daily mean in plain minutes-per-player terms — same tooltip convention
+  as the ECO-code/"in book"/"deviated" `<abbr>`s on the game page, for the same beginner-facing
+  reason (see "Blunders aggregate" below for the rest of that pass). `myResult` (win/draw/loss)
+  wasn't given one — the column header and the badge text already say it plainly.
 - **PGN headers are parsed independently of chess.js** (`parsePgnHeaders()`, exported from
   `normalize.ts`) so header fields (ECO/ECOUrl/Event/Link/…) are available even for games whose
   movetext chess.js can't validate (e.g. bughouse's piece-drop notation), and reused elsewhere
