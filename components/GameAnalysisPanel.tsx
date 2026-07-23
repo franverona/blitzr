@@ -165,11 +165,11 @@ function AnalysisDialog({ dialogRef }: { dialogRef: React.RefObject<HTMLDialogEl
       onClick={(e) => {
         if (e.target === e.currentTarget) dialogRef.current?.close()
       }}
-      className="fixed top-1/2 left-1/2 m-0 max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-lg border border-zinc-700 bg-zinc-900 p-0 text-left text-zinc-100 backdrop:bg-black/60"
+      className="fixed top-1/2 left-1/2 m-0 max-h-[85vh] w-[95vw] max-w-3xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg border border-zinc-700 bg-zinc-900 p-0 text-left text-zinc-100 backdrop:bg-black/60"
     >
-      <div className="flex flex-col gap-3 p-5">
+      <div className="flex flex-col gap-4 p-6">
         <div className="flex items-center justify-between gap-4">
-          <h2 className="text-sm font-semibold">Stockfish analysis</h2>
+          <h2 className="text-base font-semibold">Stockfish analysis</h2>
           <button
             onClick={() => dialogRef.current?.close()}
             aria-label="Close"
@@ -184,13 +184,13 @@ function AnalysisDialog({ dialogRef }: { dialogRef: React.RefObject<HTMLDialogEl
             No blunders found by Stockfish — clean game.
           </p>
         ) : (
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-3">
             <p className="text-sm text-amber-600 dark:text-amber-400">
               {blunders.length} {blunders.length === 1 ? 'blunder' : 'blunders'} found. Biggest:{' '}
               {plyLabel(worst!.ply)} {worst!.moveSan} ({formatEval(worst!.evalBefore)} →{' '}
               {formatEval(worst!.evalAfter)}, {describeEval(worst!.evalAfter).toLowerCase()}).
             </p>
-            <ul className="flex flex-col gap-1.5 text-sm text-zinc-400">
+            <ul className="flex flex-col divide-y divide-zinc-800">
               {blunders.map((b) => {
                 const moverColor = whiteToMove(b.ply) ? 'white' : 'black'
                 const reason = detectBlunderReason(
@@ -206,32 +206,36 @@ function AnalysisDialog({ dialogRef }: { dialogRef: React.RefObject<HTMLDialogEl
                 )
                 const bestMove = b.evalBefore.bestMove
                 return (
-                  <li key={b.ply}>
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <BlunderSeverityBadge swingCp={b.swingCp} />
-                      <span>
-                        {plyLabel(b.ply)} {b.moveSan}: {formatEval(b.evalBefore)} →{' '}
-                        {formatEval(b.evalAfter)} ({formatSwing(b)})
-                      </span>
-                    </div>
-                    <div className="text-xs text-zinc-500">
-                      {describeMove(positions[b.ply - 1], b.moveSan)}
-                    </div>
-                    {reason && (
-                      <div className="text-xs text-zinc-500">{describeBlunderReason(reason)}</div>
-                    )}
-                    {betterMove && (
-                      <div className="text-xs text-zinc-500">Better was {betterMove}</div>
-                    )}
-                    {betterMove && bestMove && bestMove.bestLine?.length > 0 && (
-                      <div className="mt-1">
+                  <li key={b.ply} className="py-4 first:pt-0 last:pb-0">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+                      <div className="flex flex-1 flex-col gap-1.5">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <BlunderSeverityBadge swingCp={b.swingCp} />
+                          <span className="text-sm text-zinc-300">
+                            {plyLabel(b.ply)} {b.moveSan}: {formatEval(b.evalBefore)} →{' '}
+                            {formatEval(b.evalAfter)} ({formatSwing(b)})
+                          </span>
+                        </div>
+                        <div className="text-sm text-zinc-400">
+                          {describeMove(positions[b.ply - 1], b.moveSan)}
+                        </div>
+                        {reason && (
+                          <div className="text-sm text-zinc-500">
+                            {describeBlunderReason(reason)}
+                          </div>
+                        )}
+                        {betterMove && (
+                          <div className="text-sm text-zinc-500">Better was {betterMove}</div>
+                        )}
+                      </div>
+                      {betterMove && bestMove && bestMove.bestLine?.length > 0 && (
                         <PlanBoard
                           fenBefore={positions[b.ply - 1]}
                           moves={[bestMove.san, ...bestMove.bestLine]}
                           boardOrientation={moverColor}
                         />
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </li>
                 )
               })}
