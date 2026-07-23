@@ -227,8 +227,9 @@ than reproduced from any source — the King's Pawn Opening lesson is adapted fr
 a link back (opens in a new tab) for attribution and further reading.
 
 A **Quiz** tab next to Study switches from reading the line to playing it from memory: you're only
-tested on one side (whichever color the board is currently oriented to — flip it to switch), the
-opponent's replies play themselves after a short pause. A "Not quite — try again" nudge appears
+tested on one side (whichever color the board is currently oriented to — defaults to the side the
+lesson is written from, flip it to practice the other), the opponent's replies play themselves
+after a short pause. A "Not quite — try again" nudge appears
 on a wrong guess with no penalty for retrying immediately, a "Show move" button reveals the
 answer as an arrow if you're stuck, and each move's explanation still appears the instant you get
 it right. The board stays visible at the final position when you finish, alongside how many

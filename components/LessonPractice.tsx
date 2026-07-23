@@ -26,7 +26,7 @@ export function LessonPractice({ lesson }: { lesson: OpeningLesson }) {
       key={mode}
       initialFen={START_FEN}
       movesSan={movesSan}
-      boardOrientation="white"
+      boardOrientation={lesson.primaryColor}
       initialPly={mode === 'study' ? 1 : 0}
     >
       <div className="flex flex-col gap-3">

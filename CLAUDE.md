@@ -905,6 +905,17 @@ lastPly`) shows a mistake/hint tally and a Restart button (`setPly(0)` plus rese
   that ply via the same `isMyTurn` flag the effect checks. Flipping the board mid-quiz changes which
   color is "mine" from that point on — an accepted edge case, not guarded against, since it's a
   rare and user-initiated action.
+- **`OpeningLesson.primaryColor`** (`'white' | 'black'`) is which side the lesson is framed
+  around, and is what `LessonPractice.tsx` seeds `BoardProvider`'s `boardOrientation` from
+  (`lesson.primaryColor`, replacing an earlier hardcoded `"white"`) — for both Study and Quiz mode,
+  though it matters most for Quiz: defaulting to quizzing the _other_ color reads as testing the
+  wrong player for a lesson named after one side's plan (raised directly — "why should I quiz
+  using Black's for the King's Pawn Opening?"). The King's Pawn Opening lesson sets `'white'`.
+  Still fully flippable either way via `FlipBoardButton` — the opponent's-reply theory in a line
+  like the Ruy Lopez is legitimate prep for the other color too (you'll be Black roughly half your
+  games), `primaryColor` only changes the _default_, not what's practicable. This is also set up
+  for the asymmetric case a future lesson will eventually hit: an opening named after Black's
+  reply (e.g. a Caro-Kann lesson) would set `primaryColor: 'black'` and default the other way.
 
 - **Vitest** — run with `pnpm test` (or `pnpm test:watch`)
 - Tests live in `__tests__/`, one file per `lib/` module they cover: `normalize.test.ts`,

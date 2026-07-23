@@ -82,6 +82,13 @@ export interface OpeningLesson {
   moves: OpeningLessonMove[]
   summary: string
   sourceUrl: string
+  /** Which side this lesson is framed around — e.g. White for "King's Pawn
+   *  Opening", Black for a defense named after Black's reply. Quiz mode
+   *  defaults to practicing this color (board orientation still flippable)
+   *  rather than always starting as White, since quizzing the *other* side
+   *  by default reads as testing the wrong player for a lesson named after
+   *  one side's plan. */
+  primaryColor: 'white' | 'black'
 }
 
 export type RepertoireColor = 'white' | 'black'
