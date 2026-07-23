@@ -21,8 +21,8 @@ ahead of time.
   and by piece, scoped to whatever games already have a saved analysis.
 - **Phase 6 (done)**: `/learn` — hand-authored, plain-English opening lessons with an interactive
   board, a Study mode (read the line) and a Quiz mode (play it from memory, one side at a time).
-  Basic architecture, seeded with one lesson (King's Pawn Opening); more lessons are a
-  content-only addition from here (see "Learn openings" below).
+  Seeded with four lessons (King's Pawn Opening, Sicilian Defense, French Defense, Queen's
+  Gambit); adding more is a content-only addition from here (see "Learn openings" below).
 
 ## Stack
 
@@ -819,11 +819,12 @@ client'`. Reuses `PieceGlyph` (white variant, on the same green badge `PieceMove
 
 - **Content is hand-authored, not imported.** `lib/openingTheory.ts` exports a hardcoded
   `OPENING_LESSONS: OpeningLesson[]` array plus `getOpeningLesson(slug)` — no DB table, no Server
-  Action, same "just data in code" treatment as `PIECE_NAMES`/`TIME_CLASS_TOOLTIPS`. Adding a
-  second lesson is a content-only change (another array entry), which is the whole point of
-  building the index → detail structure now even though there's only one lesson today.
-- **Summaries are paraphrased in original wording, not reproduced from the source.** The first
-  lesson (King's Pawn Opening) is adapted from Wikibooks' [Chess Opening
+  Action, same "just data in code" treatment as `PIECE_NAMES`/`TIME_CLASS_TOOLTIPS`. A new lesson
+  is a content-only change (another array entry) — proven out with three more lessons
+  (Sicilian Defense, French Defense, Queen's Gambit) added after the first, none of them touching
+  any page/component code.
+- **Summaries are paraphrased in original wording, not reproduced from the source.** Every lesson
+  is adapted from a specific page of Wikibooks' [Chess Opening
   Theory](https://en.wikibooks.org/wiki/Chess_Opening_Theory/1._e4), which is CC BY-SA
   (share-alike) — this repo is MIT, so verbatim text would be a licensing mismatch. Ideas aren't
   copyrightable, only specific expression, so a short original summary plus a visible

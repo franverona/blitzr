@@ -218,13 +218,14 @@ ideas behind one natural line, move by move. The index shows each one as a squar
 small preview of the position it leads to. Opening a lesson gives you a large interactive board
 to step through it, with each move getting its own one-line note on why it's played, right above
 the board — a flip button next to the board controls lets you view the line from either side.
-This is a basic architecture seeded with one lesson (King's Pawn Opening) rather than
-a full opening encyclopedia; adding more is a content-only change from here. The overall summary
-lives behind a "?" button next to the board controls rather than always taking up space on the
-page — worth reading once, not on every visit. Summaries are written in original wording rather
-than reproduced from any source — the King's Pawn Opening lesson is adapted from Wikibooks'
-[Chess Opening Theory](https://en.wikibooks.org/wiki/Chess_Opening_Theory/1._e4) (CC BY-SA), with
-a link back (opens in a new tab) for attribution and further reading.
+Four lessons are here so far — King's Pawn Opening, Sicilian Defense, French Defense, and Queen's
+Gambit — not a full opening encyclopedia, but adding more from here is just a content-only change.
+The overall summary lives behind a "?" button next to the board controls rather than always
+taking up space on the page — worth reading once, not on every visit. Summaries are written in
+original wording rather than reproduced from any source — each lesson is adapted from a specific
+page of Wikibooks' [Chess Opening
+Theory](https://en.wikibooks.org/wiki/Chess_Opening_Theory/1._e4) (CC BY-SA), with a link back
+(opens in a new tab) for attribution and further reading.
 
 A **Quiz** tab next to Study switches from reading the line to playing it from memory: you're only
 tested on one side (whichever color the board is currently oriented to — defaults to the side the
