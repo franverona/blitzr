@@ -226,6 +226,19 @@ than reproduced from any source — the King's Pawn Opening lesson is adapted fr
 [Chess Opening Theory](https://en.wikibooks.org/wiki/Chess_Opening_Theory/1._e4) (CC BY-SA), with
 a link back (opens in a new tab) for attribution and further reading.
 
+A **Quiz** tab next to Study switches from reading the line to playing it from memory: you're only
+tested on one side (whichever color the board is currently oriented to — defaults to the side the
+lesson is written from, flip it to practice the other), the opponent's replies play themselves
+after a short pause. A "Not quite — try again" nudge appears
+on a wrong guess with no penalty for retrying immediately, a "Show move" button (or the `H` key)
+reveals the answer as an arrow if you're stuck, and each move's explanation still appears the
+instant you get it right. A "Restart" button (or the `R` key) is always available, not just once
+you finish, so you can bail out and start over mid-line. The board stays visible at the final
+position when you finish, alongside how many mistakes and hints it took. It's fully
+self-contained to this page — no spaced repetition, no saved progress — the deliberately
+lightweight way to actually test what you
+just read instead of only skimming it.
+
 ## Data hygiene
 
 - Your Chess.com username lives in `.env.local` (config), never in code. The API is
