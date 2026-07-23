@@ -240,8 +240,7 @@ instant you get it right. A "Restart" button (or the `R` key) is always availabl
 you finish, so you can bail out and start over mid-line. The board stays visible at the final
 position when you finish, alongside how many mistakes and hints it took. It's fully
 self-contained to this page — no spaced repetition, no saved progress — the deliberately
-lightweight way to actually test what you
-just read instead of only skimming it.
+lightweight way to actually test what you just read instead of only skimming it.
 
 Each lesson also cross-links to your own Chess.com history: "You've played this in N of your
 games (WW/DD/LL)" (or a note that you haven't yet), linking through to `/openings`. This checks
