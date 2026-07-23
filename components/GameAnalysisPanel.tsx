@@ -216,7 +216,7 @@ function AnalysisDialog({ dialogRef }: { dialogRef: React.RefObject<HTMLDialogEl
                             {formatEval(b.evalAfter)} ({formatSwing(b)})
                           </span>
                         </div>
-                        <div className="text-sm text-zinc-400">
+                        <div className="text-base text-zinc-300">
                           {describeMove(positions[b.ply - 1], b.moveSan)}
                         </div>
                         {reason && (
