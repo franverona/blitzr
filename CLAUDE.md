@@ -20,7 +20,8 @@ ahead of time.
 - **Phase 5 (done)**: cross-game "recurring blunders" aggregate (`/blunders`), grouped by opening
   and by piece, scoped to whatever games already have a saved analysis.
 - **Phase 6 (done)**: `/learn` — hand-authored, plain-English opening lessons with an interactive
-  board. Basic architecture, seeded with one lesson (King's Pawn Opening); more lessons are a
+  board, a Study mode (read the line) and a Quiz mode (play it from memory, one side at a time).
+  Basic architecture, seeded with one lesson (King's Pawn Opening); more lessons are a
   content-only addition from here (see "Learn openings" below).
 
 ## Stack
@@ -48,7 +49,8 @@ app/
                                # or raw PGN fallback for unparseable games
   openings/page.tsx           # ECO family aggregation, expandable to named lines
   learn/page.tsx                # opening-lesson index (see "Learn openings")
-  learn/[slug]/page.tsx           # one lesson — summary + interactive board
+  learn/[slug]/page.tsx           # one lesson — thin wrapper, fetches the lesson and hands it to
+                                    # LessonPractice (see "Learn openings")
   repertoire/page.tsx          # repertoire tree builder (White/Black tabs)
   drill/page.tsx                # spaced-repetition drill deck, reads ?type/?opening
                                   # (see "Drilling")
@@ -71,6 +73,10 @@ components/
                                          # see "Drilling")
   DrillFilters.tsx                       # sourceType tabs + opening select, ?type/?opening
                                            # (client, see "Drilling")
+  LessonPractice.tsx                     # owns the Study/Quiz toggle for a /learn lesson (client,
+                                           # see "Learn openings")
+  LessonQuiz.tsx                           # active-recall quiz on a lesson's line (client, see
+                                             # "Learn openings")
   BlunderStats.tsx                       # by-opening table, by-piece chips, worst-blunders list
                                            # (server component, see "Blunders aggregate")
   EvalHelp.tsx                             # "how to read this" glossary for eval/blunder/swing
@@ -799,16 +805,17 @@ client'`. Reuses `PieceGlyph` (white variant, on the same green badge `PieceMove
   "Adapted from ..." link back to the source (`OpeningLesson.sourceUrl`, rendered on
   `app/learn/[slug]/page.tsx`) sidesteps that entirely — this is the pattern to follow for every
   future lesson, not just this one.
-- **The interactive board is free** — `app/learn/[slug]/page.tsx` reuses `BoardProvider`/
-  `BoardNavControls`/`BoardView` from `components/Board.tsx` exactly as `app/games/[id]/page.tsx`
-  does, just fed `lesson.moves` (a short SAN line — a handful of plies showing one natural
-  continuation, not a deep repertoire tree) and a local `START_FEN` instead of a synced game's
-  data. `result`/`evals` are both omitted (optional on `BoardProvider`) since a lesson has no game
-  outcome or engine analysis — `BoardView` already renders fine without either (material count
-  still shows, since that's engine-free; there's just no eval bar or blunder callouts). Also
-  passes `initialPly={1}` so the lesson opens on its first move rather than `BoardProvider`'s
-  normal default of the last ply — for a short, fully-populated lesson line that default would
-  otherwise jump straight to the end of it.
+- **The interactive board is free** — `components/LessonPractice.tsx` (rendered by the thin
+  `app/learn/[slug]/page.tsx` Server Component) reuses `BoardProvider`/`BoardNavControls`/
+  `BoardView` from `components/Board.tsx` exactly as `app/games/[id]/page.tsx` does, just fed
+  `lesson.moves` (a short SAN line — a handful of plies showing one natural continuation, not a
+  deep repertoire tree) and a local `START_FEN` instead of a synced game's data. `result`/`evals`
+  are both omitted (optional on `BoardProvider`) since a lesson has no game outcome or engine
+  analysis — `BoardView` already renders fine without either (material count still shows, since
+  that's engine-free; there's just no eval bar or blunder callouts). In Study mode it also passes
+  `initialPly={1}` so the lesson opens on its first move rather than `BoardProvider`'s normal
+  default of the last ply — for a short, fully-populated lesson line that default would otherwise
+  jump straight to the end of it.
 - **`boardOrientation` is stateful, not a fixed prop** — `BoardProvider` seeds
   `useState(initialBoardOrientation)` from what was previously just a plain passthrough prop
   (renamed via destructuring alias, `boardOrientation: initialBoardOrientation`, so both existing
@@ -859,6 +866,66 @@ FlipBoardButton.tsx` (new) is the one consumer, a circular icon button matching
   not worth sharing for a fourth one-line usage). No image generation, no external asset pipeline —
   it's a real board rendered small (`aspect-square` wrapper), so it's always exactly in sync with
   the lesson's actual line.
+- **Quiz mode** (`components/LessonQuiz.tsx`) is active-recall practice on a lesson's line —
+  self-contained to `/learn`, no `drill_cards`/SM-2/Server Action involved, unlike `/drill`'s
+  spaced-repetition deck. `components/LessonPractice.tsx` owns a `mode: 'study' | 'quiz'` toggle
+  (two tab buttons in the header) and puts it on `BoardProvider`'s `key` — switching modes remounts
+  the provider, which is what resets `ply` to each mode's own starting point (`1` for Study, `0` for
+  Quiz) rather than carrying over wherever the other mode's board happened to be, same
+  key-forces-remount pattern `key={game.id}`/`key={lesson.slug}` already use elsewhere.
+  `LessonQuiz` reuses `BoardProvider`'s own `ply`/`setPly` (via `useBoardContext()`) as the quiz's
+  progress counter instead of separate state — a side effect of this is that `MoveExplanation`
+  (also reading the same `ply`) automatically reveals each move's note the instant it's answered
+  correctly, in _both_ modes, with zero wiring between the two components. Board interaction
+  (drag or click-to-move, `legalDestinations`/`LegalMoveSquare` highlighting, `promotion: 'q'`
+  always) mirrors `RepertoireBoard.tsx`/`DrillSession.tsx`'s `attemptMove` pattern. Differs from
+  `DrillSession` in one deliberate way: there's no per-card "Next" step or `answeredRef`
+  double-submit guard — a wrong attempt just leaves you on the same ply to retry immediately, since
+  a lesson's line has exactly one correct answer per move (not several acceptable moves like a
+  repertoire card), so there's nothing to reveal-and-move-past the way a graded drill card needs.
+  A "💡 Show move" button reveals the expected move as an arrow (same amber as every other reveal
+  arrow in the app) without auto-playing it — still has to be physically played, same
+  "hint isn't a free answer" precedent as Drill's hint levels. A "⟲ Restart" button
+  (`setPly(0)` plus resetting local tally state) sits in the header at all times, not gated on
+  finishing the line — a way to bail out and start over mid-quiz rather than having to play
+  through (or hint through) every remaining move first. Nothing is persisted either way — there's
+  no schedule to update, so "restart" is just "play it again." The board stays mounted through
+  completion (`ply === lastPly`), showing the final position with
+  dragging disabled, rather than being replaced by a text-only summary — per direct user feedback
+  that the board disappearing read as jarring. The header row above the board (progress text +
+  hint button, or "Line complete!" with neither) is pinned to a fixed height (`h-9`) rather than
+  sizing to content, since the two states have different natural line-heights and letting the row
+  reflow shifted the board up/down by a few pixels on completion — also direct user feedback,
+  caught by measuring the board's bounding box before/after the completing move.
+- **Keyboard shortcuts**: `H` → Show move, `R` → Restart, added per direct request for parity with
+  Drill's Space/Enter/H. `handleHint`/`handleRestart` are both `useCallback`s (not plain function
+  declarations) so a single `keydown` listener's `useEffect` has a stable dependency array instead
+  of tearing down and re-subscribing every render — same rationale `DrillSession.tsx`'s
+  `handleNext`/`handleHint` already follow. `H` is only actionable when applicable (your turn, not
+  already revealed, not complete — same conditions the button's `disabled` uses); `R` has no
+  guard, since restarting is always valid whether mid-line or on the completion screen.
+- **Only your own side is quizzed, not the opponent's replies** — `LessonQuiz` reuses
+  `boardOrientation` (the same state `FlipBoardButton` already flips) as "which color am I
+  practicing," per direct user pushback that having to also recall the exact move an opponent
+  would play isn't a real skill (in an actual game you just react to whatever they play) — testing
+  it would just be memorizing trivia instead of practicing "what do I play here." Whenever it's the
+  other color's turn (`whiteToMove(ply + 1)` compared against `boardOrientation`), a `useEffect`
+  auto-advances the ply on their behalf after `OPPONENT_MOVE_DELAY_MS` (500ms) rather than waiting
+  for input — board interaction (`allowDragging`, square clicks, the hint button) is disabled for
+  that ply via the same `isMyTurn` flag the effect checks. Flipping the board mid-quiz changes which
+  color is "mine" from that point on — an accepted edge case, not guarded against, since it's a
+  rare and user-initiated action.
+- **`OpeningLesson.primaryColor`** (`'white' | 'black'`) is which side the lesson is framed
+  around, and is what `LessonPractice.tsx` seeds `BoardProvider`'s `boardOrientation` from
+  (`lesson.primaryColor`, replacing an earlier hardcoded `"white"`) — for both Study and Quiz mode,
+  though it matters most for Quiz: defaulting to quizzing the _other_ color reads as testing the
+  wrong player for a lesson named after one side's plan (raised directly — "why should I quiz
+  using Black's for the King's Pawn Opening?"). The King's Pawn Opening lesson sets `'white'`.
+  Still fully flippable either way via `FlipBoardButton` — the opponent's-reply theory in a line
+  like the Ruy Lopez is legitimate prep for the other color too (you'll be Black roughly half your
+  games), `primaryColor` only changes the _default_, not what's practicable. This is also set up
+  for the asymmetric case a future lesson will eventually hit: an opening named after Black's
+  reply (e.g. a Caro-Kann lesson) would set `primaryColor: 'black'` and default the other way.
 
 - **Vitest** — run with `pnpm test` (or `pnpm test:watch`)
 - Tests live in `__tests__/`, one file per `lib/` module they cover: `normalize.test.ts`,

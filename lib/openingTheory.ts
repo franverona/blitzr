@@ -45,6 +45,7 @@ export const OPENING_LESSONS: OpeningLesson[] = [
       'shown here is one classical way it can continue: 1. e4 e5 2. Nf3 Nc6 3. Bb5, the Ruy ' +
       'Lopez.',
     sourceUrl: 'https://en.wikibooks.org/wiki/Chess_Opening_Theory/1._e4',
+    primaryColor: 'white',
   },
 ]
 
