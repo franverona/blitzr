@@ -189,6 +189,258 @@ export const OPENING_LESSONS: OpeningLesson[] = [
     sourceUrl: 'https://en.wikibooks.org/wiki/Chess_Opening_Theory/1._d4/1...d5/2._c4',
     primaryColor: 'white',
   },
+  {
+    slug: 'italian-game',
+    name: 'Italian Game',
+    moves: [
+      {
+        san: 'e4',
+        explanation:
+          "White pushes the king's pawn two squares, claiming central space and opening a " +
+          'diagonal for the bishop on f1 and a line for the queen.',
+      },
+      {
+        san: 'e5',
+        explanation:
+          "Black mirrors White's claim on the center, staking out equal space and opening " +
+          'lines for their own bishop and queen.',
+      },
+      {
+        san: 'Nf3',
+        explanation:
+          'White develops a knight toward the center, attacks the e5 pawn, and prepares to ' +
+          'castle kingside.',
+      },
+      {
+        san: 'Nc6',
+        explanation: 'Black develops a knight to defend e5 and adds another attacker on d4.',
+      },
+      {
+        san: 'Bc4',
+        explanation:
+          "White develops the other bishop straight at Black's weakest point, f7 — a more " +
+          "direct plan than the Ruy Lopez's pin on c6, at the cost of not pressuring e5 at all.",
+      },
+      {
+        san: 'Bc5',
+        explanation:
+          "Black mirrors the idea, developing the bishop toward White's own weak f2 square and " +
+          'completing the symmetric setup known as the Giuoco Piano — Italian for "quiet game."',
+      },
+    ],
+    summary:
+      '1. e4 e5 2. Nf3 Nc6 3. Bc4 is the Italian Game — one of the oldest recorded openings, ' +
+      'and a natural alternative to the Ruy Lopez from the same starting position. Instead of ' +
+      "pinning the knight on c6, White's bishop aims straight down the diagonal at f7, Black's " +
+      'most vulnerable square early in the game. The line shown reaches the Giuoco Piano, ' +
+      'Black mirroring the same idea: 1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5.',
+    sourceUrl:
+      'https://en.wikibooks.org/wiki/Chess_Opening_Theory/1._e4/1...e5/2._Nf3/2...Nc6/3._Bc4/3...Bc5',
+    primaryColor: 'white',
+  },
+  {
+    slug: 'caro-kann-defense',
+    name: 'Caro-Kann Defense',
+    moves: [
+      {
+        san: 'e4',
+        explanation:
+          "White pushes the king's pawn two squares, claiming central space and opening a " +
+          'diagonal for the bishop on f1 and a line for the queen.',
+      },
+      {
+        san: 'c6',
+        explanation:
+          'Black prepares ...d5 with a pawn, same plan as the French Defense — but c6 stays ' +
+          "out of the way of Black's own light-squared bishop, unlike the French's e6.",
+      },
+      {
+        san: 'd4',
+        explanation: 'White builds a full two-pawn center, ready to meet a challenge on d5.',
+      },
+      {
+        san: 'd5',
+        explanation:
+          "Black follows through, meeting White's center directly with the pawn c6 was " +
+          'preparing to support.',
+      },
+      {
+        san: 'Nc3',
+        explanation:
+          'White develops a knight, defending e4 and adding a second attacker on d5 — Black ' +
+          'has to decide whether to maintain the tension or resolve it.',
+      },
+      {
+        san: 'dxe4',
+        explanation:
+          'Black resolves the central tension right away, trading off a central pawn rather ' +
+          'than maintaining it — one of the main plans in the Caro-Kann.',
+      },
+      {
+        san: 'Nxe4',
+        explanation: 'White recaptures, centralizing the knight on an active square.',
+      },
+      {
+        san: 'Bf5',
+        explanation:
+          'Black develops the light-squared bishop actively, hitting the knight on e4 and ' +
+          'gaining a tempo — exactly the diagonal ...c6 (instead of ...e6) was played to keep ' +
+          'open.',
+      },
+    ],
+    summary:
+      '1...c6, the Caro-Kann Defense, is a solid answer to 1. e4 that solves the French ' +
+      "Defense's biggest problem: Black still prepares ...d5 to meet the center head-on, but " +
+      'without shutting in the light-squared bishop first. The line shown reaches a classical ' +
+      "tabiya: 1. e4 c6 2. d4 d5 3. Nc3 dxe4 4. Nxe4 Bf5, Black's bishop developing actively " +
+      'before the rest of the position locks into place.',
+    sourceUrl: 'https://en.wikibooks.org/wiki/Chess_Opening_Theory/1._e4/1...c6',
+    primaryColor: 'black',
+  },
+  {
+    slug: 'scandinavian-defense',
+    name: 'Scandinavian Defense',
+    moves: [
+      {
+        san: 'e4',
+        explanation:
+          "White pushes the king's pawn two squares, claiming central space and opening a " +
+          'diagonal for the bishop on f1 and a line for the queen.',
+      },
+      {
+        san: 'd5',
+        explanation:
+          'Black challenges the e4 pawn immediately, offering to trade central pawns right ' +
+          'away rather than building up first.',
+      },
+      {
+        san: 'exd5',
+        explanation: 'White captures, picking up the pawn for the moment.',
+      },
+      {
+        san: 'Qxd5',
+        explanation:
+          'Black recaptures with the queen — simple and direct, but it brings the queen out ' +
+          'early where White can attack it and gain time.',
+      },
+      {
+        san: 'Nc3',
+        explanation:
+          'White develops a knight while attacking the queen — exactly the cost Black accepted ' +
+          'by recapturing with the queen so soon rather than developing a piece first.',
+      },
+      {
+        san: 'Qa5',
+        explanation:
+          "Black retreats to a safe, still-useful square, keeping an eye on e5 and White's " +
+          "king's position while getting out of the way so normal development can continue.",
+      },
+    ],
+    summary:
+      "1...d5, the Scandinavian Defense, meets White's center head-on immediately rather than " +
+      'easing into it — direct and easy to learn, at the cost of the tempo Black loses when ' +
+      'White later attacks the recapturing queen. The line shown reaches one of the most ' +
+      'common tabiyas: 1. e4 d5 2. exd5 Qxd5 3. Nc3 Qa5.',
+    sourceUrl: 'https://en.wikibooks.org/wiki/Chess_Opening_Theory/1._e4/1...d5',
+    primaryColor: 'black',
+  },
+  {
+    slug: 'kings-indian-defense',
+    name: "King's Indian Defense",
+    moves: [
+      {
+        san: 'd4',
+        explanation:
+          "White claims central space with the queen's pawn instead of the king's — a touch " +
+          'more solid than 1. e4, opening a line for the light-squared bishop and the queen.',
+      },
+      {
+        san: 'Nf6',
+        explanation:
+          'Black develops a knight first rather than immediately staking a claim in the ' +
+          'center with a pawn, keeping plans flexible and eyeing a kingside fianchetto.',
+      },
+      {
+        san: 'c4',
+        explanation:
+          'White expands further, building toward a broad pawn center rather than developing ' +
+          'pieces yet.',
+      },
+      {
+        san: 'g6',
+        explanation:
+          'Black prepares to fianchetto the dark-squared bishop rather than occupy the center ' +
+          'directly — a hypermodern idea: let White build a big center now, then attack it ' +
+          'later from the side.',
+      },
+      {
+        san: 'Nc3',
+        explanation: 'White develops a knight, adding central control and preparing e4.',
+      },
+      {
+        san: 'Bg7',
+        explanation:
+          'Black completes the fianchetto — the point of the whole setup. The bishop presses ' +
+          'the long diagonal and the center from a distance, ready to back up a later ' +
+          '...c5 or ...e5 strike at whatever center White builds.',
+      },
+    ],
+    summary:
+      "1...Nf6 followed by ...g6 and ...Bg7 is the King's Indian Defense — instead of meeting " +
+      '1. d4 with a central pawn right away, Black lets White build a big pawn center and ' +
+      'plans to undermine it later, backed up by a fianchettoed bishop and, often, a kingside ' +
+      'attack. One of the most heavily analyzed defenses in chess. The line shown reaches the ' +
+      "setup's starting point: 1. d4 Nf6 2. c4 g6 3. Nc3 Bg7.",
+    sourceUrl:
+      'https://en.wikibooks.org/wiki/Chess_Opening_Theory/1._d4/1...Nf6/2._c4/2...g6/3._Nc3/3...Bg7',
+    primaryColor: 'black',
+  },
+  {
+    slug: 'english-opening',
+    name: 'English Opening',
+    moves: [
+      {
+        san: 'c4',
+        explanation:
+          'White claims space on the queenside with a flank pawn instead of occupying the ' +
+          'center directly, keeping options open about whether to follow up with d4 or e4.',
+      },
+      {
+        san: 'e5',
+        explanation:
+          'Black claims full central space in return — the same structure as a Sicilian ' +
+          "Defense with colors reversed, except it's White who gets the extra tempo.",
+      },
+      {
+        san: 'Nc3',
+        explanation:
+          'White develops a knight, adding pressure toward the center while staying flexible ' +
+          'about where the rest of the pieces go.',
+      },
+      {
+        san: 'Nf6',
+        explanation: 'Black develops a knight toward the center, mirroring the same idea.',
+      },
+      {
+        san: 'Nf3',
+        explanation: 'White develops the other knight, still without committing the central pawns.',
+      },
+      {
+        san: 'Nc6',
+        explanation:
+          'Black completes symmetric development, defending e5 and preparing to expand ' +
+          'further.',
+      },
+    ],
+    summary:
+      '1. c4, the English Opening, is the fourth most popular first move in chess — a flank ' +
+      "pawn that keeps White's central plans flexible rather than committing to d4 or e4 " +
+      'immediately, while discouraging an early ...d5 from Black. The line shown reaches a ' +
+      'reversed Sicilian structure, both sides just developing naturally: 1. c4 e5 2. Nc3 ' +
+      'Nf6 3. Nf3 Nc6.',
+    sourceUrl: 'https://en.wikibooks.org/wiki/Chess_Opening_Theory/1._c4/1...e5',
+    primaryColor: 'white',
+  },
 ]
 
 export function getOpeningLesson(slug: string): OpeningLesson | undefined {

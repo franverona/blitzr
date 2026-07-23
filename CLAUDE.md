@@ -21,8 +21,9 @@ ahead of time.
   and by piece, scoped to whatever games already have a saved analysis.
 - **Phase 6 (done)**: `/learn` — hand-authored, plain-English opening lessons with an interactive
   board, a Study mode (read the line) and a Quiz mode (play it from memory, one side at a time).
-  Seeded with four lessons (King's Pawn Opening, Sicilian Defense, French Defense, Queen's
-  Gambit); adding more is a content-only addition from here (see "Learn openings" below).
+  Nine lessons so far (King's Pawn Opening, Sicilian Defense, French Defense, Queen's Gambit,
+  Italian Game, Caro-Kann Defense, Scandinavian Defense, King's Indian Defense, English Opening);
+  adding more is a content-only addition from here (see "Learn openings" below).
 
 ## Stack
 
@@ -820,9 +821,13 @@ client'`. Reuses `PieceGlyph` (white variant, on the same green badge `PieceMove
 - **Content is hand-authored, not imported.** `lib/openingTheory.ts` exports a hardcoded
   `OPENING_LESSONS: OpeningLesson[]` array plus `getOpeningLesson(slug)` — no DB table, no Server
   Action, same "just data in code" treatment as `PIECE_NAMES`/`TIME_CLASS_TOOLTIPS`. A new lesson
-  is a content-only change (another array entry) — proven out with three more lessons
-  (Sicilian Defense, French Defense, Queen's Gambit) added after the first, none of them touching
-  any page/component code.
+  is a content-only change (another array entry) — proven out with eight more lessons added
+  after the first (Sicilian, French, Caro-Kann, Scandinavian — all `primaryColor: 'black'` —
+  plus Queen's Gambit, Italian Game, King's Indian, English — `'white'` except King's Indian),
+  none of them touching any page/component code. Each `sourceUrl` was checked live (fetched and
+  read) before being cited, rather than guessed at from Wikibooks' likely page-naming pattern —
+  worth doing given how deep/specific some of these subpage paths get (e.g. the Italian Game's
+  is nested six moves deep).
 - **Summaries are paraphrased in original wording, not reproduced from the source.** Every lesson
   is adapted from a specific page of Wikibooks' [Chess Opening
   Theory](https://en.wikibooks.org/wiki/Chess_Opening_Theory/1._e4), which is CC BY-SA
