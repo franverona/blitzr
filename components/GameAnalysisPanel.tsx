@@ -223,7 +223,7 @@ function AnalysisDialog({ dialogRef }: { dialogRef: React.RefObject<HTMLDialogEl
                     {betterMove && (
                       <div className="text-xs text-zinc-500">Better was {betterMove}</div>
                     )}
-                    {betterMove && bestMove && bestMove.bestLine.length > 0 && (
+                    {betterMove && bestMove && bestMove.bestLine?.length > 0 && (
                       <div className="mt-1">
                         <PlanBoard
                           fenBefore={positions[b.ply - 1]}

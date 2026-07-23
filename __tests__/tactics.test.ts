@@ -7,6 +7,7 @@ import {
   detectFork,
   explainBestMove,
 } from '@/lib/tactics'
+import type { BestMove } from '@/lib/types'
 
 describe('detectFork', () => {
   it('flags a piece newly attacking 2+ enemy pieces at once', () => {
@@ -203,5 +204,16 @@ describe('describeBetterMove', () => {
         'white',
       ),
     ).toBe("Ra1 (Rook to a1) — Leaves the opponent's knight on a7 hanging. Plan: Nb5 Rxb5.")
+  })
+
+  it('omits the plan clause for a game_analysis row saved before bestLine existed', () => {
+    // Real old data: `bestLine` is entirely absent from the stored JSON, not
+    // an empty array — `as BestMove` simulates that shape past the type
+    // system, which (correctly) no longer allows constructing this literal
+    // directly. Regression test for a crash this exact shape caused in
+    // Board.tsx/GameAnalysisPanel.tsx (`bestLine.length` with no `?.`).
+    const before = '7k/8/8/8/8/8/8/R6K w - - 0 1'
+    const oldBestMove = { from: 'a1', to: 'a5', san: 'Ra5' } as BestMove
+    expect(describeBetterMove(before, 'Kg2', oldBestMove, 'white')).toBe('Ra5 (Rook to a5)')
   })
 })

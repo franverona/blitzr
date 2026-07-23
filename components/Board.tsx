@@ -207,7 +207,7 @@ export function BoardView({
           )}
         </p>
         {betterMove && <p className="text-xs text-amber-400">Better was {betterMove}</p>}
-        {bestMove && bestMove.bestLine.length > 0 && (
+        {bestMove && bestMove.bestLine?.length > 0 && (
           <PlanBoard
             key={ply}
             fenBefore={positions[ply]}
