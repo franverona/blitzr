@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import type { OpeningLesson } from '@/lib/types'
+import Link from 'next/link'
+import type { LessonGameStats as LessonGameStatsData, OpeningLesson } from '@/lib/types'
 import { AboutOpeningButton } from './AboutOpeningButton'
 import { BoardNavControls, BoardProvider, BoardView } from './Board'
 import { FlipBoardButton } from './FlipBoardButton'
@@ -17,7 +18,15 @@ type Mode = 'study' | 'quiz'
  *  starting ply (study opens on the first move already played; quiz starts
  *  from the empty board) and switching should always reset progress rather
  *  than carry over wherever the other mode's board happened to land. */
-export function LessonPractice({ lesson }: { lesson: OpeningLesson }) {
+export function LessonPractice({
+  lesson,
+  gameStats,
+}: {
+  lesson: OpeningLesson
+  /** How many of the account's own synced games reached this lesson's exact
+   *  line, computed server-side in `app/learn/[slug]/page.tsx`. */
+  gameStats: LessonGameStatsData
+}) {
   const [mode, setMode] = useState<Mode>('study')
   const movesSan = lesson.moves.map((move) => move.san)
 
@@ -45,10 +54,31 @@ export function LessonPractice({ lesson }: { lesson: OpeningLesson }) {
             />
           </div>
         </div>
+        <LessonGameStats stats={gameStats} />
         <MoveExplanation moves={lesson.moves} />
         {mode === 'study' ? <BoardView boardMaxWidthClassName="max-w-172" /> : <LessonQuiz />}
       </div>
     </BoardProvider>
+  )
+}
+
+function LessonGameStats({ stats }: { stats: LessonGameStatsData }) {
+  return (
+    <p className="text-sm text-zinc-500 dark:text-zinc-400">
+      {stats.games > 0 ? (
+        <>
+          You&rsquo;ve played this in {stats.games} of your games ({stats.wins}W {stats.draws}D{' '}
+          {stats.losses}L)
+        </>
+      ) : (
+        "You haven't played this exact line in any synced games yet"
+      )}
+      {' — '}
+      <Link href="/openings" className="text-blue-600 hover:underline dark:text-blue-400">
+        see your opening stats
+      </Link>
+      .
+    </p>
   )
 }
 

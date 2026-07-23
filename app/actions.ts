@@ -15,6 +15,7 @@ import {
 } from '@/lib/drill'
 import type { DrillCandidate } from '@/lib/drill'
 import { buildOpeningFamilies, ecoFamilyLabel } from '@/lib/openings'
+import { countGamesReachingLine } from '@/lib/openingTheory'
 import { syncAllArchives } from '@/lib/sync'
 import type {
   ArchiveSyncStatus,
@@ -24,6 +25,7 @@ import type {
   DrillSourceType,
   Game,
   GameAnalysis,
+  LessonGameStats,
   OpeningFamily,
   PositionEval,
   RepertoireColor,
@@ -45,6 +47,11 @@ export async function getGame(id: string): Promise<Game | undefined> {
 export async function listOpenings(): Promise<OpeningFamily[]> {
   const games = await getRepository().listAllGames()
   return buildOpeningFamilies(games)
+}
+
+export async function getLessonGameStats(moves: string[]): Promise<LessonGameStats> {
+  const games = await getRepository().listAllGames()
+  return countGamesReachingLine(games, moves)
 }
 
 export async function getBlunderStats(): Promise<BlunderStats> {
