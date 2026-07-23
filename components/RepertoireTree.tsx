@@ -62,7 +62,7 @@ function TreeNode({
       <button
         onClick={() => onSelectPath(path)}
         className={`block w-full px-2 py-1 text-left ${
-          isActive ? 'bg-[#769656]/50 font-medium text-white' : 'text-zinc-300 hover:bg-zinc-800'
+          isActive ? 'bg-accent/50 font-medium text-white' : 'text-zinc-300 hover:bg-zinc-800'
         }`}
       >
         <span className="mr-1 text-zinc-500">{plyLabel(node.ply)}</span>

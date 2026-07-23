@@ -158,6 +158,23 @@ public/
 
 ## Key conventions
 
+- **The board green/light-square pair and the reveal-arrow amber have one source of truth each**,
+  not a hardcoded literal per component. `lib/theme.ts` exports `BOARD_DARK_SQUARE`
+  (`#769656`)/`BOARD_LIGHT_SQUARE` (`#eeeed2`)/`REVEAL_ARROW_COLOR` for anywhere a plain CSS color
+  string is needed — react-chessboard's `darkSquareStyle`/`lightSquareStyle`/notation-color
+  options and its `arrows` list all take colors as data, not classNames, so a Tailwind class can't
+  reach them. `app/globals.css`'s `@theme` block separately defines `--color-accent` (the same
+  green) for everywhere a className _can_ reach — the active-tab/active-tree-row tint
+  (`bg-accent/20`, `bg-accent/50`, `border-accent`) used across `NavLinks.tsx`, `DrillFilters.tsx`,
+  `LessonPractice.tsx`, `RepertoireBoard.tsx`'s `ColorTab`, `RepertoireTree.tsx`, and `Board.tsx`'s
+  move list. Before this both were copy-pasted as raw hex literals (`'#769656'`,
+  `bg-[#769656]/20`) across a dozen files; this was consolidated per direct user feedback that
+  colors were "spread all over" — deliberately scoped to just this real duplication, not a full
+  rename of Tailwind's own gray/rose/emerald/amber palette (`text-zinc-400` etc.), which is
+  already a single source of truth via Tailwind itself and isn't actually duplicated the same way.
+  `app/icon.svg`'s hardcoded `#769656` is the one exception left as-is — it's a static asset
+  loaded as an external image, not part of the page's CSS cascade, so it can't consume either the
+  Tailwind token or a CSS variable anyway.
 - **Server Actions** for all DB reads/writes and the sync/analysis triggers — no API routes.
 - **Domain types are camelCase** (`lib/types.ts`); **DB columns are snake_case**
   (`lib/db/types.ts`). Each repository implementation maps between them explicitly (see

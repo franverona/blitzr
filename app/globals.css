@@ -12,6 +12,10 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  /* Board dark-square green and brand/active-tab accent — the same value,
+     see lib/theme.ts's BOARD_DARK_SQUARE for the non-Tailwind (inline
+     style) uses this can't reach, e.g. react-chessboard's own color props. */
+  --color-accent: #769656;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
