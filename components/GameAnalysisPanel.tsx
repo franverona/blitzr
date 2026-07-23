@@ -207,8 +207,8 @@ function AnalysisDialog({ dialogRef }: { dialogRef: React.RefObject<HTMLDialogEl
                 const bestMove = b.evalBefore.bestMove
                 return (
                   <li key={b.ply} className="py-4 first:pt-0 last:pb-0">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
-                      <div className="flex flex-1 flex-col gap-1.5">
+                    <div className="flex flex-wrap items-start gap-4">
+                      <div className="flex min-w-56 flex-1 flex-col gap-1.5">
                         <div className="flex flex-wrap items-center gap-2">
                           <BlunderSeverityBadge swingCp={b.swingCp} />
                           <span className="text-sm text-zinc-300">

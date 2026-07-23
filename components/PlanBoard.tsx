@@ -38,7 +38,7 @@ export function PlanBoard({
   const boardId = useId()
 
   return (
-    <div className="flex w-80 flex-col gap-1.5">
+    <div className="flex w-full max-w-80 shrink-0 flex-col gap-1.5">
       <div className="aspect-square w-full overflow-hidden rounded shadow-lg">
         <Chessboard
           options={{
