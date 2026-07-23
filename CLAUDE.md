@@ -796,6 +796,14 @@ client'`. Reuses `PieceGlyph` (white variant, on the same green badge `PieceMove
   "in book"/"deviated" in `app/games/[id]/page.tsx`, and the expanded intro paragraph in
   `RepertoireBoard.tsx`'s `HelpButton` dialog explaining what a repertoire _is_, not just how to
   build one).
+- **`BlunderSeverityBadge`'s "Mistake"/"Blunder" pill and `DrillFilters`'s "Deviations"/"Blunders"
+  tabs are wrapped in `<abbr title="...">`**, same beginner-facing convention as the ECO code/
+  "in book"/"deviated" tooltips above — a definition on hover without needing to open `EvalHelp`'s
+  collapsed glossary (which already explains Mistake/Blunder at greater length) just to see what
+  one badge means, and without a separate glossary existing for `/drill` at all. The badge's
+  `<abbr>` needed `no-underline` added on top of the pill's own background/text classes — the
+  browser's default dotted underline (fine for the plain-text abbr usages elsewhere) looked
+  cluttered against a small uppercase colored pill.
 - **Move quality tiers** (`blunderSeverity()`, `lib/analysis.ts`): every flagged blunder (still
   the same 200cp+ `BLUNDER_THRESHOLD_CP` set — this doesn't change what counts as a blunder
   anywhere, including `/drill` candidates and the `/blunders` aggregate counts/averages) gets a
