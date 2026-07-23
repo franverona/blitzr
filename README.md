@@ -26,7 +26,7 @@ every analyzed game so you can see what actually keeps going wrong.
 Published-Data API under their terms. It does not use Chess.com's name, logos, or marks in
 any way that implies endorsement or affiliation.
 
-## Status: Phase 5
+## Status: Phase 6
 
 - [x] Config for your Chess.com username
 - [x] Incremental sync of your games into SQLite
@@ -35,6 +35,7 @@ any way that implies endorsement or affiliation.
 - [x] Phase 3 — Stockfish (WASM) analysis, blunder detection
 - [x] Phase 4 — spaced-repetition drilling
 - [x] Phase 5 — cross-game recurring-blunders aggregate
+- [x] Phase 6 — hand-authored opening lessons with an interactive board
 
 ## Stack
 
@@ -209,6 +210,21 @@ far — is rolled up into one view: grouped by opening, grouped by moved piece, 
 explanation when that's what happened) linking back to each game. It's scoped to whatever's been
 analyzed (analyze more games, individually or with **Analyze all**, to fill it in further) rather
 than implying full coverage of your history.
+
+## Learn
+
+On `/learn`, short plain-English lessons introduce common openings — not a repertoire, just the
+ideas behind one natural line, move by move. The index shows each one as a square card with a
+small preview of the position it leads to. Opening a lesson gives you a large interactive board
+to step through it, with each move getting its own one-line note on why it's played, right above
+the board — a flip button next to the board controls lets you view the line from either side.
+This is a basic architecture seeded with one lesson (King's Pawn Opening) rather than
+a full opening encyclopedia; adding more is a content-only change from here. The overall summary
+lives behind a "?" button next to the board controls rather than always taking up space on the
+page — worth reading once, not on every visit. Summaries are written in original wording rather
+than reproduced from any source — the King's Pawn Opening lesson is adapted from Wikibooks'
+[Chess Opening Theory](https://en.wikibooks.org/wiki/Chess_Opening_Theory/1._e4) (CC BY-SA), with
+a link back (opens in a new tab) for attribution and further reading.
 
 ## Data hygiene
 
