@@ -88,7 +88,7 @@ lib/
   san.ts                       # SAN/move-number display helpers, describeMove()
   material.ts                    # materialDiff()/formatMaterialDiff()
   hangingPiece.ts                # detectHangingPiece()/describeHangingPieceReason()
-  tactics.ts                     # detectFork()/describeForkReason(), detectBlunderReason()
+  tactics.ts                     # detectFork()/detectPin()/describe*(), detectBlunderReason()
   legalMoves.ts                 # legalDestinations(fen, square)
   positions.ts                  # buildPositions() — movesSan into a FEN-per-ply array
   openings.ts                    # buildOpeningFamilies() — pure aggregation
@@ -224,18 +224,21 @@ centipawns; `game_analysis.evals` stores one JSON row per game, overwritten on r
 
 Beyond the raw eval, the game/blunders/drill pages layer on plain-English explanations:
 `describeMove()` (`lib/san.ts`) turns a SAN move into a sentence; `detectHangingPiece()`/
-`detectFork()` (`lib/hangingPiece.ts`/`lib/tactics.ts`) say _why_ a move was a blunder (hung piece
-or fork, both deliberately narrow v1 heuristics — no static-exchange evaluation, no pin awareness,
-one-ply lookback only); `detectBlunderReason()` is the combinator every call site actually uses.
-`explainBestMove()`/`describeBetterMove()` (`lib/tactics.ts`) apply the same two detectors to the
-engine's suggested move instead of the one played, explaining why the alternative was better. See
-each file's own comments for the specific algorithms and edge cases — `lib/tactics.ts` in
+`detectFork()`/`detectPin()` (`lib/hangingPiece.ts`/`lib/tactics.ts`) say _why_ a move was a
+blunder (hung piece, fork, or an absolute pin to the king — all deliberately narrow v1 heuristics:
+no static-exchange evaluation, no relative pins, one-ply lookback only); `detectBlunderReason()`
+is the combinator every call site actually uses, checked in that order (hanging piece first, since
+it's the most immediately concrete; pin last, since it's a constraint rather than material lost).
+`explainBestMove()`/`describeBetterMove()` (`lib/tactics.ts`) apply the same three detectors to
+the engine's suggested move instead of the one played, explaining why the alternative was better.
+See each file's own comments for the specific algorithms and edge cases — `lib/tactics.ts` in
 particular has several non-obvious tricks (forcing a FEN's turn field to query a color that isn't
-actually on move, swapping FEN order to detect "resolved" vs "newly created") worth reading before
-touching it.
+actually on move, swapping FEN order to detect "resolved" vs "newly created", ray-casting outward
+from the king to find pins without needing chess.js to expose "who's attacking this square")
+worth reading before touching it.
 
 Not every better move has a one-ply tactical reason — a quiet positional move's payoff can be
-several plies out, where `detectHangingPiece()`/`detectFork()` have nothing to say. `BestMove`
+several plies out, where `detectHangingPiece()`/`detectFork()`/`detectPin()` have nothing to say. `BestMove`
 carries `bestLine` (the engine's own principal variation, replayed into SAN via
 `parseBestLine()` in `lib/stockfish/client.ts`) for exactly that case, rendered as a trailing
 "Plan: ..." clause in `describeBetterMove()`'s output. `evals` is stored as opaque JSON, so this

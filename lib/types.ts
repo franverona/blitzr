@@ -210,10 +210,23 @@ export interface ForkReason {
   targets: { piece: string; square: string }[]
 }
 
-/** Either simple tactical pattern a blunder might be explained by — see
- *  `detectBlunderReason()`/`describeBlunderReason()` in `lib/tactics.ts`,
- *  which every call site uses instead of the two detectors individually. */
-export type BlunderReason = HangingPieceReason | ForkReason
+/** A piece newly pinned to its own king by an enemy sliding piece —
+ *  absolute pins only (see `detectPin()`/`pinnedPieces()` in
+ *  `lib/tactics.ts`), same "plain strings, not chess.js types" convention
+ *  as `HangingPieceReason`/`ForkReason`. */
+export interface PinReason {
+  kind: 'pin'
+  pinnedPiece: string
+  pinnedSquare: string
+  pinnerPiece: string
+  pinnerSquare: string
+}
+
+/** Any of the simple tactical patterns a blunder might be explained by —
+ *  see `detectBlunderReason()`/`describeBlunderReason()` in
+ *  `lib/tactics.ts`, which every call site uses instead of the individual
+ *  detectors. */
+export type BlunderReason = HangingPieceReason | ForkReason | PinReason
 
 export type DrillSourceType = 'deviation' | 'blunder'
 

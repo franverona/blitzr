@@ -150,12 +150,14 @@ opening"), and once a game's analyzed, a one-line "Biggest moment" summary and a
 material count (a plain piece-value tally — no engine needed, works even before you've
 analyzed) show up alongside the board. Blunder lists spell moves out in plain English too
 ("Queen captures pawn on f6, check"), not just algebraic notation — and where a blunder simply
-hangs a piece (left attacked and undefended, capturable for free) or lets the opponent fork two
-pieces at once, a line explains that too ("This leaves the queen on f6 hanging — it can be
-captured for free" / "This allows a fork — the knight on b5 now attacks the queen on c7 and the
-rook on a7 at once"). Both checks are intentionally simple (no evaluation of unequal trades, no
-pin awareness, no simulation of a future opponent move creating a fork) — they won't catch every
-kind of mistake, so plenty of blunders show no reason at all, just the eval swing.
+hangs a piece (left attacked and undefended, capturable for free), lets the opponent fork two
+pieces at once, or pins a piece to your king, a line explains that too ("This leaves the queen on
+f6 hanging — it can be captured for free" / "This allows a fork — the knight on b5 now attacks
+the queen on c7 and the rook on a7 at once" / "This pins the knight on c6 to the king — it can't
+move without exposing the king to the bishop on b5"). All three checks are intentionally simple
+(no evaluation of unequal trades, no relative pins to anything other than the king, no simulation
+of a future opponent move creating a fork) — they won't catch every kind of mistake, so plenty of
+blunders show no reason at all, just the eval swing.
 
 Each blunder also names the engine's suggested move instead, with a plain-English description and
 — when the same simple checks explain it — why it's actually better ("better was Nd7 (Knight to
