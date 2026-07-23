@@ -48,7 +48,8 @@ app/
                                # or raw PGN fallback for unparseable games
   openings/page.tsx           # ECO family aggregation, expandable to named lines
   learn/page.tsx                # opening-lesson index (see "Learn openings")
-  learn/[slug]/page.tsx           # one lesson — summary + interactive board
+  learn/[slug]/page.tsx           # one lesson — thin wrapper, fetches the lesson and hands it to
+                                    # LessonPractice (see "Learn openings")
   repertoire/page.tsx          # repertoire tree builder (White/Black tabs)
   drill/page.tsx                # spaced-repetition drill deck, reads ?type/?opening
                                   # (see "Drilling")
@@ -71,6 +72,10 @@ components/
                                          # see "Drilling")
   DrillFilters.tsx                       # sourceType tabs + opening select, ?type/?opening
                                            # (client, see "Drilling")
+  LessonPractice.tsx                     # owns the Study/Quiz toggle for a /learn lesson (client,
+                                           # see "Learn openings")
+  LessonQuiz.tsx                           # active-recall quiz on a lesson's line (client, see
+                                             # "Learn openings")
   BlunderStats.tsx                       # by-opening table, by-piece chips, worst-blunders list
                                            # (server component, see "Blunders aggregate")
   EvalHelp.tsx                             # "how to read this" glossary for eval/blunder/swing
@@ -799,16 +804,17 @@ client'`. Reuses `PieceGlyph` (white variant, on the same green badge `PieceMove
   "Adapted from ..." link back to the source (`OpeningLesson.sourceUrl`, rendered on
   `app/learn/[slug]/page.tsx`) sidesteps that entirely — this is the pattern to follow for every
   future lesson, not just this one.
-- **The interactive board is free** — `app/learn/[slug]/page.tsx` reuses `BoardProvider`/
-  `BoardNavControls`/`BoardView` from `components/Board.tsx` exactly as `app/games/[id]/page.tsx`
-  does, just fed `lesson.moves` (a short SAN line — a handful of plies showing one natural
-  continuation, not a deep repertoire tree) and a local `START_FEN` instead of a synced game's
-  data. `result`/`evals` are both omitted (optional on `BoardProvider`) since a lesson has no game
-  outcome or engine analysis — `BoardView` already renders fine without either (material count
-  still shows, since that's engine-free; there's just no eval bar or blunder callouts). Also
-  passes `initialPly={1}` so the lesson opens on its first move rather than `BoardProvider`'s
-  normal default of the last ply — for a short, fully-populated lesson line that default would
-  otherwise jump straight to the end of it.
+- **The interactive board is free** — `components/LessonPractice.tsx` (rendered by the thin
+  `app/learn/[slug]/page.tsx` Server Component) reuses `BoardProvider`/`BoardNavControls`/
+  `BoardView` from `components/Board.tsx` exactly as `app/games/[id]/page.tsx` does, just fed
+  `lesson.moves` (a short SAN line — a handful of plies showing one natural continuation, not a
+  deep repertoire tree) and a local `START_FEN` instead of a synced game's data. `result`/`evals`
+  are both omitted (optional on `BoardProvider`) since a lesson has no game outcome or engine
+  analysis — `BoardView` already renders fine without either (material count still shows, since
+  that's engine-free; there's just no eval bar or blunder callouts). In Study mode it also passes
+  `initialPly={1}` so the lesson opens on its first move rather than `BoardProvider`'s normal
+  default of the last ply — for a short, fully-populated lesson line that default would otherwise
+  jump straight to the end of it.
 - **`boardOrientation` is stateful, not a fixed prop** — `BoardProvider` seeds
   `useState(initialBoardOrientation)` from what was previously just a plain passthrough prop
   (renamed via destructuring alias, `boardOrientation: initialBoardOrientation`, so both existing
@@ -859,6 +865,29 @@ FlipBoardButton.tsx` (new) is the one consumer, a circular icon button matching
   not worth sharing for a fourth one-line usage). No image generation, no external asset pipeline —
   it's a real board rendered small (`aspect-square` wrapper), so it's always exactly in sync with
   the lesson's actual line.
+- **Quiz mode** (`components/LessonQuiz.tsx`) is active-recall practice on a lesson's line —
+  self-contained to `/learn`, no `drill_cards`/SM-2/Server Action involved, unlike `/drill`'s
+  spaced-repetition deck. `components/LessonPractice.tsx` owns a `mode: 'study' | 'quiz'` toggle
+  (two tab buttons in the header) and puts it on `BoardProvider`'s `key` — switching modes remounts
+  the provider, which is what resets `ply` to each mode's own starting point (`1` for Study, `0` for
+  Quiz) rather than carrying over wherever the other mode's board happened to be, same
+  key-forces-remount pattern `key={game.id}`/`key={lesson.slug}` already use elsewhere.
+  `LessonQuiz` reuses `BoardProvider`'s own `ply`/`setPly` (via `useBoardContext()`) as the quiz's
+  progress counter instead of separate state — a side effect of this is that `MoveExplanation`
+  (also reading the same `ply`) automatically reveals each move's note the instant it's answered
+  correctly, in _both_ modes, with zero wiring between the two components. Board interaction
+  (drag or click-to-move, `legalDestinations`/`LegalMoveSquare` highlighting, `promotion: 'q'`
+  always) mirrors `RepertoireBoard.tsx`/`DrillSession.tsx`'s `attemptMove` pattern. Differs from
+  `DrillSession` in one deliberate way: there's no per-card "Next" step or `answeredRef`
+  double-submit guard — a wrong attempt just leaves you on the same ply to retry immediately, since
+  a lesson's line has exactly one correct answer per move (not several acceptable moves like a
+  repertoire card), so there's nothing to reveal-and-move-past the way a graded drill card needs.
+  A "💡 Show move" button reveals the expected move as an arrow (same amber as every other reveal
+  arrow in the app) without auto-playing it — still has to be physically played, same
+  "hint isn't a free answer" precedent as Drill's hint levels. Finishing the line (`ply ===
+lastPly`) shows a mistake/hint tally and a Restart button (`setPly(0)` plus resetting local
+  tally state) rather than anything persisted — there's no schedule to update, so "restart" is just
+  "play it again."
 
 - **Vitest** — run with `pnpm test` (or `pnpm test:watch`)
 - Tests live in `__tests__/`, one file per `lib/` module they cover: `normalize.test.ts`,
