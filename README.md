@@ -218,9 +218,11 @@ ideas behind one natural line, move by move. The index shows each one as a squar
 small preview of the position it leads to. Opening a lesson gives you a large interactive board
 to step through it, with each move getting its own one-line note on why it's played, right above
 the board — a flip button next to the board controls lets you view the line from either side.
-Nine lessons are here so far — King's Pawn Opening, Sicilian Defense, French Defense, Queen's
-Gambit, Italian Game, Caro-Kann Defense, Scandinavian Defense, King's Indian Defense, and English
-Opening — not a full opening encyclopedia, but adding more from here is just a content-only change.
+14 lessons are here so far, spanning every major first move and both colors — King's Pawn
+Opening, Sicilian Defense, French Defense, Queen's Gambit, Italian Game, Caro-Kann Defense,
+Scandinavian Defense, King's Indian Defense, English Opening, Nimzo-Indian Defense, Grünfeld
+Defense, King's Gambit, Scotch Game, and Pirc Defense — not a full opening encyclopedia, but
+adding more from here is just a content-only change.
 The overall summary lives behind a "?" button next to the board controls rather than always
 taking up space on the page — worth reading once, not on every visit. Summaries are written in
 original wording rather than reproduced from any source — each lesson is adapted from a specific
