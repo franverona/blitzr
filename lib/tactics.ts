@@ -156,11 +156,24 @@ export function explainBestMove(
 }
 
 /**
+ * Renders the engine's own expected continuation (`BestMove.bestLine`), if
+ * any — this is what makes a quiet positional move legible: a hanging-piece
+ * or fork explanation only exists for one-ply tactics, but a move whose
+ * payoff is a few moves out has no such one-line "why". Seeing the plan
+ * itself is the next best thing. `undefined`-safe: analyses saved before
+ * this field existed simply have no plan to show.
+ */
+function formatPlan(bestLine: string[] | undefined): string | null {
+  if (!bestLine || bestLine.length === 0) return null
+  return `Plan: ${bestLine.join(' ')}.`
+}
+
+/**
  * The full "better was ..." line — the mechanical description via the
- * existing `describeMove()` plus the tactical "why" above, when there is
- * one. Null when there's no engine suggestion or it matches what was
- * actually played, so callers can render conditionally without repeating
- * that check themselves.
+ * existing `describeMove()`, the tactical "why" above when there is one,
+ * and the engine's short follow-up plan when it has one. Null when there's
+ * no engine suggestion or it matches what was actually played, so callers
+ * can render conditionally without repeating that check themselves.
  */
 export function describeBetterMove(
   fenBefore: string,
@@ -170,8 +183,11 @@ export function describeBetterMove(
 ): string | null {
   if (!bestMove || bestMove.san === moveSan) return null
   const description = describeMove(fenBefore, bestMove.san)
-  const explanation = explainBestMove(fenBefore, bestMove.san, moverColor)
-  return explanation
-    ? `${bestMove.san} (${description}) — ${explanation}`
+  const clauses = [
+    explainBestMove(fenBefore, bestMove.san, moverColor),
+    formatPlan(bestMove.bestLine),
+  ].filter((clause): clause is string => Boolean(clause))
+  return clauses.length
+    ? `${bestMove.san} (${description}) — ${clauses.join(' ')}`
     : `${bestMove.san} (${description})`
 }

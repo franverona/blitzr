@@ -6,14 +6,20 @@ import type { BestMove, PositionEval } from '../types'
 // Copied into public/ at install time by scripts/setup-stockfish.js.
 const ENGINE_URL = '/stockfish/stockfish-18-lite-single.js'
 
+// How many plies of the engine's expected continuation to keep beyond the
+// best move itself — enough to convey the idea (two replies each) without
+// turning a short callout into a full analysis line.
+const BEST_LINE_PLIES = 4
+
 function isWhiteToMove(fen: string): boolean {
   return fen.split(' ')[1] === 'w'
 }
 
 // UCI moves are long algebraic ("e2e4", "e7e8q" for promotion) — keep the
 // from/to squares for drawing a board arrow, and also convert to SAN ("e4",
-// "e8=Q") for display in text (blunder lists, etc).
-export function parseBestMove(fen: string, uciMove: string): BestMove | null {
+// "e8=Q") for display in text (blunder lists, etc). Doesn't attach a
+// `bestLine` itself (see parseBestLine below) — callers combine both.
+export function parseBestMove(fen: string, uciMove: string): Omit<BestMove, 'bestLine'> | null {
   if (uciMove === '(none)') return null
   const chess = new Chess(fen)
   const from = uciMove.slice(0, 2)
@@ -24,6 +30,26 @@ export function parseBestMove(fen: string, uciMove: string): BestMove | null {
   } catch {
     return null
   }
+}
+
+// The engine's principal variation (its expected continuation for both
+// sides) — replayed from `fen` into SAN, stopping at the first move that
+// doesn't apply cleanly (a PV can occasionally include a move that's only
+// valid deeper in the search, not the position actually reached here).
+export function parseBestLine(fen: string, pvUci: string[]): string[] {
+  const chess = new Chess(fen)
+  const sanMoves: string[] = []
+  for (const uciMove of pvUci) {
+    const from = uciMove.slice(0, 2)
+    const to = uciMove.slice(2, 4)
+    try {
+      const move = chess.move({ from, to, promotion: uciMove.length > 4 ? uciMove[4] : undefined })
+      sanMoves.push(move.san)
+    } catch {
+      break
+    }
+  }
+  return sanMoves
 }
 
 /**
@@ -62,6 +88,9 @@ export class StockfishEngine {
 
     return new Promise((resolve) => {
       let latest: Omit<PositionEval, 'bestMove'> = { cp: 0, mate: null }
+      // Each deeper "info" line's `pv` replaces the last — by the time
+      // "bestmove" arrives, this is the final (deepest-searched) line.
+      let latestPv: string[] = []
 
       const onMessage = (event: MessageEvent<string>) => {
         const line = event.data
@@ -76,10 +105,24 @@ export class StockfishEngine {
           latest = { cp: whiteToMove ? cp : -cp, mate: null }
         }
 
+        // UCI always puts "pv" last on an info line, so the rest of the
+        // line is the space-separated move list — `\bpv\b` (not `multipv`).
+        const pvMatch = line.match(/\bpv\b (.+)$/)
+        if (pvMatch) latestPv = pvMatch[1].trim().split(/\s+/)
+
         const bestMoveMatch = line.match(/^bestmove (\S+)/)
         if (bestMoveMatch) {
           this.worker.removeEventListener('message', onMessage)
-          resolve({ ...latest, bestMove: parseBestMove(fen, bestMoveMatch[1]) })
+          const bestMove = parseBestMove(fen, bestMoveMatch[1])
+          resolve({
+            ...latest,
+            bestMove: bestMove
+              ? {
+                  ...bestMove,
+                  bestLine: parseBestLine(fen, latestPv).slice(1, 1 + BEST_LINE_PLIES),
+                }
+              : null,
+          })
         }
       }
 

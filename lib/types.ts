@@ -138,6 +138,13 @@ export interface BestMove {
   from: string
   to: string
   san: string
+  /** Up to a few more plies the engine expects to follow this move (SAN),
+   *  from its own principal variation — lets a "better was X" callout show
+   *  *why* a quiet move matters even when the payoff isn't immediate (no
+   *  hanging piece or fork to point to), by showing the short plan instead
+   *  of just the first move. Empty when the engine's PV didn't extend far
+   *  enough (e.g. near a forced mate) or the analysis predates this field. */
+  bestLine: string[]
 }
 
 /** A single position's engine evaluation, always from White's perspective

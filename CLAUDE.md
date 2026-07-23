@@ -234,6 +234,19 @@ particular has several non-obvious tricks (forcing a FEN's turn field to query a
 actually on move, swapping FEN order to detect "resolved" vs "newly created") worth reading before
 touching it.
 
+Not every better move has a one-ply tactical reason — a quiet positional move's payoff can be
+several plies out, where `detectHangingPiece()`/`detectFork()` have nothing to say. `BestMove`
+carries `bestLine` (the engine's own principal variation, replayed into SAN via
+`parseBestLine()` in `lib/stockfish/client.ts`) for exactly that case, rendered as a trailing
+"Plan: ..." clause in `describeBetterMove()`'s output. `evals` is stored as opaque JSON, so this
+needed no migration — analyses saved before this field existed just have no plan until
+re-analyzed. `components/PlanBoard.tsx` renders that plan as a real, step-through-able board
+(own `ply` state, `Start/Previous/Next/End` controls) rather than SAN text alone — used from both
+`Board.tsx`'s inline suggestion and `GameAnalysisPanel.tsx`'s blunder list, so a page can have
+several simultaneous `Chessboard` instances at once. react-chessboard requires a unique `options.id`
+per instance for this (`useId()` in both `Board.tsx` and `PlanBoard.tsx`) — omitting it isn't
+just a style nit, it crashes with "Square width not found" once two boards share a page.
+
 ## Drilling (Phase 4)
 
 A drillable position is fully derivable from data that already exists (`games.moves_san`,

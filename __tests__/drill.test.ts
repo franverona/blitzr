@@ -151,7 +151,7 @@ describe('buildDrillPrompt', () => {
     const evals: PositionEval[] = [
       cp(20),
       cp(30),
-      { cp: 40, mate: null, bestMove: { from: 'g1', to: 'f3', san: 'Nf3' } },
+      { cp: 40, mate: null, bestMove: { from: 'g1', to: 'f3', san: 'Nf3', bestLine: [] } },
       cp(-260),
     ]
     const analysesByGameId = new Map<string, GameAnalysis>([

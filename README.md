@@ -163,6 +163,13 @@ d7) — saves the rook on h6, which was hanging"). Stepping through the board on
 the same explanation for whatever move you're currently viewing, right alongside the arrow
 pointing at the engine's suggestion.
 
+Not every good move pays off immediately — sometimes the point only becomes clear a few moves
+later, which is hard to judge from notation alone if you can't calculate that far ahead yet. When
+the engine's own expected follow-up is available, it shows up as a "Plan: ..." line next to the
+suggestion, and — since a short move list still asks you to picture the position yourself — as a
+small interactive board underneath it, with its own Start/Previous/Next/End controls so you can
+actually step through where the plan leads instead of just reading it.
+
 ### Reading the evaluation
 
 - **Centipawns (cp)**, shown as e.g. `+1.4` or `-0.8`: material/positional advantage in units of

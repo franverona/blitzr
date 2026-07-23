@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseBestMove } from '@/lib/stockfish/client'
+import { parseBestLine, parseBestMove } from '@/lib/stockfish/client'
 
 const START_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 
@@ -26,5 +26,31 @@ describe('parseBestMove', () => {
 
   it('returns null for a move that is illegal in the given position', () => {
     expect(parseBestMove(START_FEN, 'e2e5')).toBeNull()
+  })
+})
+
+describe('parseBestLine', () => {
+  it('replays a principal variation into SAN', () => {
+    expect(parseBestLine(START_FEN, ['e2e4', 'e7e5', 'g1f3', 'b8c6'])).toEqual([
+      'e4',
+      'e5',
+      'Nf3',
+      'Nc6',
+    ])
+  })
+
+  it('includes the promoted piece in the SAN', () => {
+    const fen = '7k/8/8/8/8/8/1p6/7K b - - 0 1'
+    expect(parseBestLine(fen, ['b2b1q'])).toEqual(['b1=Q+'])
+  })
+
+  it('stops at the first move that no longer applies', () => {
+    // e7e5 is illegal immediately (no e4 played first) — nothing after it
+    // gets replayed either, even though g1f3 would otherwise be legal.
+    expect(parseBestLine(START_FEN, ['e7e5', 'g1f3'])).toEqual([])
+  })
+
+  it('returns an empty array for an empty PV', () => {
+    expect(parseBestLine(START_FEN, [])).toEqual([])
   })
 })
