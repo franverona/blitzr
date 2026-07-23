@@ -885,16 +885,25 @@ FlipBoardButton.tsx` (new) is the one consumer, a circular icon button matching
   repertoire card), so there's nothing to reveal-and-move-past the way a graded drill card needs.
   A "💡 Show move" button reveals the expected move as an arrow (same amber as every other reveal
   arrow in the app) without auto-playing it — still has to be physically played, same
-  "hint isn't a free answer" precedent as Drill's hint levels. Finishing the line (`ply ===
-lastPly`) shows a mistake/hint tally and a Restart button (`setPly(0)` plus resetting local
-  tally state) rather than anything persisted — there's no schedule to update, so "restart" is just
-  "play it again." The board stays mounted through completion, showing the final position with
+  "hint isn't a free answer" precedent as Drill's hint levels. A "⟲ Restart" button
+  (`setPly(0)` plus resetting local tally state) sits in the header at all times, not gated on
+  finishing the line — a way to bail out and start over mid-quiz rather than having to play
+  through (or hint through) every remaining move first. Nothing is persisted either way — there's
+  no schedule to update, so "restart" is just "play it again." The board stays mounted through
+  completion (`ply === lastPly`), showing the final position with
   dragging disabled, rather than being replaced by a text-only summary — per direct user feedback
   that the board disappearing read as jarring. The header row above the board (progress text +
   hint button, or "Line complete!" with neither) is pinned to a fixed height (`h-9`) rather than
   sizing to content, since the two states have different natural line-heights and letting the row
   reflow shifted the board up/down by a few pixels on completion — also direct user feedback,
   caught by measuring the board's bounding box before/after the completing move.
+- **Keyboard shortcuts**: `H` → Show move, `R` → Restart, added per direct request for parity with
+  Drill's Space/Enter/H. `handleHint`/`handleRestart` are both `useCallback`s (not plain function
+  declarations) so a single `keydown` listener's `useEffect` has a stable dependency array instead
+  of tearing down and re-subscribing every render — same rationale `DrillSession.tsx`'s
+  `handleNext`/`handleHint` already follow. `H` is only actionable when applicable (your turn, not
+  already revealed, not complete — same conditions the button's `disabled` uses); `R` has no
+  guard, since restarting is always valid whether mid-line or on the completion screen.
 - **Only your own side is quizzed, not the opponent's replies** — `LessonQuiz` reuses
   `boardOrientation` (the same state `FlipBoardButton` already flips) as "which color am I
   practicing," per direct user pushback that having to also recall the exact move an opponent

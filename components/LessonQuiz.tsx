@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Chess } from 'chess.js'
 import { Chessboard } from 'react-chessboard'
 import { whiteToMove } from '@/lib/drill'
@@ -62,6 +62,7 @@ export function LessonQuiz() {
     [legalMoves],
   )
   const isMyTurn = ply < lastPly && (whiteToMove(ply + 1) ? 'white' : 'black') === boardOrientation
+  const isComplete = ply >= lastPly
 
   // Runs whenever it becomes the opponent's turn — advances the ply on their
   // behalf after a beat, so the line keeps moving without you having to find
@@ -69,21 +70,47 @@ export function LessonQuiz() {
   // chess strictly alternates colors, so this only ever advances one ply
   // before control returns to you.
   useEffect(() => {
-    if (isMyTurn || ply >= lastPly) return
+    if (isMyTurn || isComplete) return
     const timer = setTimeout(() => setPly(ply + 1), OPPONENT_MOVE_DELAY_MS)
     return () => clearTimeout(timer)
-  }, [ply, lastPly, isMyTurn, setPly])
+  }, [ply, isComplete, isMyTurn, setPly])
 
-  const isComplete = ply >= lastPly
+  // useCallback (not plain functions) so both have a stable identity for the
+  // keydown effect's dependency array below — otherwise the listener would
+  // be torn down and re-added on every render.
+  const handleHint = useCallback(() => {
+    setRevealed(true)
+    setHintsUsed((h) => h + 1)
+  }, [])
 
-  function handleRestart() {
+  const handleRestart = useCallback(() => {
     setPly(0)
     setFeedback(null)
     setMistakes(0)
     setHintsUsed(0)
     setRevealed(false)
     setSelectedSquare(null)
-  }
+  }, [setPly])
+
+  // H → Show move, R → Restart, mirroring DrillSession's keyboard shortcuts.
+  // Ignores the event when a <button> already has focus, same guard as
+  // DrillSession — pressing a shortcut key right after clicking a button
+  // would otherwise fire twice for one keypress (once from the button, once
+  // from this listener). Restart has no applicability guard (unlike hint) —
+  // it's always a valid action, mid-line or not.
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.target instanceof HTMLElement && e.target.tagName === 'BUTTON') return
+      const key = e.key.toLowerCase()
+      if (key === 'h' && isMyTurn && !revealed && !isComplete) {
+        handleHint()
+      } else if (key === 'r') {
+        handleRestart()
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [isMyTurn, revealed, isComplete, handleHint, handleRestart])
 
   function attemptMove(from: string, to: string): boolean {
     if (!isMyTurn) return false
@@ -135,11 +162,6 @@ export function LessonQuiz() {
     if (piece) setSelectedSquare(square)
   }
 
-  function handleHint() {
-    setRevealed(true)
-    setHintsUsed((h) => h + 1)
-  }
-
   const arrows = revealed ? revealArrow(fen, movesSan[ply]) : []
   const colorLabel = boardOrientation === 'white' ? 'White' : 'Black'
 
@@ -159,15 +181,25 @@ export function LessonQuiz() {
               : "Opponent's move…"}
           </p>
         )}
-        {!isComplete && (
+        <div className="flex shrink-0 items-center gap-2">
+          {/* Always available, not just after finishing — a way to bail out
+              and start over mid-line without playing through the rest first. */}
           <button
-            onClick={handleHint}
-            disabled={revealed || !isMyTurn}
-            className="shrink-0 rounded-md border border-zinc-700 px-3 py-1.5 text-sm font-medium hover:bg-zinc-800 disabled:opacity-40"
+            onClick={handleRestart}
+            className="rounded-md border border-zinc-700 px-3 py-1.5 text-sm font-medium hover:bg-zinc-800"
           >
-            💡 Show move
+            ⟲ Restart
           </button>
-        )}
+          {!isComplete && (
+            <button
+              onClick={handleHint}
+              disabled={revealed || !isMyTurn}
+              className="rounded-md border border-zinc-700 px-3 py-1.5 text-sm font-medium hover:bg-zinc-800 disabled:opacity-40"
+            >
+              💡 Show move
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Stays mounted through completion, showing the final position, rather
@@ -201,22 +233,16 @@ export function LessonQuiz() {
       </div>
 
       {isComplete ? (
-        <div className="flex flex-col gap-2">
-          <p className="text-sm text-zinc-400">
-            {mistakes === 0 && hintsUsed === 0
-              ? 'Played it perfectly — no mistakes or hints.'
-              : `${mistakes} mistake${mistakes === 1 ? '' : 's'}, ${hintsUsed} hint${hintsUsed === 1 ? '' : 's'} used.`}
-          </p>
-          <button
-            onClick={handleRestart}
-            className="w-fit rounded-md border border-zinc-700 px-3 py-1.5 text-sm font-medium hover:bg-zinc-800"
-          >
-            Restart
-          </button>
-        </div>
+        <p className="text-sm text-zinc-400">
+          {mistakes === 0 && hintsUsed === 0
+            ? 'Played it perfectly — no mistakes or hints.'
+            : `${mistakes} mistake${mistakes === 1 ? '' : 's'}, ${hintsUsed} hint${hintsUsed === 1 ? '' : 's'} used.`}
+        </p>
       ) : (
         feedback === 'incorrect' && <p className="text-sm text-rose-400">Not quite — try again.</p>
       )}
+
+      <p className="text-xs text-zinc-600">H → Show move · R → Restart</p>
     </div>
   )
 }
