@@ -4,10 +4,18 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import type { DrillSourceType } from '@/lib/types'
 
-const TYPE_TABS: { value: DrillSourceType | 'all'; label: string }[] = [
+const TYPE_TABS: { value: DrillSourceType | 'all'; label: string; title?: string }[] = [
   { value: 'all', label: 'All' },
-  { value: 'deviation', label: 'Deviations' },
-  { value: 'blunder', label: 'Blunders' },
+  {
+    value: 'deviation',
+    label: 'Deviations',
+    title: 'Cards for games where you left your own prepared repertoire moves',
+  },
+  {
+    value: 'blunder',
+    label: 'Blunders',
+    title: 'Cards for your own moves that lost at least 2 pawns of advantage, found by Stockfish',
+  },
 ]
 
 /** URL-driven deck filters (`?type=`/`?opening=`), same pattern as
@@ -50,7 +58,7 @@ export function DrillFilters({
                 : 'border-zinc-700 text-zinc-400 hover:bg-zinc-800'
             }`}
           >
-            {tab.label}
+            {tab.title ? <abbr title={tab.title}>{tab.label}</abbr> : tab.label}
           </Link>
         )
       })}
