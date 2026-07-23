@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { createContext, useContext, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { Chessboard } from 'react-chessboard'
 import { describeEval, formatEval } from '@/lib/analysis'
 import { whiteToMove } from '@/lib/drill'
@@ -11,6 +11,7 @@ import { BOARD_DARK_SQUARE, BOARD_LIGHT_SQUARE, REVEAL_ARROW_COLOR } from '@/lib
 import type { PositionEval } from '@/lib/types'
 import { EvalBar } from './EvalBar'
 import { PieceMoveLabel } from './PieceMoveLabel'
+import { PlanBoard } from './PlanBoard'
 
 interface BoardContextValue {
   ply: number
@@ -132,6 +133,11 @@ export function BoardView({
   boardMaxWidthClassName?: string
 } = {}) {
   const { ply, positions, boardOrientation, result, movesSan, evals, setPly } = useBoardContext()
+  // react-chessboard needs a unique `id` per instance — without one, two
+  // simultaneous boards on the same page (this one plus a PlanBoard showing
+  // the suggested move's plan) collide on shared DOM ids internally and
+  // crash with "Square width not found".
+  const boardId = useId()
   const bestMove = evals?.[ply]?.bestMove
   // positions[ply] is 0-indexed (ply plies already played), while
   // whiteToMove() takes the 1-indexed "which move number is this" — ply+1
@@ -169,6 +175,7 @@ export function BoardView({
           <div className={`w-full overflow-hidden rounded shadow-lg ${boardMaxWidthClassName}`}>
             <Chessboard
               options={{
+                id: boardId,
                 position: positions[ply],
                 boardOrientation,
                 allowDragging: false,
@@ -200,6 +207,14 @@ export function BoardView({
           )}
         </p>
         {betterMove && <p className="text-xs text-amber-400">Better was {betterMove}</p>}
+        {bestMove && bestMove.bestLine.length > 0 && (
+          <PlanBoard
+            key={ply}
+            fenBefore={positions[ply]}
+            moves={[bestMove.san, ...bestMove.bestLine]}
+            boardOrientation={boardOrientation}
+          />
+        )}
       </div>
 
       <MoveList movesSan={movesSan} ply={ply} onSelect={setPly} result={result} />

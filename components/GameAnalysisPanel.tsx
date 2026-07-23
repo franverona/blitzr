@@ -18,6 +18,7 @@ import { describeBetterMove, describeBlunderReason, detectBlunderReason } from '
 import type { GameAnalysis, MyColor } from '@/lib/types'
 import { BlunderSeverityBadge } from './BlunderSeverityBadge'
 import { EvalHelp } from './EvalHelp'
+import { PlanBoard } from './PlanBoard'
 
 interface AnalysisContextValue {
   analysis: GameAnalysis | null
@@ -203,6 +204,7 @@ function AnalysisDialog({ dialogRef }: { dialogRef: React.RefObject<HTMLDialogEl
                   b.evalBefore.bestMove,
                   moverColor,
                 )
+                const bestMove = b.evalBefore.bestMove
                 return (
                   <li key={b.ply}>
                     <div className="flex flex-wrap items-center gap-1.5">
@@ -220,6 +222,15 @@ function AnalysisDialog({ dialogRef }: { dialogRef: React.RefObject<HTMLDialogEl
                     )}
                     {betterMove && (
                       <div className="text-xs text-zinc-500">Better was {betterMove}</div>
+                    )}
+                    {betterMove && bestMove && bestMove.bestLine.length > 0 && (
+                      <div className="mt-1">
+                        <PlanBoard
+                          fenBefore={positions[b.ply - 1]}
+                          moves={[bestMove.san, ...bestMove.bestLine]}
+                          boardOrientation={moverColor}
+                        />
+                      </div>
                     )}
                   </li>
                 )

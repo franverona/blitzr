@@ -152,20 +152,56 @@ describe('describeBetterMove', () => {
   })
 
   it('returns null when the suggestion matches what was actually played', () => {
-    expect(describeBetterMove(fen, 'Kg2', { from: 'g1', to: 'g2', san: 'Kg2' }, 'white')).toBeNull()
+    expect(
+      describeBetterMove(fen, 'Kg2', { from: 'g1', to: 'g2', san: 'Kg2', bestLine: [] }, 'white'),
+    ).toBeNull()
   })
 
   it('combines the mechanical description with a tactical explanation when one applies', () => {
     const before = '7k/n7/8/8/8/8/8/1R4K1 w - - 0 1'
-    expect(describeBetterMove(before, 'Kg2', { from: 'b1', to: 'a1', san: 'Ra1' }, 'white')).toBe(
-      "Ra1 (Rook to a1) — Leaves the opponent's knight on a7 hanging.",
-    )
+    expect(
+      describeBetterMove(
+        before,
+        'Kg2',
+        { from: 'b1', to: 'a1', san: 'Ra1', bestLine: [] },
+        'white',
+      ),
+    ).toBe("Ra1 (Rook to a1) — Leaves the opponent's knight on a7 hanging.")
   })
 
   it('omits the explanation clause when no tactical pattern applies', () => {
     const before = '7k/8/8/8/8/8/8/R6K w - - 0 1'
-    expect(describeBetterMove(before, 'Kg2', { from: 'a1', to: 'a5', san: 'Ra5' }, 'white')).toBe(
-      'Ra5 (Rook to a5)',
-    )
+    expect(
+      describeBetterMove(
+        before,
+        'Kg2',
+        { from: 'a1', to: 'a5', san: 'Ra5', bestLine: [] },
+        'white',
+      ),
+    ).toBe('Ra5 (Rook to a5)')
+  })
+
+  it('appends the engine plan when the suggestion has one', () => {
+    const before = '7k/8/8/8/8/8/8/R6K w - - 0 1'
+    expect(
+      describeBetterMove(
+        before,
+        'Kg2',
+        { from: 'a1', to: 'a5', san: 'Ra5', bestLine: ['Kg8', 'Ra7'] },
+        'white',
+      ),
+    ).toBe('Ra5 (Rook to a5) — Plan: Kg8 Ra7.')
+  })
+
+  it('combines a tactical explanation with the engine plan when both are present', () => {
+    const before = '7k/n7/8/8/8/8/8/1R4K1 w - - 0 1'
+    expect(
+      describeBetterMove(
+        before,
+        'Kg2',
+        { from: 'b1', to: 'a1', san: 'Ra1', bestLine: ['Nb5', 'Rxb5'] },
+        'white',
+      ),
+    ).toBe("Ra1 (Rook to a1) — Leaves the opponent's knight on a7 hanging. Plan: Nb5 Rxb5.")
   })
 })
