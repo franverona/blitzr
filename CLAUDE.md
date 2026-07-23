@@ -20,7 +20,8 @@ ahead of time.
 - **Phase 5 (done)**: cross-game "recurring blunders" aggregate (`/blunders`), grouped by opening
   and by piece, scoped to whatever games already have a saved analysis.
 - **Phase 6 (done)**: `/learn` — hand-authored, plain-English opening lessons with an interactive
-  board. Basic architecture, seeded with one lesson (King's Pawn Opening); more lessons are a
+  board, a Study mode (read the line) and a Quiz mode (play it from memory, one side at a time).
+  Basic architecture, seeded with one lesson (King's Pawn Opening); more lessons are a
   content-only addition from here (see "Learn openings" below).
 
 ## Stack
