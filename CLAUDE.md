@@ -62,6 +62,9 @@ components/
   Board.tsx                    # BoardProvider/BoardNavControls/BoardView (client) — read-only
                                  # replay board, split via Context the same way as
                                  # GameAnalysisPanel (see "Engine analysis")
+  EvalBar.tsx                   # vertical white/black fill bar next to the board, from
+                                  # evalBarPercent() (lib/analysis.ts) — engine-free callers
+                                  # (Board.tsx without a saved analysis) simply don't render it
   RepertoireBoard.tsx            # react-chessboard in edit mode (drag or click-to-move),
                                    # builds the repertoire tree as you play moves; also owns the
                                    # page header (color tabs, Start/Back, HelpButton dialog — see
@@ -79,6 +82,14 @@ components/
                                            # see "Learn openings")
   LessonQuiz.tsx                           # active-recall quiz on a lesson's line (client, see
                                              # "Learn openings")
+  MoveExplanation.tsx                       # per-move plain-English note for the lesson currently
+                                              # on the board (client, see "Learn openings")
+  AboutOpeningButton.tsx                      # "?" button + dialog with a lesson's summary and
+                                                # source link (client, see "Learn openings")
+  FlipBoardButton.tsx                           # flips board orientation on a lesson (client, see
+                                                  # "Learn openings")
+  MiniBoard.tsx                                   # small non-interactive board preview for the
+                                                    # /learn index cards (client, see "Learn openings")
   BlunderStats.tsx                       # by-opening table, by-piece chips, worst-blunders list
                                            # (server component, see "Blunders aggregate")
   EvalHelp.tsx                             # "how to read this" glossary for eval/blunder/swing
@@ -101,6 +112,9 @@ components/
                                                        # analysis" > "Bulk analysis")
 lib/
   config.ts                # getChesscomUsername() — reads CHESSCOM_USERNAME
+  theme.ts                  # BOARD_DARK_SQUARE/BOARD_LIGHT_SQUARE/REVEAL_ARROW_COLOR — shared
+                              # color constants for the react-chessboard color props a Tailwind
+                              # class can't reach (see "Key conventions")
   types.ts                  # domain types: Game, OpeningFamily/Line, RepertoireNode,
                               # GameAnalysis/PositionEval/Blunder/HangingPieceReason,
                               # DrillCard/DrillPrompt, ArchiveSyncStatus, SyncResult
