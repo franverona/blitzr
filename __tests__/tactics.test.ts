@@ -3,8 +3,10 @@ import {
   describeBetterMove,
   describeBlunderReason,
   describeForkReason,
+  describePinReason,
   detectBlunderReason,
   detectFork,
+  detectPin,
   explainBestMove,
 } from '@/lib/tactics'
 import type { BestMove } from '@/lib/types'
@@ -57,6 +59,61 @@ describe('describeForkReason', () => {
   })
 })
 
+describe('detectPin', () => {
+  it('flags a piece newly pinned to its own king by an enemy slider', () => {
+    // Black knight steps from f8 (safe) to e6, walking onto the c4-g8
+    // diagonal a white bishop already occupies the near end of.
+    const before = '5nk1/8/8/8/2B5/8/8/K7 b - - 0 1'
+    const after = '6k1/8/4n3/8/2B5/8/8/K7 w - - 0 1'
+    expect(detectPin(before, after, 'black')).toEqual({
+      kind: 'pin',
+      pinnedPiece: 'n',
+      pinnedSquare: 'e6',
+      pinnerPiece: 'b',
+      pinnerSquare: 'c4',
+    })
+  })
+
+  it('still flags a pin even when the pinned piece is defended', () => {
+    // The pawn on d7 defends e6 — not "hanging" by the hanging-piece
+    // detector's definition — but the knight is pinned regardless.
+    const before = '5nk1/3p4/8/8/2B5/8/8/K7 b - - 0 1'
+    const after = '6k1/3p4/4n3/8/2B5/8/8/K7 w - - 0 1'
+    expect(detectPin(before, after, 'black')).toMatchObject({ pinnedSquare: 'e6' })
+  })
+
+  it('ignores a pin that already existed before the move', () => {
+    // The knight on e6 is pinned throughout; only an unrelated pawn push
+    // (h7-h6) happens on this ply.
+    const before = '6k1/7p/4n3/8/2B5/8/8/K7 b - - 0 1'
+    const after = '6k1/8/4n2p/8/2B5/8/8/K7 w - - 0 1'
+    expect(detectPin(before, after, 'black')).toBeNull()
+  })
+
+  it('does not flag a pin when a second piece blocks the line', () => {
+    // A pawn on f7 sits between the king and the knight on e6 — with two
+    // blockers on the ray, neither piece is actually pinned.
+    const fen = '6k1/5p2/4n3/8/2B5/8/8/K7 w - - 0 1'
+    expect(detectPin(fen, fen, 'black')).toBeNull()
+  })
+})
+
+describe('describePinReason', () => {
+  it('formats a plain-English pin message', () => {
+    expect(
+      describePinReason({
+        kind: 'pin',
+        pinnedPiece: 'n',
+        pinnedSquare: 'e6',
+        pinnerPiece: 'b',
+        pinnerSquare: 'c4',
+      }),
+    ).toBe(
+      "This pins the knight on e6 to the king — it can't move without exposing the king to the bishop on c4.",
+    )
+  })
+})
+
 describe('detectBlunderReason', () => {
   it('returns a hanging-piece reason when one applies', () => {
     const before = 'k7/1b6/8/8/8/8/3N4/4K3 w - - 0 1'
@@ -74,7 +131,15 @@ describe('detectBlunderReason', () => {
     expect(detectBlunderReason(before, after, 'black')).toMatchObject({ kind: 'fork' })
   })
 
-  it('returns null when neither pattern applies', () => {
+  it('falls back to a pin reason when no piece is hanging or forked', () => {
+    // Same defended-knight pin as detectPin's own test — attacked but
+    // defended (not hanging), and only one target (not a fork).
+    const before = '5nk1/3p4/8/8/2B5/8/8/K7 b - - 0 1'
+    const after = '6k1/3p4/4n3/8/2B5/8/8/K7 w - - 0 1'
+    expect(detectBlunderReason(before, after, 'black')).toMatchObject({ kind: 'pin' })
+  })
+
+  it('returns null when no pattern applies', () => {
     const fen = 'k7/8/8/8/8/8/8/4K3 w - - 0 1'
     expect(detectBlunderReason(fen, fen, 'white')).toBeNull()
   })
@@ -96,6 +161,20 @@ describe('describeBlunderReason', () => {
         targets: [{ piece: 'q', square: 'c7' }],
       }),
     ).toBe('This allows a fork — the knight on b5 now attacks the queen on c7 at once.')
+  })
+
+  it('dispatches to the pin description', () => {
+    expect(
+      describeBlunderReason({
+        kind: 'pin',
+        pinnedPiece: 'n',
+        pinnedSquare: 'e6',
+        pinnerPiece: 'b',
+        pinnerSquare: 'c4',
+      }),
+    ).toBe(
+      "This pins the knight on e6 to the king — it can't move without exposing the king to the bishop on c4.",
+    )
   })
 })
 
@@ -137,6 +216,23 @@ describe('explainBestMove', () => {
     expect(explanation).toMatch(/^Forks .+ at once\.$/)
     expect(explanation).toContain('the queen on c7')
     expect(explanation).toContain('the rook on a7')
+  })
+
+  it('explains that the suggested move frees a piece from a pin', () => {
+    // The knight on e6 is pinned to the king on g8 by the bishop on c4;
+    // Kh8 steps the king off the diagonal, freeing it.
+    const fen = '6k1/3p4/4n3/8/2B5/8/8/K7 b - - 0 1'
+    expect(explainBestMove(fen, 'Kh8', 'black')).toBe('Frees the knight on e6 from the pin.')
+  })
+
+  it('explains that the suggested move pins an opponent piece to their king', () => {
+    // Moving the bishop from d3 to c4 newly pins the knight on e6 to the
+    // black king on g8 — the knight is defended, so this isn't also a
+    // hanging-piece or fork explanation.
+    const fen = '6k1/3p4/4n3/8/8/3B4/8/K7 w - - 0 1'
+    expect(explainBestMove(fen, 'Bc4', 'white')).toBe(
+      "Pins the opponent's knight on e6 to their king.",
+    )
   })
 
   it('returns null for a quiet move none of the heuristics explain', () => {
