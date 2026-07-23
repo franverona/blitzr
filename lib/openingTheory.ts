@@ -1,4 +1,4 @@
-import type { OpeningLesson } from './types'
+import type { Game, LessonGameStats, OpeningLesson } from './types'
 
 // Summaries here are paraphrased in original wording, not reproduced from the
 // source — the source is CC BY-SA (share-alike) and this repo is MIT, so
@@ -51,4 +51,27 @@ export const OPENING_LESSONS: OpeningLesson[] = [
 
 export function getOpeningLesson(slug: string): OpeningLesson | undefined {
   return OPENING_LESSONS.find((lesson) => lesson.slug === slug)
+}
+
+/** Counts the account's own synced games that reached at least as far as
+ *  `moves` (an exact SAN prefix match against `Game.movesSan`) — see
+ *  `LessonGameStats` (`lib/types.ts`) for why this matches on moves played
+ *  rather than Chess.com's ECO code/name. Games with no parsed `movesSan`
+ *  (unparseable PGN movetext) can't be checked and are simply skipped. */
+export function countGamesReachingLine(games: Game[], moves: string[]): LessonGameStats {
+  let wins = 0
+  let draws = 0
+  let losses = 0
+
+  for (const game of games) {
+    if (!game.movesSan) continue
+    const reached = moves.every((san, i) => game.movesSan![i] === san)
+    if (!reached) continue
+
+    if (game.myResult === 'win') wins++
+    else if (game.myResult === 'draw') draws++
+    else losses++
+  }
+
+  return { games: wins + draws + losses, wins, draws, losses }
 }

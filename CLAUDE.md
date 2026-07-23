@@ -951,6 +951,26 @@ FlipBoardButton.tsx` (new) is the one consumer, a circular icon button matching
   games), `primaryColor` only changes the _default_, not what's practicable. This is also set up
   for the asymmetric case a future lesson will eventually hit: an opening named after Black's
   reply (e.g. a Caro-Kann lesson) would set `primaryColor: 'black'` and default the other way.
+- **Cross-linked to the account's own data**: `app/learn/[slug]/page.tsx` shows "You've played
+  this in N of your games (WW/DD/LL)" (or "you haven't played this exact line yet"), linking to
+  `/openings`. `countGamesReachingLine()` (`lib/openingTheory.ts`) computes this by checking
+  whether each synced game's own `movesSan` starts with the lesson's exact SAN sequence — **not**
+  by matching Chess.com's ECO code/name, which was the first approach tried and turned out wrong
+  in practice: a lesson's line is usually just a tabiya (e.g. right after 3.Bb5, before Black even
+  replies), and real games almost always continue past it into a deeper, more specific named
+  sub-variation (verified live — this account's two actual Ruy Lopez games were both tagged
+  `C70`/"Morphy Defense", not the `C60` the lesson's own resulting position would map to), so
+  Chess.com ends up tagging the _whole game_ with that deeper code/name rather than the shallower
+  one the lesson teaches. Matching on the actual moves played instead sidesteps needing to know
+  which of potentially dozens of ECO codes/names share a lesson's opening family. New
+  `LessonGameStats` type (`lib/types.ts`) and `getLessonGameStats()` Server Action
+  (`app/actions.ts`, thin wrapper calling `listAllGames()` + `countGamesReachingLine()`) — no new
+  repository method needed, same `listAllGames()` every other aggregation
+  (`listOpenings()`/`getBlunderStats()`/`getDrillDeck()`) already reuses. Rendered via a small
+  `LessonGameStats` component inside `components/LessonPractice.tsx` (single use site, not a
+  separate file) — shown once per lesson page regardless of Study/Quiz mode, right above
+  `MoveExplanation`. Games with unparseable movetext (`movesSan: null`) are silently skipped, same
+  precedent as everywhere else `movesSan` is consumed.
 
 - **Vitest** — run with `pnpm test` (or `pnpm test:watch`)
 - Tests live in `__tests__/`, one file per `lib/` module they cover: `normalize.test.ts`,

@@ -239,6 +239,12 @@ self-contained to this page — no spaced repetition, no saved progress — the 
 lightweight way to actually test what you
 just read instead of only skimming it.
 
+Each lesson also cross-links to your own Chess.com history: "You've played this in N of your
+games (WW/DD/LL)" (or a note that you haven't yet), linking through to `/openings`. This checks
+your synced games' actual moves against the lesson's line, rather than Chess.com's ECO
+categorization — a lesson teaches a starting position, but real games almost always continue past
+it into a more specific named variation, which is what Chess.com actually tags the game with.
+
 ## Data hygiene
 
 - Your Chess.com username lives in `.env.local` (config), never in code. The API is

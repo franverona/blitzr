@@ -91,6 +91,23 @@ export interface OpeningLesson {
   primaryColor: 'white' | 'black'
 }
 
+/** How many of the account's own synced games actually reached (played at
+ *  least as far as) an `OpeningLesson`'s exact move sequence — see
+ *  `countGamesReachingLine()` in `lib/openingTheory.ts`. Deliberately not
+ *  matched via Chess.com's ECO code/name: a lesson's line is usually just a
+ *  tabiya (e.g. the position right after 3.Bb5, before Black even replies),
+ *  and real games almost always continue into a deeper, more specific named
+ *  sub-variation — Chess.com then tags the *whole game* with that deeper
+ *  ECO code/name, not the shallower one the lesson teaches. Matching on the
+ *  actual move prefix instead sidesteps needing to know which of
+ *  potentially dozens of ECO codes/names share a lesson's opening family. */
+export interface LessonGameStats {
+  games: number
+  wins: number
+  draws: number
+  losses: number
+}
+
 export type RepertoireColor = 'white' | 'black'
 
 export interface RepertoireNode {
