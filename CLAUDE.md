@@ -19,6 +19,9 @@ ahead of time.
   blunders, via a card per drillable position scheduled with SM-2.
 - **Phase 5 (done)**: cross-game "recurring blunders" aggregate (`/blunders`), grouped by opening
   and by piece, scoped to whatever games already have a saved analysis.
+- **Phase 6 (done)**: `/learn` — hand-authored, plain-English opening lessons with an interactive
+  board. Basic architecture, seeded with one lesson (King's Pawn Opening); more lessons are a
+  content-only addition from here (see "Learn openings" below).
 
 ## Stack
 
@@ -44,6 +47,8 @@ app/
   games/[id]/page.tsx        # single game — board replay, repertoire diff, analysis panel,
                                # or raw PGN fallback for unparseable games
   openings/page.tsx           # ECO family aggregation, expandable to named lines
+  learn/page.tsx                # opening-lesson index (see "Learn openings")
+  learn/[slug]/page.tsx           # one lesson — summary + interactive board
   repertoire/page.tsx          # repertoire tree builder (White/Black tabs)
   drill/page.tsx                # spaced-repetition drill deck, reads ?type/?opening
                                   # (see "Drilling")
@@ -106,6 +111,8 @@ lib/
   positions.ts                  # buildPositions() — walks movesSan into a FEN-per-ply array,
                                   # shared by board replay and engine analysis
   openings.ts                    # buildOpeningFamilies() — pure aggregation, unit-tested
+  openingTheory.ts                 # OPENING_LESSONS/getOpeningLesson() — hardcoded lesson
+                                     # content, see "Learn openings"
   repertoire.ts                    # buildRepertoireIndex(), diffGameAgainstRepertoire() — pure
   analysis.ts                       # findBlunders(), biggestBlunder(), formatEval() — pure
   drill.ts                           # candidate-finding, card hydration, SM-2 scheduling — pure
@@ -192,6 +199,30 @@ public/
   constraint** — deliberately, so the board and move list can use as much of the viewport as
   possible (closer to how chess.com lays out a game page) rather than being centered in a
   narrower column.
+- **The sidebar stays fixed in place; only `main` scrolls.** `body` is `h-full overflow-hidden`
+  (was `min-h-full` with no overflow control, so the whole page — sidebar included — scrolled
+  together) and `main`/`aside` each get their own `overflow-y-auto`, per direct user feedback
+  that the nav shouldn't scroll away with a long page. `aside` getting the same treatment as
+  `main` is future-proofing more than a fix for an observed problem — the nav list is short today
+  and unlikely to overflow, but it's a flex child of the same height-capped container, so it needs
+  the same overflow handling to stay correct if that ever changes.
+- **`NavLinks.tsx`'s active-link check is prefix-based, not exact**
+  (`isLinkActive()`), so a section highlights as active on its own detail pages too (`/learn`
+  on `/learn/kings-pawn-opening`), not just its index. One special case: the Games link's `href`
+  is `"/"`, but game detail pages live under `/games/:id`, not nested under `/` in any way a
+  prefix check could recognize on its own — `isLinkActive()` checks `pathname.startsWith('/games/')`
+  specifically for that one link rather than generalizing, since every other section's detail
+  routes actually do nest under their own link's href.
+- **The configured Chess.com account shows at the bottom of the sidebar** (`app/layout.tsx`,
+  avatar + username, `mt-auto` pushing it below `NavLinks`) — previously only visible by reading
+  `.env.local`, no in-app indicator of which account the whole app is scoped to. `RootLayout` is
+  now `async` to call `getChesscomUsername()`/`fetchPlayerAvatar()` directly (reusing
+  `PlayerAvatar.tsx`, the same avatar-with-initial-letter-fallback component the game page already
+  uses). `getChesscomUsername()` normally throws when the env var is missing — every other caller
+  (`lib/sync.ts`) only runs on-demand from the Sync button, but this one runs on **every** page
+  render via the root layout, so it's wrapped in try/catch and fails soft to "not shown" instead
+  of taking the whole app down when unconfigured. No settings page yet to change the account from
+  the UI — this is just visibility for now.
 - **`GameAnalysisProvider` needs `key={game.id}`** (`app/games/[id]/page.tsx`) — it seeds its
   state with `useState(initialAnalysis)`, which only reads that value on mount. Without the key
   forcing a full remount on every distinct game, navigating from an analyzed game to an
@@ -216,7 +247,11 @@ prevPly) { ...; setPrevPly(ply) }`), not a ref — the project's eslint config f
   (the board + move list) are separate consumers so the nav row can sit next to `AnalyzeButton`
   in the header while the board itself renders further down the tree. Needs the same
   `key={game.id}` on `BoardProvider` as `GameAnalysisProvider` does, for the same reason —
-  `useState(lastPly)` only reads its initial ply on mount.
+  `useState(initialPly ?? lastPly)` only reads its initial ply on mount. `BoardProvider` takes an
+  optional `initialPly` (default the last ply, unchanged for every existing caller) — `/learn`
+  passes `1` so a lesson opens on its first move instead of jumping straight to the end of the
+  line, which is what defaulting to `lastPly` would otherwise do for a short, fully-populated
+  `movesSan` array.
 - **`BoardView` explains the suggested-move arrow, not just draws it**: `describeBetterMove()`
   (`lib/tactics.ts`, see "Explaining the suggested 'better' move" under "Engine analysis") runs
   for whatever ply is currently being viewed — every ply with a saved analysis, not just
@@ -749,13 +784,87 @@ client'`. Reuses `PieceGlyph` (white variant, on the same green badge `PieceMove
   `BlunderStats.tsx`'s worst-blunders list, and as a severity-aware verb in `GameSummary()`
   ("blundered" vs "made a mistake"). `EvalHelp` picked up a matching glossary bullet.
 
-## Testing
+## Learn openings (Phase 6)
+
+- **Content is hand-authored, not imported.** `lib/openingTheory.ts` exports a hardcoded
+  `OPENING_LESSONS: OpeningLesson[]` array plus `getOpeningLesson(slug)` — no DB table, no Server
+  Action, same "just data in code" treatment as `PIECE_NAMES`/`TIME_CLASS_TOOLTIPS`. Adding a
+  second lesson is a content-only change (another array entry), which is the whole point of
+  building the index → detail structure now even though there's only one lesson today.
+- **Summaries are paraphrased in original wording, not reproduced from the source.** The first
+  lesson (King's Pawn Opening) is adapted from Wikibooks' [Chess Opening
+  Theory](https://en.wikibooks.org/wiki/Chess_Opening_Theory/1._e4), which is CC BY-SA
+  (share-alike) — this repo is MIT, so verbatim text would be a licensing mismatch. Ideas aren't
+  copyrightable, only specific expression, so a short original summary plus a visible
+  "Adapted from ..." link back to the source (`OpeningLesson.sourceUrl`, rendered on
+  `app/learn/[slug]/page.tsx`) sidesteps that entirely — this is the pattern to follow for every
+  future lesson, not just this one.
+- **The interactive board is free** — `app/learn/[slug]/page.tsx` reuses `BoardProvider`/
+  `BoardNavControls`/`BoardView` from `components/Board.tsx` exactly as `app/games/[id]/page.tsx`
+  does, just fed `lesson.moves` (a short SAN line — a handful of plies showing one natural
+  continuation, not a deep repertoire tree) and a local `START_FEN` instead of a synced game's
+  data. `result`/`evals` are both omitted (optional on `BoardProvider`) since a lesson has no game
+  outcome or engine analysis — `BoardView` already renders fine without either (material count
+  still shows, since that's engine-free; there's just no eval bar or blunder callouts). Also
+  passes `initialPly={1}` so the lesson opens on its first move rather than `BoardProvider`'s
+  normal default of the last ply — for a short, fully-populated lesson line that default would
+  otherwise jump straight to the end of it.
+- **`boardOrientation` is stateful, not a fixed prop** — `BoardProvider` seeds
+  `useState(initialBoardOrientation)` from what was previously just a plain passthrough prop
+  (renamed via destructuring alias, `boardOrientation: initialBoardOrientation`, so both existing
+  callers' `boardOrientation="..."` usage needed no changes) and exposes `setBoardOrientation` on
+  context alongside it. Game replay pages never call it (no flip control rendered there), so
+  orientation still stays fixed at the synced player's color for that whole session exactly as
+  before — this is additive, not a behavior change for existing callers. `components/
+FlipBoardButton.tsx` (new) is the one consumer, a circular icon button matching
+  `AboutOpeningButton`'s styling, rendered next to it in the /learn lesson header — flipping is
+  only useful once a lesson might reasonably be studied from either side, which doesn't apply to
+  a synced game (orientation there should always match how you actually played it).
+- **`BoardView` takes an optional `boardMaxWidthClassName`** (default `'max-w-160'`, matching the
+  game-replay page unchanged) so the learn page can give the board more visual presence
+  (`'max-w-172'`, 688px) without touching that default — per direct user feedback that the board
+  felt too small relative to the page, then measured back down from an initial 800px because that
+  overflowed the viewport (checked live via `main`'s actual content height vs `window.innerHeight`
+  — `document.documentElement.scrollHeight` reads as unreliable here since `body` has `min-h-full`
+  in `app/layout.tsx`, which floors it at the viewport height regardless of real content height).
+  Only the board's own max-width is parameterized; everything else about `BoardView` (eval bar,
+  move list, animation logic) is untouched.
+- **Each move in the line gets its own plain-English note**, not just one summary for the whole
+  opening — `OpeningLessonMove` (`lib/types.ts`) pairs a SAN move with a short `explanation`.
+  `components/MoveExplanation.tsx` (new, client component) shows whichever move led to the
+  position currently on the board, reading `ply` from `Board.tsx`'s context — which required
+  **exporting `useBoardContext()`** from `Board.tsx` (previously private) so a consumer outside
+  that file can read the same ply state `BoardView` already tracks, without `Board.tsx` needing to
+  know anything about lessons. Must render as a descendant of `<BoardProvider>` for the context to
+  resolve; shows "Starting position." at ply 0, before any move has been played.
+- **"About this opening" is a circular `?` button that opens a dialog**, not an always-visible
+  block of prose — `components/AboutOpeningButton.tsx` (new) is the same centered-`<dialog>`
+  pattern as `RepertoireBoard.tsx`'s `HelpButton` (own file since it's parameterized with
+  lesson-specific `name`/`summary`/`sourceUrl` rather than static text), rendered next to
+  `BoardNavControls` in the header row — same "extra control sits beside the nav buttons" layout
+  `app/games/[id]/page.tsx` already uses for `AnalyzeButton`, not a prop injected into
+  `BoardNavControls` itself. The source-attribution link inside opens in a new tab
+  (`target="_blank" rel="noopener noreferrer"`) rather than navigating away from the lesson. This
+  replaced an earlier `<details>`-based version per direct user feedback wanting the summary
+  further out of the way and the nav/help controls consolidated onto one row.
+- **`app/learn/page.tsx`** is the index — a grid of square cards (name below a position preview),
+  not a text list, per direct user feedback. Both learn pages are plain Server Components; only
+  `Board.tsx`'s pieces, `MoveExplanation`, `AboutOpeningButton`, and `MiniBoard` are client-side,
+  same split every other board-using page already follows.
+- **Each card's preview image is a real board, not an external asset** — `components/MiniBoard.tsx`
+  (new) is a small non-interactive `react-chessboard` instance (`allowDragging`/`showNotation`
+  both off) showing the lesson's _final_ position, computed server-side via the same
+  `buildPositions()` (`lib/positions.ts`) every other board already uses, from a local `START_FEN`
+  constant (same literal `RepertoireBoard.tsx`/`app/learn/[slug]/page.tsx` each already define —
+  not worth sharing for a fourth one-line usage). No image generation, no external asset pipeline —
+  it's a real board rendered small (`aspect-square` wrapper), so it's always exactly in sync with
+  the lesson's actual line.
 
 - **Vitest** — run with `pnpm test` (or `pnpm test:watch`)
 - Tests live in `__tests__/`, one file per `lib/` module they cover: `normalize.test.ts`,
   `openings.test.ts`, `repertoire.test.ts`, `analysis.test.ts`, `san.test.ts` (including
   `describeMove()`/`hintPieceName()`), `material.test.ts`, `hangingPiece.test.ts`, `tactics.test.ts`,
-  `dates.test.ts`, `drill.test.ts`,
+  `openingTheory.test.ts`, `dates.test.ts`, `drill.test.ts`,
   `blunders.test.ts`, `stockfish-analyze.test.ts` (just `terminalEval()`) and `stockfish-client.test.ts` (just
   `parseBestMove()`) — the rest of `evaluate()`/`analyzeGame()`/`analyzeGames()` needs a real
   browser Worker and isn't unit-tested. `analysis.test.ts` also covers `blunderSeverity()`.

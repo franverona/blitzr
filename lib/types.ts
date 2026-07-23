@@ -63,6 +63,27 @@ export interface SyncResult {
   gamesUpserted: number
 }
 
+/** One move in an `OpeningLesson`'s line, with a short plain-English note on
+ *  why it's played — shown for whichever ply the lesson board is currently
+ *  on. */
+export interface OpeningLessonMove {
+  san: string
+  explanation: string
+}
+
+/** A hand-authored "learn openings" lesson — see lib/openingTheory.ts. Static
+ *  content shipped with the app, not stored data, so this has no repository
+ *  method of its own. */
+export interface OpeningLesson {
+  slug: string
+  name: string
+  /** The line from the start position — deliberately short (a handful of
+   *  plies showing one natural continuation), not a deep repertoire line. */
+  moves: OpeningLessonMove[]
+  summary: string
+  sourceUrl: string
+}
+
 export type RepertoireColor = 'white' | 'black'
 
 export interface RepertoireNode {

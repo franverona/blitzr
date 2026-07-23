@@ -17,6 +17,13 @@ interface BoardContextValue {
   positions: string[]
   lastPly: number
   boardOrientation: 'white' | 'black'
+  /** Most callers never flip — game replay pages fix orientation to the
+   *  synced player's color for the whole session. Exposed so a consumer
+   *  that *does* want a flip control (the /learn lesson board) can add one
+   *  without Board.tsx needing to know anything about that use case. */
+  setBoardOrientation: (
+    updater: 'white' | 'black' | ((o: 'white' | 'black') => 'white' | 'black'),
+  ) => void
   result?: string
   movesSan: string[]
   evals?: PositionEval[]
@@ -28,7 +35,10 @@ interface BoardContextValue {
 // same reason: the two positions in the tree aren't adjacent.
 const BoardContext = createContext<BoardContextValue | null>(null)
 
-function useBoardContext(): BoardContextValue {
+// Exported so consumers outside this file (e.g. the /learn lesson page, which
+// needs the current ply to show a per-move explanation) can read the same
+// context without Board.tsx needing to know anything about their use case.
+export function useBoardContext(): BoardContextValue {
   const ctx = useContext(BoardContext)
   if (!ctx) throw new Error('Must be used within <BoardProvider>')
   return ctx
@@ -37,9 +47,10 @@ function useBoardContext(): BoardContextValue {
 export function BoardProvider({
   initialFen,
   movesSan,
-  boardOrientation,
+  boardOrientation: initialBoardOrientation,
   result,
   evals,
+  initialPly,
   children,
 }: {
   initialFen: string
@@ -47,15 +58,31 @@ export function BoardProvider({
   boardOrientation: 'white' | 'black'
   result?: string
   evals?: PositionEval[]
+  /** Which ply to show first — defaults to the last, since most callers
+   *  (the game replay page) want to land on the final position. The /learn
+   *  lesson page overrides this to 1 so a lesson opens on its first move
+   *  instead of jumping straight to the end of the line. */
+  initialPly?: number
   children: React.ReactNode
 }) {
   const positions = useMemo(() => buildPositions(initialFen, movesSan), [initialFen, movesSan])
   const lastPly = positions.length - 1
-  const [ply, setPly] = useState(lastPly)
+  const [ply, setPly] = useState(initialPly ?? lastPly)
+  const [boardOrientation, setBoardOrientation] = useState(initialBoardOrientation)
 
   return (
     <BoardContext.Provider
-      value={{ ply, setPly, positions, lastPly, boardOrientation, result, movesSan, evals }}
+      value={{
+        ply,
+        setPly,
+        positions,
+        lastPly,
+        boardOrientation,
+        setBoardOrientation,
+        result,
+        movesSan,
+        evals,
+      }}
     >
       {children}
     </BoardContext.Provider>
@@ -94,7 +121,15 @@ export function BoardNavControls() {
   )
 }
 
-export function BoardView() {
+export function BoardView({
+  boardMaxWidthClassName = 'max-w-160',
+}: {
+  /** Lets a caller give the board more visual presence than the default
+   *  game-replay sizing without changing that page's layout — e.g. the
+   *  `/learn` lesson page, which has no move-list-heavy sidebar competing
+   *  for width. */
+  boardMaxWidthClassName?: string
+} = {}) {
   const { ply, positions, boardOrientation, result, movesSan, evals, setPly } = useBoardContext()
   const bestMove = evals?.[ply]?.bestMove
   // positions[ply] is 0-indexed (ply plies already played), while
@@ -130,7 +165,7 @@ export function BoardView() {
       <div className="flex shrink-0 flex-col gap-3">
         <div className="flex items-stretch gap-2">
           {evals?.[ply] && <EvalBar evaluation={evals[ply]} boardOrientation={boardOrientation} />}
-          <div className="w-full max-w-160 overflow-hidden rounded shadow-lg">
+          <div className={`w-full overflow-hidden rounded shadow-lg ${boardMaxWidthClassName}`}>
             <Chessboard
               options={{
                 position: positions[ply],
