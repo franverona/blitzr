@@ -226,14 +226,15 @@ than reproduced from any source — the King's Pawn Opening lesson is adapted fr
 [Chess Opening Theory](https://en.wikibooks.org/wiki/Chess_Opening_Theory/1._e4) (CC BY-SA), with
 a link back (opens in a new tab) for attribution and further reading.
 
-A **Quiz** tab next to Study switches from reading the line to playing it from memory: the board
-starts empty and you make each move yourself (either side, same as reading it), with a "Not
-quite — try again" nudge on a wrong guess and no penalty for retrying immediately. A "Show move"
-button reveals the answer as an arrow if you're stuck, and each move's explanation still appears
-the instant you get it right. Finishing the line shows how many mistakes and hints it took, with
-a one-click restart. It's fully self-contained to this page — no spaced repetition, no saved
-progress — the deliberately lightweight way to actually test what you just read instead of only
-skimming it.
+A **Quiz** tab next to Study switches from reading the line to playing it from memory: you're only
+tested on one side (whichever color the board is currently oriented to — flip it to switch), the
+opponent's replies play themselves after a short pause. A "Not quite — try again" nudge appears
+on a wrong guess with no penalty for retrying immediately, a "Show move" button reveals the
+answer as an arrow if you're stuck, and each move's explanation still appears the instant you get
+it right. The board stays visible at the final position when you finish, alongside how many
+mistakes and hints it took and a one-click restart. It's fully self-contained to this page — no
+spaced repetition, no saved progress — the deliberately lightweight way to actually test what you
+just read instead of only skimming it.
 
 ## Data hygiene
 

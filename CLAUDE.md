@@ -887,7 +887,24 @@ FlipBoardButton.tsx` (new) is the one consumer, a circular icon button matching
   "hint isn't a free answer" precedent as Drill's hint levels. Finishing the line (`ply ===
 lastPly`) shows a mistake/hint tally and a Restart button (`setPly(0)` plus resetting local
   tally state) rather than anything persisted — there's no schedule to update, so "restart" is just
-  "play it again."
+  "play it again." The board stays mounted through completion, showing the final position with
+  dragging disabled, rather than being replaced by a text-only summary — per direct user feedback
+  that the board disappearing read as jarring. The header row above the board (progress text +
+  hint button, or "Line complete!" with neither) is pinned to a fixed height (`h-9`) rather than
+  sizing to content, since the two states have different natural line-heights and letting the row
+  reflow shifted the board up/down by a few pixels on completion — also direct user feedback,
+  caught by measuring the board's bounding box before/after the completing move.
+- **Only your own side is quizzed, not the opponent's replies** — `LessonQuiz` reuses
+  `boardOrientation` (the same state `FlipBoardButton` already flips) as "which color am I
+  practicing," per direct user pushback that having to also recall the exact move an opponent
+  would play isn't a real skill (in an actual game you just react to whatever they play) — testing
+  it would just be memorizing trivia instead of practicing "what do I play here." Whenever it's the
+  other color's turn (`whiteToMove(ply + 1)` compared against `boardOrientation`), a `useEffect`
+  auto-advances the ply on their behalf after `OPPONENT_MOVE_DELAY_MS` (500ms) rather than waiting
+  for input — board interaction (`allowDragging`, square clicks, the hint button) is disabled for
+  that ply via the same `isMyTurn` flag the effect checks. Flipping the board mid-quiz changes which
+  color is "mine" from that point on — an accepted edge case, not guarded against, since it's a
+  rare and user-initiated action.
 
 - **Vitest** — run with `pnpm test` (or `pnpm test:watch`)
 - Tests live in `__tests__/`, one file per `lib/` module they cover: `normalize.test.ts`,
