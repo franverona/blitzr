@@ -7,16 +7,12 @@ import { submitDrillAnswer } from '@/app/actions'
 import { legalDestinations } from '@/lib/legalMoves'
 import { hintPieceName } from '@/lib/san'
 import { describeBlunderReason, detectBlunderReason } from '@/lib/tactics'
+import { BOARD_DARK_SQUARE, BOARD_LIGHT_SQUARE, REVEAL_ARROW_COLOR } from '@/lib/theme'
 import type { BlunderReason, DrillPrompt } from '@/lib/types'
 import { LegalMoveSquare } from './LegalMoveSquare'
 import { PlayerAvatar } from './PlayerAvatar'
 
 type Feedback = 'correct' | 'incorrect' | null
-
-// Same amber used for the engine-suggestion arrow on the game analysis
-// board, so a "here's the move" arrow reads consistently everywhere it
-// shows up.
-const REVEAL_ARROW_COLOR = 'rgba(234, 179, 8, 0.9)'
 
 function revealArrows(
   prompt: DrillPrompt,
@@ -315,10 +311,10 @@ export function DrillSession({
                 {children}
               </LegalMoveSquare>
             ),
-            darkSquareStyle: { backgroundColor: '#769656' },
-            lightSquareStyle: { backgroundColor: '#eeeed2' },
-            darkSquareNotationStyle: { color: '#eeeed2' },
-            lightSquareNotationStyle: { color: '#769656' },
+            darkSquareStyle: { backgroundColor: BOARD_DARK_SQUARE },
+            lightSquareStyle: { backgroundColor: BOARD_LIGHT_SQUARE },
+            darkSquareNotationStyle: { color: BOARD_LIGHT_SQUARE },
+            lightSquareNotationStyle: { color: BOARD_DARK_SQUARE },
             arrows,
           }}
         />

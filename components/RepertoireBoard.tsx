@@ -9,6 +9,7 @@ import { whiteToMove } from '@/lib/drill'
 import { legalDestinations } from '@/lib/legalMoves'
 import { buildRepertoireIndex } from '@/lib/repertoire'
 import { describeBlunderReason, detectBlunderReason } from '@/lib/tactics'
+import { BOARD_DARK_SQUARE, BOARD_LIGHT_SQUARE } from '@/lib/theme'
 import type { RepertoireColor, RepertoireNode } from '@/lib/types'
 import { LegalMoveSquare } from './LegalMoveSquare'
 import { RepertoireTree } from './RepertoireTree'
@@ -207,10 +208,10 @@ export function RepertoireBoard({
                     {children}
                   </LegalMoveSquare>
                 ),
-                darkSquareStyle: { backgroundColor: '#769656' },
-                lightSquareStyle: { backgroundColor: '#eeeed2' },
-                darkSquareNotationStyle: { color: '#eeeed2' },
-                lightSquareNotationStyle: { color: '#769656' },
+                darkSquareStyle: { backgroundColor: BOARD_DARK_SQUARE },
+                lightSquareStyle: { backgroundColor: BOARD_LIGHT_SQUARE },
+                darkSquareNotationStyle: { color: BOARD_LIGHT_SQUARE },
+                lightSquareNotationStyle: { color: BOARD_DARK_SQUARE },
               }}
             />
           </div>
@@ -241,7 +242,7 @@ export function RepertoireBoard({
                   onClick={() => setPath((p) => [...p.slice(0, -1), sibling])}
                   className={`rounded px-2 py-0.5 ${
                     sibling.id === currentNode?.id
-                      ? 'bg-[#769656]/50 font-medium text-white'
+                      ? 'bg-accent/50 font-medium text-white'
                       : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
                   }`}
                 >
@@ -264,7 +265,7 @@ function ColorTab({ color, active }: { color: RepertoireColor; active: boolean }
       href={`/repertoire?color=${color}`}
       className={`rounded-md border px-3 py-1 capitalize ${
         active
-          ? 'border-[#769656] bg-[#769656]/20 text-white'
+          ? 'border-accent bg-accent/20 text-white'
           : 'border-zinc-700 text-zinc-400 hover:bg-zinc-800'
       }`}
     >

@@ -66,7 +66,7 @@ function ModeTab({
       onClick={onClick}
       className={`rounded-md border px-3 py-1 text-sm ${
         active
-          ? 'border-[#769656] bg-[#769656]/20 text-white'
+          ? 'border-accent bg-accent/20 text-white'
           : 'border-zinc-700 text-zinc-400 hover:bg-zinc-800'
       }`}
     >

@@ -3,6 +3,7 @@ import { formatEval, formatSwing } from '@/lib/analysis'
 import { plyLabel } from '@/lib/san'
 import type { SanPiece } from '@/lib/san'
 import { describeBlunderReason } from '@/lib/tactics'
+import { BOARD_DARK_SQUARE } from '@/lib/theme'
 import type { BlunderStats as BlunderStatsData } from '@/lib/types'
 import { BlunderSeverityBadge } from './BlunderSeverityBadge'
 import { EvalHelp } from './EvalHelp'
@@ -78,7 +79,7 @@ export function BlunderStats({ stats }: { stats: BlunderStatsData }) {
               {PIECE_KEYS.has(group.key) && (
                 <span
                   className="inline-flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-sm"
-                  style={{ backgroundColor: '#769656' }}
+                  style={{ backgroundColor: BOARD_DARK_SQUARE }}
                 >
                   <PieceGlyph piece={group.key as SanPiece} color="white" className="h-3.5 w-3.5" />
                 </span>

@@ -5,12 +5,9 @@ import { Chess } from 'chess.js'
 import { Chessboard } from 'react-chessboard'
 import { whiteToMove } from '@/lib/drill'
 import { legalDestinations } from '@/lib/legalMoves'
+import { BOARD_DARK_SQUARE, BOARD_LIGHT_SQUARE, REVEAL_ARROW_COLOR } from '@/lib/theme'
 import { useBoardContext } from './Board'
 import { LegalMoveSquare } from './LegalMoveSquare'
-
-// Same amber used for every other reveal arrow in the app (the engine
-// suggestion on Board.tsx, Drill's hint arrow).
-const REVEAL_ARROW_COLOR = 'rgba(234, 179, 8, 0.9)'
 
 // How long an auto-played opponent move sits highlighted before the next
 // ply becomes yours — long enough to read, short enough not to feel like a
@@ -223,10 +220,10 @@ export function LessonQuiz() {
                 {children}
               </LegalMoveSquare>
             ),
-            darkSquareStyle: { backgroundColor: '#769656' },
-            lightSquareStyle: { backgroundColor: '#eeeed2' },
-            darkSquareNotationStyle: { color: '#eeeed2' },
-            lightSquareNotationStyle: { color: '#769656' },
+            darkSquareStyle: { backgroundColor: BOARD_DARK_SQUARE },
+            lightSquareStyle: { backgroundColor: BOARD_LIGHT_SQUARE },
+            darkSquareNotationStyle: { color: BOARD_LIGHT_SQUARE },
+            lightSquareNotationStyle: { color: BOARD_DARK_SQUARE },
             arrows,
           }}
         />
