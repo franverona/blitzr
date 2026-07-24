@@ -2,14 +2,14 @@
 
 import { getLocale } from '@/lib/i18n/locale'
 import { getStrings } from '@/lib/i18n/strings'
-import type { OpeningLessonMove } from '@/lib/types'
+import type { LessonMove } from '@/lib/types'
 import { useBoardContext } from './Board'
 
 /** Shows the plain-English note for whichever move led to the position
  *  currently on the board — reads `ply` from the same context BoardView
  *  consumes, so it stays in sync with Start/Prev/Next/End and the move list
  *  without any state of its own. */
-export function MoveExplanation({ moves }: { moves: OpeningLessonMove[] }) {
+export function MoveExplanation({ moves }: { moves: LessonMove[] }) {
   const { ply } = useBoardContext()
   const s = getStrings()
   const locale = getLocale()

@@ -19,12 +19,16 @@ ahead of time.
   blunders, via a card per drillable position scheduled with SM-2.
 - **Phase 5 (done)**: cross-game "recurring blunders" aggregate (`/blunders`), grouped by opening
   and by piece, scoped to whatever games already have a saved analysis.
-- **Phase 6 (done)**: `/learn` — hand-authored, plain-English opening lessons with an interactive
+- **Phase 6 (done)**: `/learn` — hand-authored, plain-language opening lessons with an interactive
   board, a Study mode (read the line) and a Quiz mode (play it from memory, one side at a time).
   14 lessons so far (King's Pawn Opening, Sicilian Defense, French Defense, Queen's Gambit,
   Italian Game, Caro-Kann Defense, Scandinavian Defense, King's Indian Defense, English Opening,
   Nimzo-Indian Defense, Grünfeld Defense, King's Gambit, Scotch Game, Pirc Defense); adding more
   is a content-only addition from here (see "Learn openings" below).
+- **Phase 7 (done)**: `/learn` gains a second content category — hand-authored endgame lessons,
+  reusing every Study/Quiz component the opening lessons already built. 3 lessons so far (King
+  and Queen vs. King, King and Rook vs. King, King and Pawn vs. King); adding more is a
+  content-only addition from here (see "Learn endgames" below).
 
 ## Stack
 
@@ -93,6 +97,7 @@ lib/
   positions.ts                  # buildPositions() — movesSan into a FEN-per-ply array
   openings.ts                    # buildOpeningFamilies() — pure aggregation
   openingTheory.ts                 # OPENING_LESSONS/getOpeningLesson()/countGamesReachingLine()
+  endgameTheory.ts                 # ENDGAME_LESSONS/getEndgameLesson()
   repertoire.ts                    # buildRepertoireIndex(), diffGameAgainstRepertoire()
   analysis.ts                       # findBlunders(), biggestBlunder(), formatEval()
   drill.ts                           # candidate-finding, card hydration, SM-2 scheduling
@@ -289,29 +294,57 @@ changing what counts as a blunder anywhere — shown via `BlunderSeverityBadge`.
 ## Learn openings (Phase 6)
 
 **Content is hand-authored, not imported.** `lib/openingTheory.ts` exports a hardcoded
-`OPENING_LESSONS: OpeningLesson[]` array plus `getOpeningLesson(slug)` — no DB table, no Server
-Action, same "just data in code" treatment as `PIECE_NAMES`/`TIME_CLASS_TOOLTIPS`. A new lesson is
-a content-only array entry; 14 exist today across every major first move and both colors. Every
+`OPENING_LESSONS: Lesson[]` array plus `getOpeningLesson(slug)` — no DB table, no Server Action,
+same "just data in code" treatment as `PIECE_NAMES`/`TIME_CLASS_TOOLTIPS`. A new lesson is a
+content-only array entry; 14 exist today across every major first move and both colors. Every
 `sourceUrl` must be fetched and read live before being cited (don't guess Wikibooks' page-naming
 pattern — some subpages are nested 5-6 moves deep). **Summaries are paraphrased in original
 wording, never reproduced from the source** — Wikibooks' Chess Opening Theory is CC BY-SA
 (share-alike), this repo is MIT, so verbatim text would be a licensing mismatch; a short original
-summary plus a visible "Adapted from ..." link (`OpeningLesson.sourceUrl`) sidesteps that. Follow
-this pattern for every future lesson.
+summary plus a visible "Adapted from ..." link (`Lesson.sourceUrl`) sidesteps that. Follow this
+pattern for every future lesson.
 
 The interactive board reuses `Board.tsx`'s `BoardProvider`/`BoardNavControls`/`BoardView`
-(`components/LessonPractice.tsx`), same as the game-replay page, just fed `lesson.moves` instead
-of a synced game. Quiz mode (`components/LessonQuiz.tsx`) is separate active-recall practice —
-play the line from memory, one side at a time (`OpeningLesson.primaryColor` picks the default
-side, matching which player the lesson is framed around; flippable) — self-contained to `/learn`,
-no `drill_cards`/SM-2 involved. Each lesson also cross-links to the account's own data:
-`countGamesReachingLine()` (`lib/openingTheory.ts`) checks whether a synced game's `movesSan`
-starts with the lesson's exact SAN sequence, **not** Chess.com's ECO code/name — a lesson's line
-is usually just a tabiya, and real games almost always continue into a deeper, more specific named
-sub-variation that Chess.com tags the whole game with instead (confirmed live: this account's two
-actual Ruy Lopez games are tagged `C70`/"Morphy Defense", not the `C60` the lesson's own position
-maps to — an ECO-code match would have shown 0 games despite 2 real ones). See each component's
-own comments for further implementation detail.
+(`components/LessonPractice.tsx`), same as the game-replay page, just fed `lesson.initialFen`/
+`lesson.moves` instead of a synced game. Quiz mode (`components/LessonQuiz.tsx`) is separate
+active-recall practice — play the line from memory, one side at a time (`Lesson.primaryColor`
+picks the default side, matching which player the lesson is framed around; flippable) —
+self-contained to `/learn`, no `drill_cards`/SM-2 involved. Each _opening_ lesson also cross-links
+to the account's own data: `countGamesReachingLine()` (`lib/openingTheory.ts`) checks whether a
+synced game's `movesSan` starts with the lesson's exact SAN sequence, **not** Chess.com's ECO
+code/name — a lesson's line is usually just a tabiya, and real games almost always continue into
+a deeper, more specific named sub-variation that Chess.com tags the whole game with instead
+(confirmed live: this account's two actual Ruy Lopez games are tagged `C70`/"Morphy Defense", not
+the `C60` the lesson's own position maps to — an ECO-code match would have shown 0 games despite
+2 real ones). See each component's own comments for further implementation detail.
+
+## Learn endgames (Phase 7)
+
+`lib/endgameTheory.ts` mirrors `lib/openingTheory.ts` exactly — `ENDGAME_LESSONS: Lesson[]` +
+`getEndgameLesson(slug)`, same hand-authored/paraphrased/`sourceUrl`-cited content rules, same
+`components/LessonPractice.tsx`/`LessonQuiz.tsx` rendering. `app/learn/[slug]/page.tsx` looks a
+slug up in both arrays (`getOpeningLesson(slug) ?? getEndgameLesson(slug)`); `app/learn/page.tsx`
+switches between the two card grids with an Openings/Endgames tab (plain `useState`, same
+`ModeTab`-style toggle `LessonPractice.tsx`'s Study/Quiz switch already uses) rather than adding a
+7th sidebar nav item for what's still "stuff you can study." 3 lessons so far (King and Queen vs.
+King, King and Rook vs. King, King and Pawn vs. King), sourced from a different chapter of the
+same Wikibooks book (`Chess/The_Endgame/...` instead of `Chess_Opening_Theory/...`).
+
+The one real difference from an opening lesson: an opening always starts from the standard
+position, but an endgame needs its own constructed starting position (e.g. king + queen vs. lone
+king) — `Lesson.initialFen` carries that (openings just set it to the standard FEN), so
+`BoardProvider` needed no changes at all, just a per-lesson FEN instead of a hardcoded constant.
+Each endgame lesson's move sequence runs all the way to an actual checkmate (or, for the pawn
+lesson, to the pawn queening) rather than stopping at a tabiya like an opening does — Quiz mode's
+existing "replay this line, opponent auto-plays" mechanic needed zero code changes to make
+reaching the end of the line _mean_ delivering mate, since that's just what the authored line
+does. Every move sequence was verified legal-and-correct (final position really is checkmate, or
+really has a new queen) with a `chess.js` scratch script before being written down, and that same
+check is now a standing test (`__tests__/endgameTheory.test.ts`) — not just eyeballed once.
+`getLessonGameStats()`/`countGamesReachingLine()` (the "you've played this in N games" line) has
+no endgame equivalent — a game doesn't "reach" an endgame position via a fixed move prefix from
+move 1 — so `LessonPractice`'s `gameStats` prop is `null` for an endgame lesson and that section
+simply doesn't render, rather than showing a meaningless "0 games" line.
 
 ## Internationalization (i18n)
 
@@ -341,11 +374,11 @@ word-for-word swap of the English ones — verb/preposition/article all differ, 
 articles (torre/dama are feminine, everything else masculine) meant centralizing a
 `pieceWithArticle()` helper (`lib/san.ts`) rather than hand-rolling "el"/"la" in every function
 that builds a "the {piece} on {square}" phrase (hanging-piece, fork, pin, and better-move
-explanations all do). `lib/openingTheory.ts`'s `OPENING_LESSONS` follows the same idea at the
-content level: `OpeningLesson.name`/`.summary` and `OpeningLessonMove.explanation` are
-`Record<Locale, string>` rather than a plain `string` (one array, not parallel `_EN`/`_ES`
-arrays, so there's a single source of truth per lesson) — I translated all 14 lessons' English
-paraphrases into natural (not machine-literal) Spanish myself.
+explanations all do). `OPENING_LESSONS`/`ENDGAME_LESSONS` follow the same idea at the content
+level: `Lesson.name`/`.summary` and `LessonMove.explanation` are `Record<Locale, string>` rather
+than a plain `string` (one array per lesson type, not parallel `_EN`/`_ES` arrays, so there's a
+single source of truth per lesson) — I translated all of it into natural (not machine-literal)
+Spanish myself.
 
 ## Testing
 
@@ -353,7 +386,9 @@ paraphrases into natural (not machine-literal) Spanish myself.
 - Tests live in `__tests__/`, one file per `lib/` module they cover: `normalize.test.ts`,
   `openings.test.ts`, `repertoire.test.ts`, `analysis.test.ts`, `san.test.ts` (including
   `describeMove()`/`hintPieceName()`), `material.test.ts`, `hangingPiece.test.ts`, `tactics.test.ts`,
-  `openingTheory.test.ts`, `dates.test.ts`, `drill.test.ts`,
+  `openingTheory.test.ts`, `endgameTheory.test.ts` (includes replaying every lesson's moves with
+  `chess.js` to confirm the final position really is checkmate, or really has a new queen — not
+  just a content-shape check), `dates.test.ts`, `drill.test.ts`,
   `blunders.test.ts`, `stockfish-analyze.test.ts` (just `terminalEval()`) and `stockfish-client.test.ts` (just
   `parseBestMove()`) — the rest of `evaluate()`/`analyzeGame()`/`analyzeGames()` needs a real
   browser Worker and isn't unit-tested. `analysis.test.ts` also covers `blunderSeverity()`.
