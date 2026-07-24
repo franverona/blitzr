@@ -232,7 +232,7 @@ than implying full coverage of your history.
 On `/learn`, short plain-language lessons (English and Spanish, see "Language" above) introduce
 common openings and endgames — not a repertoire, just the ideas behind one natural line, move by
 move. The index shows each one as a square card with a small preview of the position it leads to,
-grouped into an "Openings" and an "Endgames" section. Opening a lesson gives you a large
+switched between an "Openings" and an "Endgames" tab. Opening a lesson gives you a large
 interactive board to step through it, with each move getting its own one-line note on why it's
 played, right above the board — a flip button next to the board controls lets you view the line
 from either side.

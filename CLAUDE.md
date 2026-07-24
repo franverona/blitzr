@@ -324,10 +324,11 @@ the `C60` the lesson's own position maps to — an ECO-code match would have sho
 `getEndgameLesson(slug)`, same hand-authored/paraphrased/`sourceUrl`-cited content rules, same
 `components/LessonPractice.tsx`/`LessonQuiz.tsx` rendering. `app/learn/[slug]/page.tsx` looks a
 slug up in both arrays (`getOpeningLesson(slug) ?? getEndgameLesson(slug)`); `app/learn/page.tsx`
-renders both as separate card sections on one page rather than adding a 7th sidebar nav item for
-what's still "stuff you can study." 3 lessons so far (King and Queen vs. King, King and Rook vs.
-King, King and Pawn vs. King), sourced from a different chapter of the same Wikibooks book
-(`Chess/The_Endgame/...` instead of `Chess_Opening_Theory/...`).
+switches between the two card grids with an Openings/Endgames tab (plain `useState`, same
+`ModeTab`-style toggle `LessonPractice.tsx`'s Study/Quiz switch already uses) rather than adding a
+7th sidebar nav item for what's still "stuff you can study." 3 lessons so far (King and Queen vs.
+King, King and Rook vs. King, King and Pawn vs. King), sourced from a different chapter of the
+same Wikibooks book (`Chess/The_Endgame/...` instead of `Chess_Opening_Theory/...`).
 
 The one real difference from an opening lesson: an opening always starts from the standard
 position, but an endgame needs its own constructed starting position (e.g. king + queen vs. lone
