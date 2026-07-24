@@ -136,6 +136,12 @@ describe('describeEval', () => {
     expect(describeEval(mate(4))).toBe('White has a forced mate')
     expect(describeEval(mate(-1))).toBe('Black has a forced mate')
   })
+
+  it('describes evals in Spanish', () => {
+    expect(describeEval(cp(20), 'es')).toBe('Posición igualada')
+    expect(describeEval(cp(500), 'es')).toBe('Posición ganadora para las blancas')
+    expect(describeEval(mate(4), 'es')).toBe('Mate forzado para las blancas')
+  })
 })
 
 describe('blunderSeverity', () => {
@@ -171,5 +177,9 @@ describe('formatSwing', () => {
 
   it('describes a swing out of a mate in words too', () => {
     expect(formatSwing(blunder(mate(-2), cp(20), 99_980))).toBe('equal position')
+  })
+
+  it('formats an ordinary swing in Spanish', () => {
+    expect(formatSwing(blunder(cp(370), cp(580), 210), 'es')).toBe('2.1 peones')
   })
 })

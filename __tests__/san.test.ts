@@ -94,3 +94,30 @@ describe('hintPieceName', () => {
     expect(hintPieceName('O-O-O')).toBe('castling')
   })
 })
+
+describe('describeMove (Spanish)', () => {
+  const START_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+
+  it('describes a quiet move in Spanish', () => {
+    expect(describeMove(START_FEN, 'e4', 'es')).toBe('Peón a e4')
+  })
+
+  it('describes a capture in Spanish', () => {
+    const fen = '4k3/8/8/4p3/8/3N4/8/4K3 w - - 0 1'
+    expect(describeMove(fen, 'Nxe5', 'es')).toBe('Caballo captura Peón en e5')
+  })
+
+  it('describes castling in Spanish', () => {
+    const fen = 'r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1'
+    expect(describeMove(fen, 'O-O', 'es')).toBe('Enroque corto')
+    expect(describeMove(fen, 'O-O-O', 'es')).toBe('Enroque largo')
+  })
+})
+
+describe('hintPieceName (Spanish)', () => {
+  it('names each piece letter in Spanish', () => {
+    expect(hintPieceName('Nc7', 'es')).toBe('caballo')
+    expect(hintPieceName('e4', 'es')).toBe('peón')
+    expect(hintPieceName('O-O', 'es')).toBe('enroque')
+  })
+})

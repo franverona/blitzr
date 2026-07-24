@@ -1,3 +1,5 @@
+import type { Locale } from './i18n/locale'
+
 export type MyColor = 'white' | 'black'
 export type MyResult = 'win' | 'draw' | 'loss'
 
@@ -63,12 +65,13 @@ export interface SyncResult {
   gamesUpserted: number
 }
 
-/** One move in an `OpeningLesson`'s line, with a short plain-English note on
+/** One move in an `OpeningLesson`'s line, with a short plain-language note on
  *  why it's played — shown for whichever ply the lesson board is currently
- *  on. */
+ *  on. Keyed by `Locale` (not a plain string) since this is hand-authored
+ *  content translated alongside the rest of the app, not generated text. */
 export interface OpeningLessonMove {
   san: string
-  explanation: string
+  explanation: Record<Locale, string>
 }
 
 /** A hand-authored "learn openings" lesson — see lib/openingTheory.ts. Static
@@ -76,11 +79,11 @@ export interface OpeningLessonMove {
  *  method of its own. */
 export interface OpeningLesson {
   slug: string
-  name: string
+  name: Record<Locale, string>
   /** The line from the start position — deliberately short (a handful of
    *  plies showing one natural continuation), not a deep repertoire line. */
   moves: OpeningLessonMove[]
-  summary: string
+  summary: Record<Locale, string>
   sourceUrl: string
   /** Which side this lesson is framed around — e.g. White for "King's Pawn
    *  Opening", Black for a defense named after Black's reply. Quiz mode

@@ -146,6 +146,16 @@ describe('buildBlunderStats', () => {
     expect(stats.worst[0].moveDescription).toBe('Queen to h5')
   })
 
+  it('translates piece labels and move descriptions when the locale is es', () => {
+    const game = makeGame({ ecoCode: null, ecoName: null, movesSan: ['e4', 'e5', 'Qh5??'] })
+    const analyses = new Map([[game.id, makeAnalysis(game.id, [cp(20), cp(30), cp(40), cp(-260)])]])
+
+    const stats = buildBlunderStats([game], analyses, 'es')
+    expect(stats.byOpening[0].label).toBe('Apertura desconocida')
+    expect(stats.byPiece[0].label).toBe('Dama')
+    expect(stats.worst[0].moveDescription).toBe('Dama a h5')
+  })
+
   it('sorts the worst list by swing descending and caps it at 10', () => {
     const games = Array.from({ length: 12 }, () => makeGame({ movesSan: ['e4'] }))
     const analyses = new Map(

@@ -328,10 +328,24 @@ engine — not worth a library for two locales. `getStrings()` returns the whole
 current locale; components call it once per render and destructure what they need. **SAN move
 notation and square names are never translated** (universal chess notation), and neither is
 Chess.com's own `ecoName`/opening-name data (external, not ours to translate) — same "don't touch
-external data" principle the ingestion layer already follows. The tactical-description generators
-in `lib/` (`describeMove`, `describeBetterMove`, `describeBlunderReason`, etc.) and the `/learn`
-lesson content (`OPENING_LESSONS`) need real per-locale sentence/grammar handling, not a string
-swap, and are translated separately from the static-UI pass this section otherwise describes.
+external data" principle the ingestion layer already follows.
+
+The tactical-description generators in `lib/` (`describeMove`, `describeBetterMove`,
+`describeBlunderReason`, `describeEval`, `formatSwing`, `formatMaterialDiff`,
+`buildBlunderStats`/`buildOpeningFamilies`'s fallback labels, ...) each take an **optional
+trailing `locale: Locale = getLocale()` parameter** instead of threading a required one through
+every call site — omit it and a call site gets the env-based default (which is how every existing
+caller still works unchanged), or pass `'es'` explicitly (which is how tests cover the Spanish
+templates without mutating `process.env`). Spanish needed real sentence templates here, not a
+word-for-word swap of the English ones — verb/preposition/article all differ, and gendered
+articles (torre/dama are feminine, everything else masculine) meant centralizing a
+`pieceWithArticle()` helper (`lib/san.ts`) rather than hand-rolling "el"/"la" in every function
+that builds a "the {piece} on {square}" phrase (hanging-piece, fork, pin, and better-move
+explanations all do). `lib/openingTheory.ts`'s `OPENING_LESSONS` follows the same idea at the
+content level: `OpeningLesson.name`/`.summary` and `OpeningLessonMove.explanation` are
+`Record<Locale, string>` rather than a plain `string` (one array, not parallel `_EN`/`_ES`
+arrays, so there's a single source of truth per lesson) — I translated all 14 lessons' English
+paraphrases into natural (not machine-literal) Spanish myself.
 
 ## Testing
 

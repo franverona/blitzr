@@ -325,7 +325,9 @@ export function DrillSession({
       {hintLevel >= 1 && (
         <p className="text-sm text-zinc-400">
           {s.drill.hintText(
-            [...new Set(activePrompt.correctMoves.map(hintPieceName))].join(` ${s.drill.or} `),
+            [...new Set(activePrompt.correctMoves.map((san) => hintPieceName(san)))].join(
+              ` ${s.drill.or} `,
+            ),
           )}
         </p>
       )}

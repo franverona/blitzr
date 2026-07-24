@@ -1,5 +1,6 @@
 'use client'
 
+import { getLocale } from '@/lib/i18n/locale'
 import { getStrings } from '@/lib/i18n/strings'
 import type { OpeningLessonMove } from '@/lib/types'
 import { useBoardContext } from './Board'
@@ -11,6 +12,7 @@ import { useBoardContext } from './Board'
 export function MoveExplanation({ moves }: { moves: OpeningLessonMove[] }) {
   const { ply } = useBoardContext()
   const s = getStrings()
+  const locale = getLocale()
   const move = ply > 0 ? moves[ply - 1] : null
 
   return (
@@ -18,7 +20,7 @@ export function MoveExplanation({ moves }: { moves: OpeningLessonMove[] }) {
       {move ? (
         <>
           <span className="font-medium text-zinc-900 dark:text-white">{move.san}</span> —{' '}
-          {move.explanation}
+          {move.explanation[locale]}
         </>
       ) : (
         s.moveExplanation.startingPosition

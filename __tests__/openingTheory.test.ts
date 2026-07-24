@@ -42,6 +42,28 @@ describe('getOpeningLesson', () => {
   })
 })
 
+describe('OPENING_LESSONS content', () => {
+  it('has a distinct, non-empty English and Spanish name/summary for every lesson', () => {
+    for (const lesson of OPENING_LESSONS) {
+      expect(lesson.name.en.length).toBeGreaterThan(0)
+      expect(lesson.name.es.length).toBeGreaterThan(0)
+      expect(lesson.summary.en.length).toBeGreaterThan(0)
+      expect(lesson.summary.es.length).toBeGreaterThan(0)
+      expect(lesson.name.es).not.toBe(lesson.name.en)
+    }
+  })
+
+  it('has a distinct, non-empty English and Spanish explanation for every move', () => {
+    for (const lesson of OPENING_LESSONS) {
+      for (const move of lesson.moves) {
+        expect(move.explanation.en.length).toBeGreaterThan(0)
+        expect(move.explanation.es.length).toBeGreaterThan(0)
+        expect(move.explanation.es).not.toBe(move.explanation.en)
+      }
+    }
+  })
+})
+
 describe('countGamesReachingLine', () => {
   const moves = ['e4', 'e5', 'Nf3']
 

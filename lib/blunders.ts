@@ -1,9 +1,12 @@
+import type { PieceSymbol } from 'chess.js'
 import { findBlunders } from './analysis'
 import { formatDate } from './dates'
 import { whiteToMove } from './drill'
-import { ecoFamilyLabel } from './openings'
+import { getLocale } from './i18n/locale'
+import type { Locale } from './i18n/locale'
+import { ecoFamilyLabel, unknownOpeningLabel } from './openings'
 import { buildPositions } from './positions'
-import { describeMove, splitSanPiece } from './san'
+import { describeMove, pieceName, splitSanPiece } from './san'
 import { describeBetterMove, detectBlunderReason } from './tactics'
 import type { BlunderGroupStat, BlunderStats, Game, GameAnalysis, WorstBlunder } from './types'
 
@@ -55,13 +58,15 @@ function toGroupStats(groups: Map<string, GroupAcc>): BlunderGroupStat[] {
 
 /** The piece that moved, for grouping blunders by piece — pawn moves and
  *  castling have no leading piece letter in SAN, so they get their own
- *  buckets rather than falling through as "unknown". */
-function pieceKey(moveSan: string): { key: string; label: string } {
-  if (moveSan.startsWith('O-O')) return { key: 'castle', label: 'Castle' }
+ *  buckets rather than falling through as "unknown". Reuses `pieceName()`
+ *  (`lib/san.ts`) for the K/Q/R/B/N labels rather than its own copy of the
+ *  map, so a locale only needs translating once. */
+function pieceKey(moveSan: string, locale: Locale): { key: string; label: string } {
+  if (moveSan.startsWith('O-O'))
+    return { key: 'castle', label: locale === 'es' ? 'Enroque' : 'Castle' }
   const { piece } = splitSanPiece(moveSan)
-  if (!piece) return { key: 'pawn', label: 'Pawn' }
-  const labels = { K: 'King', Q: 'Queen', R: 'Rook', B: 'Bishop', N: 'Knight' }
-  return { key: piece, label: labels[piece] }
+  if (!piece) return { key: 'pawn', label: pieceName('p', locale) }
+  return { key: piece, label: pieceName(piece.toLowerCase() as PieceSymbol, locale) }
 }
 
 /**
@@ -73,6 +78,7 @@ function pieceKey(moveSan: string): { key: string; label: string } {
 export function buildBlunderStats(
   games: Game[],
   analysesByGameId: Map<string, GameAnalysis>,
+  locale: Locale = getLocale(),
 ): BlunderStats {
   const byOpening = new Map<string, GroupAcc>()
   const byPiece = new Map<string, GroupAcc>()
@@ -97,10 +103,10 @@ export function buildBlunderStats(
       const isMateSwing = blunder.evalBefore.mate !== null || blunder.evalAfter.mate !== null
 
       const ecoKey = game.ecoCode ?? 'unknown'
-      const ecoLabel = game.ecoName ? ecoFamilyLabel(game.ecoName) : 'Unknown opening'
+      const ecoLabel = game.ecoName ? ecoFamilyLabel(game.ecoName) : unknownOpeningLabel(locale)
       accumulate(byOpening, ecoKey, ecoLabel, blunder.swingCp, isMateSwing)
 
-      const { key, label } = pieceKey(blunder.moveSan)
+      const { key, label } = pieceKey(blunder.moveSan, locale)
       accumulate(byPiece, key, label, blunder.swingCp, isMateSwing)
 
       worst.push({
@@ -124,7 +130,7 @@ export function buildBlunderStats(
     return {
       ...entry,
       moveDescription: positions
-        ? describeMove(positions[entry.ply - 1], entry.moveSan)
+        ? describeMove(positions[entry.ply - 1], entry.moveSan, locale)
         : entry.moveSan,
       // `worst` entries are already filtered to the account's own moves, so
       // the mover is always `game.myColor` — no parity check needed here.
@@ -139,6 +145,7 @@ export function buildBlunderStats(
               entry.moveSan,
               entry.evalBefore.bestMove,
               game.myColor,
+              locale,
             )
           : null,
     }

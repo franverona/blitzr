@@ -1,3 +1,5 @@
+import { getLocale } from './i18n/locale'
+import type { Locale } from './i18n/locale'
 import type { Blunder, PositionEval } from './types'
 
 // A swing at or above this size (in centipawns, from the mover's own
@@ -87,19 +89,25 @@ export function evalBarPercent(evaluation: PositionEval): number {
 }
 
 /** A plain-language read of an eval, e.g. "White is winning", for anyone who doesn't
- * think in centipawns yet. */
-export function describeEval(evaluation: PositionEval): string {
+ *  think in centipawns yet. The Spanish templates all use a "X para {side}"
+ *  shape rather than mirroring English's subject-first "{side} is X" one —
+ *  keeps every tier grammatical without a per-tier verb conjugation. */
+export function describeEval(evaluation: PositionEval, locale: Locale = getLocale()): string {
+  const es = locale === 'es'
   if (evaluation.mate !== null) {
+    if (es) {
+      return evaluation.mate > 0 ? 'Mate forzado para las blancas' : 'Mate forzado para las negras'
+    }
     return evaluation.mate > 0 ? 'White has a forced mate' : 'Black has a forced mate'
   }
   const cp = evaluation.cp ?? 0
-  if (Math.abs(cp) < 50) return 'Equal position'
-  const side = cp > 0 ? 'White' : 'Black'
+  if (Math.abs(cp) < 50) return es ? 'Posición igualada' : 'Equal position'
+  const side = cp > 0 ? (es ? 'las blancas' : 'White') : es ? 'las negras' : 'Black'
   const abs = Math.abs(cp)
-  if (abs < 150) return `Slight edge for ${side}`
-  if (abs < 300) return `${side} is better`
-  if (abs < 700) return `${side} is winning`
-  return `${side} is completely winning`
+  if (abs < 150) return es ? `Ligera ventaja para ${side}` : `Slight edge for ${side}`
+  if (abs < 300) return es ? `Mejor para ${side}` : `${side} is better`
+  if (abs < 700) return es ? `Posición ganadora para ${side}` : `${side} is winning`
+  return es ? `Posición completamente ganadora para ${side}` : `${side} is completely winning`
 }
 
 /**
@@ -109,9 +117,10 @@ export function describeEval(evaluation: PositionEval): string {
  * just to make sure mate swings always cross the blunder threshold — so a
  * mate transition is described in words instead of a bogus "988.1 pawns".
  */
-export function formatSwing(blunder: Blunder): string {
+export function formatSwing(blunder: Blunder, locale: Locale = getLocale()): string {
   if (blunder.evalBefore.mate !== null || blunder.evalAfter.mate !== null) {
-    return describeEval(blunder.evalAfter).toLowerCase()
+    return describeEval(blunder.evalAfter, locale).toLowerCase()
   }
-  return `${(blunder.swingCp / 100).toFixed(1)} pawns`
+  const pawns = (blunder.swingCp / 100).toFixed(1)
+  return locale === 'es' ? `${pawns} peones` : `${pawns} pawns`
 }

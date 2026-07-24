@@ -228,7 +228,8 @@ than implying full coverage of your history.
 
 ## Learn
 
-On `/learn`, short plain-English lessons introduce common openings — not a repertoire, just the
+On `/learn`, short plain-language lessons (English and Spanish, see "Language" above) introduce
+common openings — not a repertoire, just the
 ideas behind one natural line, move by move. The index shows each one as a square card with a
 small preview of the position it leads to. Opening a lesson gives you a large interactive board
 to step through it, with each move getting its own one-line note on why it's played, right above

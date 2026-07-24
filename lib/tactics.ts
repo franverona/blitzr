@@ -1,9 +1,19 @@
 import { Chess } from 'chess.js'
 import type { Color, PieceSymbol, Square } from 'chess.js'
 import { describeHangingPieceReason, detectHangingPiece } from './hangingPiece'
+import { getLocale } from './i18n/locale'
+import type { Locale } from './i18n/locale'
 import { PIECE_VALUES } from './material'
-import { describeMove, PIECE_NAMES } from './san'
+import { describeMove, pieceName, pieceWithArticle } from './san'
 import type { BestMove, BlunderReason, ForkReason, MyColor, PinReason } from './types'
+
+// "a"/"al" is a genuine preposition here (expose the king TO the bishop),
+// not the optional personal-a for a direct object, so it can't just be
+// dropped like the direct-object "a" is everywhere else in this file —
+// contracts "a" + "el X" -> "al X", leaves "a" + "la X" as-is.
+function withPreposition(articled: string): string {
+  return articled.startsWith('el ') ? `al ${articled.slice(3)}` : `a ${articled}`
+}
 
 function toColor(color: MyColor): Color {
   return color === 'white' ? 'w' : 'b'
@@ -79,15 +89,19 @@ export function detectFork(
   }
 }
 
-function targetList(targets: ForkReason['targets']): string {
+function targetList(targets: ForkReason['targets'], locale: Locale): string {
+  const preposition = locale === 'es' ? 'en' : 'on'
+  const joiner = locale === 'es' ? ' y ' : ' and '
   return targets
-    .map((t) => `the ${PIECE_NAMES[t.piece as PieceSymbol].toLowerCase()} on ${t.square}`)
-    .join(' and ')
+    .map((t) => `${pieceWithArticle(t.piece as PieceSymbol, locale)} ${preposition} ${t.square}`)
+    .join(joiner)
 }
 
-export function describeForkReason(reason: ForkReason): string {
-  const attacker = PIECE_NAMES[reason.attackerPiece as PieceSymbol].toLowerCase()
-  return `This allows a fork — the ${attacker} on ${reason.attackerSquare} now attacks ${targetList(reason.targets)} at once.`
+export function describeForkReason(reason: ForkReason, locale: Locale = getLocale()): string {
+  const attacker = pieceWithArticle(reason.attackerPiece as PieceSymbol, locale)
+  return locale === 'es'
+    ? `Esto permite una horquilla — ${attacker} en ${reason.attackerSquare} ahora ataca ${targetList(reason.targets, locale)} a la vez.`
+    : `This allows a fork — ${attacker} on ${reason.attackerSquare} now attacks ${targetList(reason.targets, locale)} at once.`
 }
 
 const ROOK_DIRECTIONS: readonly [number, number][] = [
@@ -209,10 +223,12 @@ export function detectPin(
   }
 }
 
-export function describePinReason(reason: PinReason): string {
-  const pinned = PIECE_NAMES[reason.pinnedPiece as PieceSymbol].toLowerCase()
-  const pinner = PIECE_NAMES[reason.pinnerPiece as PieceSymbol].toLowerCase()
-  return `This pins the ${pinned} on ${reason.pinnedSquare} to the king — it can't move without exposing the king to the ${pinner} on ${reason.pinnerSquare}.`
+export function describePinReason(reason: PinReason, locale: Locale = getLocale()): string {
+  const pinned = pieceWithArticle(reason.pinnedPiece as PieceSymbol, locale)
+  const pinner = pieceWithArticle(reason.pinnerPiece as PieceSymbol, locale)
+  return locale === 'es'
+    ? `Esto clava ${pinned} en ${reason.pinnedSquare} al rey — no puede moverse sin exponer el rey ${withPreposition(pinner)} en ${reason.pinnerSquare}.`
+    : `This pins ${pinned} on ${reason.pinnedSquare} to the king — it can't move without exposing the king to ${pinner} on ${reason.pinnerSquare}.`
 }
 
 /** Tries `detectHangingPiece` first, then `detectFork`, then `detectPin` —
@@ -230,10 +246,10 @@ export function detectBlunderReason(
   )
 }
 
-export function describeBlunderReason(reason: BlunderReason): string {
-  if (reason.kind === 'hanging-piece') return describeHangingPieceReason(reason)
-  if (reason.kind === 'fork') return describeForkReason(reason)
-  return describePinReason(reason)
+export function describeBlunderReason(reason: BlunderReason, locale: Locale = getLocale()): string {
+  if (reason.kind === 'hanging-piece') return describeHangingPieceReason(reason, locale)
+  if (reason.kind === 'fork') return describeForkReason(reason, locale)
+  return describePinReason(reason, locale)
 }
 
 /**
@@ -254,6 +270,7 @@ export function explainBestMove(
   fenBefore: string,
   bestMoveSan: string,
   moverColor: MyColor,
+  locale: Locale = getLocale(),
 ): string | null {
   let fenAfter: string
   try {
@@ -262,31 +279,48 @@ export function explainBestMove(
     return null
   }
   const opponent: MyColor = moverColor === 'white' ? 'black' : 'white'
+  const es = locale === 'es'
 
   const saved = detectHangingPiece(fenAfter, fenBefore, moverColor)
   if (saved) {
-    return `Saves the ${PIECE_NAMES[saved.piece as PieceSymbol].toLowerCase()} on ${saved.square}, which was hanging.`
+    const piece = pieceWithArticle(saved.piece as PieceSymbol, locale)
+    return es
+      ? `Salva ${piece} en ${saved.square}, que estaba colgando.`
+      : `Saves ${piece} on ${saved.square}, which was hanging.`
   }
 
   const escaped = detectFork(fenAfter, fenBefore, moverColor)
-  if (escaped) return `Gets ${targetList(escaped.targets)} out of the fork.`
+  if (escaped) {
+    const targets = targetList(escaped.targets, locale)
+    return es ? `Saca ${targets} de la horquilla.` : `Gets ${targets} out of the fork.`
+  }
 
   const unpinned = detectPin(fenAfter, fenBefore, moverColor)
   if (unpinned) {
-    return `Frees the ${PIECE_NAMES[unpinned.pinnedPiece as PieceSymbol].toLowerCase()} on ${unpinned.pinnedSquare} from the pin.`
+    const piece = pieceWithArticle(unpinned.pinnedPiece as PieceSymbol, locale)
+    return es
+      ? `Libera ${piece} en ${unpinned.pinnedSquare} de la clavada.`
+      : `Frees ${piece} on ${unpinned.pinnedSquare} from the pin.`
   }
 
   const wins = detectHangingPiece(fenBefore, fenAfter, opponent)
   if (wins) {
-    return `Leaves the opponent's ${PIECE_NAMES[wins.piece as PieceSymbol].toLowerCase()} on ${wins.square} hanging.`
+    return es
+      ? `Deja colgando ${pieceWithArticle(wins.piece as PieceSymbol, locale)} del rival en ${wins.square}.`
+      : `Leaves the opponent's ${pieceName(wins.piece as PieceSymbol, locale).toLowerCase()} on ${wins.square} hanging.`
   }
 
   const forks = detectFork(fenBefore, fenAfter, opponent)
-  if (forks) return `Forks ${targetList(forks.targets)} at once.`
+  if (forks) {
+    const targets = targetList(forks.targets, locale)
+    return es ? `Hace una horquilla sobre ${targets} a la vez.` : `Forks ${targets} at once.`
+  }
 
   const pins = detectPin(fenBefore, fenAfter, opponent)
   if (pins) {
-    return `Pins the opponent's ${PIECE_NAMES[pins.pinnedPiece as PieceSymbol].toLowerCase()} on ${pins.pinnedSquare} to their king.`
+    return es
+      ? `Clava ${pieceWithArticle(pins.pinnedPiece as PieceSymbol, locale)} del rival en ${pins.pinnedSquare} a su rey.`
+      : `Pins the opponent's ${pieceName(pins.pinnedPiece as PieceSymbol, locale).toLowerCase()} on ${pins.pinnedSquare} to their king.`
   }
 
   return null
@@ -302,6 +336,8 @@ export function explainBestMove(
  */
 function formatPlan(bestLine: string[] | undefined): string | null {
   if (!bestLine || bestLine.length === 0) return null
+  // "Plan" reads naturally in Spanish too (a common cognate in Spanish chess
+  // commentary) — no separate translation needed for the lead-in word.
   return `Plan: ${bestLine.join(' ')}.`
 }
 
@@ -317,11 +353,12 @@ export function describeBetterMove(
   moveSan: string,
   bestMove: BestMove | null,
   moverColor: MyColor,
+  locale: Locale = getLocale(),
 ): string | null {
   if (!bestMove || bestMove.san === moveSan) return null
-  const description = describeMove(fenBefore, bestMove.san)
+  const description = describeMove(fenBefore, bestMove.san, locale)
   const clauses = [
-    explainBestMove(fenBefore, bestMove.san, moverColor),
+    explainBestMove(fenBefore, bestMove.san, moverColor, locale),
     formatPlan(bestMove.bestLine),
   ].filter((clause): clause is string => Boolean(clause))
   return clauses.length

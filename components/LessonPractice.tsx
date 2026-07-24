@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { getLocale } from '@/lib/i18n/locale'
 import { getStrings } from '@/lib/i18n/strings'
 import type { LessonGameStats as LessonGameStatsData, OpeningLesson } from '@/lib/types'
 import { AboutOpeningButton } from './AboutOpeningButton'
@@ -30,6 +31,7 @@ export function LessonPractice({
 }) {
   const [mode, setMode] = useState<Mode>('study')
   const s = getStrings()
+  const locale = getLocale()
   const movesSan = lesson.moves.map((move) => move.san)
 
   return (
@@ -42,7 +44,7 @@ export function LessonPractice({
     >
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-xl font-semibold">{lesson.name}</h1>
+          <h1 className="text-xl font-semibold">{lesson.name[locale]}</h1>
           <div className="flex items-center gap-2">
             <ModeTab
               label={s.lessonPractice.study}
@@ -58,8 +60,8 @@ export function LessonPractice({
             {mode === 'study' && <BoardNavControls />}
             <FlipBoardButton />
             <AboutOpeningButton
-              name={lesson.name}
-              summary={lesson.summary}
+              name={lesson.name[locale]}
+              summary={lesson.summary[locale]}
               sourceUrl={lesson.sourceUrl}
             />
           </div>
