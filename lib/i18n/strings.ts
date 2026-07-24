@@ -296,7 +296,7 @@ const es: Strings = {
     betterWas: 'Mejor era',
     color: { white: 'Blancas', black: 'Negras' },
     result: { win: 'Victoria', draw: 'Tablas', loss: 'Derrota' },
-    timeClass: { bullet: 'Bala', blitz: 'Blitz', rapid: 'Rápidas', daily: 'Por correspondencia' },
+    timeClass: { bullet: 'Bala', blitz: 'Blitz', rapid: 'Rápidas', daily: 'Diaria' },
     pawns: (n: number) => `${n.toFixed(1)} peones`,
   },
   nav: {
