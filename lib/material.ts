@@ -1,5 +1,7 @@
 import { Chess } from 'chess.js'
 import type { PieceSymbol } from 'chess.js'
+import { getLocale } from './i18n/locale'
+import type { Locale } from './i18n/locale'
 
 export const PIECE_VALUES: Partial<Record<PieceSymbol, number>> = {
   p: 1,
@@ -26,7 +28,7 @@ export function materialDiff(fen: string): number {
 }
 
 /** Formats a material difference for display, e.g. 2 -> "+2", -3 -> "-3", 0 -> "Even". */
-export function formatMaterialDiff(diff: number): string {
-  if (diff === 0) return 'Even'
+export function formatMaterialDiff(diff: number, locale: Locale = getLocale()): string {
+  if (diff === 0) return locale === 'es' ? 'Igual' : 'Even'
   return diff > 0 ? `+${diff}` : `${diff}`
 }

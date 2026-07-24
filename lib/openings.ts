@@ -1,4 +1,13 @@
+import { getLocale } from './i18n/locale'
+import type { Locale } from './i18n/locale'
 import type { Game, MyResult, OpeningFamily, OpeningLine } from './types'
+
+/** Display label for the "no ECO code" bucket — shared with `lib/blunders.ts`,
+ *  which groups by the same fallback. Not to be confused with the internal
+ *  `'Unknown'` map key below, which is data, not display text. */
+export function unknownOpeningLabel(locale: Locale = getLocale()): string {
+  return locale === 'es' ? 'Apertura desconocida' : 'Unknown opening'
+}
 
 interface ScoreAcc {
   games: number
@@ -32,7 +41,7 @@ export function ecoFamilyLabel(ecoName: string): string {
  * named lines nested underneath. Games with no ECO code (very short games)
  * are bucketed under a null-coded "Unknown" family.
  */
-export function buildOpeningFamilies(games: Game[]): OpeningFamily[] {
+export function buildOpeningFamilies(games: Game[], locale: Locale = getLocale()): OpeningFamily[] {
   const families = new Map<
     string,
     {
@@ -59,7 +68,7 @@ export function buildOpeningFamilies(games: Game[]): OpeningFamily[] {
     addResult(family.overall, game.myResult)
     addResult(game.myColor === 'white' ? family.white : family.black, game.myResult)
 
-    const label = game.ecoName ? ecoFamilyLabel(game.ecoName) : 'Unknown opening'
+    const label = game.ecoName ? ecoFamilyLabel(game.ecoName) : unknownOpeningLabel(locale)
     family.labelCounts.set(label, (family.labelCounts.get(label) ?? 0) + 1)
 
     const lineKey = game.ecoName ?? 'Unknown'
@@ -71,7 +80,7 @@ export function buildOpeningFamilies(games: Game[]): OpeningFamily[] {
 
   const result: OpeningFamily[] = []
   for (const [ecoCode, family] of families) {
-    let bestLabel = 'Unknown opening'
+    let bestLabel = unknownOpeningLabel(locale)
     let bestCount = -1
     for (const [label, count] of family.labelCounts) {
       if (count > bestCount) {

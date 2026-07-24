@@ -36,4 +36,8 @@ describe('formatMaterialDiff', () => {
   it('formats zero as Even', () => {
     expect(formatMaterialDiff(0)).toBe('Even')
   })
+
+  it('formats zero as Igual in Spanish', () => {
+    expect(formatMaterialDiff(0, 'es')).toBe('Igual')
+  })
 })

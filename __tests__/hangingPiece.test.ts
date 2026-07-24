@@ -63,4 +63,13 @@ describe('describeHangingPieceReason', () => {
       'This leaves the queen on d5 hanging — it can be captured for free.',
     )
   })
+
+  it('formats a plain-Spanish hanging-piece message', () => {
+    expect(
+      describeHangingPieceReason({ kind: 'hanging-piece', piece: 'n', square: 'f3' }, 'es'),
+    ).toBe('Esto deja el caballo en f3 colgando — se puede capturar gratis.')
+    expect(
+      describeHangingPieceReason({ kind: 'hanging-piece', piece: 'q', square: 'd5' }, 'es'),
+    ).toBe('Esto deja la dama en d5 colgando — se puede capturar gratis.')
+  })
 })
