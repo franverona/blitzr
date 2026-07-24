@@ -253,7 +253,8 @@ const en = {
   learnPage: {
     title: 'Learn',
     intro:
-      'Short, plain-English introductions to common openings — not a repertoire, just the ideas behind one natural line, move by move.',
+      'Short, plain-language introductions to common openings and endgames — not a repertoire, just the ideas behind one natural line, move by move.',
+    endgames: 'Endgames',
   },
   openingsPage: {
     title: 'Openings',
@@ -545,7 +546,8 @@ const es: Strings = {
   learnPage: {
     title: 'Aprender',
     intro:
-      'Introducciones breves y en lenguaje sencillo a aperturas comunes — no es un repertorio, solo las ideas detrás de una línea natural, jugada por jugada.',
+      'Introducciones breves y en lenguaje sencillo a aperturas y finales comunes — no es un repertorio, solo las ideas detrás de una línea natural, jugada por jugada.',
+    endgames: 'Finales',
   },
   openingsPage: {
     title: 'Aperturas',

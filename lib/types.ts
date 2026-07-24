@@ -65,24 +65,33 @@ export interface SyncResult {
   gamesUpserted: number
 }
 
-/** One move in an `OpeningLesson`'s line, with a short plain-language note on
- *  why it's played — shown for whichever ply the lesson board is currently
- *  on. Keyed by `Locale` (not a plain string) since this is hand-authored
+/** One move in a `Lesson`'s line, with a short plain-language note on why
+ *  it's played — shown for whichever ply the lesson board is currently on.
+ *  Keyed by `Locale` (not a plain string) since this is hand-authored
  *  content translated alongside the rest of the app, not generated text. */
-export interface OpeningLessonMove {
+export interface LessonMove {
   san: string
   explanation: Record<Locale, string>
 }
 
-/** A hand-authored "learn openings" lesson — see lib/openingTheory.ts. Static
- *  content shipped with the app, not stored data, so this has no repository
- *  method of its own. */
-export interface OpeningLesson {
+/** A hand-authored lesson — either an opening (`lib/openingTheory.ts`) or an
+ *  endgame (`lib/endgameTheory.ts`), same shape for both since they share
+ *  every rendering component (`components/LessonPractice.tsx` and friends).
+ *  Static content shipped with the app, not stored data, so this has no
+ *  repository method of its own. */
+export interface Lesson {
   slug: string
   name: Record<Locale, string>
-  /** The line from the start position — deliberately short (a handful of
-   *  plies showing one natural continuation), not a deep repertoire line. */
-  moves: OpeningLessonMove[]
+  /** Openings always start from the standard position; endgames need their
+   *  own constructed FEN (e.g. king + queen vs. lone king) — carried on the
+   *  data itself rather than a hardcoded constant in the board component,
+   *  since it now varies per lesson. */
+  initialFen: string
+  /** The line from `initialFen` — deliberately short (a handful of plies
+   *  showing one natural continuation), not a deep repertoire line. For an
+   *  endgame lesson this runs all the way to an actual checkmate or, for
+   *  the pawn-ending lesson, to the pawn queening. */
+  moves: LessonMove[]
   summary: Record<Locale, string>
   sourceUrl: string
   /** Which side this lesson is framed around — e.g. White for "King's Pawn
@@ -95,8 +104,11 @@ export interface OpeningLesson {
 }
 
 /** How many of the account's own synced games actually reached (played at
- *  least as far as) an `OpeningLesson`'s exact move sequence — see
- *  `countGamesReachingLine()` in `lib/openingTheory.ts`. Deliberately not
+ *  least as far as) an opening `Lesson`'s exact move sequence — see
+ *  `countGamesReachingLine()` in `lib/openingTheory.ts`. Opening-specific
+ *  (endgame lessons don't have an equivalent — a game doesn't "reach" an
+ *  endgame position via a fixed move prefix from move 1 the way it does an
+ *  opening line). Deliberately not
  *  matched via Chess.com's ECO code/name: a lesson's line is usually just a
  *  tabiya (e.g. the position right after 3.Bb5, before Black even replies),
  *  and real games almost always continue into a deeper, more specific named

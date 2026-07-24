@@ -26,7 +26,7 @@ every analyzed game so you can see what actually keeps going wrong.
 Published-Data API under their terms. It does not use Chess.com's name, logos, or marks in
 any way that implies endorsement or affiliation.
 
-## Status: Phase 6
+## Status: Phase 7
 
 - [x] Config for your Chess.com username
 - [x] Incremental sync of your games into SQLite
@@ -36,6 +36,7 @@ any way that implies endorsement or affiliation.
 - [x] Phase 4 — spaced-repetition drilling
 - [x] Phase 5 — cross-game recurring-blunders aggregate
 - [x] Phase 6 — hand-authored opening lessons with an interactive board
+- [x] Phase 7 — hand-authored endgame lessons alongside them
 
 ## Stack
 
@@ -229,22 +230,30 @@ than implying full coverage of your history.
 ## Learn
 
 On `/learn`, short plain-language lessons (English and Spanish, see "Language" above) introduce
-common openings — not a repertoire, just the
-ideas behind one natural line, move by move. The index shows each one as a square card with a
-small preview of the position it leads to. Opening a lesson gives you a large interactive board
-to step through it, with each move getting its own one-line note on why it's played, right above
-the board — a flip button next to the board controls lets you view the line from either side.
-14 lessons are here so far, spanning every major first move and both colors — King's Pawn
+common openings and endgames — not a repertoire, just the ideas behind one natural line, move by
+move. The index shows each one as a square card with a small preview of the position it leads to,
+switched between an "Openings" and an "Endgames" tab. Opening a lesson gives you a large
+interactive board to step through it, with each move getting its own one-line note on why it's
+played, right above the board — a flip button next to the board controls lets you view the line
+from either side.
+
+**Openings**: 14 lessons so far, spanning every major first move and both colors — King's Pawn
 Opening, Sicilian Defense, French Defense, Queen's Gambit, Italian Game, Caro-Kann Defense,
 Scandinavian Defense, King's Indian Defense, English Opening, Nimzo-Indian Defense, Grünfeld
 Defense, King's Gambit, Scotch Game, and Pirc Defense — not a full opening encyclopedia, but
-adding more from here is just a content-only change.
+adding more from here is just a content-only change. Adapted from a specific page of Wikibooks'
+[Chess Opening Theory](https://en.wikibooks.org/wiki/Chess_Opening_Theory/1._e4) (CC BY-SA).
+
+**Endgames**: 3 lessons so far — King and Queen vs. King, King and Rook vs. King, and King and
+Pawn vs. King (opposition) — each one a complete, real technique demonstration that plays all the
+way to an actual checkmate (or, for the pawn ending, to the pawn promoting), not just a tabiya.
+Adapted from a different chapter of the same Wikibooks book,
+[Chess/The Endgame](https://en.wikibooks.org/wiki/Chess/The_Endgame).
+
 The overall summary lives behind a "?" button next to the board controls rather than always
 taking up space on the page — worth reading once, not on every visit. Summaries are written in
-original wording rather than reproduced from any source — each lesson is adapted from a specific
-page of Wikibooks' [Chess Opening
-Theory](https://en.wikibooks.org/wiki/Chess_Opening_Theory/1._e4) (CC BY-SA), with a link back
-(opens in a new tab) for attribution and further reading.
+original wording rather than reproduced from any source, with a link back (opens in a new tab)
+for attribution and further reading.
 
 A **Quiz** tab next to Study switches from reading the line to playing it from memory: you're only
 tested on one side (whichever color the board is currently oriented to — defaults to the side the
@@ -258,11 +267,13 @@ position when you finish, alongside how many mistakes and hints it took. It's fu
 self-contained to this page — no spaced repetition, no saved progress — the deliberately
 lightweight way to actually test what you just read instead of only skimming it.
 
-Each lesson also cross-links to your own Chess.com history: "You've played this in N of your
-games (WW/DD/LL)" (or a note that you haven't yet), linking through to `/openings`. This checks
-your synced games' actual moves against the lesson's line, rather than Chess.com's ECO
+Each _opening_ lesson also cross-links to your own Chess.com history: "You've played this in N of
+your games (WW/DD/LL)" (or a note that you haven't yet), linking through to `/openings`. This
+checks your synced games' actual moves against the lesson's line, rather than Chess.com's ECO
 categorization — a lesson teaches a starting position, but real games almost always continue past
 it into a more specific named variation, which is what Chess.com actually tags the game with.
+Endgame lessons skip this line entirely — a game doesn't "reach" a constructed endgame position
+the way it reaches an opening tabiya.
 
 ## Data hygiene
 

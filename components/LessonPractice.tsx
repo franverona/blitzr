@@ -4,14 +4,12 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { getLocale } from '@/lib/i18n/locale'
 import { getStrings } from '@/lib/i18n/strings'
-import type { LessonGameStats as LessonGameStatsData, OpeningLesson } from '@/lib/types'
+import type { Lesson, LessonGameStats as LessonGameStatsData } from '@/lib/types'
 import { AboutOpeningButton } from './AboutOpeningButton'
 import { BoardNavControls, BoardProvider, BoardView } from './Board'
 import { FlipBoardButton } from './FlipBoardButton'
 import { LessonQuiz } from './LessonQuiz'
 import { MoveExplanation } from './MoveExplanation'
-
-const START_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 
 type Mode = 'study' | 'quiz'
 
@@ -24,10 +22,14 @@ export function LessonPractice({
   lesson,
   gameStats,
 }: {
-  lesson: OpeningLesson
+  lesson: Lesson
   /** How many of the account's own synced games reached this lesson's exact
-   *  line, computed server-side in `app/learn/[slug]/page.tsx`. */
-  gameStats: LessonGameStatsData
+   *  line, computed server-side in `app/learn/[slug]/page.tsx` — only
+   *  meaningful for an opening lesson (a game doesn't "reach" an endgame
+   *  position via a move prefix from move 1), so `null` for an endgame
+   *  lesson skips the section entirely rather than showing a nonsense
+   *  "0 games" line. */
+  gameStats: LessonGameStatsData | null
 }) {
   const [mode, setMode] = useState<Mode>('study')
   const s = getStrings()
@@ -37,7 +39,7 @@ export function LessonPractice({
   return (
     <BoardProvider
       key={mode}
-      initialFen={START_FEN}
+      initialFen={lesson.initialFen}
       movesSan={movesSan}
       boardOrientation={lesson.primaryColor}
       initialPly={mode === 'study' ? 1 : 0}
@@ -66,7 +68,7 @@ export function LessonPractice({
             />
           </div>
         </div>
-        <LessonGameStats stats={gameStats} />
+        {gameStats && <LessonGameStats stats={gameStats} />}
         <MoveExplanation moves={lesson.moves} />
         {mode === 'study' ? <BoardView boardMaxWidthClassName="max-w-172" /> : <LessonQuiz />}
       </div>
