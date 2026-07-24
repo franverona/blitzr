@@ -6,6 +6,8 @@ import { getStrings } from '@/lib/i18n/strings'
 // Same circular "?" + centered native <dialog> convention as RepertoireBoard's
 // HelpButton — the summary is "read once" content, so it belongs behind a
 // toggle next to the board's nav controls rather than always on screen.
+// Content-agnostic despite the name (just name/summary/sourceUrl props) —
+// used for both opening and endgame lessons.
 export function AboutOpeningButton({
   name,
   summary,

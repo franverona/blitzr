@@ -1,4 +1,6 @@
-import type { Game, LessonGameStats, OpeningLesson } from './types'
+import type { Game, Lesson, LessonGameStats } from './types'
+
+const START_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 
 // Summaries here are paraphrased in original wording, not reproduced from the
 // source — the source is CC BY-SA (share-alike) and this repo is MIT, so
@@ -7,10 +9,11 @@ import type { Game, LessonGameStats, OpeningLesson } from './types'
 // back for attribution and further reading sidesteps that entirely. The
 // Spanish text is my own translation of that same original wording, not a
 // separate paraphrase of the source — no additional licensing concern there.
-export const OPENING_LESSONS: OpeningLesson[] = [
+export const OPENING_LESSONS: Lesson[] = [
   {
     slug: 'kings-pawn-opening',
     name: { en: "King's Pawn Opening", es: 'Apertura de Peón de Rey' },
+    initialFen: START_FEN,
     moves: [
       {
         san: 'e4',
@@ -58,6 +61,7 @@ export const OPENING_LESSONS: OpeningLesson[] = [
   {
     slug: 'sicilian-defense',
     name: { en: 'Sicilian Defense', es: 'Defensa Siciliana' },
+    initialFen: START_FEN,
     moves: [
       {
         san: 'e4',
@@ -112,6 +116,7 @@ export const OPENING_LESSONS: OpeningLesson[] = [
   {
     slug: 'french-defense',
     name: { en: 'French Defense', es: 'Defensa Francesa' },
+    initialFen: START_FEN,
     moves: [
       {
         san: 'e4',
@@ -159,6 +164,7 @@ export const OPENING_LESSONS: OpeningLesson[] = [
   {
     slug: 'queens-gambit',
     name: { en: "Queen's Gambit", es: 'Gambito de Dama' },
+    initialFen: START_FEN,
     moves: [
       {
         san: 'd4',
@@ -213,6 +219,7 @@ export const OPENING_LESSONS: OpeningLesson[] = [
   {
     slug: 'italian-game',
     name: { en: 'Italian Game', es: 'Apertura Italiana' },
+    initialFen: START_FEN,
     moves: [
       {
         san: 'e4',
@@ -268,6 +275,7 @@ export const OPENING_LESSONS: OpeningLesson[] = [
   {
     slug: 'caro-kann-defense',
     name: { en: 'Caro-Kann Defense', es: 'Defensa Caro-Kann' },
+    initialFen: START_FEN,
     moves: [
       {
         san: 'e4',
@@ -336,6 +344,7 @@ export const OPENING_LESSONS: OpeningLesson[] = [
   {
     slug: 'scandinavian-defense',
     name: { en: 'Scandinavian Defense', es: 'Defensa Escandinava' },
+    initialFen: START_FEN,
     moves: [
       {
         san: 'e4',
@@ -390,6 +399,7 @@ export const OPENING_LESSONS: OpeningLesson[] = [
   {
     slug: 'kings-indian-defense',
     name: { en: "King's Indian Defense", es: 'Defensa India de Rey' },
+    initialFen: START_FEN,
     moves: [
       {
         san: 'd4',
@@ -445,6 +455,7 @@ export const OPENING_LESSONS: OpeningLesson[] = [
   {
     slug: 'english-opening',
     name: { en: 'English Opening', es: 'Apertura Inglesa' },
+    initialFen: START_FEN,
     moves: [
       {
         san: 'c4',
@@ -499,6 +510,7 @@ export const OPENING_LESSONS: OpeningLesson[] = [
   {
     slug: 'nimzo-indian-defense',
     name: { en: 'Nimzo-Indian Defense', es: 'Defensa Nimzoindia' },
+    initialFen: START_FEN,
     moves: [
       {
         san: 'd4',
@@ -554,6 +566,7 @@ export const OPENING_LESSONS: OpeningLesson[] = [
   {
     slug: 'grunfeld-defense',
     name: { en: 'Grünfeld Defense', es: 'Defensa Grünfeld' },
+    initialFen: START_FEN,
     moves: [
       {
         san: 'd4',
@@ -609,6 +622,7 @@ export const OPENING_LESSONS: OpeningLesson[] = [
   {
     slug: 'kings-gambit',
     name: { en: "King's Gambit", es: 'Gambito de Rey' },
+    initialFen: START_FEN,
     moves: [
       {
         san: 'e4',
@@ -656,6 +670,7 @@ export const OPENING_LESSONS: OpeningLesson[] = [
   {
     slug: 'scotch-game',
     name: { en: 'Scotch Game', es: 'Apertura Escocesa' },
+    initialFen: START_FEN,
     moves: [
       {
         san: 'e4',
@@ -711,6 +726,7 @@ export const OPENING_LESSONS: OpeningLesson[] = [
   {
     slug: 'pirc-defense',
     name: { en: 'Pirc Defense', es: 'Defensa Pirc' },
+    initialFen: START_FEN,
     moves: [
       {
         san: 'e4',
@@ -764,7 +780,7 @@ export const OPENING_LESSONS: OpeningLesson[] = [
   },
 ]
 
-export function getOpeningLesson(slug: string): OpeningLesson | undefined {
+export function getOpeningLesson(slug: string): Lesson | undefined {
   return OPENING_LESSONS.find((lesson) => lesson.slug === slug)
 }
 
