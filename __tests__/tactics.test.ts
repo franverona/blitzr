@@ -59,6 +59,27 @@ describe('describeForkReason', () => {
   })
 })
 
+describe('describeForkReason (Spanish)', () => {
+  it('formats a plain-Spanish fork message', () => {
+    expect(
+      describeForkReason(
+        {
+          kind: 'fork',
+          attackerPiece: 'n',
+          attackerSquare: 'b5',
+          targets: [
+            { piece: 'q', square: 'c7' },
+            { piece: 'r', square: 'a7' },
+          ],
+        },
+        'es',
+      ),
+    ).toBe(
+      'Esto permite una horquilla — el caballo en b5 ahora ataca la dama en c7 y la torre en a7 a la vez.',
+    )
+  })
+})
+
 describe('detectPin', () => {
   it('flags a piece newly pinned to its own king by an enemy slider', () => {
     // Black knight steps from f8 (safe) to e6, walking onto the c4-g8
@@ -110,6 +131,42 @@ describe('describePinReason', () => {
       }),
     ).toBe(
       "This pins the knight on e6 to the king — it can't move without exposing the king to the bishop on c4.",
+    )
+  })
+})
+
+describe('describePinReason (Spanish)', () => {
+  it('formats a plain-Spanish pin message', () => {
+    expect(
+      describePinReason(
+        {
+          kind: 'pin',
+          pinnedPiece: 'n',
+          pinnedSquare: 'e6',
+          pinnerPiece: 'b',
+          pinnerSquare: 'c4',
+        },
+        'es',
+      ),
+    ).toBe(
+      'Esto clava el caballo en e6 al rey — no puede moverse sin exponer el rey al alfil en c4.',
+    )
+  })
+
+  it('uses the "a la" preposition form for a feminine pinner', () => {
+    expect(
+      describePinReason(
+        {
+          kind: 'pin',
+          pinnedPiece: 'n',
+          pinnedSquare: 'e6',
+          pinnerPiece: 'r',
+          pinnerSquare: 'e1',
+        },
+        'es',
+      ),
+    ).toBe(
+      'Esto clava el caballo en e6 al rey — no puede moverse sin exponer el rey a la torre en e1.',
     )
   })
 })
@@ -300,6 +357,19 @@ describe('describeBetterMove', () => {
         'white',
       ),
     ).toBe("Ra1 (Rook to a1) — Leaves the opponent's knight on a7 hanging. Plan: Nb5 Rxb5.")
+  })
+
+  it('describes the mechanical part in Spanish when the locale is es', () => {
+    const before = '7k/8/8/8/8/8/8/R6K w - - 0 1'
+    expect(
+      describeBetterMove(
+        before,
+        'Kg2',
+        { from: 'a1', to: 'a5', san: 'Ra5', bestLine: [] },
+        'white',
+        'es',
+      ),
+    ).toBe('Ra5 (Torre a a5)')
   })
 
   it('omits the plan clause for a game_analysis row saved before bestLine existed', () => {

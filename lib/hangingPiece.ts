@@ -1,7 +1,9 @@
 import { Chess } from 'chess.js'
 import type { Color, PieceSymbol, Square } from 'chess.js'
+import { getLocale } from './i18n/locale'
+import type { Locale } from './i18n/locale'
 import { PIECE_VALUES } from './material'
-import { PIECE_NAMES } from './san'
+import { pieceWithArticle } from './san'
 import type { HangingPieceReason, MyColor } from './types'
 
 function toColor(color: MyColor): Color {
@@ -58,7 +60,12 @@ export function detectHangingPiece(
   return worst ? { kind: 'hanging-piece', piece: worst.piece, square: worst.square } : null
 }
 
-export function describeHangingPieceReason(reason: HangingPieceReason): string {
-  const piece = PIECE_NAMES[reason.piece as PieceSymbol].toLowerCase()
-  return `This leaves the ${piece} on ${reason.square} hanging — it can be captured for free.`
+export function describeHangingPieceReason(
+  reason: HangingPieceReason,
+  locale: Locale = getLocale(),
+): string {
+  const piece = pieceWithArticle(reason.piece as PieceSymbol, locale)
+  return locale === 'es'
+    ? `Esto deja ${piece} en ${reason.square} colgando — se puede capturar gratis.`
+    : `This leaves ${piece} on ${reason.square} hanging — it can be captured for free.`
 }
