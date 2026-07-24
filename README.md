@@ -158,13 +158,16 @@ material count (a plain piece-value tally — no engine needed, works even befor
 analyzed) show up alongside the board. Blunder lists spell moves out in plain English too
 ("Queen captures pawn on f6, check"), not just algebraic notation — and where a blunder simply
 hangs a piece (left attacked and undefended, capturable for free), lets the opponent fork two
-pieces at once, or pins a piece to your king, a line explains that too ("This leaves the queen on
-f6 hanging — it can be captured for free" / "This allows a fork — the knight on b5 now attacks
-the queen on c7 and the rook on a7 at once" / "This pins the knight on c6 to the king — it can't
-move without exposing the king to the bishop on b5"). All three checks are intentionally simple
-(no evaluation of unequal trades, no relative pins to anything other than the king, no simulation
-of a future opponent move creating a fork) — they won't catch every kind of mistake, so plenty of
-blunders show no reason at all, just the eval swing.
+pieces at once, skewers a piece into exposing a less valuable one behind it, or pins a piece to
+your king, a line explains that too ("This leaves the queen on f6 hanging — it can be captured for
+free" / "This allows a fork — the knight on b5 now attacks the queen on c7 and the rook on a7 at
+once" / "This skewers the queen on d5 — if it moves, the bishop on c4 captures the rook on g8" /
+"This pins the knight on c6 to the king — it can't move without exposing the king to the bishop on
+b5"). A "How to read this" glossary alongside the blunder list spells out each of these terms in
+plain language too. All four checks are intentionally simple (no evaluation of unequal trades, no
+relative pins to anything other than the king, no simulation of a future opponent move creating a
+fork or skewer) — they won't catch every kind of mistake, so plenty of blunders show no reason at
+all, just the eval swing.
 
 Each blunder also names the engine's suggested move instead, with a plain-English description and
 — when the same simple checks explain it — why it's actually better ("better was Nd7 (Knight to
