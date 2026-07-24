@@ -6,6 +6,8 @@ import { NavLinks } from '@/components/NavLinks'
 import { PlayerAvatar } from '@/components/PlayerAvatar'
 import { fetchPlayerAvatar } from '@/lib/chesscom/client'
 import { getChesscomUsername } from '@/lib/config'
+import { getLocale } from '@/lib/i18n/locale'
+import { getStrings } from '@/lib/i18n/strings'
 import './globals.css'
 
 const geistSans = Geist({
@@ -19,9 +21,8 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Blitzr',
-  description:
-    'Train on your own blunders, not generic puzzles — a local chess trainer built from your real Chess.com games.',
+  title: getStrings().metadata.title,
+  description: getStrings().metadata.description,
 }
 
 export const viewport: Viewport = {
@@ -46,7 +47,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
 
   return (
     <html
-      lang="en"
+      lang={getLocale()}
       className={`dark ${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex h-full overflow-hidden bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">

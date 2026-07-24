@@ -2,15 +2,16 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { getStrings } from '@/lib/i18n/strings'
 
-const LINKS = [
-  { href: '/', label: 'Games' },
-  { href: '/openings', label: 'Openings' },
-  { href: '/learn', label: 'Learn' },
-  { href: '/repertoire', label: 'Repertoire' },
-  { href: '/drill', label: 'Drill' },
-  { href: '/blunders', label: 'Blunders' },
-]
+const LINK_ROUTES = [
+  { href: '/', key: 'games' },
+  { href: '/openings', key: 'openings' },
+  { href: '/learn', key: 'learn' },
+  { href: '/repertoire', key: 'repertoire' },
+  { href: '/drill', key: 'drill' },
+  { href: '/blunders', key: 'blunders' },
+] as const
 
 // Nested detail routes don't share their section's own path prefix in one
 // case: game pages live under /games/:id, not under the Games link's own
@@ -23,10 +24,11 @@ function isLinkActive(pathname: string, href: string): boolean {
 
 export function NavLinks() {
   const pathname = usePathname()
+  const s = getStrings()
 
   return (
     <nav className="flex flex-col gap-0.5">
-      {LINKS.map((link) => {
+      {LINK_ROUTES.map((link) => {
         const isActive = isLinkActive(pathname, link.href)
         return (
           <Link
@@ -39,7 +41,7 @@ export function NavLinks() {
                 : 'text-zinc-500 hover:bg-zinc-200 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100'
             }`}
           >
-            {link.label}
+            {s.nav[link.key]}
           </Link>
         )
       })}

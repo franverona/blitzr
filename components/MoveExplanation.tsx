@@ -1,7 +1,8 @@
 'use client'
 
-import { useBoardContext } from './Board'
+import { getStrings } from '@/lib/i18n/strings'
 import type { OpeningLessonMove } from '@/lib/types'
+import { useBoardContext } from './Board'
 
 /** Shows the plain-English note for whichever move led to the position
  *  currently on the board — reads `ply` from the same context BoardView
@@ -9,6 +10,7 @@ import type { OpeningLessonMove } from '@/lib/types'
  *  without any state of its own. */
 export function MoveExplanation({ moves }: { moves: OpeningLessonMove[] }) {
   const { ply } = useBoardContext()
+  const s = getStrings()
   const move = ply > 0 ? moves[ply - 1] : null
 
   return (
@@ -19,7 +21,7 @@ export function MoveExplanation({ moves }: { moves: OpeningLessonMove[] }) {
           {move.explanation}
         </>
       ) : (
-        'Starting position.'
+        s.moveExplanation.startingPosition
       )}
     </p>
   )

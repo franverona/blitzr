@@ -2,21 +2,8 @@
 
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { getStrings } from '@/lib/i18n/strings'
 import type { DrillSourceType } from '@/lib/types'
-
-const TYPE_TABS: { value: DrillSourceType | 'all'; label: string; title?: string }[] = [
-  { value: 'all', label: 'All' },
-  {
-    value: 'deviation',
-    label: 'Deviations',
-    title: 'Cards for games where you left your own prepared repertoire moves',
-  },
-  {
-    value: 'blunder',
-    label: 'Blunders',
-    title: 'Cards for your own moves that lost at least 2 pawns of advantage, found by Stockfish',
-  },
-]
 
 /** URL-driven deck filters (`?type=`/`?opening=`), same pattern as
  *  `RepertoireBoard.tsx`'s `ColorTab` — a real navigation, not client state,
@@ -33,6 +20,12 @@ export function DrillFilters({
 }) {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const s = getStrings()
+  const TYPE_TABS: { value: DrillSourceType | 'all'; label: string; title?: string }[] = [
+    { value: 'all', label: s.drillFilters.all },
+    { value: 'deviation', label: s.drillFilters.deviations, title: s.drillFilters.deviationsTitle },
+    { value: 'blunder', label: s.drillFilters.blunders, title: s.drillFilters.blundersTitle },
+  ]
 
   function hrefFor(next: { type?: string; opening?: string }): string {
     const params = new URLSearchParams(searchParams.toString())
@@ -68,7 +61,7 @@ export function DrillFilters({
           onChange={(e) => router.push(hrefFor({ opening: e.target.value || undefined }))}
           className="rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1 text-zinc-300"
         >
-          <option value="">All openings</option>
+          <option value="">{s.drillFilters.allOpenings}</option>
           {availableOpenings.map((label) => (
             <option key={label} value={label}>
               {label}

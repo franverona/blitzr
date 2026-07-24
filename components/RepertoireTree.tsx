@@ -1,3 +1,4 @@
+import { getStrings } from '@/lib/i18n/strings'
 import { buildRepertoireIndex } from '@/lib/repertoire'
 import { plyLabel } from '@/lib/san'
 import type { RepertoireNode } from '@/lib/types'
@@ -19,7 +20,7 @@ export function RepertoireTree({
   if (roots.length === 0) {
     return (
       <p className="text-sm text-zinc-500 lg:max-w-xs lg:flex-1">
-        No moves recorded yet — drag a piece on the board to start building this repertoire.
+        {getStrings().repertoire.noMovesYet}
       </p>
     )
   }

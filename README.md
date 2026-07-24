@@ -65,6 +65,12 @@ terms are explained elsewhere in the app.
 SQLite is created automatically at `./data/blitzr.db` on first run — no config needed beyond
 your username. To reset, delete the file and re-sync.
 
+## Language
+
+The UI is available in English (default) and Spanish — set `NEXT_PUBLIC_LOCALE=es` in
+`.env.local` and restart. It's a single-user app with no accounts, so there's no in-app
+switcher: one instance runs in one language, chosen once.
+
 ## Running as a background service (pm2)
 
 Blitzr runs on port **9877** in production mode, so it doesn't collide with other local dev

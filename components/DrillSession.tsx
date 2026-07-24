@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Chess } from 'chess.js'
 import { Chessboard } from 'react-chessboard'
 import { submitDrillAnswer } from '@/app/actions'
+import { getStrings } from '@/lib/i18n/strings'
 import { legalDestinations } from '@/lib/legalMoves'
 import { hintPieceName } from '@/lib/san'
 import { describeBlunderReason, detectBlunderReason } from '@/lib/tactics'
@@ -71,6 +72,7 @@ export function DrillSession({
   // Gains a setter only for "Shuffle and restart" (below) to reorder — never
   // to accept fresh server data, which would reintroduce the exact
   // revalidation-reshuffle problem this snapshot exists to prevent.
+  const s = getStrings()
   const [sessionPrompts, setSessionPrompts] = useState(prompts)
   const [sessionTotalCards] = useState(totalCards)
   const [sessionDueCount] = useState(dueCount)
@@ -165,8 +167,8 @@ export function DrillSession({
     return (
       <p className="mx-auto max-w-140 text-sm text-zinc-500 dark:text-zinc-400">
         {sessionTotalCards === 0
-          ? 'Nothing to drill yet — build a repertoire and analyze some games to start building a deck.'
-          : `No ${filtered ? 'matching cards' : 'cards'} due right now (${sessionTotalCards} in your deck) — nice work. Check back later.`}
+          ? s.drill.nothingToDrillYet
+          : s.drill.noCardsDue(filtered, sessionTotalCards)}
       </p>
     )
   }
@@ -175,16 +177,16 @@ export function DrillSession({
     const moreDue = sessionDueCount - sessionPrompts.length
     return (
       <div className="mx-auto flex w-full max-w-140 flex-col gap-3">
-        <p className="text-lg font-medium">Session complete</p>
+        <p className="text-lg font-medium">{s.drill.sessionComplete}</p>
         <p className="text-sm text-zinc-400">
-          {tally.correct} correct, {tally.incorrect} incorrect out of {sessionPrompts.length}.
+          {s.drill.tally(tally.correct, tally.incorrect, sessionPrompts.length)}
         </p>
         <div className="flex flex-wrap items-center gap-3">
           <button
             onClick={handleRestart}
             className="w-fit rounded-md border border-zinc-700 px-3 py-1.5 text-sm font-medium hover:bg-zinc-800"
           >
-            Shuffle and restart
+            {s.drill.shuffleAndRestart}
           </button>
           {moreDue > 0 && (
             // Plain <a>, not next/link — this needs a full reload so
@@ -192,7 +194,7 @@ export function DrillSession({
             // wouldn't pick up a soft-navigation's fresh props anyway (same
             // reason a filter change needs a new `key`, see app/drill/page.tsx).
             <a href="/drill" className="text-sm text-blue-600 hover:underline dark:text-blue-400">
-              {moreDue} more due — load more
+              {s.drill.moreDue(moreDue)}
             </a>
           )}
         </div>
@@ -276,8 +278,8 @@ export function DrillSession({
           <PlayerAvatar username={prompt.opponentUsername} avatarUrl={prompt.opponentAvatarUrl} />
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
             {prompt.gameLabel} ·{' '}
-            {prompt.sourceType === 'deviation' ? 'Find your prepared move' : 'Find the best move'} ·
-            card {index + 1} of {sessionPrompts.length}
+            {prompt.sourceType === 'deviation' ? s.drill.findPreparedMove : s.drill.findBestMove} ·{' '}
+            {s.drill.cardOf(index + 1, sessionPrompts.length)}
           </p>
         </div>
         {/* `invisible` rather than unmounting on `feedback` — keeps the
@@ -289,7 +291,7 @@ export function DrillSession({
           disabled={hintLevel >= 3 || !!feedback}
           className={`shrink-0 rounded-md border border-zinc-700 px-3 py-1.5 text-sm font-medium hover:bg-zinc-800 disabled:opacity-40 ${feedback ? 'invisible' : ''}`}
         >
-          💡 Hint
+          {s.drill.hint}
         </button>
       </div>
 
@@ -322,8 +324,9 @@ export function DrillSession({
 
       {hintLevel >= 1 && (
         <p className="text-sm text-zinc-400">
-          Hint: it&rsquo;s a{' '}
-          {[...new Set(activePrompt.correctMoves.map(hintPieceName))].join(' or ')} move.
+          {s.drill.hintText(
+            [...new Set(activePrompt.correctMoves.map(hintPieceName))].join(` ${s.drill.or} `),
+          )}
         </p>
       )}
 
@@ -334,14 +337,14 @@ export function DrillSession({
               className={`text-sm ${feedback === 'correct' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-400'}`}
             >
               {feedback === 'correct'
-                ? 'Correct!'
-                : `Not quite — the move was ${prompt.correctMoves.join(' or ')}.`}
+                ? s.drill.correct
+                : s.drill.notQuite(prompt.correctMoves.join(` ${s.drill.or} `))}
             </p>
             <button
               onClick={handleNext}
               className="rounded-md border border-zinc-700 px-3 py-1.5 text-sm font-medium hover:bg-zinc-800"
             >
-              Next
+              {s.drill.next}
             </button>
           </div>
           {hangingReason && (
@@ -352,7 +355,7 @@ export function DrillSession({
         </div>
       )}
 
-      <p className="text-xs text-zinc-600">Space/Enter → Next · H → Hint</p>
+      <p className="text-xs text-zinc-600">{s.drill.keyboardHint}</p>
     </div>
   )
 }
