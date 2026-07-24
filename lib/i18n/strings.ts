@@ -116,6 +116,22 @@ const en = {
         term: 'Better was …',
         body: "What Stockfish would have played instead, from the position right before the blunder. The same suggestion is drawn as a yellow arrow on the board at whichever position you're currently viewing.",
       },
+      {
+        term: 'Hanging piece',
+        body: "A piece that's attacked and has no defender of its own — it can be captured for free.",
+      },
+      {
+        term: 'Fork',
+        body: 'One piece attacking two or more enemy pieces at once, so the defender can only save one of them.',
+      },
+      {
+        term: 'Pin',
+        body: "A piece that can't move without exposing a more valuable piece behind it (usually the king) to attack.",
+      },
+      {
+        term: 'Skewer',
+        body: 'The reverse of a pin — a valuable piece (often the king) is attacked and forced to move, exposing a less valuable piece behind it to be captured next.',
+      },
     ],
   },
   board: {
@@ -398,6 +414,22 @@ const es: Strings = {
       {
         term: 'Mejor era …',
         body: 'Lo que Stockfish habría jugado en su lugar, desde la posición justo antes del error. La misma sugerencia se dibuja como una flecha amarilla en el tablero, en la posición que estés viendo en ese momento.',
+      },
+      {
+        term: 'Pieza colgada',
+        body: 'Una pieza atacada que no tiene ninguna defensa propia — se puede capturar gratis.',
+      },
+      {
+        term: 'Horquilla',
+        body: 'Una pieza que ataca a dos o más piezas enemigas a la vez, de forma que el rival solo puede salvar una.',
+      },
+      {
+        term: 'Clavada',
+        body: 'Una pieza que no puede moverse sin exponer a un ataque una pieza más valiosa (normalmente el rey) que tiene detrás.',
+      },
+      {
+        term: 'Enfilada',
+        body: 'Lo contrario de una clavada — una pieza valiosa (a menudo el rey) es atacada y obligada a moverse, dejando expuesta a captura una pieza menos valiosa que tenía detrás.',
       },
     ],
   },

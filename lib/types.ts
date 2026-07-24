@@ -237,11 +237,27 @@ export interface PinReason {
   pinnerSquare: string
 }
 
+/** A sliding piece newly attacking two enemy pieces in a straight line,
+ *  front then back — the reverse of a pin: the front piece (equal or more
+ *  valuable, or the king in check) is the one forced to move, exposing the
+ *  back piece to capture — see `detectSkewer()`/`skewers()` in
+ *  `lib/tactics.ts`, same "plain strings, not chess.js types" convention as
+ *  the other reasons. */
+export interface SkewerReason {
+  kind: 'skewer'
+  attackerPiece: string
+  attackerSquare: string
+  frontPiece: string
+  frontSquare: string
+  backPiece: string
+  backSquare: string
+}
+
 /** Any of the simple tactical patterns a blunder might be explained by —
  *  see `detectBlunderReason()`/`describeBlunderReason()` in
  *  `lib/tactics.ts`, which every call site uses instead of the individual
  *  detectors. */
-export type BlunderReason = HangingPieceReason | ForkReason | PinReason
+export type BlunderReason = HangingPieceReason | ForkReason | PinReason | SkewerReason
 
 export type DrillSourceType = 'deviation' | 'blunder'
 
