@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useId, useMemo, useRef, useState 
 import { Chessboard } from 'react-chessboard'
 import { describeEval, formatEval } from '@/lib/analysis'
 import { whiteToMove } from '@/lib/drill'
+import { getStrings } from '@/lib/i18n/strings'
 import { formatMaterialDiff, materialDiff } from '@/lib/material'
 import { buildPositions } from '@/lib/positions'
 import { describeBetterMove } from '@/lib/tactics'
@@ -93,16 +94,17 @@ export function BoardProvider({
 
 export function BoardNavControls() {
   const { ply, setPly, lastPly } = useBoardContext()
+  const s = getStrings()
 
   return (
     <div className="flex items-center gap-2 text-sm">
-      <NavButton onClick={() => setPly(0)} disabled={ply === 0} label="Start">
+      <NavButton onClick={() => setPly(0)} disabled={ply === 0} label={s.board.navLabels.start}>
         ⏮
       </NavButton>
       <NavButton
         onClick={() => setPly((p) => Math.max(0, p - 1))}
         disabled={ply === 0}
-        label="Previous move"
+        label={s.board.navLabels.previous}
       >
         ◀
       </NavButton>
@@ -112,11 +114,15 @@ export function BoardNavControls() {
       <NavButton
         onClick={() => setPly((p) => Math.min(lastPly, p + 1))}
         disabled={ply === lastPly}
-        label="Next move"
+        label={s.board.navLabels.next}
       >
         ▶
       </NavButton>
-      <NavButton onClick={() => setPly(lastPly)} disabled={ply === lastPly} label="End">
+      <NavButton
+        onClick={() => setPly(lastPly)}
+        disabled={ply === lastPly}
+        label={s.board.navLabels.end}
+      >
         ⏭
       </NavButton>
     </div>
@@ -133,6 +139,7 @@ export function BoardView({
   boardMaxWidthClassName?: string
 } = {}) {
   const { ply, positions, boardOrientation, result, movesSan, evals, setPly } = useBoardContext()
+  const s = getStrings()
   // react-chessboard needs a unique `id` per instance — without one, two
   // simultaneous boards on the same page (this one plus a PlanBoard showing
   // the suggested move's plan) collide on shared DOM ids internally and
@@ -198,7 +205,7 @@ export function BoardView({
           </div>
         </div>
         <p className="text-xs text-zinc-400">
-          Material: {formatMaterialDiff(materialDiff(positions[ply]))}
+          {s.board.material} {formatMaterialDiff(materialDiff(positions[ply]))}
           {evals?.[ply] && (
             <>
               {' '}
@@ -206,7 +213,11 @@ export function BoardView({
             </>
           )}
         </p>
-        {betterMove && <p className="text-xs text-amber-400">Better was {betterMove}</p>}
+        {betterMove && (
+          <p className="text-xs text-amber-400">
+            {s.common.betterWas} {betterMove}
+          </p>
+        )}
         {bestMove && bestMove.bestLine?.length > 0 && (
           <PlanBoard
             key={ply}
@@ -282,6 +293,7 @@ function MoveList({
 }) {
   const pairs = useMemo(() => buildMovePairs(movesSan), [movesSan])
   const activeRef = useRef<HTMLButtonElement>(null)
+  const s = getStrings()
 
   useEffect(() => {
     activeRef.current?.scrollIntoView({ block: 'nearest' })
@@ -296,7 +308,7 @@ function MoveList({
           ply === 0 ? 'bg-accent/50 font-semibold text-white' : 'text-zinc-400 hover:bg-zinc-800/60'
         }`}
       >
-        Starting position
+        {s.board.startingPositionButton}
       </button>
       <ol className="max-h-[480px] overflow-y-auto text-sm">
         {pairs.map((pair, i) => (

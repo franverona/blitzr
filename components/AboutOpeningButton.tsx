@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef } from 'react'
+import { getStrings } from '@/lib/i18n/strings'
 
 // Same circular "?" + centered native <dialog> convention as RepertoireBoard's
 // HelpButton — the summary is "read once" content, so it belongs behind a
@@ -15,12 +16,13 @@ export function AboutOpeningButton({
   sourceUrl: string
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null)
+  const s = getStrings()
 
   return (
     <>
       <button
         onClick={() => dialogRef.current?.showModal()}
-        aria-label={`About ${name}`}
+        aria-label={s.aboutOpening.about(name)}
         className="flex h-7 w-7 items-center justify-center rounded-full border border-zinc-700 text-xs text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
       >
         ?
@@ -34,10 +36,10 @@ export function AboutOpeningButton({
       >
         <div className="flex flex-col gap-3 p-5">
           <div className="flex items-center justify-between gap-4">
-            <h2 className="text-sm font-semibold">About {name}</h2>
+            <h2 className="text-sm font-semibold">{s.aboutOpening.about(name)}</h2>
             <button
               onClick={() => dialogRef.current?.close()}
-              aria-label="Close"
+              aria-label={s.common.close}
               className="text-zinc-500 hover:text-zinc-200"
             >
               ✕
@@ -50,7 +52,7 @@ export function AboutOpeningButton({
             rel="noopener noreferrer"
             className="text-sm text-blue-400 hover:underline"
           >
-            Adapted from Wikibooks&rsquo; Chess Opening Theory
+            {s.aboutOpening.adaptedFrom}
           </a>
         </div>
       </dialog>

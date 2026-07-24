@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { getUnanalyzedGames, saveGameAnalysis } from '@/app/actions'
+import { getStrings } from '@/lib/i18n/strings'
 import { analyzeGames } from '@/lib/stockfish/analyze'
 import type { BulkAnalysisProgress } from '@/lib/stockfish/analyze'
 
@@ -28,6 +29,8 @@ export function BulkAnalyzeButton() {
     return () => clearTimeout(timeout)
   }, [toast])
 
+  const s = getStrings()
+
   async function handleClick() {
     setToast(null)
     shouldContinueRef.current = true
@@ -35,7 +38,7 @@ export function BulkAnalyzeButton() {
     try {
       const games = await getUnanalyzedGames()
       if (games.length === 0) {
-        setToast({ text: 'Nothing to analyze — every game already has one.', isError: false })
+        setToast({ text: s.bulkAnalyze.nothingToAnalyze, isError: false })
         return
       }
 
@@ -51,15 +54,12 @@ export function BulkAnalyzeButton() {
         () => shouldContinueRef.current,
       )
 
-      setToast({
-        text:
-          analyzed === games.length
-            ? `Analyzed ${analyzed} game${analyzed === 1 ? '' : 's'}.`
-            : `Analyzed ${analyzed} of ${games.length} games — stopped early.`,
-        isError: false,
-      })
+      setToast({ text: s.bulkAnalyze.analyzed(analyzed, games.length), isError: false })
     } catch (err) {
-      setToast({ text: err instanceof Error ? err.message : 'Analysis failed.', isError: true })
+      setToast({
+        text: err instanceof Error ? err.message : s.bulkAnalyze.analysisFailed,
+        isError: true,
+      })
     } finally {
       setProgress(null)
     }
@@ -73,14 +73,14 @@ export function BulkAnalyzeButton() {
           disabled={progress !== null}
           className="rounded-md border border-zinc-700 px-3 py-1.5 text-sm font-medium whitespace-nowrap hover:bg-zinc-800 disabled:opacity-50"
         >
-          Analyze all
+          {s.bulkAnalyze.button}
         </button>
         {progress && (
           <div className="flex items-center gap-2 text-sm text-zinc-400">
             <span>
-              Analyzing game {progress.gamesDone + 1} of {progress.gamesTotal}
+              {s.bulkAnalyze.analyzingProgress(progress.gamesDone + 1, progress.gamesTotal)}
               {progress.positionsTotal > 0 &&
-                ` (${progress.positionsDone}/${progress.positionsTotal} positions)`}
+                ` ${s.bulkAnalyze.positionsProgress(progress.positionsDone, progress.positionsTotal)}`}
               …
             </span>
             <button
@@ -89,7 +89,7 @@ export function BulkAnalyzeButton() {
               }}
               className="text-zinc-500 underline hover:text-zinc-200"
             >
-              Cancel
+              {s.bulkAnalyze.cancel}
             </button>
           </div>
         )}

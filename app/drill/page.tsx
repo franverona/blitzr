@@ -1,6 +1,7 @@
 import { getDrillDeck } from '../actions'
 import { DrillFilters } from '@/components/DrillFilters'
 import { DrillSession } from '@/components/DrillSession'
+import { getStrings } from '@/lib/i18n/strings'
 import type { DrillSourceType } from '@/lib/types'
 
 export default async function DrillPage({
@@ -18,7 +19,7 @@ export default async function DrillPage({
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-xl font-semibold">Drill</h1>
+      <h1 className="text-xl font-semibold">{getStrings().drillPage.title}</h1>
       <DrillFilters
         sourceType={sourceType}
         opening={opening}

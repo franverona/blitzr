@@ -7,6 +7,7 @@ import { PlayerAvatar } from '@/components/PlayerAvatar'
 import { fetchPlayerAvatar } from '@/lib/chesscom/client'
 import { parsePgnHeaders } from '@/lib/chesscom/normalize'
 import { formatDateTime } from '@/lib/dates'
+import { getStrings } from '@/lib/i18n/strings'
 import { diffGameAgainstRepertoire } from '@/lib/repertoire'
 import { plyLabel } from '@/lib/san'
 import type { Game, MyColor, MyResult, RepertoireDiffResult } from '@/lib/types'
@@ -67,8 +68,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
       ) : (
         <div className="flex flex-col gap-2">
           <p className="text-sm text-amber-600 dark:text-amber-400">
-            This game&rsquo;s moves couldn&rsquo;t be parsed (likely a non-standard variant) —
-            showing the raw PGN instead.
+            {getStrings().gamePage.unparsedMoves}
           </p>
           <pre className="overflow-x-auto rounded-md bg-zinc-100 p-3 text-xs whitespace-pre-wrap dark:bg-zinc-900">
             {game.pgn}
@@ -114,28 +114,29 @@ function GameHeader({
   whiteAvatar: string | null
   blackAvatar: string | null
 }) {
+  const s = getStrings()
+  const timeClassLabel =
+    s.common.timeClass[game.timeClass as keyof typeof s.common.timeClass] ?? game.timeClass
   return (
     <div className="flex flex-col gap-1.5">
       <h1 className="flex items-center gap-2 text-xl font-semibold">
         <PlayerAvatar username={game.whiteUsername} avatarUrl={whiteAvatar} />
         {game.whiteUsername}
-        <span className="text-sm font-normal text-zinc-500">vs</span>
+        <span className="text-sm font-normal text-zinc-500">{s.common.vs}</span>
         <PlayerAvatar username={game.blackUsername} avatarUrl={blackAvatar} />
         {game.blackUsername}
       </h1>
       <p className="text-xs text-zinc-500 dark:text-zinc-400">
-        {formatDateTime(game.endTime)} · {game.timeClass} · playing {game.myColor} ·{' '}
-        <span className="capitalize">{game.myResult}</span>
+        {formatDateTime(game.endTime)} · {timeClassLabel} ·{' '}
+        {s.gamePage.playing(s.common.color[game.myColor])} · {s.common.result[game.myResult]}
       </p>
       {game.ecoName && (
         <p className="text-xs text-zinc-500 dark:text-zinc-400">
           {game.ecoName} (
           {game.ecoCode ? (
-            <abbr title="ECO code — a standard reference number for this opening, used to group games by opening regardless of the exact move order">
-              {game.ecoCode}
-            </abbr>
+            <abbr title={s.gamePage.ecoTooltip}>{game.ecoCode}</abbr>
           ) : (
-            'no ECO'
+            s.gamePage.noEco
           )}
           )
           {game.ecoUrl && (
@@ -147,7 +148,7 @@ function GameHeader({
                 rel="noopener noreferrer"
                 className="text-blue-600 hover:underline dark:text-blue-400"
               >
-                Learn more about this opening
+                {s.gamePage.learnMoreAboutOpening}
               </a>
             </>
           )}
@@ -160,7 +161,7 @@ function GameHeader({
           rel="noopener noreferrer"
           className="text-xs text-blue-600 hover:underline dark:text-blue-400"
         >
-          View on Chess.com
+          {s.gamePage.viewOnChessCom}
         </a>
       )}
     </div>
@@ -178,15 +179,16 @@ function RepertoireDiff({
   hasRepertoire: boolean
   totalPlies: number
 }) {
+  const s = getStrings()
   if (!hasRepertoire) {
     return (
       <p className="text-sm text-zinc-500 dark:text-zinc-400">
-        No {color} repertoire defined yet —{' '}
+        {s.gamePage.noRepertoireYet(s.common.color[color])}{' '}
         <Link
           href={`/repertoire?color=${color}`}
           className="text-blue-600 hover:underline dark:text-blue-400"
         >
-          build one
+          {s.gamePage.buildOne}
         </Link>
         .
       </p>
@@ -196,14 +198,12 @@ function RepertoireDiff({
   if (diff.deviationPly !== null) {
     return (
       <p className="text-sm text-amber-600 dark:text-amber-400">
-        <abbr title="Still following your prepared moves up to this point">In book</abbr> for{' '}
-        {diff.inBookPlies} {diff.inBookPlies === 1 ? 'move' : 'moves'}, then{' '}
-        <abbr title="Played a different move than the one saved in your repertoire at this point">
-          deviated
-        </abbr>{' '}
-        on {plyLabel(diff.deviationPly)} — played{' '}
-        <span className="font-medium">{diff.deviationMove}</span>, repertoire has{' '}
-        <span className="font-medium">{diff.expectedMoves?.join(' or ')}</span>.
+        <abbr title={s.gamePage.inBookTooltip}>{s.gamePage.inBook}</abbr>{' '}
+        {s.gamePage.inBookFor(diff.inBookPlies)}{' '}
+        <abbr title={s.gamePage.deviatedTooltip}>{s.gamePage.deviated}</abbr> on{' '}
+        {plyLabel(diff.deviationPly)} — {s.gamePage.played}{' '}
+        <span className="font-medium">{diff.deviationMove}</span>, {s.gamePage.repertoireHas}{' '}
+        <span className="font-medium">{diff.expectedMoves?.join(` ${s.drill.or} `)}</span>.
       </p>
     )
   }
@@ -211,8 +211,7 @@ function RepertoireDiff({
   if (diff.inBookPlies === totalPlies && totalPlies > 0) {
     return (
       <p className="text-sm text-emerald-600 dark:text-emerald-400">
-        Followed your repertoire the entire game ({diff.inBookPlies}{' '}
-        {diff.inBookPlies === 1 ? 'move' : 'moves'}).
+        {s.gamePage.followedRepertoire(diff.inBookPlies)}
       </p>
     )
   }

@@ -2,12 +2,14 @@
 
 import { useEffect, useState, useTransition } from 'react'
 import { syncGames } from '@/app/actions'
+import { getStrings } from '@/lib/i18n/strings'
 
 const TOAST_DURATION_MS = 4000
 
 export function SyncButton() {
   const [isPending, startTransition] = useTransition()
   const [toast, setToast] = useState<{ text: string; isError: boolean } | null>(null)
+  const s = getStrings()
 
   useEffect(() => {
     if (!toast) return
@@ -21,12 +23,12 @@ export function SyncButton() {
       try {
         const result = await syncGames()
         setToast({
-          text: `Synced ${result.archivesSynced} archive${result.archivesSynced === 1 ? '' : 's'}, ${result.gamesUpserted} game${result.gamesUpserted === 1 ? '' : 's'} added.`,
+          text: s.sync.synced(result.archivesSynced, result.gamesUpserted),
           isError: false,
         })
       } catch (err) {
         setToast({
-          text: err instanceof Error ? err.message : 'Sync failed.',
+          text: err instanceof Error ? err.message : s.sync.failed,
           isError: true,
         })
       }
@@ -40,7 +42,7 @@ export function SyncButton() {
         disabled={isPending}
         className="rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
       >
-        {isPending ? 'Syncing…' : 'Sync games'}
+        {isPending ? s.sync.syncing : s.sync.button}
       </button>
       {toast && (
         <div

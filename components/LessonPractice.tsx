@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { getStrings } from '@/lib/i18n/strings'
 import type { LessonGameStats as LessonGameStatsData, OpeningLesson } from '@/lib/types'
 import { AboutOpeningButton } from './AboutOpeningButton'
 import { BoardNavControls, BoardProvider, BoardView } from './Board'
@@ -28,6 +29,7 @@ export function LessonPractice({
   gameStats: LessonGameStatsData
 }) {
   const [mode, setMode] = useState<Mode>('study')
+  const s = getStrings()
   const movesSan = lesson.moves.map((move) => move.san)
 
   return (
@@ -42,8 +44,16 @@ export function LessonPractice({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 className="text-xl font-semibold">{lesson.name}</h1>
           <div className="flex items-center gap-2">
-            <ModeTab label="Study" active={mode === 'study'} onClick={() => setMode('study')} />
-            <ModeTab label="Quiz" active={mode === 'quiz'} onClick={() => setMode('quiz')} />
+            <ModeTab
+              label={s.lessonPractice.study}
+              active={mode === 'study'}
+              onClick={() => setMode('study')}
+            />
+            <ModeTab
+              label={s.lessonPractice.quiz}
+              active={mode === 'quiz'}
+              onClick={() => setMode('quiz')}
+            />
             <span className="mx-1 h-4 w-px bg-zinc-700" />
             {mode === 'study' && <BoardNavControls />}
             <FlipBoardButton />
@@ -63,19 +73,15 @@ export function LessonPractice({
 }
 
 function LessonGameStats({ stats }: { stats: LessonGameStatsData }) {
+  const s = getStrings()
   return (
     <p className="text-sm text-zinc-500 dark:text-zinc-400">
-      {stats.games > 0 ? (
-        <>
-          You&rsquo;ve played this in {stats.games} of your games ({stats.wins}W {stats.draws}D{' '}
-          {stats.losses}L)
-        </>
-      ) : (
-        "You haven't played this exact line in any synced games yet"
-      )}
+      {stats.games > 0
+        ? s.lessonPractice.playedGames(stats.games, stats.wins, stats.draws, stats.losses)
+        : s.lessonPractice.neverPlayed}
       {' — '}
       <Link href="/openings" className="text-blue-600 hover:underline dark:text-blue-400">
-        see your opening stats
+        {s.lessonPractice.seeOpeningStats}
       </Link>
       .
     </p>

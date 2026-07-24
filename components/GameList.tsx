@@ -1,13 +1,11 @@
+import { getStrings } from '@/lib/i18n/strings'
 import type { Game } from '@/lib/types'
 import { GameRow } from './GameRow'
 
 export function GameList({ games }: { games: Game[] }) {
+  const s = getStrings()
   if (games.length === 0) {
-    return (
-      <p className="text-sm text-zinc-500 dark:text-zinc-400">
-        No games synced yet. Click &ldquo;Sync games&rdquo; to fetch your Chess.com history.
-      </p>
-    )
+    return <p className="text-sm text-zinc-500 dark:text-zinc-400">{s.gameList.empty}</p>
   }
 
   return (
@@ -15,12 +13,12 @@ export function GameList({ games }: { games: Game[] }) {
       <table className="w-full text-sm">
         <thead className="bg-zinc-100 text-left text-xs tracking-wide text-zinc-500 uppercase dark:bg-zinc-900 dark:text-zinc-400">
           <tr>
-            <th className="px-3 py-2">Date</th>
-            <th className="px-3 py-2">Color</th>
-            <th className="px-3 py-2">Opponent</th>
-            <th className="px-3 py-2">Result</th>
-            <th className="px-3 py-2">Opening</th>
-            <th className="px-3 py-2">Time class</th>
+            <th className="px-3 py-2">{s.gameList.headers.date}</th>
+            <th className="px-3 py-2">{s.gameList.headers.color}</th>
+            <th className="px-3 py-2">{s.gameList.headers.opponent}</th>
+            <th className="px-3 py-2">{s.gameList.headers.result}</th>
+            <th className="px-3 py-2">{s.gameList.headers.opening}</th>
+            <th className="px-3 py-2">{s.gameList.headers.timeClass}</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">

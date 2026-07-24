@@ -1,6 +1,7 @@
 'use client'
 
 import { Fragment, useState } from 'react'
+import { getStrings } from '@/lib/i18n/strings'
 import type { OpeningFamily } from '@/lib/types'
 
 function pct(score: number): string {
@@ -8,6 +9,7 @@ function pct(score: number): string {
 }
 
 export function OpeningsTable({ families }: { families: OpeningFamily[] }) {
+  const s = getStrings()
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
 
   function toggle(key: string) {
@@ -20,11 +22,7 @@ export function OpeningsTable({ families }: { families: OpeningFamily[] }) {
   }
 
   if (families.length === 0) {
-    return (
-      <p className="text-sm text-zinc-500 dark:text-zinc-400">
-        No games synced yet. Sync games from the Games page to see your opening stats.
-      </p>
-    )
+    return <p className="text-sm text-zinc-500 dark:text-zinc-400">{s.openingsTable.empty}</p>
   }
 
   return (
@@ -32,12 +30,12 @@ export function OpeningsTable({ families }: { families: OpeningFamily[] }) {
       <table className="w-full text-sm">
         <thead className="bg-zinc-100 text-left text-xs tracking-wide text-zinc-500 uppercase dark:bg-zinc-900 dark:text-zinc-400">
           <tr>
-            <th className="px-3 py-2">Opening</th>
-            <th className="px-3 py-2">ECO</th>
-            <th className="px-3 py-2">Games</th>
-            <th className="px-3 py-2">W / D / L</th>
-            <th className="px-3 py-2">As White</th>
-            <th className="px-3 py-2">As Black</th>
+            <th className="px-3 py-2">{s.openingsTable.headers.opening}</th>
+            <th className="px-3 py-2">{s.openingsTable.headers.eco}</th>
+            <th className="px-3 py-2">{s.openingsTable.headers.games}</th>
+            <th className="px-3 py-2">{s.openingsTable.headers.wdl}</th>
+            <th className="px-3 py-2">{s.openingsTable.headers.asWhite}</th>
+            <th className="px-3 py-2">{s.openingsTable.headers.asBlack}</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
