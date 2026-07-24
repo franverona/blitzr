@@ -4,9 +4,11 @@ import {
   describeBlunderReason,
   describeForkReason,
   describePinReason,
+  describeSkewerReason,
   detectBlunderReason,
   detectFork,
   detectPin,
+  detectSkewer,
   explainBestMove,
 } from '@/lib/tactics'
 import type { BestMove } from '@/lib/types'
@@ -171,6 +173,85 @@ describe('describePinReason (Spanish)', () => {
   })
 })
 
+describe('detectSkewer', () => {
+  it('flags a sliding piece newly attacking two enemy pieces in a line, front then back', () => {
+    // Black's own Rg8 walks the rook onto the c4-g8 diagonal behind the
+    // queen on d5 — the bishop on c4 now skewers queen (front) then rook
+    // (back); the queen isn't directly hanging since the rook blocks the
+    // ray beyond it, so this is a skewer, not a hanging-piece case.
+    const before = 'r7/7k/8/3q4/2B4K/8/8/8 b - - 0 1'
+    const after = '6r1/7k/8/3q4/2B4K/8/8/8 w - - 1 2'
+    expect(detectSkewer(before, after, 'black')).toEqual({
+      kind: 'skewer',
+      attackerPiece: 'b',
+      attackerSquare: 'c4',
+      frontPiece: 'q',
+      frontSquare: 'd5',
+      backPiece: 'r',
+      backSquare: 'g8',
+    })
+  })
+
+  it('ignores a skewer that already existed before the move', () => {
+    // The bishop already skewers the queen and rook throughout; only an
+    // unrelated king move (h7-h6) happens on this ply.
+    const before = '6r1/7k/8/3q4/2B4K/8/8/8 b - - 0 1'
+    const after = '6r1/8/7k/3q4/2B4K/8/8/8 w - - 1 2'
+    expect(detectSkewer(before, after, 'black')).toBeNull()
+  })
+
+  it('does not flag a skewer when a second piece blocks the line', () => {
+    // A white pawn on f7 sits between the queen on d5 and the rook on g8 —
+    // with a blocker on the ray, the rook is never reached.
+    const fen = '6r1/5P2/7k/3q4/2B4K/8/8/8 w - - 0 1'
+    expect(detectSkewer(fen, fen, 'black')).toBeNull()
+  })
+
+  it('does not flag a skewer where the back piece is the king (that is a pin instead)', () => {
+    // Regression test: a king can never legitimately be the *back* piece of
+    // a skewer — a lesser piece in front of the king with a slider behind
+    // it is detectPin's territory, not detectSkewer's.
+    const before = '5nk1/8/8/8/2B5/8/8/K7 b - - 0 1'
+    const after = '6k1/8/4n3/8/2B5/8/8/K7 w - - 0 1'
+    expect(detectSkewer(before, after, 'black')).toBeNull()
+  })
+})
+
+describe('describeSkewerReason', () => {
+  it('formats a plain-English skewer message', () => {
+    expect(
+      describeSkewerReason({
+        kind: 'skewer',
+        attackerPiece: 'b',
+        attackerSquare: 'c4',
+        frontPiece: 'q',
+        frontSquare: 'd5',
+        backPiece: 'r',
+        backSquare: 'g8',
+      }),
+    ).toBe('This skewers the queen on d5 — if it moves, the bishop on c4 captures the rook on g8.')
+  })
+})
+
+describe('describeSkewerReason (Spanish)', () => {
+  it('formats a plain-Spanish skewer message', () => {
+    expect(
+      describeSkewerReason(
+        {
+          kind: 'skewer',
+          attackerPiece: 'b',
+          attackerSquare: 'c4',
+          frontPiece: 'q',
+          frontSquare: 'd5',
+          backPiece: 'r',
+          backSquare: 'g8',
+        },
+        'es',
+      ),
+    ).toBe('Esto enfila la dama en d5 — si se mueve, el alfil en c4 captura la torre en g8.')
+  })
+})
+
 describe('detectBlunderReason', () => {
   it('returns a hanging-piece reason when one applies', () => {
     const before = 'k7/1b6/8/8/8/8/3N4/4K3 w - - 0 1'
@@ -186,6 +267,15 @@ describe('detectBlunderReason', () => {
     const before = 'r5k1/2q5/8/1N6/8/8/8/6K1 b - - 0 1'
     const after = '6k1/r1q5/8/1N6/8/8/8/6K1 w - - 0 1'
     expect(detectBlunderReason(before, after, 'black')).toMatchObject({ kind: 'fork' })
+  })
+
+  it('falls back to a skewer reason when no piece is hanging or forked', () => {
+    // Same bishop/queen/rook skewer as detectSkewer's own test — the queen
+    // isn't hanging (blocked ray beyond it) and nothing is forked (only one
+    // square is directly attacked).
+    const before = 'r7/7k/8/3q4/2B4K/8/8/8 b - - 0 1'
+    const after = '6r1/7k/8/3q4/2B4K/8/8/8 w - - 1 2'
+    expect(detectBlunderReason(before, after, 'black')).toMatchObject({ kind: 'skewer' })
   })
 
   it('falls back to a pin reason when no piece is hanging or forked', () => {
@@ -218,6 +308,20 @@ describe('describeBlunderReason', () => {
         targets: [{ piece: 'q', square: 'c7' }],
       }),
     ).toBe('This allows a fork — the knight on b5 now attacks the queen on c7 at once.')
+  })
+
+  it('dispatches to the skewer description', () => {
+    expect(
+      describeBlunderReason({
+        kind: 'skewer',
+        attackerPiece: 'b',
+        attackerSquare: 'c4',
+        frontPiece: 'q',
+        frontSquare: 'd5',
+        backPiece: 'r',
+        backSquare: 'g8',
+      }),
+    ).toBe('This skewers the queen on d5 — if it moves, the bishop on c4 captures the rook on g8.')
   })
 
   it('dispatches to the pin description', () => {
@@ -273,6 +377,26 @@ describe('explainBestMove', () => {
     expect(explanation).toMatch(/^Forks .+ at once\.$/)
     expect(explanation).toContain('the queen on c7')
     expect(explanation).toContain('the rook on a7')
+  })
+
+  it('explains that the suggested move escapes an existing skewer', () => {
+    // Black's queen on d5 and rook on g8 are already skewered by the bishop
+    // on c4 — a pawn on c6 defends the queen (isolating this from the
+    // saves-a-hanging-piece branch above) — Qa5 moves the queen off the
+    // diagonal, resolving the skewer.
+    const fen = '6r1/7k/2p5/3q4/2B4K/8/8/8 b - - 0 1'
+    expect(explainBestMove(fen, 'Qa5', 'black')).toBe('Gets the queen on d5 out of the skewer.')
+  })
+
+  it('explains that the suggested move creates a new skewer on the opponent', () => {
+    // The bishop on f1 (safe from the queen, unlike d3 which sits on its
+    // file) doesn't yet attack anything; Bc4 newly skewers the queen on d5
+    // (front) and the rook on g8 (back) — a pawn on c6 defends the queen,
+    // isolating this from the wins-material (hanging piece) branch above.
+    const fen = '6r1/7k/2p5/3q4/7K/8/8/5B2 w - - 0 1'
+    expect(explainBestMove(fen, 'Bc4', 'white')).toBe(
+      "Skewers the opponent's queen on d5, with the rook behind it on g8.",
+    )
   })
 
   it('explains that the suggested move frees a piece from a pin', () => {

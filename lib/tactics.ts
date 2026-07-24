@@ -5,7 +5,7 @@ import { getLocale } from './i18n/locale'
 import type { Locale } from './i18n/locale'
 import { PIECE_VALUES } from './material'
 import { describeMove, pieceName, pieceWithArticle } from './san'
-import type { BestMove, BlunderReason, ForkReason, MyColor, PinReason } from './types'
+import type { BestMove, BlunderReason, ForkReason, MyColor, PinReason, SkewerReason } from './types'
 
 // "a"/"al" is a genuine preposition here (expose the king TO the bishop),
 // not the optional personal-a for a direct object, so it can't just be
@@ -231,9 +231,141 @@ export function describePinReason(reason: PinReason, locale: Locale = getLocale(
     : `This pins ${pinned} on ${reason.pinnedSquare} to the king — it can't move without exposing the king to ${pinner} on ${reason.pinnerSquare}.`
 }
 
-/** Tries `detectHangingPiece` first, then `detectFork`, then `detectPin` —
- *  the one function every call site uses instead of running the three
- *  detectors individually and merging the results itself. */
+interface Skewer {
+  attackerSquare: Square
+  attackerPiece: PieceSymbol
+  frontSquare: Square
+  frontPiece: PieceSymbol
+  backSquare: Square
+  backPiece: PieceSymbol
+}
+
+/** Every `color` sliding piece (rook/bishop/queen) currently attacking two
+ *  enemy pieces in a straight line, front then back, with nothing between
+ *  either of them — a skewer, **only counted when the front piece is at
+ *  least as valuable as the back one (or is the king) AND the back piece is
+ *  worth more than a pawn**: the value check is what actually forces the
+ *  front piece to move rather than just sitting there, and the back-piece
+ *  filter rules out a line that just happens to hit two pawns (or a piece
+ *  then a pawn) — real, not a tactical point, same "at least one non-pawn
+ *  target" precedent `forkers()` already applies. Reuses the same
+ *  ray-casting shape as `pinnedPieces()`, just rayed outward from the
+ *  attacker instead of from the king, and without requiring the back piece
+ *  to be the king. */
+function skewers(fen: string, color: Color): Skewer[] {
+  const chess = new Chess(fen)
+  const opponent: Color = color === 'w' ? 'b' : 'w'
+  const found: Skewer[] = []
+
+  for (const row of chess.board()) {
+    for (const cell of row) {
+      if (!cell || cell.color !== color) continue
+      if (cell.type !== 'r' && cell.type !== 'b' && cell.type !== 'q') continue
+      const directions =
+        cell.type === 'r'
+          ? ROOK_DIRECTIONS
+          : cell.type === 'b'
+            ? BISHOP_DIRECTIONS
+            : [...ROOK_DIRECTIONS, ...BISHOP_DIRECTIONS]
+      const [startFile, startRank] = squareCoords(cell.square)
+
+      for (const [df, dr] of directions) {
+        let file = startFile + df
+        let rank = startRank + dr
+        let front: { square: Square; piece: PieceSymbol } | null = null
+
+        while (file >= 0 && file < 8 && rank >= 0 && rank < 8) {
+          const square = coordsSquare(file, rank)
+          const piece = chess.get(square)
+          if (piece) {
+            if (!front) {
+              if (piece.color !== opponent) break // own piece, or nothing to skewer — ray dead
+              front = { square, piece: piece.type }
+            } else {
+              if (piece.color !== opponent) break // attacker's own piece blocks further — no skewer
+              // A king can never be the *back* piece — a lesser piece in
+              // front of the king with a slider behind it is a pin
+              // (detectPin's territory), not a skewer, regardless of value.
+              if (piece.type === 'k') break
+              const frontValue = PIECE_VALUES[front.piece] ?? 0
+              const backValue = PIECE_VALUES[piece.type] ?? 0
+              if (backValue > 1 && (front.piece === 'k' || frontValue >= backValue)) {
+                found.push({
+                  attackerSquare: cell.square,
+                  attackerPiece: cell.type,
+                  frontSquare: front.square,
+                  frontPiece: front.piece,
+                  backSquare: square,
+                  backPiece: piece.type,
+                })
+              }
+              break
+            }
+          }
+          file += df
+          rank += dr
+        }
+      }
+    }
+  }
+  return found
+}
+
+/**
+ * Whether the mover's move newly allowed the opponent to skewer them — a
+ * single opponent sliding piece now lining up two of the mover's pieces,
+ * front then back, that wasn't already doing so before this move. Same
+ * one-ply-lookback, before/after-diff shape as `detectFork`/`detectPin`.
+ */
+export function detectSkewer(
+  fenBefore: string,
+  fenAfter: string,
+  moverColor: MyColor,
+): SkewerReason | null {
+  const opponent = toColor(moverColor === 'white' ? 'black' : 'white')
+  const before = skewers(fenBefore, opponent)
+  const after = skewers(fenAfter, opponent)
+
+  const newSkewers = after.filter(
+    (s) =>
+      !before.some(
+        (b) =>
+          b.attackerSquare === s.attackerSquare &&
+          b.frontSquare === s.frontSquare &&
+          b.backSquare === s.backSquare,
+      ),
+  )
+  if (newSkewers.length === 0) return null
+
+  const value = (s: Skewer) => PIECE_VALUES[s.backPiece] ?? 0
+  const worst = newSkewers.reduce((best, s) => (value(s) > value(best) ? s : best))
+
+  return {
+    kind: 'skewer',
+    attackerPiece: worst.attackerPiece,
+    attackerSquare: worst.attackerSquare,
+    frontPiece: worst.frontPiece,
+    frontSquare: worst.frontSquare,
+    backPiece: worst.backPiece,
+    backSquare: worst.backSquare,
+  }
+}
+
+export function describeSkewerReason(reason: SkewerReason, locale: Locale = getLocale()): string {
+  const front = pieceWithArticle(reason.frontPiece as PieceSymbol, locale)
+  const attacker = pieceWithArticle(reason.attackerPiece as PieceSymbol, locale)
+  const back = pieceWithArticle(reason.backPiece as PieceSymbol, locale)
+  return locale === 'es'
+    ? `Esto enfila ${front} en ${reason.frontSquare} — si se mueve, ${attacker} en ${reason.attackerSquare} captura ${back} en ${reason.backSquare}.`
+    : `This skewers ${front} on ${reason.frontSquare} — if it moves, ${attacker} on ${reason.attackerSquare} captures ${back} on ${reason.backSquare}.`
+}
+
+/** Tries `detectHangingPiece` first, then `detectFork`, then `detectSkewer`,
+ *  then `detectPin` — the one function every call site uses instead of
+ *  running the four detectors individually and merging the results itself.
+ *  Skewer sits with fork (a material threat) rather than down by pin (a
+ *  constraint, not a threat of its own) — same "concreteness" ordering
+ *  logic the rest of this list already follows. */
 export function detectBlunderReason(
   fenBefore: string,
   fenAfter: string,
@@ -242,6 +374,7 @@ export function detectBlunderReason(
   return (
     detectHangingPiece(fenBefore, fenAfter, moverColor) ??
     detectFork(fenBefore, fenAfter, moverColor) ??
+    detectSkewer(fenBefore, fenAfter, moverColor) ??
     detectPin(fenBefore, fenAfter, moverColor)
   )
 }
@@ -249,6 +382,7 @@ export function detectBlunderReason(
 export function describeBlunderReason(reason: BlunderReason, locale: Locale = getLocale()): string {
   if (reason.kind === 'hanging-piece') return describeHangingPieceReason(reason, locale)
   if (reason.kind === 'fork') return describeForkReason(reason, locale)
+  if (reason.kind === 'skewer') return describeSkewerReason(reason, locale)
   return describePinReason(reason, locale)
 }
 
@@ -295,6 +429,14 @@ export function explainBestMove(
     return es ? `Saca ${targets} de la horquilla.` : `Gets ${targets} out of the fork.`
   }
 
+  const unskewered = detectSkewer(fenAfter, fenBefore, moverColor)
+  if (unskewered) {
+    const piece = pieceWithArticle(unskewered.frontPiece as PieceSymbol, locale)
+    return es
+      ? `Saca ${piece} en ${unskewered.frontSquare} de la enfilada.`
+      : `Gets ${piece} on ${unskewered.frontSquare} out of the skewer.`
+  }
+
   const unpinned = detectPin(fenAfter, fenBefore, moverColor)
   if (unpinned) {
     const piece = pieceWithArticle(unpinned.pinnedPiece as PieceSymbol, locale)
@@ -314,6 +456,14 @@ export function explainBestMove(
   if (forks) {
     const targets = targetList(forks.targets, locale)
     return es ? `Hace una horquilla sobre ${targets} a la vez.` : `Forks ${targets} at once.`
+  }
+
+  const skewers = detectSkewer(fenBefore, fenAfter, opponent)
+  if (skewers) {
+    const back = pieceWithArticle(skewers.backPiece as PieceSymbol, locale)
+    return es
+      ? `Enfila ${pieceWithArticle(skewers.frontPiece as PieceSymbol, locale)} del rival en ${skewers.frontSquare}, con ${back} detrás en ${skewers.backSquare}.`
+      : `Skewers the opponent's ${pieceName(skewers.frontPiece as PieceSymbol, locale).toLowerCase()} on ${skewers.frontSquare}, with ${back} behind it on ${skewers.backSquare}.`
   }
 
   const pins = detectPin(fenBefore, fenAfter, opponent)
