@@ -2,6 +2,7 @@
 
 import { useId, useState } from 'react'
 import { Chessboard } from 'react-chessboard'
+import { getStrings } from '@/lib/i18n/strings'
 import { buildPositions } from '@/lib/positions'
 import { BOARD_DARK_SQUARE, BOARD_LIGHT_SQUARE } from '@/lib/theme'
 
@@ -36,6 +37,7 @@ export function PlanBoard({
   // replay board, or another PlanBoard in a blunder list) on shared DOM ids
   // internally and crashes with "Square width not found".
   const boardId = useId()
+  const s = getStrings()
 
   return (
     <div className="flex w-full max-w-80 shrink-0 flex-col gap-1.5">
@@ -54,14 +56,14 @@ export function PlanBoard({
       </div>
       <div className="flex items-center justify-between gap-2 text-xs text-zinc-500">
         <span>
-          Plan {ply} / {lastPly}
+          {s.planBoard.label} {ply} / {lastPly}
           {ply > 0 && ` — ${moves[ply - 1]}`}
         </span>
         <div className="flex items-center gap-1">
           <button
             onClick={() => setPly(0)}
             disabled={ply === 0}
-            aria-label="Start of plan"
+            aria-label={s.planBoard.navLabels.start}
             className="rounded border border-zinc-700 px-1.5 py-0.5 hover:bg-zinc-800 disabled:opacity-40"
           >
             ⏮
@@ -69,7 +71,7 @@ export function PlanBoard({
           <button
             onClick={() => setPly((p) => Math.max(0, p - 1))}
             disabled={ply === 0}
-            aria-label="Previous plan move"
+            aria-label={s.planBoard.navLabels.previous}
             className="rounded border border-zinc-700 px-1.5 py-0.5 hover:bg-zinc-800 disabled:opacity-40"
           >
             ◀
@@ -77,7 +79,7 @@ export function PlanBoard({
           <button
             onClick={() => setPly((p) => Math.min(lastPly, p + 1))}
             disabled={ply === lastPly}
-            aria-label="Next plan move"
+            aria-label={s.planBoard.navLabels.next}
             className="rounded border border-zinc-700 px-1.5 py-0.5 hover:bg-zinc-800 disabled:opacity-40"
           >
             ▶
@@ -85,7 +87,7 @@ export function PlanBoard({
           <button
             onClick={() => setPly(lastPly)}
             disabled={ply === lastPly}
-            aria-label="End of plan"
+            aria-label={s.planBoard.navLabels.end}
             className="rounded border border-zinc-700 px-1.5 py-0.5 hover:bg-zinc-800 disabled:opacity-40"
           >
             ⏭

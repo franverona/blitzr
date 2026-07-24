@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { Chessboard } from 'react-chessboard'
 import { addRepertoireMove, deleteRepertoireMove, listRepertoire } from '@/app/actions'
 import { whiteToMove } from '@/lib/drill'
+import { getStrings } from '@/lib/i18n/strings'
 import { legalDestinations } from '@/lib/legalMoves'
 import { buildRepertoireIndex } from '@/lib/repertoire'
 import { describeBlunderReason, detectBlunderReason } from '@/lib/tactics'
@@ -23,6 +24,7 @@ export function RepertoireBoard({
   color: RepertoireColor
   initialNodes: RepertoireNode[]
 }) {
+  const s = getStrings()
   const [nodes, setNodesState] = useState(initialNodes)
   const [path, setPathState] = useState<RepertoireNode[]>([])
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null)
@@ -117,7 +119,7 @@ export function RepertoireBoard({
     addRepertoireMove(node).catch((err) => {
       setNodes((prev) => prev.filter((n) => n.id !== node.id))
       setPath((p) => p.filter((n) => n.id !== node.id))
-      setError(err instanceof Error ? err.message : 'Failed to save move.')
+      setError(err instanceof Error ? err.message : s.repertoire.failedToSave)
     })
 
     return true
@@ -157,7 +159,7 @@ export function RepertoireBoard({
       setNodes(() => fresh)
       setPath((p) => p.slice(0, -1))
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete.')
+      setError(err instanceof Error ? err.message : s.repertoire.failedToDelete)
     } finally {
       setDeleting(false)
     }
@@ -166,21 +168,21 @@ export function RepertoireBoard({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-semibold">Repertoire</h1>
+        <h1 className="text-xl font-semibold">{s.repertoire.title}</h1>
         <div className="flex flex-wrap items-center gap-2 text-sm">
           <button
             onClick={() => setPath([])}
             disabled={path.length === 0}
             className="rounded-md border border-zinc-700 px-2.5 py-1 hover:bg-zinc-800 disabled:opacity-40"
           >
-            ⏮ Start
+            {s.repertoire.start}
           </button>
           <button
             onClick={() => setPath((p) => p.slice(0, -1))}
             disabled={path.length === 0}
             className="rounded-md border border-zinc-700 px-2.5 py-1 hover:bg-zinc-800 disabled:opacity-40"
           >
-            ◀ Back
+            {s.repertoire.back}
           </button>
           <span className="mx-1 h-4 w-px bg-zinc-700" />
           <HelpButton />
@@ -222,7 +224,7 @@ export function RepertoireBoard({
               disabled={!currentNode || deleting}
               className="rounded-md border border-rose-900 px-2.5 py-1 text-rose-400 hover:bg-rose-950 disabled:opacity-40"
             >
-              Delete this line
+              {s.repertoire.deleteLine}
             </button>
           </div>
 
@@ -235,7 +237,7 @@ export function RepertoireBoard({
 
           {siblings.length > 1 && (
             <div className="flex flex-wrap items-center gap-2 text-sm">
-              <span className="text-zinc-500">Alternatives here:</span>
+              <span className="text-zinc-500">{s.repertoire.alternativesHere}</span>
               {siblings.map((sibling) => (
                 <button
                   key={sibling.id}
@@ -260,28 +262,30 @@ export function RepertoireBoard({
 }
 
 function ColorTab({ color, active }: { color: RepertoireColor; active: boolean }) {
+  const s = getStrings()
   return (
     <Link
       href={`/repertoire?color=${color}`}
-      className={`rounded-md border px-3 py-1 capitalize ${
+      className={`rounded-md border px-3 py-1 ${
         active
           ? 'border-accent bg-accent/20 text-white'
           : 'border-zinc-700 text-zinc-400 hover:bg-zinc-800'
       }`}
     >
-      {color}
+      {s.common.color[color]}
     </Link>
   )
 }
 
 function HelpButton() {
   const dialogRef = useRef<HTMLDialogElement>(null)
+  const s = getStrings()
 
   return (
     <>
       <button
         onClick={() => dialogRef.current?.showModal()}
-        aria-label="How to use this screen"
+        aria-label={s.repertoire.helpAriaLabel}
         className="flex h-7 w-7 items-center justify-center rounded-full border border-zinc-700 text-xs text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
       >
         ?
@@ -295,27 +299,17 @@ function HelpButton() {
       >
         <div className="flex flex-col gap-3 p-5">
           <div className="flex items-center justify-between gap-4">
-            <h2 className="text-sm font-semibold">How to use this screen</h2>
+            <h2 className="text-sm font-semibold">{s.repertoire.helpTitle}</h2>
             <button
               onClick={() => dialogRef.current?.close()}
-              aria-label="Close"
+              aria-label={s.common.close}
               className="text-zinc-500 hover:text-zinc-200"
             >
               ✕
             </button>
           </div>
-          <p className="text-sm text-zinc-400">
-            A repertoire is the set of opening moves you&rsquo;ve decided to play and practice, one
-            tree per color. Building it here means picking the move(s) you want to play (or expect
-            from the opponent) at each position you&rsquo;ll actually reach — so your games and
-            drills check you against <em>your own plan</em>, not chess theory in general.
-          </p>
-          <p className="text-sm text-zinc-400">
-            Drag, or click a piece then a destination, to record your prep. Playing a move
-            that&rsquo;s already in the tree just navigates into it; a new move adds a branch.
-            Multiple branches from the same position are fine — that&rsquo;s how you prepare for
-            more than one opponent try.
-          </p>
+          <p className="text-sm text-zinc-400">{s.repertoire.helpP1}</p>
+          <p className="text-sm text-zinc-400">{s.repertoire.helpP2}</p>
         </div>
       </dialog>
     </>

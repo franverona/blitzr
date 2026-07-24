@@ -98,6 +98,9 @@ lib/
   drill.ts                           # candidate-finding, card hydration, SM-2 scheduling
   blunders.ts                          # buildBlunderStats() — pure aggregation
   sync.ts                            # syncAllArchives()
+  i18n/
+    locale.ts                # Locale type, getLocale() — reads NEXT_PUBLIC_LOCALE
+    strings.ts                 # UI string dictionary, getStrings()
   chesscom/
     client.ts                        # fetchArchives, fetchArchiveMonth
     normalize.ts                       # raw Chess.com game -> Game, parsePgnHeaders()
@@ -309,6 +312,26 @@ sub-variation that Chess.com tags the whole game with instead (confirmed live: t
 actual Ruy Lopez games are tagged `C70`/"Morphy Defense", not the `C60` the lesson's own position
 maps to — an ECO-code match would have shown 0 games despite 2 real ones). See each component's
 own comments for further implementation detail.
+
+## Internationalization (i18n)
+
+English and Spanish, chosen once per deployment via `NEXT_PUBLIC_LOCALE` (`lib/i18n/locale.ts`'s
+`getLocale()`) — needs the `NEXT_PUBLIC_` prefix (unlike `DB_TYPE`/`CHESSCOM_USERNAME`) so client
+components can read it too, since Next.js inlines `NEXT_PUBLIC_*` vars into both server and
+client bundles at build time. No Context/Provider, no in-app switcher — this is a single-user
+app, there's no other viewer to switch it for; changing the var needs a restart/rebuild.
+`lib/i18n/strings.ts` holds the whole UI string dictionary as plain data — an `en` object with no
+type annotation, and an `es` object typed against `typeof en` (via a derived `Strings` type), so
+a missing or mismatched Spanish key is a `tsc` error, not a silent gap. Parameterized/pluralized
+text is a function value (e.g. `drill.moreDue(n)`) rather than a placeholder-syntax templating
+engine — not worth a library for two locales. `getStrings()` returns the whole dictionary for the
+current locale; components call it once per render and destructure what they need. **SAN move
+notation and square names are never translated** (universal chess notation), and neither is
+Chess.com's own `ecoName`/opening-name data (external, not ours to translate) — same "don't touch
+external data" principle the ingestion layer already follows. The tactical-description generators
+in `lib/` (`describeMove`, `describeBetterMove`, `describeBlunderReason`, etc.) and the `/learn`
+lesson content (`OPENING_LESSONS`) need real per-locale sentence/grammar handling, not a string
+swap, and are translated separately from the static-UI pass this section otherwise describes.
 
 ## Testing
 

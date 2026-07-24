@@ -11,6 +11,7 @@ import {
   formatSwing,
 } from '@/lib/analysis'
 import { whiteToMove } from '@/lib/drill'
+import { getStrings } from '@/lib/i18n/strings'
 import { buildPositions } from '@/lib/positions'
 import { describeMove, plyLabel } from '@/lib/san'
 import { analyzeGame } from '@/lib/stockfish/analyze'
@@ -74,7 +75,7 @@ export function GameAnalysisProvider({
       setAnalysis({ gameId, evals, analyzedAt: new Date().toISOString() })
       await saveGameAnalysis(gameId, evals)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Analysis failed.')
+      setError(err instanceof Error ? err.message : getStrings().analysisPanel.analysisFailed)
     } finally {
       setProgress(null)
     }
@@ -92,6 +93,7 @@ export function GameAnalysisProvider({
 export function AnalyzeButton() {
   const { analysis, progress, error, handleAnalyze } = useAnalysisContext()
   const dialogRef = useRef<HTMLDialogElement>(null)
+  const s = getStrings()
 
   return (
     <div className="flex flex-col items-end gap-1">
@@ -101,7 +103,7 @@ export function AnalyzeButton() {
             onClick={() => dialogRef.current?.showModal()}
             className="text-sm text-zinc-400 hover:text-zinc-100"
           >
-            View analysis
+            {s.analysisPanel.viewAnalysis}
           </button>
         )}
         <button
@@ -110,10 +112,10 @@ export function AnalyzeButton() {
           className="rounded-md border border-zinc-700 px-3 py-1.5 text-sm font-medium whitespace-nowrap hover:bg-zinc-800 disabled:opacity-50"
         >
           {progress
-            ? `${analysis ? 'Re-analyzing' : 'Analyzing'}… (${progress.done}/${progress.total})`
+            ? `${analysis ? s.analysisPanel.reanalyzing : s.analysisPanel.analyzing}… (${progress.done}/${progress.total})`
             : analysis
-              ? 'Re-analyze'
-              : 'Analyze with Stockfish'}
+              ? s.analysisPanel.reanalyze
+              : s.analysisPanel.analyzeWithStockfish}
         </button>
       </div>
       {error && <p className="text-sm text-rose-400">{error}</p>}
@@ -128,13 +130,14 @@ export function AnalyzeButton() {
  *  nothing when not applicable yet" pattern as `RepertoireDiff`. */
 export function GameSummary() {
   const { analysis, movesSan, myColor, positions } = useAnalysisContext()
+  const s = getStrings()
   if (!analysis) return null
 
   const worst = biggestBlunder(findBlunders(analysis.evals, movesSan))
   if (!worst) {
     return (
       <p className="text-sm text-zinc-500 dark:text-zinc-400">
-        Clean game — no significant blunders from either side.
+        {s.analysisPanel.cleanGameNoBlunders}
       </p>
     )
   }
@@ -142,11 +145,11 @@ export function GameSummary() {
   const isMine = whiteToMove(worst.ply) === (myColor === 'white')
   const moverColor = whiteToMove(worst.ply) ? 'white' : 'black'
   const reason = detectBlunderReason(positions[worst.ply - 1], positions[worst.ply], moverColor)
-  const verb = blunderSeverity(worst.swingCp) === 'blunder' ? 'blundered' : 'made a mistake'
+  const isBlunder = blunderSeverity(worst.swingCp) === 'blunder'
   return (
     <p className="text-sm text-zinc-500 dark:text-zinc-400">
-      Biggest moment: {isMine ? 'you' : 'your opponent'} {verb} on {plyLabel(worst.ply)}{' '}
-      {worst.moveSan} ({describeMove(positions[worst.ply - 1], worst.moveSan)}).{' '}
+      {s.analysisPanel.biggestMoment(isMine, isBlunder)} {plyLabel(worst.ply)} {worst.moveSan} (
+      {describeMove(positions[worst.ply - 1], worst.moveSan)}).{' '}
       {reason && describeBlunderReason(reason)}
     </p>
   )
@@ -154,6 +157,7 @@ export function GameSummary() {
 
 function AnalysisDialog({ dialogRef }: { dialogRef: React.RefObject<HTMLDialogElement | null> }) {
   const { analysis, movesSan, positions } = useAnalysisContext()
+  const s = getStrings()
   if (!analysis) return null
 
   const blunders = findBlunders(analysis.evals, movesSan)
@@ -169,10 +173,10 @@ function AnalysisDialog({ dialogRef }: { dialogRef: React.RefObject<HTMLDialogEl
     >
       <div className="flex flex-col gap-4 p-6">
         <div className="flex items-center justify-between gap-4">
-          <h2 className="text-base font-semibold">Stockfish analysis</h2>
+          <h2 className="text-base font-semibold">{s.analysisPanel.stockfishAnalysis}</h2>
           <button
             onClick={() => dialogRef.current?.close()}
-            aria-label="Close"
+            aria-label={s.common.close}
             className="text-zinc-500 hover:text-zinc-200"
           >
             ✕
@@ -181,14 +185,14 @@ function AnalysisDialog({ dialogRef }: { dialogRef: React.RefObject<HTMLDialogEl
 
         {blunders.length === 0 ? (
           <p className="text-sm text-emerald-600 dark:text-emerald-400">
-            No blunders found by Stockfish — clean game.
+            {s.analysisPanel.noBlundersFoundClean}
           </p>
         ) : (
           <div className="flex flex-col gap-3">
             <p className="text-sm text-amber-600 dark:text-amber-400">
-              {blunders.length} {blunders.length === 1 ? 'blunder' : 'blunders'} found. Biggest:{' '}
-              {plyLabel(worst!.ply)} {worst!.moveSan} ({formatEval(worst!.evalBefore)} →{' '}
-              {formatEval(worst!.evalAfter)}, {describeEval(worst!.evalAfter).toLowerCase()}).
+              {s.analysisPanel.blundersFound(blunders.length)} {plyLabel(worst!.ply)}{' '}
+              {worst!.moveSan} ({formatEval(worst!.evalBefore)} → {formatEval(worst!.evalAfter)},{' '}
+              {describeEval(worst!.evalAfter).toLowerCase()}).
             </p>
             <ul className="flex flex-col divide-y divide-zinc-800">
               {blunders.map((b) => {
@@ -225,7 +229,9 @@ function AnalysisDialog({ dialogRef }: { dialogRef: React.RefObject<HTMLDialogEl
                           </div>
                         )}
                         {betterMove && (
-                          <div className="text-sm text-zinc-500">Better was {betterMove}</div>
+                          <div className="text-sm text-zinc-500">
+                            {s.common.betterWas} {betterMove}
+                          </div>
                         )}
                       </div>
                       {betterMove && bestMove && bestMove.bestLine?.length > 0 && (

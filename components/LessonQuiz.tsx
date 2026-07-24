@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Chess } from 'chess.js'
 import { Chessboard } from 'react-chessboard'
 import { whiteToMove } from '@/lib/drill'
+import { getStrings } from '@/lib/i18n/strings'
 import { legalDestinations } from '@/lib/legalMoves'
 import { BOARD_DARK_SQUARE, BOARD_LIGHT_SQUARE, REVEAL_ARROW_COLOR } from '@/lib/theme'
 import { useBoardContext } from './Board'
@@ -43,6 +44,7 @@ function revealArrow(fen: string, san: string) {
  *  acceptable moves. */
 export function LessonQuiz() {
   const { ply, setPly, positions, lastPly, boardOrientation, movesSan } = useBoardContext()
+  const s = getStrings()
   const [feedback, setFeedback] = useState<'incorrect' | null>(null)
   const [mistakes, setMistakes] = useState(0)
   const [hintsUsed, setHintsUsed] = useState(0)
@@ -160,7 +162,7 @@ export function LessonQuiz() {
   }
 
   const arrows = revealed ? revealArrow(fen, movesSan[ply]) : []
-  const colorLabel = boardOrientation === 'white' ? 'White' : 'Black'
+  const colorLabel = s.common.color[boardOrientation]
 
   return (
     <div className="mx-auto flex w-full max-w-140 flex-col gap-3">
@@ -170,12 +172,12 @@ export function LessonQuiz() {
           natural line-heights otherwise. */}
       <div className="flex h-9 items-center justify-between gap-2">
         {isComplete ? (
-          <p className="text-lg font-medium">Line complete!</p>
+          <p className="text-lg font-medium">{s.lessonQuiz.lineComplete}</p>
         ) : (
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
             {isMyTurn
-              ? `Playing as ${colorLabel} — move ${ply + 1} of ${lastPly}`
-              : "Opponent's move…"}
+              ? s.lessonQuiz.playingAs(colorLabel, ply + 1, lastPly)
+              : s.lessonQuiz.opponentsMove}
           </p>
         )}
         <div className="flex shrink-0 items-center gap-2">
@@ -185,7 +187,7 @@ export function LessonQuiz() {
             onClick={handleRestart}
             className="rounded-md border border-zinc-700 px-3 py-1.5 text-sm font-medium hover:bg-zinc-800"
           >
-            ⟲ Restart
+            {s.lessonQuiz.restart}
           </button>
           {!isComplete && (
             <button
@@ -193,7 +195,7 @@ export function LessonQuiz() {
               disabled={revealed || !isMyTurn}
               className="rounded-md border border-zinc-700 px-3 py-1.5 text-sm font-medium hover:bg-zinc-800 disabled:opacity-40"
             >
-              💡 Show move
+              {s.lessonQuiz.showMove}
             </button>
           )}
         </div>
@@ -232,14 +234,16 @@ export function LessonQuiz() {
       {isComplete ? (
         <p className="text-sm text-zinc-400">
           {mistakes === 0 && hintsUsed === 0
-            ? 'Played it perfectly — no mistakes or hints.'
-            : `${mistakes} mistake${mistakes === 1 ? '' : 's'}, ${hintsUsed} hint${hintsUsed === 1 ? '' : 's'} used.`}
+            ? s.lessonQuiz.perfect
+            : s.lessonQuiz.summary(mistakes, hintsUsed)}
         </p>
       ) : (
-        feedback === 'incorrect' && <p className="text-sm text-rose-400">Not quite — try again.</p>
+        feedback === 'incorrect' && (
+          <p className="text-sm text-rose-400">{s.lessonQuiz.notQuiteTryAgain}</p>
+        )
       )}
 
-      <p className="text-xs text-zinc-600">H → Show move · R → Restart</p>
+      <p className="text-xs text-zinc-600">{s.lessonQuiz.keyboardHint}</p>
     </div>
   )
 }

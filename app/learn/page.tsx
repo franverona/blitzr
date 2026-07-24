@@ -1,18 +1,17 @@
 import Link from 'next/link'
 import { MiniBoard } from '@/components/MiniBoard'
+import { getStrings } from '@/lib/i18n/strings'
 import { OPENING_LESSONS } from '@/lib/openingTheory'
 import { buildPositions } from '@/lib/positions'
 
 const START_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 
 export default function LearnPage() {
+  const s = getStrings()
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-xl font-semibold">Learn</h1>
-      <p className="text-sm text-zinc-500 dark:text-zinc-400">
-        Short, plain-English introductions to common openings — not a repertoire, just the ideas
-        behind one natural line, move by move.
-      </p>
+      <h1 className="text-xl font-semibold">{s.learnPage.title}</h1>
+      <p className="text-sm text-zinc-500 dark:text-zinc-400">{s.learnPage.intro}</p>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         {OPENING_LESSONS.map((lesson) => {
           const positions = buildPositions(

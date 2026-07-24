@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { formatEval, formatSwing } from '@/lib/analysis'
+import { getStrings } from '@/lib/i18n/strings'
 import { plyLabel } from '@/lib/san'
 import type { SanPiece } from '@/lib/san'
 import { describeBlunderReason } from '@/lib/tactics'
@@ -12,20 +13,17 @@ import { PieceGlyph } from './PieceGlyph'
 const PIECE_KEYS: ReadonlySet<string> = new Set(['K', 'Q', 'R', 'B', 'N'])
 
 export function BlunderStats({ stats }: { stats: BlunderStatsData }) {
+  const s = getStrings()
   if (stats.analyzedGames === 0) {
     return (
-      <p className="text-sm text-zinc-500 dark:text-zinc-400">
-        No analyzed games yet — open a game and click &ldquo;Analyze with Stockfish&rdquo; to start
-        building this up.
-      </p>
+      <p className="text-sm text-zinc-500 dark:text-zinc-400">{s.blunderStats.emptyNoAnalyzed}</p>
     )
   }
 
   if (stats.totalBlunders === 0) {
     return (
       <p className="text-sm text-zinc-500 dark:text-zinc-400">
-        No blunders found across your {stats.analyzedGames} analyzed{' '}
-        {stats.analyzedGames === 1 ? 'game' : 'games'} — clean sheet so far.
+        {s.blunderStats.emptyNoBlunders(stats.analyzedGames)}
       </p>
     )
   }
@@ -34,18 +32,16 @@ export function BlunderStats({ stats }: { stats: BlunderStatsData }) {
     <div className="flex flex-col gap-6">
       <section className="flex flex-col gap-2">
         <h2 className="text-xs font-semibold tracking-wide text-zinc-500 uppercase dark:text-zinc-400">
-          By opening
+          {s.blunderStats.byOpening}
         </h2>
         <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
           <table className="w-full text-sm">
             <thead className="bg-zinc-100 text-left text-xs tracking-wide text-zinc-500 uppercase dark:bg-zinc-900 dark:text-zinc-400">
               <tr>
-                <th className="px-3 py-2">Opening</th>
-                <th className="px-3 py-2">Blunders</th>
+                <th className="px-3 py-2">{s.openingsTable.headers.opening}</th>
+                <th className="px-3 py-2">{s.nav.blunders}</th>
                 <th className="px-3 py-2">
-                  <abbr title="How many pawns worse the position got, on average, across these blunders">
-                    Avg swing
-                  </abbr>
+                  <abbr title={s.blunderStats.avgSwingTooltip}>{s.blunderStats.avgSwing}</abbr>
                 </th>
               </tr>
             </thead>
@@ -55,9 +51,7 @@ export function BlunderStats({ stats }: { stats: BlunderStatsData }) {
                   <td className="px-3 py-2 font-medium">{group.label}</td>
                   <td className="px-3 py-2">{group.count}</td>
                   <td className="px-3 py-2 text-zinc-600 dark:text-zinc-400">
-                    {group.avgSwingCp !== null
-                      ? `${(group.avgSwingCp / 100).toFixed(1)} pawns`
-                      : '—'}
+                    {group.avgSwingCp !== null ? s.common.pawns(group.avgSwingCp / 100) : '—'}
                   </td>
                 </tr>
               ))}
@@ -68,7 +62,7 @@ export function BlunderStats({ stats }: { stats: BlunderStatsData }) {
 
       <section className="flex flex-col gap-2">
         <h2 className="text-xs font-semibold tracking-wide text-zinc-500 uppercase dark:text-zinc-400">
-          By piece
+          {s.blunderStats.byPiece}
         </h2>
         <div className="flex flex-wrap gap-2">
           {stats.byPiece.map((group) => (
@@ -93,7 +87,7 @@ export function BlunderStats({ stats }: { stats: BlunderStatsData }) {
 
       <section className="flex flex-col gap-2">
         <h2 className="text-xs font-semibold tracking-wide text-zinc-500 uppercase dark:text-zinc-400">
-          Worst blunders
+          {s.blunderStats.worstBlunders}
         </h2>
         <ul className="flex flex-col gap-1.5 text-sm">
           {stats.worst.map((b) => (
@@ -119,7 +113,7 @@ export function BlunderStats({ stats }: { stats: BlunderStatsData }) {
               )}
               {b.betterMove && (
                 <div className="text-xs text-zinc-500 dark:text-zinc-500">
-                  Better was {b.betterMove}
+                  {s.common.betterWas} {b.betterMove}
                 </div>
               )}
             </li>
