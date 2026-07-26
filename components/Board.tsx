@@ -384,7 +384,7 @@ export function BoardView({
 
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-center">
-      <div className="flex shrink-0 flex-col gap-3">
+      <div className={`flex w-full shrink-0 flex-col gap-3 ${boardMaxWidthClassName}`}>
         <div className="flex items-stretch gap-2">
           {evals?.[ply] && <EvalBar evaluation={evals[ply]} boardOrientation={boardOrientation} />}
           <div className={`w-full overflow-hidden rounded shadow-lg ${boardMaxWidthClassName}`}>
