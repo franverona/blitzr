@@ -123,7 +123,16 @@ file, not here — this section is only cross-cutting rules that span multiple f
   children (board, move-list column) against the left edge, leaving empty space trailing on the
   right whenever the row was narrower than the available width (any viewport where the board
   hadn't grown to its largest `xl`/`2xl` tier) — `lg:justify-center` on that row fixes it at the
-  source, so this isn't specific to any one viewport width.
+  source, so this isn't specific to any one viewport width. `justify-center` on that row also
+  surfaced a pre-existing bug: the board's own column (`w-full` + `boardMaxWidthClassName`) had no
+  cap of its own, so a long betterMove/plan `<p>` (unbounded width, unlike the board) could render
+  wider than the board on some plies — with a centered row, that briefly widened column shifted the
+  _whole_ board+sidebar block sideways every time the suggestion text got long or short, reading as
+  a horizontal flicker while stepping through a game (most visible around a move where the engine's
+  suggestion text changes length ply-to-ply). Previously invisible because a left-packed row only
+  had to nudge the sidebar, not the board itself. Fixed by giving the column the same
+  `boardMaxWidthClassName` cap as the board inside it, so long suggestion text wraps within that
+  fixed width instead of growing the column.
 - **Server Actions** for all DB reads/writes and the sync/analysis triggers — no API routes.
 - **Domain types are camelCase** (`lib/types.ts`); **DB columns are snake_case**
   (`lib/db/types.ts`). Each repository implementation maps between them explicitly — never leak
