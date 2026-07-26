@@ -174,7 +174,10 @@ Each blunder also names the engine's suggested move instead, with a plain-Englis
 d7) — saves the rook on h6, which was hanging"). Stepping through the board on a game's page (with
 the ◀/▶ buttons, the move list, or the left/right arrow keys) shows the same explanation for
 whatever move you're currently viewing, right alongside the arrow pointing at the engine's
-suggestion.
+suggestion. A game's page opens on the first move already played rather than the last, and a
+**Play** button (or the Space key) auto-advances through the game — pausing automatically on a
+blunder rather than requiring you to step through every quiet move to find one — until it reaches
+the end, or you pause it yourself. `0` jumps back to the start.
 
 Not every good move pays off immediately — sometimes the point only becomes clear a few moves
 later, which is hard to judge from notation alone if you can't calculate that far ahead yet. When

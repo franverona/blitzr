@@ -11,7 +11,7 @@ import {
   useState,
 } from 'react'
 import { Chessboard } from 'react-chessboard'
-import { describeEval, formatEval } from '@/lib/analysis'
+import { describeEval, findBlunders, formatEval } from '@/lib/analysis'
 import { whiteToMove } from '@/lib/drill'
 import { getStrings } from '@/lib/i18n/strings'
 import { formatMaterialDiff, materialDiff } from '@/lib/material'
@@ -52,6 +52,11 @@ interface BoardContextValue {
 // same reason: the two positions in the tree aren't adjacent.
 const BoardContext = createContext<BoardContextValue | null>(null)
 
+// How long the Play toggle in BoardNavControls waits between auto-advancing
+// one ply — long enough to actually read the position, short enough that
+// watching a full game doesn't feel sluggish.
+const PLAY_INTERVAL_MS = 500
+
 // Exported so consumers outside this file (e.g. the /learn lesson page, which
 // needs the current ply to show a per-move explanation) can read the same
 // context without Board.tsx needing to know anything about their use case.
@@ -75,16 +80,19 @@ export function BoardProvider({
   boardOrientation: 'white' | 'black'
   result?: string
   evals?: PositionEval[]
-  /** Which ply to show first — defaults to the last, since most callers
-   *  (the game replay page) want to land on the final position. The /learn
-   *  lesson page overrides this to 1 so a lesson opens on its first move
-   *  instead of jumping straight to the end of the line. */
+  /** Which ply to show first — defaults to the last ply if omitted, but
+   *  every current caller passes its own value instead: the game replay
+   *  page opens on ply 1 (the first move already played, not the empty
+   *  starting position) so the board shows something happened; /learn's
+   *  Study mode does the same, Quiz mode opens on 0 instead. */
   initialPly?: number
   children: React.ReactNode
 }) {
   const positions = useMemo(() => buildPositions(initialFen, movesSan), [initialFen, movesSan])
   const lastPly = positions.length - 1
-  const [ply, setPly] = useState(initialPly ?? lastPly)
+  // Clamped in case a caller's fixed initialPly (e.g. the game page's 1)
+  // exceeds a real lastPly of 0 — a synced game can have zero parsed moves.
+  const [ply, setPly] = useState(Math.min(initialPly ?? lastPly, lastPly))
   const [boardOrientation, setBoardOrientation] = useState(initialBoardOrientation)
 
   return (
@@ -107,21 +115,76 @@ export function BoardProvider({
 }
 
 export function BoardNavControls() {
-  const { ply, setPly, lastPly } = useBoardContext()
+  const { ply, setPly, lastPly, movesSan, evals } = useBoardContext()
   const s = getStrings()
+  const [isPlaying, setIsPlaying] = useState(false)
 
-  const goToPrevious = useCallback(() => setPly((p) => Math.max(0, p - 1)), [setPly])
-  const goToNext = useCallback(() => setPly((p) => Math.min(lastPly, p + 1)), [setPly, lastPly])
+  // Mirror `ply`/`isPlaying` in refs so the setInterval/keydown callbacks
+  // below can read the latest value without being dependencies of the
+  // effects that create them (which would tear down and recreate the
+  // interval/listener on every single step) — and, for `togglePlaying`, so
+  // it never nests a `setPly` call inside `setIsPlaying`'s own updater
+  // function, which React flags as updating one component's state while
+  // rendering another's (`setPly` belongs to `BoardProvider`, not here).
+  // Synced via an effect (not assigned directly during render) since refs
+  // are only safe to read/write outside of render.
+  const plyRef = useRef(ply)
+  const isPlayingRef = useRef(isPlaying)
+  useEffect(() => {
+    plyRef.current = ply
+    isPlayingRef.current = isPlaying
+  })
+
+  const goToStart = useCallback(() => {
+    setIsPlaying(false)
+    setPly(0)
+  }, [setPly])
+  const goToPrevious = useCallback(() => {
+    setIsPlaying(false)
+    setPly((p) => Math.max(0, p - 1))
+  }, [setPly])
+  const goToNext = useCallback(() => {
+    setIsPlaying(false)
+    setPly((p) => Math.min(lastPly, p + 1))
+  }, [setPly, lastPly])
+  const goToEnd = useCallback(() => {
+    setIsPlaying(false)
+    setPly(lastPly)
+  }, [setPly, lastPly])
+  const togglePlaying = useCallback(() => {
+    if (isPlayingRef.current) {
+      setIsPlaying(false)
+      return
+    }
+    if (plyRef.current >= lastPly) setPly(0) // restart from the beginning if already at the end
+    setIsPlaying(true)
+  }, [lastPly, setPly])
 
   // Left/right arrow keys step through the game the same as the ◀/▶
-  // buttons — global, not scoped to a focused element, matching the
-  // chess.com/lichess convention this page's audience already knows. Only
-  // mounted where the buttons themselves are (games/[id], and /learn's
-  // Study mode but not Quiz mode), so this never fights with Quiz mode's
-  // own input handling.
+  // buttons, Space toggles Play/Pause, and 0 jumps to the start — global,
+  // not scoped to a focused element, matching the chess.com/lichess
+  // convention this page's audience already knows. Only mounted where the
+  // buttons themselves are (games/[id], and /learn's Study mode but not
+  // Quiz mode), so this never fights with Quiz mode's own input handling.
   const lastNavAtRef = useRef(0)
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
+      // Space is a native activation key for a focused <button> (e.g. the
+      // Play/Pause button itself, right after clicking it) — without this
+      // guard, pressing it would toggle play twice: once from the button's
+      // own native click, once from this listener.
+      if (e.key === ' ' && e.target instanceof HTMLElement && e.target.tagName === 'BUTTON') {
+        return
+      }
+      if (e.key === ' ') {
+        e.preventDefault()
+        togglePlaying()
+        return
+      }
+      if (e.key === '0') {
+        goToStart()
+        return
+      }
       if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
       e.preventDefault()
       // Holding the key down (or just tapping it fast) fires keydown much
@@ -138,11 +201,31 @@ export function BoardNavControls() {
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [goToPrevious, goToNext])
+  }, [goToPrevious, goToNext, goToStart, togglePlaying])
+
+  // Every ply that's a blunder (200cp+ swing) for whoever just moved — same
+  // definition findBlunders() already uses for the analysis dialog/
+  // blunders page, reused here as "auto-play's stopping points" instead of
+  // a separate notion of what counts as relevant. `undefined` (unanalyzed
+  // game) just means autoplay has nothing to stop for except the end.
+  const blunderPlies = useMemo(
+    () => (evals ? new Set(findBlunders(evals, movesSan).map((b) => b.ply)) : null),
+    [evals, movesSan],
+  )
+
+  useEffect(() => {
+    if (!isPlaying) return
+    const interval = setInterval(() => {
+      const next = Math.min(plyRef.current + 1, lastPly)
+      setPly(next)
+      if (next === lastPly || blunderPlies?.has(next)) setIsPlaying(false)
+    }, PLAY_INTERVAL_MS)
+    return () => clearInterval(interval)
+  }, [isPlaying, lastPly, blunderPlies, setPly])
 
   return (
     <div className="flex items-center gap-2 text-sm">
-      <NavButton onClick={() => setPly(0)} disabled={ply === 0} label={s.board.navLabels.start}>
+      <NavButton onClick={goToStart} disabled={ply === 0} label={s.board.navLabels.start}>
         ⏮
       </NavButton>
       <NavButton onClick={goToPrevious} disabled={ply === 0} label={s.board.navLabels.previous}>
@@ -154,13 +237,19 @@ export function BoardNavControls() {
       <NavButton onClick={goToNext} disabled={ply === lastPly} label={s.board.navLabels.next}>
         ▶
       </NavButton>
-      <NavButton
-        onClick={() => setPly(lastPly)}
-        disabled={ply === lastPly}
-        label={s.board.navLabels.end}
-      >
+      <NavButton onClick={goToEnd} disabled={ply === lastPly} label={s.board.navLabels.end}>
         ⏭
       </NavButton>
+      <span className="mx-1 h-4 w-px bg-zinc-700" />
+      <button
+        onClick={togglePlaying}
+        disabled={lastPly === 0}
+        className={`rounded-md border px-2.5 py-1 disabled:opacity-40 ${
+          isPlaying ? 'border-accent bg-accent/20 text-white' : 'border-zinc-700 hover:bg-zinc-800'
+        }`}
+      >
+        {isPlaying ? s.board.navLabels.pause : s.board.navLabels.play}
+      </button>
     </div>
   )
 }
