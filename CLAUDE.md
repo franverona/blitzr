@@ -435,6 +435,30 @@ crowding the material/eval line out of the same initial viewport, undoing the fi
 (matching `/learn`'s own already-vetted board size) at `xl` and a modest further step at `2xl`
 balances "use the space" against "still fits everything, board included."
 
+Findings are also drawn directly on the board, not just described in the sidebar text — a
+hanging-piece square gets a highlight, a fork/skewer/pin gets an arrow (attacker→target,
+attacker→back piece, pinner→pinned respectively) plus highlights on every square involved.
+`findingMarks()`/`findingKey()` (`lib/checklist.ts`) are the pure mapping from a `ChecklistFinding`
+to plain square-name strings — `BoardView` (`components/Board.tsx`) applies the actual
+`squareStyles`/`arrows` colors (`CHECKLIST_SQUARE_COLOR`/`CHECKLIST_ARROW_COLOR`, `lib/theme.ts`,
+rose — matching `BlunderSeverityBadge`'s existing "danger" rose rather than reusing
+`REVEAL_ARROW_COLOR`'s amber, which means something different: the engine's own suggested move).
+Showing every finding by default risks turning a busy middlegame into clutter, so each finding in
+`PositionChecklist` carries its own Hide/Show toggle — `BoardProvider` holds a `hiddenFindingKeys`
+Set + `toggleFindingVisibility()` in context (not local to `PositionChecklist`) since `BoardView`
+needs to read it too to decide what to actually draw; `findingKey()` gives each finding a stable
+identity (side + kind + squares) that survives the sort-and-recap `buildPositionChecklist()` does
+every render, since array index isn't stable across that. Hidden keys are never reset on ply
+change — in practice a finding's key is specific enough (exact squares/pieces) that it essentially
+never recurs at a different position, so no explicit reset was worth the extra code. One
+non-obvious bug caught only by checking the browser console (not `tsc`/lint/tests): react-chessboard
+keys each rendered arrow by its start/end squares alone, not by color, so a checklist arrow and the
+engine's reveal arrow landing on the same two squares — or two checklist findings independently
+producing the same arrow — threw a duplicate-key React warning. Fixed by deduping arrows through a
+single `Map` keyed on `"from-to"` before handing the list to `Chessboard`, with the reveal arrow
+inserted last so it wins any collision (it's the primary "what to play instead" callout, the
+checklist arrow is supplementary).
+
 ## Internationalization (i18n)
 
 English and Spanish, chosen once per deployment via `NEXT_PUBLIC_LOCALE` (`lib/i18n/locale.ts`'s

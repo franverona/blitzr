@@ -310,6 +310,8 @@ const en = {
       yourPieces: 'Your pieces',
       opponentPieces: "Opponent's pieces",
       clean: 'Nothing spotted here.',
+      hide: 'Hide on board',
+      show: 'Show on board',
     },
   },
   metadata: {
@@ -632,6 +634,8 @@ const es: Strings = {
       yourPieces: 'Tus piezas',
       opponentPieces: 'Piezas del rival',
       clean: 'Nada que destacar aquí.',
+      hide: 'Ocultar en el tablero',
+      show: 'Mostrar en el tablero',
     },
   },
   metadata: {

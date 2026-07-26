@@ -27,3 +27,13 @@ export const REVEAL_ARROW_COLOR = 'rgba(234, 179, 8, 0.9)'
  *  captures read consistently everywhere, and `Board.tsx`'s arrow-key
  *  throttle matches it so a new step never cuts an in-flight slide short. */
 export const BOARD_ANIMATION_DURATION_MS = 150
+
+/** Board markers for `PositionChecklist` findings (hanging piece/fork/pin/
+ *  skewer squares and arrows) — rose, matching `BlunderSeverityBadge`'s
+ *  existing "danger" rose already used for the Blunder severity pill, so the
+ *  color reads consistently as "something's at risk" everywhere in the app.
+ *  Deliberately not the same hue as `REVEAL_ARROW_COLOR` (the engine's
+ *  suggested-move arrow) — both can be on screen at once, and reusing one
+ *  color for two different meanings would make them hard to tell apart. */
+export const CHECKLIST_ARROW_COLOR = 'rgba(244, 63, 94, 0.9)'
+export const CHECKLIST_SQUARE_COLOR = 'rgba(244, 63, 94, 0.35)'
