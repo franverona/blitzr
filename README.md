@@ -198,6 +198,21 @@ actually step through where the plan leads instead of just reading it.
   page](https://www.chessprogramming.org/Evaluation) covers the same centipawn/mate-score
   convention Stockfish (and Blitzr) uses.
 
+## Position checklist
+
+Stepping through a game on its page, a **Position checklist** panel sits next to the board, below
+the move list, and updates as you move through the game — it scans whatever position you're
+currently looking at for hanging pieces, forks, pins, and skewers on either side, split into "Your
+pieces" and "Opponent's pieces." Unlike the blunder explanations above (which only fire on a move
+that actually swung the eval), this checks the position itself, so it's useful at any point in any
+game — including one you haven't run Stockfish on at all — for figuring out what to look for next
+instead of just moving pieces around. It's capped to the 3 most valuable findings per side so a
+busy position doesn't turn into a wall of text, and the same "How to read this" glossary from the
+analysis dialog is right there too, in case "skewer" or "fork" isn't a familiar term yet. It stays
+in view the whole time you're stepping through a game — no scrolling down to check it and back up
+to move again — and collapses down to one line ("nothing to flag right now") on a quiet position
+so it doesn't crowd out the move list when there's nothing to say.
+
 ## Drilling
 
 On `/drill`, every repertoire deviation and every blunder from your own moves becomes a card:

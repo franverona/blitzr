@@ -259,6 +259,18 @@ export interface SkewerReason {
  *  detectors. */
 export type BlunderReason = HangingPieceReason | ForkReason | PinReason | SkewerReason
 
+/** One already-present tactical pattern found by scanning a single static
+ *  position (`buildPositionChecklist()` in `lib/checklist.ts`) — reuses the
+ *  same `BlunderReason` shape the diff-based detectors produce, since the
+ *  underlying pattern is identical, just found a different way (a snapshot
+ *  scan rather than a before/after diff off one specific move). `side` is
+ *  whose piece(s) the finding is about — the one at risk of losing
+ *  material or being forced to move, not the side doing the attacking. */
+export interface ChecklistFinding {
+  side: MyColor
+  reason: BlunderReason
+}
+
 export type DrillSourceType = 'deviation' | 'blunder'
 
 /** A spaced-repetition card, keyed by where it came from rather than a
