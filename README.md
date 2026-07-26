@@ -26,17 +26,18 @@ every analyzed game so you can see what actually keeps going wrong.
 Published-Data API under their terms. It does not use Chess.com's name, logos, or marks in
 any way that implies endorsement or affiliation.
 
-## Status: Phase 7
+## What's built
 
 - [x] Config for your Chess.com username
 - [x] Incremental sync of your games into SQLite
 - [x] Browse UI — game list, board replay, openings aggregated by ECO
-- [x] Phase 2 — intended repertoire + deviation detection
-- [x] Phase 3 — Stockfish (WASM) analysis, blunder detection
-- [x] Phase 4 — spaced-repetition drilling
-- [x] Phase 5 — cross-game recurring-blunders aggregate
-- [x] Phase 6 — hand-authored opening lessons with an interactive board
-- [x] Phase 7 — hand-authored endgame lessons alongside them
+- [x] User-defined repertoire + deviation detection
+- [x] Stockfish (WASM) analysis — blunder detection, plus tactical explanations (hanging pieces,
+      forks, pins, skewers)
+- [x] Spaced-repetition drilling
+- [x] Cross-game recurring-blunders aggregate
+- [x] Hand-authored opening and endgame lessons with an interactive board
+- [x] Position checklist — a live tactical scan of whatever position you're viewing
 
 ## Stack
 

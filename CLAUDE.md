@@ -6,29 +6,8 @@ A local, single-user chess repertoire trainer built from the owner's own Chess.c
 Public, open-source, but scoped for one person running it on their own machine. No accounts,
 no hosted version, no multi-user support.
 
-Built in phases; only build what the current phase asks for. Don't scaffold future phases
-ahead of time.
-
-- **Phase 1 (done)**: username config, incremental Chess.com sync into SQLite, browse UI
-  (game list, board replay, openings aggregated by ECO). No engine.
-- **Phase 2 (done)**: user-defined repertoire (opening trees per color), diff each game against
-  it to flag the first deviating move.
-- **Phase 3 (done)**: Stockfish (WASM, in a Web Worker) analysis — per-game blunders and biggest
-  eval drop.
-- **Phase 4 (done)**: spaced-repetition drilling (`/drill`) of repertoire deviations and your own
-  blunders, via a card per drillable position scheduled with SM-2.
-- **Phase 5 (done)**: cross-game "recurring blunders" aggregate (`/blunders`), grouped by opening
-  and by piece, scoped to whatever games already have a saved analysis.
-- **Phase 6 (done)**: `/learn` — hand-authored, plain-language opening lessons with an interactive
-  board, a Study mode (read the line) and a Quiz mode (play it from memory, one side at a time).
-  14 lessons so far (King's Pawn Opening, Sicilian Defense, French Defense, Queen's Gambit,
-  Italian Game, Caro-Kann Defense, Scandinavian Defense, King's Indian Defense, English Opening,
-  Nimzo-Indian Defense, Grünfeld Defense, King's Gambit, Scotch Game, Pirc Defense); adding more
-  is a content-only addition from here (see "Learn openings" below).
-- **Phase 7 (done)**: `/learn` gains a second content category — hand-authored endgame lessons,
-  reusing every Study/Quiz component the opening lessons already built. 3 lessons so far (King
-  and Queen vs. King, King and Rook vs. King, King and Pawn vs. King); adding more is a
-  content-only addition from here (see "Learn endgames" below).
+Built incrementally, one feature or fix at a time, driven by what's actually asked for — don't
+scaffold speculative future work ahead of time.
 
 ## Stack
 
@@ -234,7 +213,7 @@ ply)` rather than a synthetic id, `ON DELETE CASCADE` on `game_id`).
   includes activity the public Published-Data API simply never exposes. Nothing to fix here;
   there's no data to sync.
 
-## Repertoire (Phase 2)
+## Repertoire
 
 A branching tree per color (`repertoire_moves` — `parent_id`/`ply`/`move_san`/`fen`; multiple
 children at one node is how you prepare replies to more than one opponent try). Built
@@ -246,7 +225,7 @@ same real-time hanging-piece/fork warning used in analysis (`detectBlunderReason
 `lib/tactics.ts`) runs live while building the tree, derived from the current node's FEN rather
 than stored state.
 
-## Engine analysis (Phase 3)
+## Engine analysis
 
 Stockfish runs **client-side only**, in a browser Web Worker — Server Actions
 (`getGameAnalysis`/`saveGameAnalysis`) only persist results, never run the engine.
@@ -298,10 +277,11 @@ several simultaneous `Chessboard` instances at once. react-chessboard requires a
 per instance for this (`useId()` in both `Board.tsx` and `PlanBoard.tsx`) — omitting it isn't
 just a style nit, it crashes with "Square width not found" once two boards share a page.
 
-## Drilling (Phase 4)
+## Drilling
 
 A drillable position is fully derivable from data that already exists (`games.moves_san`,
-`repertoire_moves`, `game_analysis.evals`) via the same pure functions Phases 2/3 built —
+`repertoire_moves`, `game_analysis.evals`) via the same pure functions the Repertoire and Engine
+analysis sections above already built —
 `drill_cards` stores only the spaced-repetition schedule, keyed by `(gameId, sourceType, ply)`,
 everything else recomputed on demand by `buildDrillPrompt()` (`lib/drill.ts`). Two card sources:
 `findDeviationCandidates()` (repertoire deviations) and `findBlunderCandidates()` (blunders on the
@@ -318,7 +298,7 @@ board). `?type=`/`?opening=` filters follow the same URL-driven pattern as `/rep
 `?color=`, with `DrillSession` keyed on the filter values so switching filters remounts a fresh
 session instead of reusing the frozen one.
 
-## Blunders aggregate (Phase 5)
+## Blunders aggregate
 
 Pure aggregation over already-stored data, no new table — `buildBlunderStats()` (`lib/blunders.ts`)
 mirrors `buildOpeningFamilies()`'s shape, computed fresh on every `/blunders` load. Scoped to
@@ -331,7 +311,7 @@ this" glossary used by both this page and the game analysis dialog. `blunderSeve
 (`lib/analysis.ts`) labels each blunder "Mistake" (200–399cp) or "Blunder" (400cp+) without
 changing what counts as a blunder anywhere — shown via `BlunderSeverityBadge`.
 
-## Learn openings (Phase 6)
+## Learn openings
 
 **Content is hand-authored, not imported.** `lib/openingTheory.ts` exports a hardcoded
 `OPENING_LESSONS: Lesson[]` array plus `getOpeningLesson(slug)` — no DB table, no Server Action,
@@ -358,7 +338,7 @@ a deeper, more specific named sub-variation that Chess.com tags the whole game w
 the `C60` the lesson's own position maps to — an ECO-code match would have shown 0 games despite
 2 real ones). See each component's own comments for further implementation detail.
 
-## Learn endgames (Phase 7)
+## Learn endgames
 
 `lib/endgameTheory.ts` mirrors `lib/openingTheory.ts` exactly — `ENDGAME_LESSONS: Lesson[]` +
 `getEndgameLesson(slug)`, same hand-authored/paraphrased/`sourceUrl`-cited content rules, same
@@ -528,7 +508,7 @@ See README.md for full pm2 setup instructions.
 
 ## Git workflow
 
-- **Never commit directly to `main`.** Every phase (or standalone fix/change) gets its own
+- **Never commit directly to `main`.** Every feature, fix, or standalone change gets its own
   branch and at least one PR — `git checkout -b <branch>`, commit there, `gh pr create`.
 - **Conventional commits for both commit messages and PR titles** (`feat: …`, `fix: …`,
   `chore: …`, `style: …`), lowercase subject — enforced on commits by commitlint
