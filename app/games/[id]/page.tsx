@@ -53,22 +53,23 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
         </div>
       </div>
 
-      {diff && (
-        <RepertoireDiff
-          diff={diff}
-          color={game.myColor}
-          hasRepertoire={repertoireNodes.length > 0}
-          totalPlies={game.movesSan?.length ?? 0}
-        />
-      )}
-
-      {game.movesSan && <GameSummary />}
-
       {game.movesSan ? (
-        <>
-          <BoardView />
-          <PositionChecklist myColor={game.myColor} />
-        </>
+        <BoardView
+          sidebarExtra={
+            <>
+              {diff && (
+                <RepertoireDiff
+                  diff={diff}
+                  color={game.myColor}
+                  hasRepertoire={repertoireNodes.length > 0}
+                  totalPlies={game.movesSan.length}
+                />
+              )}
+              <GameSummary />
+              <PositionChecklist myColor={game.myColor} />
+            </>
+          }
+        />
       ) : (
         <div className="flex flex-col gap-2">
           <p className="text-sm text-amber-600 dark:text-amber-400">

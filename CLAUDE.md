@@ -388,19 +388,32 @@ a plain verb ("pins"/"clava") rather than a gendered past-participle adjective, 
 torre/dama-vs-everything-else gender agreement.
 
 `components/PositionChecklist.tsx` renders two sections ("Your pieces"/"Opponent's pieces," split
-by `ChecklistFinding.side` against `game.myColor`) on the game page, right after `BoardView` — a
-`<details>` disclosure like `EvalHelp`, not an always-open block. The first version rendered
-always-open and, on live testing, made an already-tall game page (board, move list, analysis
-panel) require scrolling well past the board just to reach it — real user feedback on the running
-app, not a hypothetical. `open={findings.length > 0}` means a quiet position collapses to a single
-summary line (`s.gamePage.checklist.summary(n)`, e.g. "Position checklist — 2 to check" vs.
-"— nothing to flag right now"), so the count is visible without opening it, and a position with
-something worth seeing expands automatically instead of hiding behind a click. It also renders
-`EvalHelp` itself at the bottom: the glossary previously only surfaced inside the Stockfish
-analysis dialog, which requires running analysis first, but the checklist works on any game with
-moves, analyzed or not — a beginner hitting "fork"/"skewer" terminology here needs the glossary
-reachable without that dependency. Game-replay page only for v1, not wired into `/learn` lessons
-(no clear "my color vs. opponent" framing there).
+by `ChecklistFinding.side` against `game.myColor`). Placement went through two live-tested
+iterations, both driven by real friction on the running app rather than guessed upfront: an
+always-open block right after `BoardView` needed scrolling well past the board on every ply to
+reach; collapsing it into a `<details>` (still after `BoardView`) fixed the scrolling _cost_ but
+not the round-trip itself — stepping to a new move still meant scrolling down to check it,
+scrolling back up to step again. The actual fix was moving it out of the page's main flow
+entirely: `BoardView` (`components/Board.tsx`) now takes an optional `sidebarExtra: React.ReactNode`
+prop, rendered stacked below the move list in that same width-capped column next to the board —
+`undefined` for every other caller (`/learn` lessons have nothing to pass), so this changed
+nothing for them. `app/games/[id]/page.tsx` passes a fragment of `RepertoireDiff`/`GameSummary`/
+`PositionChecklist` there (moved out of the page's top-of-page main column, where they'd
+previously stacked above the board alongside the header) — same reasoning extended past the
+checklist itself once it became clear the deviation/blunder-summary lines were pushing the board
+down the page too, for the same "supplementary analysis, not core game identity" reason. Only
+`GameHeader` (names/date/opening) and the nav/analyze controls stay above the board now. The panel
+stays in view the whole time you step through a game, no scrolling either direction.
+It's still a `<details>` disclosure (a long game's move list can already be tall, so a quiet
+position collapsing to one summary line — `s.gamePage.checklist.summary(n)`, e.g.
+"Position checklist — 2 to check" vs. "— nothing to flag right now" — keeps this column from
+growing past the board for no reason), `open={findings.length > 0}` so anything worth seeing
+expands itself rather than hiding behind a click. It also renders `EvalHelp` itself at the bottom:
+the glossary previously only surfaced inside the Stockfish analysis dialog, which requires running
+analysis first, but the checklist works on any game with moves, analyzed or not — a beginner
+hitting "fork"/"skewer" terminology here needs the glossary reachable without that dependency.
+Game-replay page only for v1, not wired into `/learn` lessons (no clear "my color vs. opponent"
+framing there).
 
 ## Internationalization (i18n)
 

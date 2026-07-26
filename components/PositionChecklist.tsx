@@ -6,13 +6,14 @@ import type { ChecklistFinding, MyColor } from '@/lib/types'
 import { useBoardContext } from './Board'
 import { EvalHelp } from './EvalHelp'
 
-// A <details> disclosure (like EvalHelp), not an always-open block — the
-// game page is already tall (board, move list, analysis panel), and a
-// permanently-expanded two-section panel plus the glossary pushed everyone
-// into scrolling well past the board just to reach it. The summary line
-// names the finding count so there's no need to open it just to check
-// whether it's empty, and `open` defaults to true only when there's
-// actually something to see — a quiet position collapses to one line.
+// Rendered as `BoardView`'s `sidebarExtra`, stacked below the move list in
+// the same width-capped column next to the board — not a separate
+// full-width block after the whole board+movelist row, which needed
+// scrolling well past the board to reach on every ply change. Still a
+// <details> disclosure (like EvalHelp): the move list can already be tall
+// on a long game, so a quiet position collapsing to one summary line keeps
+// this column from growing past the board for no reason. `open` defaults
+// to true only when there's actually something to see.
 export function PositionChecklist({ myColor }: { myColor: MyColor }) {
   const { positions, ply } = useBoardContext()
   const s = getStrings()
@@ -29,10 +30,8 @@ export function PositionChecklist({ myColor }: { myColor: MyColor }) {
         {s.gamePage.checklist.summary(findings.length)}
       </summary>
       <div className="flex flex-col gap-3 px-4 pb-4">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <ChecklistSection title={s.gamePage.checklist.yourPieces} findings={mine} />
-          <ChecklistSection title={s.gamePage.checklist.opponentPieces} findings={opponent} />
-        </div>
+        <ChecklistSection title={s.gamePage.checklist.yourPieces} findings={mine} />
+        <ChecklistSection title={s.gamePage.checklist.opponentPieces} findings={opponent} />
         <EvalHelp />
       </div>
     </details>
