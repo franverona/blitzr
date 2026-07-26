@@ -295,6 +295,12 @@ const en = {
     repertoireHas: 'repertoire has',
     followedRepertoire: (n: number) =>
       `Followed your repertoire the entire game (${n} ${n === 1 ? 'move' : 'moves'}).`,
+    checklist: {
+      heading: 'Position checklist',
+      yourPieces: 'Your pieces',
+      opponentPieces: "Opponent's pieces",
+      clean: 'Nothing spotted here.',
+    },
   },
   metadata: {
     title: 'Blitzr',
@@ -606,6 +612,12 @@ const es: Strings = {
     repertoireHas: 'el repertorio tiene',
     followedRepertoire: (n: number) =>
       `Seguiste tu repertorio toda la partida (${n} ${n === 1 ? 'jugada' : 'jugadas'}).`,
+    checklist: {
+      heading: 'Lista de comprobación de la posición',
+      yourPieces: 'Tus piezas',
+      opponentPieces: 'Piezas del rival',
+      clean: 'Nada que destacar aquí.',
+    },
   },
   metadata: {
     title: 'Blitzr',

@@ -358,6 +358,44 @@ no endgame equivalent — a game doesn't "reach" an endgame position via a fixed
 move 1 — so `LessonPractice`'s `gameStats` prop is `null` for an endgame lesson and that section
 simply doesn't render, rather than showing a meaningless "0 games" line.
 
+## Middlegame position checklist
+
+Every blunder explanation so far (`detectHangingPiece()`/`detectFork()`/`detectPin()`/
+`detectSkewer()`) is diff-based — it only reports a pattern that's _newly_ true after one specific
+move, for after-the-fact explanation. `lib/checklist.ts`'s `buildPositionChecklist(fen)` answers a
+different question — "what's actually going on in this position right now" — for a beginner
+stepping through any game who's stuck and doesn't know what to look for next, not just at a move
+Stockfish already flagged. It reuses the exact same detection logic: `hangingSquares()`
+(`lib/hangingPiece.ts`) and `forkers()`/`pinnedPieces()`/`skewers()` (`lib/tactics.ts`) were
+already there as the per-position building blocks each diff-based detector calls on both the
+before- and after-FEN — exporting them (previously module-private) needed no new detection code at
+all, just a static scan of one FEN calling all four for both colors.
+
+Two refinements keep this from being a raw dump of every result: a hanging-piece finding is
+skipped when that square is already a fork/skewer target for the same side (the fork/skewer
+already explains _why_ the piece is in danger — repeating the weaker "it's hanging" note on the
+same square is just noise; pin overlaps are **not** suppressed, since a piece that's both pinned
+and genuinely hanging is a materially different, still-urgent fact), and each side's findings are
+sorted by the value of the piece at risk and capped to `MAX_FINDINGS_PER_SIDE` (3) — every other
+always-visible line on the game page (material diff, eval, better-move hint) is a single line, so
+an uncapped list would bury the point for someone who's already stuck.
+`describeChecklistFinding()` uses **new** EN/ES templates rather than reusing
+`describeBlunderReason()` — that function's phrasing ("This leaves the queen on d5 hanging") reads
+as "this move caused it," the wrong voice for a static snapshot unconnected to any one move; these
+templates lead with the piece/attacker as the sentence subject instead, and the pin template uses
+a plain verb ("pins"/"clava") rather than a gendered past-participle adjective, the same trick
+`describePinReason()`/`describeSkewerReason()` already lean on to sidestep Spanish's
+torre/dama-vs-everything-else gender agreement.
+
+`components/PositionChecklist.tsx` renders two always-visible sections ("Your pieces"/"Opponent's
+pieces," split by `ChecklistFinding.side` against `game.myColor`) on the game page, right after
+`BoardView` — not a `<details>` disclosure like `EvalHelp`, matching every other per-position line
+on this page. It also renders `EvalHelp` itself at the bottom: the glossary previously only
+surfaced inside the Stockfish analysis dialog, which requires running analysis first, but the
+checklist works on any game with moves, analyzed or not — a beginner hitting "fork"/"skewer"
+terminology here needs the glossary reachable without that dependency. Game-replay page only for
+v1, not wired into `/learn` lessons (no clear "my color vs. opponent" framing there).
+
 ## Internationalization (i18n)
 
 English and Spanish, chosen once per deployment via `NEXT_PUBLIC_LOCALE` (`lib/i18n/locale.ts`'s
