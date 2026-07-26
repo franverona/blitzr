@@ -1,6 +1,15 @@
 'use client'
 
-import { createContext, useContext, useEffect, useId, useMemo, useRef, useState } from 'react'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { Chessboard } from 'react-chessboard'
 import { describeEval, formatEval } from '@/lib/analysis'
 import { whiteToMove } from '@/lib/drill'
@@ -8,7 +17,12 @@ import { getStrings } from '@/lib/i18n/strings'
 import { formatMaterialDiff, materialDiff } from '@/lib/material'
 import { buildPositions } from '@/lib/positions'
 import { describeBetterMove } from '@/lib/tactics'
-import { BOARD_DARK_SQUARE, BOARD_LIGHT_SQUARE, REVEAL_ARROW_COLOR } from '@/lib/theme'
+import {
+  BOARD_ANIMATION_DURATION_MS,
+  BOARD_DARK_SQUARE,
+  BOARD_LIGHT_SQUARE,
+  REVEAL_ARROW_COLOR,
+} from '@/lib/theme'
 import type { PositionEval } from '@/lib/types'
 import { EvalBar } from './EvalBar'
 import { PieceMoveLabel } from './PieceMoveLabel'
@@ -96,26 +110,48 @@ export function BoardNavControls() {
   const { ply, setPly, lastPly } = useBoardContext()
   const s = getStrings()
 
+  const goToPrevious = useCallback(() => setPly((p) => Math.max(0, p - 1)), [setPly])
+  const goToNext = useCallback(() => setPly((p) => Math.min(lastPly, p + 1)), [setPly, lastPly])
+
+  // Left/right arrow keys step through the game the same as the ◀/▶
+  // buttons — global, not scoped to a focused element, matching the
+  // chess.com/lichess convention this page's audience already knows. Only
+  // mounted where the buttons themselves are (games/[id], and /learn's
+  // Study mode but not Quiz mode), so this never fights with Quiz mode's
+  // own input handling.
+  const lastNavAtRef = useRef(0)
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
+      e.preventDefault()
+      // Holding the key down (or just tapping it fast) fires keydown much
+      // quicker than the board's own slide animation can finish — each new
+      // position prop cuts the previous slide off mid-flight, which reads
+      // as flickering pieces rather than a clean step. Throttling to the
+      // same duration as the animation keeps one step finished before the
+      // next one starts.
+      const now = Date.now()
+      if (now - lastNavAtRef.current < BOARD_ANIMATION_DURATION_MS) return
+      lastNavAtRef.current = now
+      if (e.key === 'ArrowLeft') goToPrevious()
+      else goToNext()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [goToPrevious, goToNext])
+
   return (
     <div className="flex items-center gap-2 text-sm">
       <NavButton onClick={() => setPly(0)} disabled={ply === 0} label={s.board.navLabels.start}>
         ⏮
       </NavButton>
-      <NavButton
-        onClick={() => setPly((p) => Math.max(0, p - 1))}
-        disabled={ply === 0}
-        label={s.board.navLabels.previous}
-      >
+      <NavButton onClick={goToPrevious} disabled={ply === 0} label={s.board.navLabels.previous}>
         ◀
       </NavButton>
       <span className="min-w-16 text-center text-zinc-400 tabular-nums">
         {ply} / {lastPly}
       </span>
-      <NavButton
-        onClick={() => setPly((p) => Math.min(lastPly, p + 1))}
-        disabled={ply === lastPly}
-        label={s.board.navLabels.next}
-      >
+      <NavButton onClick={goToNext} disabled={ply === lastPly} label={s.board.navLabels.next}>
         ▶
       </NavButton>
       <NavButton
@@ -195,6 +231,7 @@ export function BoardView({
                 boardOrientation,
                 allowDragging: false,
                 showAnimations: isAdjacentStep,
+                animationDurationInMs: BOARD_ANIMATION_DURATION_MS,
                 darkSquareStyle: { backgroundColor: BOARD_DARK_SQUARE },
                 lightSquareStyle: { backgroundColor: BOARD_LIGHT_SQUARE },
                 darkSquareNotationStyle: { color: BOARD_LIGHT_SQUARE },
