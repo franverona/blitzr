@@ -94,6 +94,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
       boardOrientation={game.myColor}
       result={pgnResult(game.myColor, game.myResult)}
       evals={analysis?.evals}
+      initialPly={1}
     >
       <GameAnalysisProvider
         key={game.id}

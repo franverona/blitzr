@@ -156,12 +156,26 @@ file, not here — this section is only cross-cutting rules that span multiple f
   in the app (`Board.tsx`'s `BoardView`/`PlanBoard.tsx`/`RepertoireBoard.tsx`) shares it, and
   `BoardNavControls`'s arrow-key throttle (below) matches it too.
 - **`BoardNavControls` (`components/Board.tsx`) binds left/right arrow keys** to the same
-  prev/next step as its ◀/▶ buttons, globally (not scoped to a focused element) — matching the
-  chess.com/lichess convention this app's audience already knows. Throttled to
-  `BOARD_ANIMATION_DURATION_MS` so holding a key down (or tapping it faster than the animation can
-  finish) can't fire a new step mid-slide. Only mounted where the buttons themselves are
-  (`games/[id]`, and `/learn`'s Study mode but not Quiz mode), so it never fights with Quiz
-  mode's own input handling.
+  prev/next step as its ◀/▶ buttons, Space to its Play/Pause toggle, and `0` to Start — globally
+  (not scoped to a focused element) — matching the chess.com/lichess convention this app's
+  audience already knows. Arrow-key repeats are throttled to `BOARD_ANIMATION_DURATION_MS` so
+  holding a key down (or tapping it faster than the animation can finish) can't fire a new step
+  mid-slide. Only mounted where the buttons themselves are (`games/[id]`, and `/learn`'s Study
+  mode but not Quiz mode), so it never fights with Quiz mode's own input handling.
+- **Play auto-advances one ply every `PLAY_INTERVAL_MS`, stopping automatically on a blunder
+  ply** (reusing `findBlunders()` from `lib/analysis.ts` — the same 200cp+ swing definition
+  already used for the analysis dialog and `/blunders`, not a separate notion of "relevant") or
+  at the end of the game. Restarts from ply 0 if toggled on again from the end. `ply`/`isPlaying`
+  are mirrored into refs (synced via an effect, never assigned during render — this project's
+  lint config flags that) so the `setInterval`/keydown callbacks can read the latest value
+  without becoming effect dependencies that would tear down and recreate the interval on every
+  step, and so `togglePlaying` never calls `setPly` (owned by `BoardProvider`) from inside
+  `setIsPlaying`'s own updater function — React (correctly) flags that as updating one
+  component's state while rendering another's. Unanalyzed games (no `evals`) just autoplay
+  straight through with nothing to stop for except the end.
+- **The game replay page and `/learn`'s Study mode both open on ply 1** (the first move already
+  played), not ply 0 (empty board) or the last ply (end of game) — `BoardProvider`'s
+  `initialPly` prop, clamped to a real `lastPly` in case a game has zero parsed moves.
 - **Beginner-facing jargon is explained in place**, not simplified away — `<abbr title="...">`
   tooltips (ECO codes, in book/deviated, time class, severity badges) and `EvalHelp`'s glossary.
 - **A component that seeds state with `useState(initialX)` needs `key={id}`** wherever the same
