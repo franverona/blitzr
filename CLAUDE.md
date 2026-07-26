@@ -387,14 +387,20 @@ a plain verb ("pins"/"clava") rather than a gendered past-participle adjective, 
 `describePinReason()`/`describeSkewerReason()` already lean on to sidestep Spanish's
 torre/dama-vs-everything-else gender agreement.
 
-`components/PositionChecklist.tsx` renders two always-visible sections ("Your pieces"/"Opponent's
-pieces," split by `ChecklistFinding.side` against `game.myColor`) on the game page, right after
-`BoardView` — not a `<details>` disclosure like `EvalHelp`, matching every other per-position line
-on this page. It also renders `EvalHelp` itself at the bottom: the glossary previously only
-surfaced inside the Stockfish analysis dialog, which requires running analysis first, but the
-checklist works on any game with moves, analyzed or not — a beginner hitting "fork"/"skewer"
-terminology here needs the glossary reachable without that dependency. Game-replay page only for
-v1, not wired into `/learn` lessons (no clear "my color vs. opponent" framing there).
+`components/PositionChecklist.tsx` renders two sections ("Your pieces"/"Opponent's pieces," split
+by `ChecklistFinding.side` against `game.myColor`) on the game page, right after `BoardView` — a
+`<details>` disclosure like `EvalHelp`, not an always-open block. The first version rendered
+always-open and, on live testing, made an already-tall game page (board, move list, analysis
+panel) require scrolling well past the board just to reach it — real user feedback on the running
+app, not a hypothetical. `open={findings.length > 0}` means a quiet position collapses to a single
+summary line (`s.gamePage.checklist.summary(n)`, e.g. "Position checklist — 2 to check" vs.
+"— nothing to flag right now"), so the count is visible without opening it, and a position with
+something worth seeing expands automatically instead of hiding behind a click. It also renders
+`EvalHelp` itself at the bottom: the glossary previously only surfaced inside the Stockfish
+analysis dialog, which requires running analysis first, but the checklist works on any game with
+moves, analyzed or not — a beginner hitting "fork"/"skewer" terminology here needs the glossary
+reachable without that dependency. Game-replay page only for v1, not wired into `/learn` lessons
+(no clear "my color vs. opponent" framing there).
 
 ## Internationalization (i18n)
 

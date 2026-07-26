@@ -208,7 +208,10 @@ eval), this checks the position itself, so it's useful at any point in any game 
 you haven't run Stockfish on at all — for figuring out what to look for next instead of just
 moving pieces around. It's capped to the 3 most valuable findings per side so a busy position
 doesn't turn into a wall of text, and the same "How to read this" glossary from the analysis
-dialog is right there too, in case "skewer" or "fork" isn't a familiar term yet.
+dialog is right there too, in case "skewer" or "fork" isn't a familiar term yet. The panel is
+collapsible — a quiet position collapses down to one line ("nothing to flag right now"), and only
+expands itself automatically when there's actually something to check, so it doesn't add scrolling
+to positions with nothing going on.
 
 ## Drilling
 
