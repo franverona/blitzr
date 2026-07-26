@@ -12,6 +12,7 @@ import {
 } from 'react'
 import { Chessboard } from 'react-chessboard'
 import { describeEval, findBlunders, formatEval } from '@/lib/analysis'
+import { buildPositionChecklist, findingKey, findingMarks } from '@/lib/checklist'
 import { whiteToMove } from '@/lib/drill'
 import { getStrings } from '@/lib/i18n/strings'
 import { formatMaterialDiff, materialDiff } from '@/lib/material'
@@ -21,6 +22,8 @@ import {
   BOARD_ANIMATION_DURATION_MS,
   BOARD_DARK_SQUARE,
   BOARD_LIGHT_SQUARE,
+  CHECKLIST_ARROW_COLOR,
+  CHECKLIST_SQUARE_COLOR,
   REVEAL_ARROW_COLOR,
 } from '@/lib/theme'
 import type { PositionEval } from '@/lib/types'
@@ -44,6 +47,13 @@ interface BoardContextValue {
   result?: string
   movesSan: string[]
   evals?: PositionEval[]
+  /** Keys (`findingKey()`, `lib/checklist.ts`) of checklist findings the user
+   *  has dismissed from the board — `PositionChecklist`'s per-finding "Hide"
+   *  toggle writes here, `BoardView` reads it to skip drawing that finding's
+   *  arrow/highlight, so showing every finding on the board by default
+   *  doesn't turn into unremovable clutter on a busy position. */
+  hiddenFindingKeys: Set<string>
+  toggleFindingVisibility: (key: string) => void
 }
 
 // The nav controls (⏮◀▶⏭) live in the page header, next to the analysis
@@ -94,6 +104,15 @@ export function BoardProvider({
   // exceeds a real lastPly of 0 — a synced game can have zero parsed moves.
   const [ply, setPly] = useState(Math.min(initialPly ?? lastPly, lastPly))
   const [boardOrientation, setBoardOrientation] = useState(initialBoardOrientation)
+  const [hiddenFindingKeys, setHiddenFindingKeys] = useState<Set<string>>(new Set())
+  const toggleFindingVisibility = useCallback((key: string) => {
+    setHiddenFindingKeys((prev) => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }, [])
 
   return (
     <BoardContext.Provider
@@ -107,6 +126,8 @@ export function BoardProvider({
         result,
         movesSan,
         evals,
+        hiddenFindingKeys,
+        toggleFindingVisibility,
       }}
     >
       {children}
@@ -271,7 +292,8 @@ export function BoardView({
    *  nothing for them. */
   sidebarExtra?: React.ReactNode
 } = {}) {
-  const { ply, positions, boardOrientation, result, movesSan, evals, setPly } = useBoardContext()
+  const { ply, positions, boardOrientation, result, movesSan, evals, setPly, hiddenFindingKeys } =
+    useBoardContext()
   const s = getStrings()
   // react-chessboard needs a unique `id` per instance — without one, two
   // simultaneous boards on the same page (this one plus a PlanBoard showing
@@ -279,6 +301,59 @@ export function BoardView({
   // crash with "Square width not found".
   const boardId = useId()
   const bestMove = evals?.[ply]?.bestMove
+
+  // Checklist findings shown directly on the board (arrows + highlighted
+  // squares), not just as sidebar text — recomputed from the same pure
+  // `buildPositionChecklist()` `PositionChecklist` already calls on this
+  // ply's FEN, so this needed no new detection logic, only a mapping to
+  // board marks. Filtered by `hiddenFindingKeys` so a finding the user
+  // dismissed there stops being drawn here too.
+  const checklistSquareStyles = useMemo(() => {
+    const findings = buildPositionChecklist(positions[ply]).filter(
+      (f) => !hiddenFindingKeys.has(findingKey(f)),
+    )
+    const styles: Record<string, React.CSSProperties> = {}
+    // Keyed by "from-to" so two findings that happen to draw the same arrow
+    // (e.g. both an attacker's fork and skewer landing on the same square
+    // pair) don't hand react-chessboard two arrows with an identical key —
+    // it renders each arrow keyed by its own start/end squares and warns on
+    // the duplicate.
+    const arrowsByKey = new Map<string, { startSquare: string; endSquare: string; color: string }>()
+    for (const f of findings) {
+      const marks = findingMarks(f.reason)
+      for (const square of marks.squares) {
+        styles[square] = { backgroundColor: CHECKLIST_SQUARE_COLOR }
+      }
+      for (const [startSquare, endSquare] of marks.arrows) {
+        arrowsByKey.set(`${startSquare}-${endSquare}`, {
+          startSquare,
+          endSquare,
+          color: CHECKLIST_ARROW_COLOR,
+        })
+      }
+    }
+    return { styles, arrows: [...arrowsByKey.values()] }
+  }, [positions, ply, hiddenFindingKeys])
+  // Merge with the engine's own suggested-move arrow, deduped the same way —
+  // react-chessboard keys each arrow by its start/end squares alone (not by
+  // color), so a checklist arrow landing on the exact same two squares as
+  // the reveal arrow would otherwise hand it two arrows sharing one key. The
+  // reveal arrow wins when they collide: it's the primary "what to play
+  // instead" callout, the checklist one is supplementary.
+  const boardArrows = useMemo(() => {
+    const arrows = new Map<string, { startSquare: string; endSquare: string; color: string }>()
+    for (const arrow of checklistSquareStyles.arrows) {
+      arrows.set(`${arrow.startSquare}-${arrow.endSquare}`, arrow)
+    }
+    if (bestMove) {
+      arrows.set(`${bestMove.from}-${bestMove.to}`, {
+        startSquare: bestMove.from,
+        endSquare: bestMove.to,
+        color: REVEAL_ARROW_COLOR,
+      })
+    }
+    return [...arrows.values()]
+  }, [checklistSquareStyles.arrows, bestMove])
   // positions[ply] is 0-indexed (ply plies already played), while
   // whiteToMove() takes the 1-indexed "which move number is this" — ply+1
   // converts between the two conventions.
@@ -325,15 +400,8 @@ export function BoardView({
                 lightSquareStyle: { backgroundColor: BOARD_LIGHT_SQUARE },
                 darkSquareNotationStyle: { color: BOARD_LIGHT_SQUARE },
                 lightSquareNotationStyle: { color: BOARD_DARK_SQUARE },
-                arrows: bestMove
-                  ? [
-                      {
-                        startSquare: bestMove.from,
-                        endSquare: bestMove.to,
-                        color: REVEAL_ARROW_COLOR,
-                      },
-                    ]
-                  : [],
+                squareStyles: checklistSquareStyles.styles,
+                arrows: boardArrows,
               }}
             />
           </div>

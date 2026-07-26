@@ -1,6 +1,6 @@
 'use client'
 
-import { buildPositionChecklist, describeChecklistFinding } from '@/lib/checklist'
+import { buildPositionChecklist, describeChecklistFinding, findingKey } from '@/lib/checklist'
 import { getStrings } from '@/lib/i18n/strings'
 import type { ChecklistFinding, MyColor } from '@/lib/types'
 import { useBoardContext } from './Board'
@@ -15,7 +15,7 @@ import { EvalHelp } from './EvalHelp'
 // this column from growing past the board for no reason. `open` defaults
 // to true only when there's actually something to see.
 export function PositionChecklist({ myColor }: { myColor: MyColor }) {
-  const { positions, ply } = useBoardContext()
+  const { positions, ply, hiddenFindingKeys, toggleFindingVisibility } = useBoardContext()
   const s = getStrings()
   const findings = buildPositionChecklist(positions[ply])
   const mine = findings.filter((f) => f.side === myColor)
@@ -30,15 +30,35 @@ export function PositionChecklist({ myColor }: { myColor: MyColor }) {
         {s.gamePage.checklist.summary(findings.length)}
       </summary>
       <div className="flex flex-col gap-3 px-4 pb-4">
-        <ChecklistSection title={s.gamePage.checklist.yourPieces} findings={mine} />
-        <ChecklistSection title={s.gamePage.checklist.opponentPieces} findings={opponent} />
+        <ChecklistSection
+          title={s.gamePage.checklist.yourPieces}
+          findings={mine}
+          hiddenFindingKeys={hiddenFindingKeys}
+          toggleFindingVisibility={toggleFindingVisibility}
+        />
+        <ChecklistSection
+          title={s.gamePage.checklist.opponentPieces}
+          findings={opponent}
+          hiddenFindingKeys={hiddenFindingKeys}
+          toggleFindingVisibility={toggleFindingVisibility}
+        />
         <EvalHelp />
       </div>
     </details>
   )
 }
 
-function ChecklistSection({ title, findings }: { title: string; findings: ChecklistFinding[] }) {
+function ChecklistSection({
+  title,
+  findings,
+  hiddenFindingKeys,
+  toggleFindingVisibility,
+}: {
+  title: string
+  findings: ChecklistFinding[]
+  hiddenFindingKeys: Set<string>
+  toggleFindingVisibility: (key: string) => void
+}) {
   const s = getStrings()
   return (
     <div className="flex flex-col gap-1">
@@ -47,11 +67,23 @@ function ChecklistSection({ title, findings }: { title: string; findings: Checkl
         <p className="text-zinc-500">{s.gamePage.checklist.clean}</p>
       ) : (
         <ul className="flex flex-col gap-1">
-          {findings.map((f, i) => (
-            <li key={i} className="text-zinc-300">
-              {describeChecklistFinding(f)}
-            </li>
-          ))}
+          {findings.map((f) => {
+            const key = findingKey(f)
+            const isHidden = hiddenFindingKeys.has(key)
+            return (
+              <li key={key} className="flex items-start justify-between gap-2">
+                <span className={isHidden ? 'text-zinc-500 line-through' : 'text-zinc-300'}>
+                  {describeChecklistFinding(f)}
+                </span>
+                <button
+                  onClick={() => toggleFindingVisibility(key)}
+                  className="shrink-0 text-xs text-zinc-500 hover:text-zinc-300 hover:underline"
+                >
+                  {isHidden ? s.gamePage.checklist.show : s.gamePage.checklist.hide}
+                </button>
+              </li>
+            )
+          })}
         </ul>
       )}
     </div>

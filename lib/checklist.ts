@@ -158,3 +158,51 @@ export function describeChecklistFinding(
     ? `${pinner} en ${reason.pinnerSquare} clava ${pinned} en ${reason.pinnedSquare} al rey.`
     : `${pinner} on ${reason.pinnerSquare} pins ${pinned} on ${reason.pinnedSquare} to the king.`
 }
+
+/** A stable identity for one finding, keyed on its side/kind/squares (not
+ *  array index — findings get re-sorted and re-capped every render) so a
+ *  "hide this one" toggle (`components/Board.tsx`'s `hiddenFindingKeys`)
+ *  survives ply-to-ply re-renders without needing a synthetic id anywhere. */
+export function findingKey(finding: ChecklistFinding): string {
+  const { side, reason } = finding
+  if (reason.kind === 'hanging-piece') return `${side}-hanging-${reason.square}`
+  if (reason.kind === 'fork') return `${side}-fork-${reason.attackerSquare}`
+  if (reason.kind === 'skewer')
+    return `${side}-skewer-${reason.attackerSquare}-${reason.backSquare}`
+  return `${side}-pin-${reason.pinnedSquare}`
+}
+
+/** Which squares to highlight and which arrows to draw for one finding, so
+ *  `BoardView` can show a checklist finding directly on the board instead of
+ *  only as sidebar text — the whole point of pointing at it rather than
+ *  making a beginner map "knight on b5" back to the board themselves. Plain
+ *  square-name strings, not react-chessboard types — this stays a pure,
+ *  UI-agnostic mapping; `Board.tsx` applies the actual colors/styles. */
+export interface FindingMarks {
+  squares: string[]
+  arrows: [string, string][]
+}
+
+export function findingMarks(reason: BlunderReason): FindingMarks {
+  if (reason.kind === 'hanging-piece') {
+    // No tracked attacker square for a hanging piece (only the FEN's own
+    // attack/defense count, see hangingSquares()) — highlight-only.
+    return { squares: [reason.square], arrows: [] }
+  }
+  if (reason.kind === 'fork') {
+    return {
+      squares: [reason.attackerSquare, ...reason.targets.map((t) => t.square)],
+      arrows: reason.targets.map((t): [string, string] => [reason.attackerSquare, t.square]),
+    }
+  }
+  if (reason.kind === 'skewer') {
+    return {
+      squares: [reason.attackerSquare, reason.frontSquare, reason.backSquare],
+      arrows: [[reason.attackerSquare, reason.backSquare]],
+    }
+  }
+  return {
+    squares: [reason.pinnerSquare, reason.pinnedSquare],
+    arrows: [[reason.pinnerSquare, reason.pinnedSquare]],
+  }
+}

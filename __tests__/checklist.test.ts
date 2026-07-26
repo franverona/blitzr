@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { buildPositionChecklist, describeChecklistFinding } from '@/lib/checklist'
+import {
+  buildPositionChecklist,
+  describeChecklistFinding,
+  findingKey,
+  findingMarks,
+} from '@/lib/checklist'
 import type { ChecklistFinding } from '@/lib/types'
 
 describe('buildPositionChecklist', () => {
@@ -195,5 +200,42 @@ describe('describeChecklistFinding', () => {
     expect(describeChecklistFinding(skewer, 'es')).toBe(
       'El alfil en c4 enfila la dama en d5, con la torre detrás en g8.',
     )
+  })
+
+  it('gives distinct, stable keys per finding', () => {
+    expect(findingKey(hangingPiece)).toBe('white-hanging-b5')
+    expect(findingKey(fork)).toBe('black-fork-b5')
+    expect(findingKey(pin)).toBe('black-pin-e6')
+    expect(findingKey(skewer)).toBe('black-skewer-c4-g8')
+    const keys = [hangingPiece, fork, pin, skewer].map(findingKey)
+    expect(new Set(keys).size).toBe(keys.length)
+  })
+
+  it('marks a hanging-piece finding with a highlight only, no arrow', () => {
+    expect(findingMarks(hangingPiece.reason)).toEqual({ squares: ['b5'], arrows: [] })
+  })
+
+  it('marks a fork finding with one arrow per target', () => {
+    expect(findingMarks(fork.reason)).toEqual({
+      squares: ['b5', 'c7', 'a7'],
+      arrows: [
+        ['b5', 'c7'],
+        ['b5', 'a7'],
+      ],
+    })
+  })
+
+  it('marks a pin finding with an arrow from pinner to pinned', () => {
+    expect(findingMarks(pin.reason)).toEqual({
+      squares: ['c4', 'e6'],
+      arrows: [['c4', 'e6']],
+    })
+  })
+
+  it('marks a skewer finding with an arrow from attacker to the back piece', () => {
+    expect(findingMarks(skewer.reason)).toEqual({
+      squares: ['c4', 'd5', 'g8'],
+      arrows: [['c4', 'g8']],
+    })
   })
 })

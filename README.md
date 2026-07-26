@@ -218,6 +218,12 @@ in view the whole time you're stepping through a game — no scrolling down to c
 to move again — and collapses down to one line ("nothing to flag right now") on a quiet position
 so it doesn't crowd out the move list when there's nothing to say.
 
+Each finding is also drawn directly on the board — a highlighted square for a hanging piece, an
+arrow for a fork/pin/skewer — so there's no mental step mapping "the knight on b5" back to an
+actual square. If a busy position makes that too much at once, every finding has its own Hide/Show
+link right next to its sentence, so you can dismiss just the ones you don't want without losing the
+rest.
+
 ## Drilling
 
 On `/drill`, every repertoire deviation and every blunder from your own moves becomes a card:
