@@ -113,6 +113,17 @@ public/
 Implementation-level rationale (why a specific file does what it does) lives as comments in that
 file, not here — this section is only cross-cutting rules that span multiple files.
 
+- **Every page's content is centered in a `max-w-7xl` wrapper inside `<main>`**
+  (`app/layout.tsx`), matching chess.com's own layout — on a very wide screen, page content
+  (the game board+sidebar, the games table, ...) sits centered in the viewport instead of
+  stretching or hugging the sidebar's edge. Below that width it has no visible effect (content
+  already fits), so this changes nothing at typical laptop widths. That outer wrapper alone isn't
+  enough for `BoardView` (`components/Board.tsx`): its board+sidebar row is a flex container that
+  itself stretches to fill the wrapper's width, and with no `justify-content` it packed its two
+  children (board, move-list column) against the left edge, leaving empty space trailing on the
+  right whenever the row was narrower than the available width (any viewport where the board
+  hadn't grown to its largest `xl`/`2xl` tier) — `lg:justify-center` on that row fixes it at the
+  source, so this isn't specific to any one viewport width.
 - **Server Actions** for all DB reads/writes and the sync/analysis triggers — no API routes.
 - **Domain types are camelCase** (`lib/types.ts`); **DB columns are snake_case**
   (`lib/db/types.ts`). Each repository implementation maps between them explicitly — never leak
