@@ -4,6 +4,7 @@ import { getGame, getGameAnalysis, listRepertoire } from '../../actions'
 import { BoardNavControls, BoardProvider, BoardView } from '@/components/Board'
 import { AnalyzeButton, GameAnalysisProvider, GameSummary } from '@/components/GameAnalysisPanel'
 import { PlayerAvatar } from '@/components/PlayerAvatar'
+import { PositionChecklist } from '@/components/PositionChecklist'
 import { fetchPlayerAvatar } from '@/lib/chesscom/client'
 import { parsePgnHeaders } from '@/lib/chesscom/normalize'
 import { formatDateTime } from '@/lib/dates'
@@ -52,19 +53,24 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
         </div>
       </div>
 
-      {diff && (
-        <RepertoireDiff
-          diff={diff}
-          color={game.myColor}
-          hasRepertoire={repertoireNodes.length > 0}
-          totalPlies={game.movesSan?.length ?? 0}
-        />
-      )}
-
-      {game.movesSan && <GameSummary />}
-
       {game.movesSan ? (
-        <BoardView />
+        <BoardView
+          boardMaxWidthClassName="max-w-160 xl:max-w-172 2xl:max-w-184"
+          sidebarExtra={
+            <>
+              {diff && (
+                <RepertoireDiff
+                  diff={diff}
+                  color={game.myColor}
+                  hasRepertoire={repertoireNodes.length > 0}
+                  totalPlies={game.movesSan.length}
+                />
+              )}
+              <GameSummary />
+              <PositionChecklist myColor={game.myColor} />
+            </>
+          }
+        />
       ) : (
         <div className="flex flex-col gap-2">
           <p className="text-sm text-amber-600 dark:text-amber-400">

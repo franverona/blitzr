@@ -358,6 +358,75 @@ no endgame equivalent — a game doesn't "reach" an endgame position via a fixed
 move 1 — so `LessonPractice`'s `gameStats` prop is `null` for an endgame lesson and that section
 simply doesn't render, rather than showing a meaningless "0 games" line.
 
+## Middlegame position checklist
+
+Every blunder explanation so far (`detectHangingPiece()`/`detectFork()`/`detectPin()`/
+`detectSkewer()`) is diff-based — it only reports a pattern that's _newly_ true after one specific
+move, for after-the-fact explanation. `lib/checklist.ts`'s `buildPositionChecklist(fen)` answers a
+different question — "what's actually going on in this position right now" — for a beginner
+stepping through any game who's stuck and doesn't know what to look for next, not just at a move
+Stockfish already flagged. It reuses the exact same detection logic: `hangingSquares()`
+(`lib/hangingPiece.ts`) and `forkers()`/`pinnedPieces()`/`skewers()` (`lib/tactics.ts`) were
+already there as the per-position building blocks each diff-based detector calls on both the
+before- and after-FEN — exporting them (previously module-private) needed no new detection code at
+all, just a static scan of one FEN calling all four for both colors.
+
+Two refinements keep this from being a raw dump of every result: a hanging-piece finding is
+skipped when that square is already a fork/skewer target for the same side (the fork/skewer
+already explains _why_ the piece is in danger — repeating the weaker "it's hanging" note on the
+same square is just noise; pin overlaps are **not** suppressed, since a piece that's both pinned
+and genuinely hanging is a materially different, still-urgent fact), and each side's findings are
+sorted by the value of the piece at risk and capped to `MAX_FINDINGS_PER_SIDE` (3) — every other
+always-visible line on the game page (material diff, eval, better-move hint) is a single line, so
+an uncapped list would bury the point for someone who's already stuck.
+`describeChecklistFinding()` uses **new** EN/ES templates rather than reusing
+`describeBlunderReason()` — that function's phrasing ("This leaves the queen on d5 hanging") reads
+as "this move caused it," the wrong voice for a static snapshot unconnected to any one move; these
+templates lead with the piece/attacker as the sentence subject instead, and the pin template uses
+a plain verb ("pins"/"clava") rather than a gendered past-participle adjective, the same trick
+`describePinReason()`/`describeSkewerReason()` already lean on to sidestep Spanish's
+torre/dama-vs-everything-else gender agreement.
+
+`components/PositionChecklist.tsx` renders two sections ("Your pieces"/"Opponent's pieces," split
+by `ChecklistFinding.side` against `game.myColor`). Placement went through two live-tested
+iterations, both driven by real friction on the running app rather than guessed upfront: an
+always-open block right after `BoardView` needed scrolling well past the board on every ply to
+reach; collapsing it into a `<details>` (still after `BoardView`) fixed the scrolling _cost_ but
+not the round-trip itself — stepping to a new move still meant scrolling down to check it,
+scrolling back up to step again. The actual fix was moving it out of the page's main flow
+entirely: `BoardView` (`components/Board.tsx`) now takes an optional `sidebarExtra: React.ReactNode`
+prop, rendered stacked below the move list in that same width-capped column next to the board —
+`undefined` for every other caller (`/learn` lessons have nothing to pass), so this changed
+nothing for them. `app/games/[id]/page.tsx` passes a fragment of `RepertoireDiff`/`GameSummary`/
+`PositionChecklist` there (moved out of the page's top-of-page main column, where they'd
+previously stacked above the board alongside the header) — same reasoning extended past the
+checklist itself once it became clear the deviation/blunder-summary lines were pushing the board
+down the page too, for the same "supplementary analysis, not core game identity" reason. Only
+`GameHeader` (names/date/opening) and the nav/analyze controls stay above the board now. The panel
+stays in view the whole time you step through a game, no scrolling either direction.
+It's still a `<details>` disclosure (a long game's move list can already be tall, so a quiet
+position collapsing to one summary line — `s.gamePage.checklist.summary(n)`, e.g.
+"Position checklist — 2 to check" vs. "— nothing to flag right now" — keeps this column from
+growing past the board for no reason), `open={findings.length > 0}` so anything worth seeing
+expands itself rather than hiding behind a click. It also renders `EvalHelp` itself at the bottom:
+the glossary previously only surfaced inside the Stockfish analysis dialog, which requires running
+analysis first, but the checklist works on any game with moves, analyzed or not — a beginner
+hitting "fork"/"skewer" terminology here needs the glossary reachable without that dependency.
+Game-replay page only for v1, not wired into `/learn` lessons (no clear "my color vs. opponent"
+framing there).
+
+Fitting board + sidebar in the initial viewport (no scrolling in either direction) at typical
+laptop widths took a few more live-tested passes: the move list's own `max-h` shrank (480px →
+280px, `max-h-70`) so a long game's list doesn't dominate the sidebar's height budget, and the
+sidebar column widened (`lg:max-w-xs` → `lg:max-w-sm`, `xl:max-w-md` on wider screens) so
+finding/summary sentences wrap less. The board's own `boardMaxWidthClassName` (passed from
+`app/games/[id]/page.tsx`, default `max-w-160` unchanged) also grows at `xl`/`2xl` — a wide
+MacBook-class screen was leaving real unused space to the right of the fixed-width board+sidebar
+pair — but deliberately not as far as it could go: pushed all the way up, the taller board ends up
+crowding the material/eval line out of the same initial viewport, undoing the fix. `max-w-172`
+(matching `/learn`'s own already-vetted board size) at `xl` and a modest further step at `2xl`
+balances "use the space" against "still fits everything, board included."
+
 ## Internationalization (i18n)
 
 English and Spanish, chosen once per deployment via `NEXT_PUBLIC_LOCALE` (`lib/i18n/locale.ts`'s

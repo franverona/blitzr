@@ -131,12 +131,20 @@ export function BoardNavControls() {
 
 export function BoardView({
   boardMaxWidthClassName = 'max-w-160',
+  sidebarExtra,
 }: {
   /** Lets a caller give the board more visual presence than the default
    *  game-replay sizing without changing that page's layout — e.g. the
    *  `/learn` lesson page, which has no move-list-heavy sidebar competing
    *  for width. */
   boardMaxWidthClassName?: string
+  /** Extra content stacked below the move list, in the same width-capped
+   *  sidebar column — e.g. the game page's `PositionChecklist`, which needs
+   *  to stay next to the board so stepping through moves never requires
+   *  scrolling to see it. Undefined for every other caller (`/learn`
+   *  lessons have no such per-position sidebar content), so this changes
+   *  nothing for them. */
+  sidebarExtra?: React.ReactNode
 } = {}) {
   const { ply, positions, boardOrientation, result, movesSan, evals, setPly } = useBoardContext()
   const s = getStrings()
@@ -228,7 +236,10 @@ export function BoardView({
         )}
       </div>
 
-      <MoveList movesSan={movesSan} ply={ply} onSelect={setPly} result={result} />
+      <div className="flex w-full flex-col gap-4 lg:max-w-sm lg:flex-1 xl:max-w-md">
+        <MoveList movesSan={movesSan} ply={ply} onSelect={setPly} result={result} />
+        {sidebarExtra}
+      </div>
     </div>
   )
 }
@@ -300,7 +311,7 @@ function MoveList({
   }, [ply])
 
   return (
-    <div className="flex w-full flex-col overflow-hidden rounded border border-zinc-800 bg-zinc-900 lg:max-w-xs lg:flex-1">
+    <div className="flex w-full flex-col overflow-hidden rounded border border-zinc-800 bg-zinc-900">
       <button
         ref={ply === 0 ? activeRef : undefined}
         onClick={() => onSelect(0)}
@@ -310,7 +321,7 @@ function MoveList({
       >
         {s.board.startingPositionButton}
       </button>
-      <ol className="max-h-[480px] overflow-y-auto text-sm">
+      <ol className="max-h-70 overflow-y-auto text-sm">
         {pairs.map((pair, i) => (
           <li key={pair.moveNumber} className={`flex ${i % 2 === 1 ? 'bg-zinc-800/25' : ''}`}>
             <span className="w-8 shrink-0 px-2 py-1.5 text-zinc-500 tabular-nums">

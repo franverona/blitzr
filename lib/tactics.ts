@@ -30,7 +30,7 @@ function withTurn(fen: string, color: Color): string {
   return [board, color, castling, '-', halfmove, fullmove].join(' ')
 }
 
-interface Forker {
+export interface Forker {
   square: Square
   piece: PieceSymbol
   targets: { square: Square; piece: PieceSymbol }[]
@@ -39,8 +39,10 @@ interface Forker {
 /** Every `color` piece currently attacking 2+ enemy pieces at once —
  *  filtered to forks with at least one non-pawn target, since two attacked
  *  pawns alone (e.g. a rook on an open file) is common and rarely the
- *  actual tactical point. */
-function forkers(fen: string, color: Color): Forker[] {
+ *  actual tactical point. Exported for `lib/checklist.ts`, which scans a
+ *  single static position directly rather than diffing a move's
+ *  before/after FEN the way `detectFork()` below does. */
+export function forkers(fen: string, color: Color): Forker[] {
   const chess = new Chess(withTurn(fen, color))
   const found: Forker[] = []
 
@@ -89,7 +91,10 @@ export function detectFork(
   }
 }
 
-function targetList(targets: ForkReason['targets'], locale: Locale): string {
+/** Joins fork targets into "the queen on c7 and the rook on a7" — exported
+ *  for `lib/checklist.ts`'s own fork/skewer descriptions, which need the
+ *  same list phrasing outside a `ForkReason`. */
+export function targetList(targets: ForkReason['targets'], locale: Locale): string {
   const preposition = locale === 'es' ? 'en' : 'on'
   const joiner = locale === 'es' ? ' y ' : ' and '
   return targets
@@ -125,7 +130,7 @@ function coordsSquare(file: number, rank: number): Square {
   return (String.fromCharCode(97 + file) + (rank + 1)) as Square
 }
 
-interface Pin {
+export interface Pin {
   pinnedSquare: Square
   pinnedPiece: PieceSymbol
   pinnerSquare: Square
@@ -141,8 +146,10 @@ interface Pin {
  *  movement matches that ray's direction (rook/queen on a straight ray,
  *  bishop/queen on a diagonal one) — a second piece of either color in
  *  between (or no further piece at all) means nothing on that ray is
- *  pinned. */
-function pinnedPieces(fen: string, color: Color): Pin[] {
+ *  pinned. Exported for `lib/checklist.ts`, which scans a single static
+ *  position directly rather than diffing a move's before/after FEN the way
+ *  `detectPin()` below does. */
+export function pinnedPieces(fen: string, color: Color): Pin[] {
   const chess = new Chess(fen)
   const king = chess
     .board()
@@ -231,7 +238,7 @@ export function describePinReason(reason: PinReason, locale: Locale = getLocale(
     : `This pins ${pinned} on ${reason.pinnedSquare} to the king — it can't move without exposing the king to ${pinner} on ${reason.pinnerSquare}.`
 }
 
-interface Skewer {
+export interface Skewer {
   attackerSquare: Square
   attackerPiece: PieceSymbol
   frontSquare: Square
@@ -251,8 +258,10 @@ interface Skewer {
  *  target" precedent `forkers()` already applies. Reuses the same
  *  ray-casting shape as `pinnedPieces()`, just rayed outward from the
  *  attacker instead of from the king, and without requiring the back piece
- *  to be the king. */
-function skewers(fen: string, color: Color): Skewer[] {
+ *  to be the king. Exported for `lib/checklist.ts`, which scans a single
+ *  static position directly rather than diffing a move's before/after FEN
+ *  the way `detectSkewer()` below does. */
+export function skewers(fen: string, color: Color): Skewer[] {
   const chess = new Chess(fen)
   const opponent: Color = color === 'w' ? 'b' : 'w'
   const found: Skewer[] = []

@@ -14,8 +14,10 @@ function toColor(color: MyColor): Color {
  *  and has no defender of its own color — capturable for free. No static
  *  exchange evaluation (an attacker outvalued by the piece it'd capture
  *  still counts) and no pin awareness (a pinned "attacker" still counts) —
- *  both out of scope for this v1 heuristic. */
-function hangingSquares(fen: string, color: Color): Map<Square, PieceSymbol> {
+ *  both out of scope for this v1 heuristic. Exported for `lib/checklist.ts`,
+ *  which scans a single static position directly rather than diffing a
+ *  move's before/after FEN the way `detectHangingPiece()` below does. */
+export function hangingSquares(fen: string, color: Color): Map<Square, PieceSymbol> {
   const chess = new Chess(fen)
   const opponent: Color = color === 'w' ? 'b' : 'w'
   const found = new Map<Square, PieceSymbol>()
