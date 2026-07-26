@@ -236,7 +236,7 @@ export function BoardView({
         )}
       </div>
 
-      <div className="flex w-full flex-col gap-4 lg:max-w-xs lg:flex-1">
+      <div className="flex w-full flex-col gap-4 lg:max-w-sm lg:flex-1 xl:max-w-md">
         <MoveList movesSan={movesSan} ply={ply} onSelect={setPly} result={result} />
         {sidebarExtra}
       </div>
@@ -321,7 +321,7 @@ function MoveList({
       >
         {s.board.startingPositionButton}
       </button>
-      <ol className="max-h-[480px] overflow-y-auto text-sm">
+      <ol className="max-h-70 overflow-y-auto text-sm">
         {pairs.map((pair, i) => (
           <li key={pair.moveNumber} className={`flex ${i % 2 === 1 ? 'bg-zinc-800/25' : ''}`}>
             <span className="w-8 shrink-0 px-2 py-1.5 text-zinc-500 tabular-nums">

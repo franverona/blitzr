@@ -55,6 +55,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
 
       {game.movesSan ? (
         <BoardView
+          boardMaxWidthClassName="max-w-160 xl:max-w-172 2xl:max-w-184"
           sidebarExtra={
             <>
               {diff && (

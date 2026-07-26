@@ -415,6 +415,18 @@ hitting "fork"/"skewer" terminology here needs the glossary reachable without th
 Game-replay page only for v1, not wired into `/learn` lessons (no clear "my color vs. opponent"
 framing there).
 
+Fitting board + sidebar in the initial viewport (no scrolling in either direction) at typical
+laptop widths took a few more live-tested passes: the move list's own `max-h` shrank (480px →
+280px, `max-h-70`) so a long game's list doesn't dominate the sidebar's height budget, and the
+sidebar column widened (`lg:max-w-xs` → `lg:max-w-sm`, `xl:max-w-md` on wider screens) so
+finding/summary sentences wrap less. The board's own `boardMaxWidthClassName` (passed from
+`app/games/[id]/page.tsx`, default `max-w-160` unchanged) also grows at `xl`/`2xl` — a wide
+MacBook-class screen was leaving real unused space to the right of the fixed-width board+sidebar
+pair — but deliberately not as far as it could go: pushed all the way up, the taller board ends up
+crowding the material/eval line out of the same initial viewport, undoing the fix. `max-w-172`
+(matching `/learn`'s own already-vetted board size) at `xl` and a modest further step at `2xl`
+balances "use the space" against "still fits everything, board included."
+
 ## Internationalization (i18n)
 
 English and Spanish, chosen once per deployment via `NEXT_PUBLIC_LOCALE` (`lib/i18n/locale.ts`'s
