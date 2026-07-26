@@ -4,7 +4,7 @@ import { useId, useState } from 'react'
 import { Chessboard } from 'react-chessboard'
 import { getStrings } from '@/lib/i18n/strings'
 import { buildPositions } from '@/lib/positions'
-import { BOARD_DARK_SQUARE, BOARD_LIGHT_SQUARE } from '@/lib/theme'
+import { BOARD_ANIMATION_DURATION_MS, BOARD_DARK_SQUARE, BOARD_LIGHT_SQUARE } from '@/lib/theme'
 
 /** A small interactive stepper through the engine's suggested move and its
  *  follow-up plan — SAN text alone doesn't let a beginner "see" where a
@@ -49,6 +49,7 @@ export function PlanBoard({
             boardOrientation,
             allowDragging: false,
             showNotation: false,
+            animationDurationInMs: BOARD_ANIMATION_DURATION_MS,
             darkSquareStyle: { backgroundColor: BOARD_DARK_SQUARE },
             lightSquareStyle: { backgroundColor: BOARD_LIGHT_SQUARE },
           }}
