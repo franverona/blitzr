@@ -44,6 +44,7 @@ components/
   RepertoireBoard.tsx            # editable board that builds the repertoire tree
   RepertoireTree.tsx               # move-tree view with branch switching
   GameAnalysisPanel.tsx              # Stockfish trigger + results dialog
+  PositionChecklist.tsx                # live hanging-piece/fork/pin/skewer scan of the current ply
   DrillSession.tsx                     # one drill card at a time
   DrillFilters.tsx                       # sourceType tabs + opening select
   LessonPractice.tsx                     # Study/Quiz toggle for a /learn lesson
@@ -53,7 +54,7 @@ components/
   FlipBoardButton.tsx                           # flips board orientation on a lesson
   MiniBoard.tsx                                   # small board preview for /learn index cards
   BlunderStats.tsx                       # by-opening/by-piece/worst-blunders aggregate view
-  EvalHelp.tsx                             # shared eval/blunder/swing notation glossary
+  EvalHelp.tsx                             # shared eval/blunder/swing/tactics glossary
   BlunderSeverityBadge.tsx                   # Mistake/Blunder severity pill
   LegalMoveSquare.tsx                    # legal-move dot/ring/selected square highlighting
   OpeningsTable.tsx                    # family/line aggregation table
@@ -70,8 +71,9 @@ lib/
   dates.ts                   # formatDate/formatDateTime — hand-formatted, not Intl
   san.ts                       # SAN/move-number display helpers, describeMove()
   material.ts                    # materialDiff()/formatMaterialDiff()
-  hangingPiece.ts                # detectHangingPiece()/describeHangingPieceReason()
+  hangingPiece.ts                # detectHangingPiece()/hangingSquares()/describe*()
   tactics.ts                     # detectFork()/detectSkewer()/detectPin()/describe*(), detectBlunderReason()
+  checklist.ts                   # buildPositionChecklist() — static per-position tactic scan
   legalMoves.ts                 # legalDestinations(fen, square)
   positions.ts                  # buildPositions() — movesSan into a FEN-per-ply array
   openings.ts                    # buildOpeningFamilies() — pure aggregation
@@ -113,26 +115,12 @@ public/
 Implementation-level rationale (why a specific file does what it does) lives as comments in that
 file, not here — this section is only cross-cutting rules that span multiple files.
 
-- **Every page's content is centered in a `max-w-7xl` wrapper inside `<main>`**
-  (`app/layout.tsx`), matching chess.com's own layout — on a very wide screen, page content
-  (the game board+sidebar, the games table, ...) sits centered in the viewport instead of
-  stretching or hugging the sidebar's edge. Below that width it has no visible effect (content
-  already fits), so this changes nothing at typical laptop widths. That outer wrapper alone isn't
-  enough for `BoardView` (`components/Board.tsx`): its board+sidebar row is a flex container that
-  itself stretches to fill the wrapper's width, and with no `justify-content` it packed its two
-  children (board, move-list column) against the left edge, leaving empty space trailing on the
-  right whenever the row was narrower than the available width (any viewport where the board
-  hadn't grown to its largest `xl`/`2xl` tier) — `lg:justify-center` on that row fixes it at the
-  source, so this isn't specific to any one viewport width. `justify-center` on that row also
-  surfaced a pre-existing bug: the board's own column (`w-full` + `boardMaxWidthClassName`) had no
-  cap of its own, so a long betterMove/plan `<p>` (unbounded width, unlike the board) could render
-  wider than the board on some plies — with a centered row, that briefly widened column shifted the
-  _whole_ board+sidebar block sideways every time the suggestion text got long or short, reading as
-  a horizontal flicker while stepping through a game (most visible around a move where the engine's
-  suggestion text changes length ply-to-ply). Previously invisible because a left-packed row only
-  had to nudge the sidebar, not the board itself. Fixed by giving the column the same
-  `boardMaxWidthClassName` cap as the board inside it, so long suggestion text wraps within that
-  fixed width instead of growing the column.
+- **Page content is centered in a `max-w-7xl` wrapper inside `<main>`** (`app/layout.tsx`),
+  matching chess.com's layout on wide screens; below that width it's a no-op. `BoardView`'s
+  board+sidebar row additionally needs `lg:justify-center` (a flex row packs children left
+  otherwise) and its board column needs the same `boardMaxWidthClassName` cap as the board
+  itself — without that cap, long suggestion text can widen the column and shift the whole row
+  sideways between plies.
 - **Server Actions** for all DB reads/writes and the sync/analysis triggers — no API routes.
 - **Domain types are camelCase** (`lib/types.ts`); **DB columns are snake_case**
   (`lib/db/types.ts`). Each repository implementation maps between them explicitly — never leak
@@ -143,390 +131,180 @@ file, not here — this section is only cross-cutting rules that span multiple f
   everything walks the array in application code; nothing queries at ply granularity in SQL.
 - **Openings aggregation, repertoire diffing, and blunder detection are pure functions**, not
   repository methods — backend-agnostic and directly unit-testable.
-- **Board colors, the reveal-arrow amber, and the piece-slide animation duration have one source
-  of truth**: `lib/theme.ts` for react-chessboard's color/`animationDurationInMs` props (a
-  Tailwind class can't reach them), and the `accent` Tailwind theme color (`app/globals.css`) for
-  everywhere a className can. Not extended to Tailwind's own gray/rose/emerald/amber palette,
-  which is already single-sourced by Tailwind itself. `BOARD_ANIMATION_DURATION_MS` (150ms,
-  shorter than react-chessboard's own 300ms default) exists because react-chessboard doesn't
-  remove a captured piece from its render until the slide animation finishes — for the full
-  duration, the captured piece and the piece capturing it are both visibly rendered on the same
-  square, and no other prop removes that overlap, only shrinks how long it's visible. Every board
-  in the app (`Board.tsx`'s `BoardView`/`PlanBoard.tsx`/`RepertoireBoard.tsx`) shares it, and
-  `BoardNavControls`'s arrow-key throttle (below) matches it too.
-- **`BoardNavControls` (`components/Board.tsx`) binds left/right arrow keys** to the same
-  prev/next step as its ◀/▶ buttons, Space to its Play/Pause toggle, and `0` to Start — globally
-  (not scoped to a focused element) — matching the chess.com/lichess convention this app's
-  audience already knows. Arrow-key repeats are throttled to `BOARD_ANIMATION_DURATION_MS` so
-  holding a key down (or tapping it faster than the animation can finish) can't fire a new step
-  mid-slide. Only mounted where the buttons themselves are (`games/[id]`, and `/learn`'s Study
-  mode but not Quiz mode), so it never fights with Quiz mode's own input handling.
-- **Play auto-advances one ply every `PLAY_INTERVAL_MS`, stopping automatically on a blunder
-  ply** (reusing `findBlunders()` from `lib/analysis.ts` — the same 200cp+ swing definition
-  already used for the analysis dialog and `/blunders`, not a separate notion of "relevant") or
-  at the end of the game. Restarts from ply 0 if toggled on again from the end. `ply`/`isPlaying`
-  are mirrored into refs (synced via an effect, never assigned during render — this project's
-  lint config flags that) so the `setInterval`/keydown callbacks can read the latest value
-  without becoming effect dependencies that would tear down and recreate the interval on every
-  step, and so `togglePlaying` never calls `setPly` (owned by `BoardProvider`) from inside
-  `setIsPlaying`'s own updater function — React (correctly) flags that as updating one
-  component's state while rendering another's. Unanalyzed games (no `evals`) just autoplay
-  straight through with nothing to stop for except the end.
-- **The game replay page and `/learn`'s Study mode both open on ply 1** (the first move already
-  played), not ply 0 (empty board) or the last ply (end of game) — `BoardProvider`'s
-  `initialPly` prop, clamped to a real `lastPly` in case a game has zero parsed moves.
+- **Board colors and animation timing have one source of truth**: `lib/theme.ts` for
+  react-chessboard props a Tailwind class can't reach, and the `accent` Tailwind color
+  (`app/globals.css`) for everywhere a className can. `BOARD_ANIMATION_DURATION_MS` (150ms,
+  vs. react-chessboard's 300ms default) minimizes how long a captured piece visibly overlaps its
+  capturer; every board in the app (`Board.tsx`, `PlanBoard.tsx`, `RepertoireBoard.tsx`) shares it.
+- **`BoardNavControls`** binds arrow keys to prev/next, Space to Play/Pause, and `0` to Start —
+  globally, throttled to `BOARD_ANIMATION_DURATION_MS` so rapid input can't cut an animation
+  short. Mounted only on `games/[id]` and `/learn`'s Study mode (not Quiz mode).
+- **Play auto-advances one ply every `PLAY_INTERVAL_MS`, stopping on a blunder ply**
+  (`findBlunders()`) or at the end of the game. `ply`/`isPlaying` are mirrored into refs so the
+  interval/keydown callbacks read fresh values without becoming effect dependencies, and so
+  `setPly`/`setIsPlaying` are never called from inside each other's updater functions (React
+  flags that as updating one component's state while rendering another's).
+- **The game replay page and `/learn`'s Study mode open on ply 1**, not ply 0 (empty board) or
+  the last ply — `BoardProvider`'s `initialPly` prop, clamped to a real `lastPly`.
 - **Beginner-facing jargon is explained in place**, not simplified away — `<abbr title="...">`
-  tooltips (ECO codes, in book/deviated, time class, severity badges) and `EvalHelp`'s glossary.
+  tooltips and `EvalHelp`'s glossary.
 - **A component that seeds state with `useState(initialX)` needs `key={id}`** wherever the same
-  component instance can receive new props for a different record (`GameAnalysisProvider`/
-  `BoardProvider` keyed on `game.id`, `LessonPractice`/`DrillSession` keyed on `lesson.slug`/
-  filter values) — otherwise switching records shows stale state instead of the new props.
+  instance can receive new props for a different record (`GameAnalysisProvider`/`BoardProvider`
+  keyed on `game.id`, `LessonPractice`/`DrillSession` keyed on `lesson.slug`/filter values) —
+  otherwise switching records shows stale state instead of the new props.
 
 ## Database backend
 
 - **`DB_TYPE`** env var selects the backend. Defaults to `sqlite` (zero-config). Only `sqlite`
-  is implemented; `lib/db/factory.ts` throws a clear error for anything else rather than
-  silently falling back.
+  is implemented; `lib/db/factory.ts` throws a clear error for anything else.
 - **To add a new backend** (e.g. Postgres): implement `GameRepository` (`lib/db/types.ts`) in a
-  new `lib/db/<backend>/` directory (mirror `lib/db/sqlite/`), then register it in the
-  `switch` in `lib/db/factory.ts`. There's no shared cross-backend SQL layer yet — add one only
-  once a second SQL backend actually exists; building it for one implementation is premature.
+  new `lib/db/<backend>/` directory (mirror `lib/db/sqlite/`), then register it in
+  `lib/db/factory.ts`'s `switch`.
 - SQLite lives at `./data/blitzr.db`, created automatically on first run. To reset, delete the
   file and re-sync.
 - Tables: `games`, `sync_state`, `repertoire_moves` (branching tree per color, `ON DELETE
-CASCADE` from a node to its subtree — requires the `foreign_keys` pragma, see
-  `sqlite/connection.ts`), `game_analysis` (one row per analyzed game, keyed by `game_id`,
-  `ON DELETE CASCADE` if the game is ever removed), `drill_cards` (one row per drillable
-  position — spaced-repetition schedule only, see "Drilling"; keyed by `(game_id, source_type,
-ply)` rather than a synthetic id, `ON DELETE CASCADE` on `game_id`).
+CASCADE` from a node to its subtree — requires the `foreign_keys` pragma), `game_analysis`
+  (one row per analyzed game, keyed by `game_id`), `drill_cards` (spaced-repetition schedule
+  only, keyed by `(game_id, source_type, ply)`, `ON DELETE CASCADE` on `game_id`).
 
 ## Chess.com ingestion
 
 - Base URL `https://api.chess.com/pub`, no API key. Every request sends a descriptive
   `User-Agent` (`lib/chesscom/client.ts`) — Chess.com throttles requests without one.
-- Archives are fetched **serially** (a `for` loop with `await`, never `Promise.all`) —
-  `lib/sync.ts`'s `syncAllArchives()`. 429s are retried with backoff honoring `Retry-After`
-  (`lib/chesscom/client.ts`'s `getJson`).
-- **Incremental sync**: `sync_state` tracks each archive month as `complete` or `partial`.
-  Months already `complete` are skipped on future runs; the current month is always re-fetched
-  (marked `partial`) since it can still gain new games.
-- Ingestion is deliberately unfiltered — variants (chess960, bughouse, …) and daily
-  (correspondence) games are synced like everything else. Filtering what counts toward the
-  user's repertoire is a UI/analysis-layer decision, not an ingestion-time one, so nothing
-  synced is ever silently lost.
-- **Player avatars aren't synced/stored** — `fetchPlayerAvatar()` (`lib/chesscom/client.ts`)
-  hits `/pub/player/{username}` live on every game page view and is never cached, since it's
-  purely decorative for a low-traffic single-user app. It swallows any failure (unknown user,
-  bot with no public profile, rate limit) and returns `null` rather than breaking the page —
-  `PlayerAvatar.tsx` falls back to an initial-letter badge in that case.
+- Archives are fetched **serially**, never `Promise.all` — `lib/sync.ts`'s `syncAllArchives()`.
+  429s are retried with backoff honoring `Retry-After`.
+- **Incremental sync**: `sync_state` tracks each archive month as `complete` or `partial`. The
+  current month is always re-fetched since it can still gain new games.
+- Ingestion is deliberately unfiltered — variants, daily games, everything syncs. Filtering what
+  counts toward the repertoire is a UI/analysis-layer decision, not an ingestion-time one.
+- **Player avatars aren't synced/stored** — `fetchPlayerAvatar()` hits the Chess.com API live on
+  every game page view, swallows any failure, and returns `null` (`PlayerAvatar.tsx` falls back
+  to an initial-letter badge).
 
 ### Known Chess.com API quirks
 
-- **"Play vs Coach" bot games have a broken `url`/PGN `[Link]`** — both point to an unrelated
-  random game, not the actual bot session (verified directly; Chess.com's own site doesn't
-  resolve it correctly either). There's no other identifier in the API response to derive a
-  correct link from. `app/games/[id]/page.tsx` hides the "View on Chess.com" link when the
-  PGN's `[Event]` header is `"Play vs Coach"`, rather than linking somewhere wrong.
-- **"Play Bots" personality games (e.g. named bots like "Santiago") don't appear in the public
-  API at all** — `/games/archives` and the monthly endpoints only return real Live/Daily games
-  and "Play vs Coach" sessions. Chess.com's own site shows a much larger game count because it
-  includes activity the public Published-Data API simply never exposes. Nothing to fix here;
-  there's no data to sync.
+- **"Play vs Coach" bot games have a broken `url`/PGN `[Link]`** pointing to an unrelated random
+  game — no correct link is derivable, so `app/games/[id]/page.tsx` hides the "View on
+  Chess.com" link when the PGN's `[Event]` header is `"Play vs Coach"`.
+- **"Play Bots" personality games don't appear in the public API at all** — nothing to sync,
+  nothing to fix.
 
 ## Repertoire
 
-A branching tree per color (`repertoire_moves` — `parent_id`/`ply`/`move_san`/`fen`; multiple
-children at one node is how you prepare replies to more than one opponent try). Built
-interactively on `/repertoire` (`RepertoireBoard.tsx`) by playing moves on an editable board,
-client-generated ids via `crypto.randomUUID()`. `diffGameAgainstRepertoire()` (`lib/repertoire.ts`)
-flags a **deviation** only when the mismatch is on the user's own ply and the tree had a prepared
-child there — an opponent's unprepared try, or the tree simply running out, doesn't count. The
-same real-time hanging-piece/fork warning used in analysis (`detectBlunderReason()`,
-`lib/tactics.ts`) runs live while building the tree, derived from the current node's FEN rather
-than stored state.
+A branching tree per color (`repertoire_moves`), built interactively on `/repertoire`
+(`RepertoireBoard.tsx`) by playing moves on an editable board. `diffGameAgainstRepertoire()`
+(`lib/repertoire.ts`) flags a **deviation** only when the mismatch is on the user's own ply and
+the tree had a prepared child there — an opponent's unprepared try, or the tree simply running
+out, doesn't count. Live hanging-piece/fork warnings while building the tree reuse
+`detectBlunderReason()` (`lib/tactics.ts`).
 
 ## Engine analysis
 
-Stockfish runs **client-side only**, in a browser Web Worker — Server Actions
-(`getGameAnalysis`/`saveGameAnalysis`) only persist results, never run the engine.
-`scripts/setup-stockfish.mjs` copies the WASM build into `public/stockfish/` on install (gitignored,
-same as `data/*.db` — a Worker needs a real URL, not something bundled). `StockfishEngine`
-(`lib/stockfish/client.ts`) is a thin UCI wrapper normalizing every eval to White's perspective;
-`lib/stockfish/analyze.ts` orchestrates the per-position loop (single game and bulk "Analyze all"
-share the same `analyzePositions()` helper and, for bulk, a single engine instance across every
-game rather than one per game). `findBlunders()` (`lib/analysis.ts`) flags any swing ≥200
-centipawns; `game_analysis.evals` stores one JSON row per game, overwritten on re-analysis.
+Stockfish runs **client-side only**, in a Web Worker — Server Actions only persist results,
+never run the engine. `StockfishEngine` (`lib/stockfish/client.ts`) normalizes every eval to
+White's perspective; bulk "Analyze all" shares a single engine instance across every game.
+`findBlunders()` flags any 200cp+ swing.
 
-Beyond the raw eval, the game/blunders/drill pages layer on plain-English explanations:
-`describeMove()` (`lib/san.ts`) turns a SAN move into a sentence; `detectHangingPiece()`/
-`detectFork()`/`detectSkewer()`/`detectPin()` (`lib/hangingPiece.ts`/`lib/tactics.ts`) say _why_ a
-move was a blunder (hung piece, fork, skewer, or an absolute pin to the king — all deliberately
-narrow v1 heuristics: no static-exchange evaluation, no relative pins, one-ply lookback only);
-`detectBlunderReason()` is the combinator every call site actually uses, checked in that order
-(hanging piece first, since it's the most immediately concrete; skewer sits with fork as a
-material threat; pin last, since it's a constraint rather than material lost). `explainBestMove()`/
-`describeBetterMove()` (`lib/tactics.ts`) apply the same four detectors to the engine's suggested
-move instead of the one played, explaining why the alternative was better. A skewer is a pin
-flipped around — the attacker's _more_ valuable target is in front and forced to move, exposing a
-less valuable piece behind it — so `skewers()` reuses `pinnedPieces()`'s ray-casting shape rayed
-outward from the attacker instead of the king, with an explicit guard against ever calling the
-king the _back_ piece (that configuration is always a pin, not a skewer, regardless of the value
-comparison) and a floor requiring the back piece be worth more than a pawn (same "at least one
-non-pawn target" filter `forkers()` already applies, needed after real-game verification turned up
-mostly meaningless pawn-vs-pawn hits without it). See each file's own comments for the specific
-algorithms and edge cases — `lib/tactics.ts` in particular has several non-obvious tricks (forcing
-a FEN's turn field to query a color that isn't actually on move, swapping FEN order to detect
-"resolved" vs "newly created", ray-casting outward from the king to find pins without needing
-chess.js to expose "who's attacking this square") worth reading before touching it. `EvalHelp`
-(`components/EvalHelp.tsx`) also carries a plain-language glossary entry for each of these four
-terms (hanging piece, fork, pin, skewer) alongside its existing eval/blunder/swing notation
-entries — same shared "how to read this" dialog, no component changes needed since it renders
-`s.evalHelp.entries` generically.
+Plain-English explanations layer on top: `describeMove()` (`lib/san.ts`) turns a SAN move into a
+sentence; `detectHangingPiece()`/`detectFork()`/`detectSkewer()`/`detectPin()`
+(`lib/hangingPiece.ts`/`lib/tactics.ts`) say _why_ a move was a blunder — deliberately narrow v1
+heuristics (no static-exchange evaluation, no relative pins, one-ply lookback only).
+`detectBlunderReason()` combines them in priority order and is what every call site actually
+uses. `explainBestMove()`/`describeBetterMove()` apply the same detectors to the engine's
+suggested move instead of the one played. See `lib/tactics.ts`'s own comments for the FEN/ray-
+casting tricks involved — worth reading before touching that file.
 
-Not every better move has a one-ply tactical reason — a quiet positional move's payoff can be
-several plies out, where `detectHangingPiece()`/`detectFork()`/`detectSkewer()`/`detectPin()` have
-nothing to say. `BestMove`
-carries `bestLine` (the engine's own principal variation, replayed into SAN via
-`parseBestLine()` in `lib/stockfish/client.ts`) for exactly that case, rendered as a trailing
-"Plan: ..." clause in `describeBetterMove()`'s output. `evals` is stored as opaque JSON, so this
-needed no migration — analyses saved before this field existed just have no plan until
-re-analyzed. `components/PlanBoard.tsx` renders that plan as a real, step-through-able board
-(own `ply` state, `Start/Previous/Next/End` controls) rather than SAN text alone — used from both
-`Board.tsx`'s inline suggestion and `GameAnalysisPanel.tsx`'s blunder list, so a page can have
-several simultaneous `Chessboard` instances at once. react-chessboard requires a unique `options.id`
-per instance for this (`useId()` in both `Board.tsx` and `PlanBoard.tsx`) — omitting it isn't
-just a style nit, it crashes with "Square width not found" once two boards share a page.
+Not every better move has a one-ply tactical reason. `BestMove.bestLine` (the engine's own
+principal variation) covers that case, rendered as a step-through-able `PlanBoard` (own `ply`
+state) instead of plain SAN text — used from both `Board.tsx` and `GameAnalysisPanel.tsx`, so
+react-chessboard's `options.id` must be unique per instance (`useId()`) or it crashes.
 
 ## Drilling
 
-A drillable position is fully derivable from data that already exists (`games.moves_san`,
-`repertoire_moves`, `game_analysis.evals`) via the same pure functions the Repertoire and Engine
-analysis sections above already built —
-`drill_cards` stores only the spaced-repetition schedule, keyed by `(gameId, sourceType, ply)`,
-everything else recomputed on demand by `buildDrillPrompt()` (`lib/drill.ts`). Two card sources:
-`findDeviationCandidates()` (repertoire deviations) and `findBlunderCandidates()` (blunders on the
-user's own plies only). Scheduling (`scheduleReview()`) is SM-2 with binary grading. The deck
-syncs fresh on every `/drill` load (`getDrillDeck()`, `app/actions.ts`) rather than a separate
-sync step, and is capped at the 15 most-overdue cards per session (`selectSessionCards()`).
+A drillable position is fully derivable from existing data (`games.moves_san`,
+`repertoire_moves`, `game_analysis.evals`) — `drill_cards` stores only the spaced-repetition
+schedule, keyed by `(gameId, sourceType, ply)`, everything else recomputed on demand by
+`buildDrillPrompt()` (`lib/drill.ts`). Two card sources: `findDeviationCandidates()` and
+`findBlunderCandidates()` (blunders on the user's own plies only). Scheduling is SM-2 with
+binary grading. The deck syncs fresh on every `/drill` load, capped to the 15 most-overdue cards.
 
-`DrillSession.tsx` is the most stateful component in the app — snapshotting its `prompts` prop on
-mount (so a background revalidation mid-session can't reshuffle the active card out from under
-it), a progressive 3-level hint system, shuffle-and-restart, and keyboard shortcuts. See the
-file's own comments for the specific React traps involved (the frozen-snapshot pattern, the
-`answeredRef` double-submit guard, `committedFen` for showing a correct move landing on the
-board). `?type=`/`?opening=` filters follow the same URL-driven pattern as `/repertoire`'s
-`?color=`, with `DrillSession` keyed on the filter values so switching filters remounts a fresh
-session instead of reusing the frozen one.
+`DrillSession.tsx` is the most stateful component in the app (a frozen prompt snapshot so a
+background revalidation can't reshuffle the active card, a progressive hint system, keyboard
+shortcuts) — see its own comments for the specific React patterns involved.
 
 ## Blunders aggregate
 
-Pure aggregation over already-stored data, no new table — `buildBlunderStats()` (`lib/blunders.ts`)
-mirrors `buildOpeningFamilies()`'s shape, computed fresh on every `/blunders` load. Scoped to
-analyzed games only (the page's summary line makes that explicit) and the account's own moves only
-(`whiteToMove()`, shared with the drill deck's blunder filter). Grouped by opening family and by
-moved piece; the worst-blunders list's plain-English fields (`moveDescription`/`reason`/
-`betterMove`) are only computed for the ≤10 entries that survive the sort-and-slice, not every
-blunder counted along the way. `EvalHelp` (`components/EvalHelp.tsx`) is a shared "how to read
-this" glossary used by both this page and the game analysis dialog. `blunderSeverity()`
-(`lib/analysis.ts`) labels each blunder "Mistake" (200–399cp) or "Blunder" (400cp+) without
-changing what counts as a blunder anywhere — shown via `BlunderSeverityBadge`.
+`buildBlunderStats()` (`lib/blunders.ts`) is pure aggregation over already-stored data, computed
+fresh on every `/blunders` load, scoped to analyzed games and the account's own moves only.
+Grouped by opening family and by moved piece. `blunderSeverity()` (`lib/analysis.ts`) labels
+each blunder "Mistake" (200–399cp) or "Blunder" (400cp+), shown via `BlunderSeverityBadge`.
 
 ## Learn openings
 
 **Content is hand-authored, not imported.** `lib/openingTheory.ts` exports a hardcoded
-`OPENING_LESSONS: Lesson[]` array plus `getOpeningLesson(slug)` — no DB table, no Server Action,
-same "just data in code" treatment as `PIECE_NAMES`/`TIME_CLASS_TOOLTIPS`. A new lesson is a
-content-only array entry; 14 exist today across every major first move and both colors. Every
-`sourceUrl` must be fetched and read live before being cited (don't guess Wikibooks' page-naming
-pattern — some subpages are nested 5-6 moves deep). **Summaries are paraphrased in original
-wording, never reproduced from the source** — Wikibooks' Chess Opening Theory is CC BY-SA
-(share-alike), this repo is MIT, so verbatim text would be a licensing mismatch; a short original
-summary plus a visible "Adapted from ..." link (`Lesson.sourceUrl`) sidesteps that. Follow this
-pattern for every future lesson.
+`OPENING_LESSONS: Lesson[]` array — no DB table, no Server Action. Every `sourceUrl` must be
+fetched and read live before being cited. **Summaries are paraphrased, never reproduced from the
+source** — Wikibooks' Chess Opening Theory is CC BY-SA, this repo is MIT, so a short original
+summary plus a visible "Adapted from ..." link sidesteps the licensing mismatch.
 
-The interactive board reuses `Board.tsx`'s `BoardProvider`/`BoardNavControls`/`BoardView`
-(`components/LessonPractice.tsx`), same as the game-replay page, just fed `lesson.initialFen`/
-`lesson.moves` instead of a synced game. Quiz mode (`components/LessonQuiz.tsx`) is separate
-active-recall practice — play the line from memory, one side at a time (`Lesson.primaryColor`
-picks the default side, matching which player the lesson is framed around; flippable) —
-self-contained to `/learn`, no `drill_cards`/SM-2 involved. Each _opening_ lesson also cross-links
-to the account's own data: `countGamesReachingLine()` (`lib/openingTheory.ts`) checks whether a
-synced game's `movesSan` starts with the lesson's exact SAN sequence, **not** Chess.com's ECO
-code/name — a lesson's line is usually just a tabiya, and real games almost always continue into
-a deeper, more specific named sub-variation that Chess.com tags the whole game with instead
-(confirmed live: this account's two actual Ruy Lopez games are tagged `C70`/"Morphy Defense", not
-the `C60` the lesson's own position maps to — an ECO-code match would have shown 0 games despite
-2 real ones). See each component's own comments for further implementation detail.
+The interactive board reuses `Board.tsx`'s provider/board (`components/LessonPractice.tsx`).
+Quiz mode (`components/LessonQuiz.tsx`) is separate active-recall practice, self-contained to
+`/learn`. `countGamesReachingLine()` matches a synced game's `movesSan` against the lesson's
+exact SAN prefix, **not** Chess.com's ECO code/name — a lesson's line is usually a shallower
+tabiya than whatever deeper sub-variation Chess.com tags the whole game with.
 
 ## Learn endgames
 
-`lib/endgameTheory.ts` mirrors `lib/openingTheory.ts` exactly — `ENDGAME_LESSONS: Lesson[]` +
-`getEndgameLesson(slug)`, same hand-authored/paraphrased/`sourceUrl`-cited content rules, same
-`components/LessonPractice.tsx`/`LessonQuiz.tsx` rendering. `app/learn/[slug]/page.tsx` looks a
-slug up in both arrays (`getOpeningLesson(slug) ?? getEndgameLesson(slug)`); `app/learn/page.tsx`
-switches between the two card grids with an Openings/Endgames tab (plain `useState`, same
-`ModeTab`-style toggle `LessonPractice.tsx`'s Study/Quiz switch already uses) rather than adding a
-7th sidebar nav item for what's still "stuff you can study." 3 lessons so far (King and Queen vs.
-King, King and Rook vs. King, King and Pawn vs. King), sourced from a different chapter of the
-same Wikibooks book (`Chess/The_Endgame/...` instead of `Chess_Opening_Theory/...`).
-
-The one real difference from an opening lesson: an opening always starts from the standard
-position, but an endgame needs its own constructed starting position (e.g. king + queen vs. lone
-king) — `Lesson.initialFen` carries that (openings just set it to the standard FEN), so
-`BoardProvider` needed no changes at all, just a per-lesson FEN instead of a hardcoded constant.
-Each endgame lesson's move sequence runs all the way to an actual checkmate (or, for the pawn
-lesson, to the pawn queening) rather than stopping at a tabiya like an opening does — Quiz mode's
-existing "replay this line, opponent auto-plays" mechanic needed zero code changes to make
-reaching the end of the line _mean_ delivering mate, since that's just what the authored line
-does. Every move sequence was verified legal-and-correct (final position really is checkmate, or
-really has a new queen) with a `chess.js` scratch script before being written down, and that same
-check is now a standing test (`__tests__/endgameTheory.test.ts`) — not just eyeballed once.
-`getLessonGameStats()`/`countGamesReachingLine()` (the "you've played this in N games" line) has
-no endgame equivalent — a game doesn't "reach" an endgame position via a fixed move prefix from
-move 1 — so `LessonPractice`'s `gameStats` prop is `null` for an endgame lesson and that section
-simply doesn't render, rather than showing a meaningless "0 games" line.
+`lib/endgameTheory.ts` mirrors `openingTheory.ts` — same hand-authored/paraphrased rules, same
+rendering components. The one real difference: each lesson needs its own constructed
+`initialFen` (not the standard start position), and its move sequence runs all the way to an
+actual checkmate (or, for the pawn lesson, to promotion) — verified with a `chess.js` script and
+covered by a standing test (`endgameTheory.test.ts`). No `countGamesReachingLine()` equivalent —
+an endgame isn't reached via a fixed move prefix from move 1.
 
 ## Middlegame position checklist
 
-Every blunder explanation so far (`detectHangingPiece()`/`detectFork()`/`detectPin()`/
-`detectSkewer()`) is diff-based — it only reports a pattern that's _newly_ true after one specific
-move, for after-the-fact explanation. `lib/checklist.ts`'s `buildPositionChecklist(fen)` answers a
-different question — "what's actually going on in this position right now" — for a beginner
-stepping through any game who's stuck and doesn't know what to look for next, not just at a move
-Stockfish already flagged. It reuses the exact same detection logic: `hangingSquares()`
-(`lib/hangingPiece.ts`) and `forkers()`/`pinnedPieces()`/`skewers()` (`lib/tactics.ts`) were
-already there as the per-position building blocks each diff-based detector calls on both the
-before- and after-FEN — exporting them (previously module-private) needed no new detection code at
-all, just a static scan of one FEN calling all four for both colors.
+`buildPositionChecklist(fen)` (`lib/checklist.ts`) scans one static position for hanging
+pieces/forks/pins/skewers on both sides — unlike the diff-based `detectX()` functions above,
+this answers "what's going on right now," useful at any ply a beginner is stuck on, not just one
+Stockfish already flagged. Reuses the same exported per-position helpers (`hangingSquares()`,
+`forkers()`, `pinnedPieces()`, `skewers()`). A hanging-piece finding is suppressed when the same
+square is already a fork/skewer target (noise reduction; pin overlaps are not suppressed —
+that's a materially different fact); findings are capped to `MAX_FINDINGS_PER_SIDE` (3) per side.
+`describeChecklistFinding()` uses its own EN/ES templates (subject-led, not "this move caused
+it" framing, since a checklist isn't tied to any one move).
 
-Two refinements keep this from being a raw dump of every result: a hanging-piece finding is
-skipped when that square is already a fork/skewer target for the same side (the fork/skewer
-already explains _why_ the piece is in danger — repeating the weaker "it's hanging" note on the
-same square is just noise; pin overlaps are **not** suppressed, since a piece that's both pinned
-and genuinely hanging is a materially different, still-urgent fact), and each side's findings are
-sorted by the value of the piece at risk and capped to `MAX_FINDINGS_PER_SIDE` (3) — every other
-always-visible line on the game page (material diff, eval, better-move hint) is a single line, so
-an uncapped list would bury the point for someone who's already stuck.
-`describeChecklistFinding()` uses **new** EN/ES templates rather than reusing
-`describeBlunderReason()` — that function's phrasing ("This leaves the queen on d5 hanging") reads
-as "this move caused it," the wrong voice for a static snapshot unconnected to any one move; these
-templates lead with the piece/attacker as the sentence subject instead, and the pin template uses
-a plain verb ("pins"/"clava") rather than a gendered past-participle adjective, the same trick
-`describePinReason()`/`describeSkewerReason()` already lean on to sidestep Spanish's
-torre/dama-vs-everything-else gender agreement.
-
-`components/PositionChecklist.tsx` renders two sections ("Your pieces"/"Opponent's pieces," split
-by `ChecklistFinding.side` against `game.myColor`). Placement went through two live-tested
-iterations, both driven by real friction on the running app rather than guessed upfront: an
-always-open block right after `BoardView` needed scrolling well past the board on every ply to
-reach; collapsing it into a `<details>` (still after `BoardView`) fixed the scrolling _cost_ but
-not the round-trip itself — stepping to a new move still meant scrolling down to check it,
-scrolling back up to step again. The actual fix was moving it out of the page's main flow
-entirely: `BoardView` (`components/Board.tsx`) now takes an optional `sidebarExtra: React.ReactNode`
-prop, rendered stacked below the move list in that same width-capped column next to the board —
-`undefined` for every other caller (`/learn` lessons have nothing to pass), so this changed
-nothing for them. `app/games/[id]/page.tsx` passes a fragment of `RepertoireDiff`/`GameSummary`/
-`PositionChecklist` there (moved out of the page's top-of-page main column, where they'd
-previously stacked above the board alongside the header) — same reasoning extended past the
-checklist itself once it became clear the deviation/blunder-summary lines were pushing the board
-down the page too, for the same "supplementary analysis, not core game identity" reason. Only
-`GameHeader` (names/date/opening) and the nav/analyze controls stay above the board now. The panel
-stays in view the whole time you step through a game, no scrolling either direction.
-It's still a `<details>` disclosure (a long game's move list can already be tall, so a quiet
-position collapsing to one summary line — `s.gamePage.checklist.summary(n)`, e.g.
-"Position checklist — 2 to check" vs. "— nothing to flag right now" — keeps this column from
-growing past the board for no reason), `open={findings.length > 0}` so anything worth seeing
-expands itself rather than hiding behind a click. It also renders `EvalHelp` itself at the bottom:
-the glossary previously only surfaced inside the Stockfish analysis dialog, which requires running
-analysis first, but the checklist works on any game with moves, analyzed or not — a beginner
-hitting "fork"/"skewer" terminology here needs the glossary reachable without that dependency.
-Game-replay page only for v1, not wired into `/learn` lessons (no clear "my color vs. opponent"
-framing there).
-
-Fitting board + sidebar in the initial viewport (no scrolling in either direction) at typical
-laptop widths took a few more live-tested passes: the move list's own `max-h` shrank (480px →
-280px, `max-h-70`) so a long game's list doesn't dominate the sidebar's height budget, and the
-sidebar column widened (`lg:max-w-xs` → `lg:max-w-sm`, `xl:max-w-md` on wider screens) so
-finding/summary sentences wrap less. The board's own `boardMaxWidthClassName` (passed from
-`app/games/[id]/page.tsx`, default `max-w-160` unchanged) also grows at `xl`/`2xl` — a wide
-MacBook-class screen was leaving real unused space to the right of the fixed-width board+sidebar
-pair — but deliberately not as far as it could go: pushed all the way up, the taller board ends up
-crowding the material/eval line out of the same initial viewport, undoing the fix. `max-w-172`
-(matching `/learn`'s own already-vetted board size) at `xl` and a modest further step at `2xl`
-balances "use the space" against "still fits everything, board included."
-
-Findings are also drawn directly on the board, not just described in the sidebar text — a
-hanging-piece square gets a highlight, a fork/skewer/pin gets an arrow (attacker→target,
-attacker→back piece, pinner→pinned respectively) plus highlights on every square involved.
-`findingMarks()`/`findingKey()` (`lib/checklist.ts`) are the pure mapping from a `ChecklistFinding`
-to plain square-name strings — `BoardView` (`components/Board.tsx`) applies the actual
-`squareStyles`/`arrows` colors (`CHECKLIST_SQUARE_COLOR`/`CHECKLIST_ARROW_COLOR`, `lib/theme.ts`,
-rose — matching `BlunderSeverityBadge`'s existing "danger" rose rather than reusing
-`REVEAL_ARROW_COLOR`'s amber, which means something different: the engine's own suggested move).
-Showing every finding by default risks turning a busy middlegame into clutter, so each finding in
-`PositionChecklist` carries its own Hide/Show toggle — `BoardProvider` holds a `hiddenFindingKeys`
-Set + `toggleFindingVisibility()` in context (not local to `PositionChecklist`) since `BoardView`
-needs to read it too to decide what to actually draw; `findingKey()` gives each finding a stable
-identity (side + kind + squares) that survives the sort-and-recap `buildPositionChecklist()` does
-every render, since array index isn't stable across that. Hidden keys are never reset on ply
-change — in practice a finding's key is specific enough (exact squares/pieces) that it essentially
-never recurs at a different position, so no explicit reset was worth the extra code. One
-non-obvious bug caught only by checking the browser console (not `tsc`/lint/tests): react-chessboard
-keys each rendered arrow by its start/end squares alone, not by color, so a checklist arrow and the
-engine's reveal arrow landing on the same two squares — or two checklist findings independently
-producing the same arrow — threw a duplicate-key React warning. Fixed by deduping arrows through a
-single `Map` keyed on `"from-to"` before handing the list to `Chessboard`, with the reveal arrow
-inserted last so it wins any collision (it's the primary "what to play instead" callout, the
-checklist arrow is supplementary).
+`PositionChecklist.tsx` renders as `BoardView`'s `sidebarExtra` (a dedicated prop so it stays
+next to the board instead of pushing it down the page) and also draws findings directly on the
+board — highlighted squares plus arrows, via `findingMarks()`/`findingKey()` and the rose
+`CHECKLIST_*` colors in `lib/theme.ts`. Each finding has its own Hide/Show toggle
+(`BoardProvider`'s `hiddenFindingKeys`) so a busy position doesn't turn into clutter. See the
+component's own comments for layout-history and a react-chessboard duplicate-arrow-key gotcha
+(arrows are keyed by start/end square only, not color — dedupe before handing the list to
+`Chessboard`).
 
 ## Internationalization (i18n)
 
-English and Spanish, chosen once per deployment via `NEXT_PUBLIC_LOCALE` (`lib/i18n/locale.ts`'s
-`getLocale()`) — needs the `NEXT_PUBLIC_` prefix (unlike `DB_TYPE`/`CHESSCOM_USERNAME`) so client
-components can read it too, since Next.js inlines `NEXT_PUBLIC_*` vars into both server and
-client bundles at build time. No Context/Provider, no in-app switcher — this is a single-user
-app, there's no other viewer to switch it for; changing the var needs a restart/rebuild.
-`lib/i18n/strings.ts` holds the whole UI string dictionary as plain data — an `en` object with no
-type annotation, and an `es` object typed against `typeof en` (via a derived `Strings` type), so
-a missing or mismatched Spanish key is a `tsc` error, not a silent gap. Parameterized/pluralized
-text is a function value (e.g. `drill.moreDue(n)`) rather than a placeholder-syntax templating
-engine — not worth a library for two locales. `getStrings()` returns the whole dictionary for the
-current locale; components call it once per render and destructure what they need. **SAN move
-notation and square names are never translated** (universal chess notation), and neither is
-Chess.com's own `ecoName`/opening-name data (external, not ours to translate) — same "don't touch
-external data" principle the ingestion layer already follows.
+English and Spanish, chosen once per deployment via `NEXT_PUBLIC_LOCALE`
+(`lib/i18n/locale.ts`) — no in-app switcher; changing the var needs a rebuild.
+`lib/i18n/strings.ts` holds the whole UI string dictionary: an untyped `en` object and an `es`
+object typed against `typeof en`, so a missing Spanish key is a `tsc` error. Parameterized text
+is a function value (e.g. `drill.moreDue(n)`), not a templating engine. **SAN notation, square
+names, and Chess.com's own `ecoName` are never translated.**
 
-The tactical-description generators in `lib/` (`describeMove`, `describeBetterMove`,
-`describeBlunderReason`, `describeEval`, `formatSwing`, `formatMaterialDiff`,
-`buildBlunderStats`/`buildOpeningFamilies`'s fallback labels, ...) each take an **optional
-trailing `locale: Locale = getLocale()` parameter** instead of threading a required one through
-every call site — omit it and a call site gets the env-based default (which is how every existing
-caller still works unchanged), or pass `'es'` explicitly (which is how tests cover the Spanish
-templates without mutating `process.env`). Spanish needed real sentence templates here, not a
-word-for-word swap of the English ones — verb/preposition/article all differ, and gendered
-articles (torre/dama are feminine, everything else masculine) meant centralizing a
-`pieceWithArticle()` helper (`lib/san.ts`) rather than hand-rolling "el"/"la" in every function
-that builds a "the {piece} on {square}" phrase (hanging-piece, fork, pin, and better-move
-explanations all do). `OPENING_LESSONS`/`ENDGAME_LESSONS` follow the same idea at the content
-level: `Lesson.name`/`.summary` and `LessonMove.explanation` are `Record<Locale, string>` rather
-than a plain `string` (one array per lesson type, not parallel `_EN`/`_ES` arrays, so there's a
-single source of truth per lesson) — I translated all of it into natural (not machine-literal)
-Spanish myself.
+The tactical-description generators take an optional trailing `locale: Locale = getLocale()`
+parameter rather than threading a required one through every call site. Spanish needed real
+sentence templates, not word-for-word swaps — gendered articles (torre/dama are feminine) are
+centralized in `pieceWithArticle()` (`lib/san.ts`). `Lesson.name`/`.summary`/
+`LessonMove.explanation` are `Record<Locale, string>` rather than parallel arrays.
 
 ## Testing
 
 - **Vitest** — run with `pnpm test` (or `pnpm test:watch`)
-- Tests live in `__tests__/`, one file per `lib/` module they cover: `normalize.test.ts`,
-  `openings.test.ts`, `repertoire.test.ts`, `analysis.test.ts`, `san.test.ts` (including
-  `describeMove()`/`hintPieceName()`), `material.test.ts`, `hangingPiece.test.ts`, `tactics.test.ts`,
-  `openingTheory.test.ts`, `endgameTheory.test.ts` (includes replaying every lesson's moves with
-  `chess.js` to confirm the final position really is checkmate, or really has a new queen — not
-  just a content-shape check), `dates.test.ts`, `drill.test.ts`,
-  `blunders.test.ts`, `stockfish-analyze.test.ts` (just `terminalEval()`) and `stockfish-client.test.ts` (just
-  `parseBestMove()`) — the rest of `evaluate()`/`analyzeGame()`/`analyzeGames()` needs a real
-  browser Worker and isn't unit-tested. `analysis.test.ts` also covers `blunderSeverity()`.
-- Pure functions are tested directly against fixtures — no DB, network, or browser needed for
-  any of them
+- Tests live in `__tests__/`, one file per `lib/` module they cover. Pure functions are tested
+  directly against fixtures — no DB, network, or browser needed for any of them.
+- `evaluate()`/`analyzeGame()`/`analyzeGames()` need a real browser Worker and aren't
+  unit-tested; only their pure helpers (`terminalEval()`, `parseBestMove()`) are.
 
 ## Before considering a feature or fix done
 
