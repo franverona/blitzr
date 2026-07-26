@@ -17,3 +17,13 @@ export const BOARD_LIGHT_SQUARE = '#eeeed2'
 /** Used for every "here's the move" reveal arrow in the app — the engine's
  *  suggested move, Drill's hint, the Learn quiz's "Show move" hint. */
 export const REVEAL_ARROW_COLOR = 'rgba(234, 179, 8, 0.9)'
+
+/** react-chessboard's `animationDurationInMs`, shorter than its own 300ms
+ *  default — react-chessboard doesn't remove a captured piece from its
+ *  render until the slide animation finishes, so for the full duration the
+ *  captured piece and the piece capturing it are both visibly rendered on
+ *  the same square. No other prop removes that overlap; this just shrinks
+ *  how long it's visible. Every board in the app shares this value so
+ *  captures read consistently everywhere, and `Board.tsx`'s arrow-key
+ *  throttle matches it so a new step never cuts an in-flight slide short. */
+export const BOARD_ANIMATION_DURATION_MS = 150

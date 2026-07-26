@@ -144,10 +144,24 @@ file, not here — this section is only cross-cutting rules that span multiple f
   everything walks the array in application code; nothing queries at ply granularity in SQL.
 - **Openings aggregation, repertoire diffing, and blunder detection are pure functions**, not
   repository methods — backend-agnostic and directly unit-testable.
-- **Board colors and the reveal-arrow amber have one source of truth**: `lib/theme.ts` for
-  react-chessboard's color props (a Tailwind class can't reach them), and the `accent` Tailwind
-  theme color (`app/globals.css`) for everywhere a className can. Not extended to Tailwind's own
-  gray/rose/emerald/amber palette, which is already single-sourced by Tailwind itself.
+- **Board colors, the reveal-arrow amber, and the piece-slide animation duration have one source
+  of truth**: `lib/theme.ts` for react-chessboard's color/`animationDurationInMs` props (a
+  Tailwind class can't reach them), and the `accent` Tailwind theme color (`app/globals.css`) for
+  everywhere a className can. Not extended to Tailwind's own gray/rose/emerald/amber palette,
+  which is already single-sourced by Tailwind itself. `BOARD_ANIMATION_DURATION_MS` (150ms,
+  shorter than react-chessboard's own 300ms default) exists because react-chessboard doesn't
+  remove a captured piece from its render until the slide animation finishes — for the full
+  duration, the captured piece and the piece capturing it are both visibly rendered on the same
+  square, and no other prop removes that overlap, only shrinks how long it's visible. Every board
+  in the app (`Board.tsx`'s `BoardView`/`PlanBoard.tsx`/`RepertoireBoard.tsx`) shares it, and
+  `BoardNavControls`'s arrow-key throttle (below) matches it too.
+- **`BoardNavControls` (`components/Board.tsx`) binds left/right arrow keys** to the same
+  prev/next step as its ◀/▶ buttons, globally (not scoped to a focused element) — matching the
+  chess.com/lichess convention this app's audience already knows. Throttled to
+  `BOARD_ANIMATION_DURATION_MS` so holding a key down (or tapping it faster than the animation can
+  finish) can't fire a new step mid-slide. Only mounted where the buttons themselves are
+  (`games/[id]`, and `/learn`'s Study mode but not Quiz mode), so it never fights with Quiz
+  mode's own input handling.
 - **Beginner-facing jargon is explained in place**, not simplified away — `<abbr title="...">`
   tooltips (ECO codes, in book/deviated, time class, severity badges) and `EvalHelp`'s glossary.
 - **A component that seeds state with `useState(initialX)` needs `key={id}`** wherever the same

@@ -10,7 +10,7 @@ import { getStrings } from '@/lib/i18n/strings'
 import { legalDestinations } from '@/lib/legalMoves'
 import { buildRepertoireIndex } from '@/lib/repertoire'
 import { describeBlunderReason, detectBlunderReason } from '@/lib/tactics'
-import { BOARD_DARK_SQUARE, BOARD_LIGHT_SQUARE } from '@/lib/theme'
+import { BOARD_ANIMATION_DURATION_MS, BOARD_DARK_SQUARE, BOARD_LIGHT_SQUARE } from '@/lib/theme'
 import type { RepertoireColor, RepertoireNode } from '@/lib/types'
 import { LegalMoveSquare } from './LegalMoveSquare'
 import { RepertoireTree } from './RepertoireTree'
@@ -199,6 +199,7 @@ export function RepertoireBoard({
                 position: currentFen,
                 boardOrientation: color,
                 allowDragging: !deleting,
+                animationDurationInMs: BOARD_ANIMATION_DURATION_MS,
                 onPieceDrop: handleDrop,
                 onSquareClick: handleSquareClick,
                 squareRenderer: ({ square, children }) => (
