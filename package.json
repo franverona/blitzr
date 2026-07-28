@@ -28,7 +28,7 @@
     ]
   },
   "dependencies": {
-    "better-sqlite3": "^12.11.1",
+    "better-sqlite3": "^13.0.1",
     "chess.js": "^1.4.0",
     "kysely": "^0.29.4",
     "next": "16.2.10",
