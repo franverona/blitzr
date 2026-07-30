@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import Image from 'next/image'
 import Link from 'next/link'
+import { BulkAnalysisIndicator } from '@/components/BulkAnalysisIndicator'
+import { BulkAnalysisProvider } from '@/components/BulkAnalysisProvider'
 import { NavLinks } from '@/components/NavLinks'
 import { PlayerAvatar } from '@/components/PlayerAvatar'
 import { fetchPlayerAvatar } from '@/lib/chesscom/client'
@@ -51,27 +53,30 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       className={`dark ${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex h-full overflow-hidden bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
-        <aside className="flex w-40 shrink-0 flex-col gap-4 overflow-y-auto border-r border-zinc-200 px-2 py-4 dark:border-zinc-800">
-          <Link
-            href="/"
-            className="flex items-center gap-2 px-2 text-lg font-semibold tracking-tight"
-          >
-            <Image src="/icon.svg" alt="" width={24} height={24} />
-            Blitzr
-          </Link>
-          <NavLinks />
-          {username && (
-            <div className="mt-auto flex items-center gap-2 border-t border-zinc-200 px-1 pt-3 dark:border-zinc-800">
-              <PlayerAvatar username={username} avatarUrl={avatarUrl} />
-              <span className="min-w-0 truncate text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                {username}
-              </span>
-            </div>
-          )}
-        </aside>
-        <main className="min-w-0 flex-1 overflow-y-auto px-6 py-6">
-          <div className="mx-auto max-w-7xl">{children}</div>
-        </main>
+        <BulkAnalysisProvider>
+          <aside className="flex w-40 shrink-0 flex-col gap-4 overflow-y-auto border-r border-zinc-200 px-2 py-4 dark:border-zinc-800">
+            <Link
+              href="/"
+              className="flex items-center gap-2 px-2 text-lg font-semibold tracking-tight"
+            >
+              <Image src="/icon.svg" alt="" width={24} height={24} />
+              Blitzr
+            </Link>
+            <NavLinks />
+            <BulkAnalysisIndicator />
+            {username && (
+              <div className="mt-auto flex items-center gap-2 border-t border-zinc-200 px-1 pt-3 dark:border-zinc-800">
+                <PlayerAvatar username={username} avatarUrl={avatarUrl} />
+                <span className="min-w-0 truncate text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                  {username}
+                </span>
+              </div>
+            )}
+          </aside>
+          <main className="min-w-0 flex-1 overflow-y-auto px-6 py-6">
+            <div className="mx-auto max-w-7xl">{children}</div>
+          </main>
+        </BulkAnalysisProvider>
       </body>
     </html>
   )

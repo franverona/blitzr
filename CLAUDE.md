@@ -205,6 +205,14 @@ never run the engine. `StockfishEngine` (`lib/stockfish/client.ts`) normalizes e
 White's perspective; bulk "Analyze all" shares a single engine instance across every game.
 `findBlunders()` flags any 200cp+ swing.
 
+Bulk "Analyze all"'s run state (progress, the running loop itself) lives in
+`BulkAnalysisProvider` (`components/BulkAnalysisProvider.tsx`), mounted once in the root layout
+rather than owned by the games-page button — a run started there needs to keep going, and stay
+visible via `BulkAnalysisIndicator` in the sidebar, after the user navigates to another page,
+not get cancelled the moment its trigger unmounts. `analyzeGames()` (`lib/stockfish/analyze.ts`)
+only checks its `shouldContinue` callback between games, so Cancel always lets an in-flight game
+finish and save rather than abandoning a partial result.
+
 Plain-English explanations layer on top: `describeMove()` (`lib/san.ts`) turns a SAN move into a
 sentence; `detectHangingPiece()`/`detectFork()`/`detectSkewer()`/`detectPin()`
 (`lib/hangingPiece.ts`/`lib/tactics.ts`) say _why_ a move was a blunder — deliberately narrow v1
