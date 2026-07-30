@@ -211,7 +211,11 @@ rather than owned by the games-page button — a run started there needs to keep
 visible via `BulkAnalysisIndicator` in the sidebar, after the user navigates to another page,
 not get cancelled the moment its trigger unmounts. `analyzeGames()` (`lib/stockfish/analyze.ts`)
 only checks its `shouldContinue` callback between games, so Cancel always lets an in-flight game
-finish and save rather than abandoning a partial result.
+finish and save rather than abandoning a partial result. The games list's "Analyzed" column
+(`listAnalyzedGameIds()`, `app/actions.ts`) is a separate lookup from `Game` itself — kept out of
+that domain type since most callers (openings aggregation, etc.) have no use for it — and
+`saveGameAnalysis()` revalidates `/` too, not just the game page and `/blunders`, so the column
+updates live while a bulk run is in progress instead of needing a manual refresh.
 
 Plain-English explanations layer on top: `describeMove()` (`lib/san.ts`) turns a SAN move into a
 sentence; `detectHangingPiece()`/`detectFork()`/`detectSkewer()`/`detectPin()`

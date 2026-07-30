@@ -12,7 +12,7 @@ const RESULT_BADGE_STYLES: Record<Game['myResult'], string> = {
   loss: 'bg-rose-900/40 text-rose-400',
 }
 
-export function GameRow({ game }: { game: Game }) {
+export function GameRow({ game, isAnalyzed }: { game: Game; isAnalyzed: boolean }) {
   const s = getStrings()
   const router = useRouter()
   const opponent = game.myColor === 'white' ? game.blackUsername : game.whiteUsername
@@ -56,6 +56,17 @@ export function GameRow({ game }: { game: Game }) {
           </abbr>
         ) : (
           game.timeClass
+        )}
+      </td>
+      <td className="px-3 py-2 text-center">
+        {isAnalyzed ? (
+          <abbr title={s.gameList.analyzedTooltip} className="text-emerald-500 no-underline">
+            ✓
+          </abbr>
+        ) : (
+          <abbr title={s.gameList.notAnalyzedTooltip} className="text-zinc-700 no-underline">
+            —
+          </abbr>
         )}
       </td>
     </tr>

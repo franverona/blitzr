@@ -61,7 +61,10 @@ const en = {
       result: 'Result',
       opening: 'Opening',
       timeClass: 'Time class',
+      analyzed: 'Analyzed',
     },
+    analyzedTooltip: 'This game has been analyzed by the engine.',
+    notAnalyzedTooltip: 'This game has not been analyzed yet.',
   },
   openingsTable: {
     empty: 'No games synced yet. Sync games from the Games page to see your opening stats.',
@@ -377,7 +380,10 @@ const es: Strings = {
       result: 'Resultado',
       opening: 'Apertura',
       timeClass: 'Ritmo',
+      analyzed: 'Analizada',
     },
+    analyzedTooltip: 'Esta partida ya ha sido analizada por el motor.',
+    notAnalyzedTooltip: 'Esta partida aún no ha sido analizada.',
   },
   openingsTable: {
     empty:

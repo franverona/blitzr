@@ -94,6 +94,7 @@ export async function saveGameAnalysis(gameId: string, evals: PositionEval[]): P
   await getRepository().saveGameAnalysis({ gameId, evals, analyzedAt: new Date().toISOString() })
   revalidatePath(`/games/${gameId}`)
   revalidatePath('/blunders')
+  revalidatePath('/')
 }
 
 /** Every synced game with no saved analysis yet, for the bulk "Analyze all"
@@ -116,6 +117,14 @@ export async function getUnanalyzedGames(): Promise<UnanalyzedGame[]> {
         gameLabel: `vs ${opponent} · ${formatDate(g.endTime)}`,
       }
     })
+}
+
+/** Every game id that already has saved analysis — for the games list's
+ *  per-row "analyzed" indicator, the inverse of `getUnanalyzedGames()`'s
+ *  own analyzed-id lookup. */
+export async function listAnalyzedGameIds(): Promise<string[]> {
+  const analyses = await getRepository().listAllGameAnalyses()
+  return analyses.map((a) => a.gameId)
 }
 
 function cardKey(c: { gameId: string; sourceType: DrillSourceType; ply: number }): string {
