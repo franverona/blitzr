@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { listGames } from './actions'
+import { listAnalyzedGameIds, listGames } from './actions'
 import { BulkAnalyzeButton } from '@/components/BulkAnalyzeButton'
 import { GameList } from '@/components/GameList'
 import { SyncButton } from '@/components/SyncButton'
@@ -14,7 +14,10 @@ export default async function GamesPage({
 }) {
   const { page: pageParam } = await searchParams
   const page = Math.max(1, Number(pageParam) || 1)
-  const { games, total } = await listGames({ limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE })
+  const [{ games, total }, analyzedGameIds] = await Promise.all([
+    listGames({ limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE }),
+    listAnalyzedGameIds(),
+  ])
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
   const s = getStrings()
 
@@ -28,7 +31,7 @@ export default async function GamesPage({
         </div>
       </div>
 
-      <GameList games={games} />
+      <GameList games={games} analyzedGameIds={analyzedGameIds} />
 
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-4 text-sm">
