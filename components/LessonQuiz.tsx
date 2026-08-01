@@ -42,7 +42,15 @@ function revealArrow(fen: string, san: string) {
  *  attempt just leaves you on the same ply to try again, since the "correct
  *  answer" here is always the one fixed line rather than one of several
  *  acceptable moves. */
-export function LessonQuiz() {
+export function LessonQuiz({
+  /** Rendered beside the board, same row/column split as BoardView's own
+   *  `sidebarExtra` — e.g. the lesson page's MoveExplanation, so Study and
+   *  Quiz mode put it in the same spot instead of Quiz stacking it above a
+   *  centered single-column board. */
+  sidebarExtra,
+}: {
+  sidebarExtra?: React.ReactNode
+}) {
   const { ply, setPly, positions, lastPly, boardOrientation, movesSan } = useBoardContext()
   const s = getStrings()
   const [feedback, setFeedback] = useState<'incorrect' | null>(null)
@@ -165,85 +173,93 @@ export function LessonQuiz() {
   const colorLabel = s.common.color[boardOrientation]
 
   return (
-    <div className="mx-auto flex w-full max-w-140 flex-col gap-3">
-      {/* Fixed height so the row doesn't reflow (and shift the board below
-          it) when it swaps between the taller "Line complete!" text and the
-          progress text + hint button — the two variants have different
-          natural line-heights otherwise. */}
-      <div className="flex h-9 items-center justify-between gap-2">
-        {isComplete ? (
-          <p className="text-lg font-medium">{s.lessonQuiz.lineComplete}</p>
-        ) : (
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            {isMyTurn
-              ? s.lessonQuiz.playingAs(colorLabel, ply + 1, lastPly)
-              : s.lessonQuiz.opponentsMove}
-          </p>
-        )}
-        <div className="flex shrink-0 items-center gap-2">
-          {/* Always available, not just after finishing — a way to bail out
-              and start over mid-line without playing through the rest first. */}
-          <button
-            onClick={handleRestart}
-            className="rounded-md border border-zinc-700 px-3 py-1.5 text-sm font-medium hover:bg-zinc-800"
-          >
-            {s.lessonQuiz.restart}
-          </button>
-          {!isComplete && (
-            <button
-              onClick={handleHint}
-              disabled={revealed || !isMyTurn}
-              className="rounded-md border border-zinc-700 px-3 py-1.5 text-sm font-medium hover:bg-zinc-800 disabled:opacity-40"
-            >
-              {s.lessonQuiz.showMove}
-            </button>
+    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-center">
+      <div className="flex w-full max-w-140 shrink-0 flex-col gap-3">
+        {/* Fixed height so the row doesn't reflow (and shift the board below
+            it) when it swaps between the taller "Line complete!" text and the
+            progress text + hint button — the two variants have different
+            natural line-heights otherwise. */}
+        <div className="flex h-9 items-center justify-between gap-2">
+          {isComplete ? (
+            <p className="text-lg font-medium">{s.lessonQuiz.lineComplete}</p>
+          ) : (
+            <p className="text-sm text-zinc-500 dark:text-zinc-400">
+              {isMyTurn
+                ? s.lessonQuiz.playingAs(colorLabel, ply + 1, lastPly)
+                : s.lessonQuiz.opponentsMove}
+            </p>
           )}
-        </div>
-      </div>
-
-      {/* Stays mounted through completion, showing the final position, rather
-          than being replaced by a text-only summary screen — per direct user
-          feedback that the board disappearing on finishing the line felt
-          jarring. */}
-      <div className="w-full overflow-hidden rounded shadow-lg">
-        <Chessboard
-          options={{
-            position: fen,
-            boardOrientation,
-            allowDragging: isMyTurn,
-            onPieceDrop: handleDrop,
-            onSquareClick: handleSquareClick,
-            squareRenderer: ({ square, children }) => (
-              <LegalMoveSquare
-                isSelected={square === selectedSquare}
-                isLegalMove={legalMoveMap.has(square)}
-                isCapture={legalMoveMap.get(square) ?? false}
+          <div className="flex shrink-0 items-center gap-2">
+            {/* Always available, not just after finishing — a way to bail out
+                and start over mid-line without playing through the rest first. */}
+            <button
+              onClick={handleRestart}
+              className="rounded-md border border-zinc-700 px-3 py-1.5 text-sm font-medium hover:bg-zinc-800"
+            >
+              {s.lessonQuiz.restart}
+            </button>
+            {!isComplete && (
+              <button
+                onClick={handleHint}
+                disabled={revealed || !isMyTurn}
+                className="rounded-md border border-zinc-700 px-3 py-1.5 text-sm font-medium hover:bg-zinc-800 disabled:opacity-40"
               >
-                {children}
-              </LegalMoveSquare>
-            ),
-            darkSquareStyle: { backgroundColor: BOARD_DARK_SQUARE },
-            lightSquareStyle: { backgroundColor: BOARD_LIGHT_SQUARE },
-            darkSquareNotationStyle: { color: BOARD_LIGHT_SQUARE },
-            lightSquareNotationStyle: { color: BOARD_DARK_SQUARE },
-            arrows,
-          }}
-        />
+                {s.lessonQuiz.showMove}
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Stays mounted through completion, showing the final position, rather
+            than being replaced by a text-only summary screen — per direct user
+            feedback that the board disappearing on finishing the line felt
+            jarring. */}
+        <div className="w-full overflow-hidden rounded shadow-lg">
+          <Chessboard
+            options={{
+              position: fen,
+              boardOrientation,
+              allowDragging: isMyTurn,
+              onPieceDrop: handleDrop,
+              onSquareClick: handleSquareClick,
+              squareRenderer: ({ square, children }) => (
+                <LegalMoveSquare
+                  isSelected={square === selectedSquare}
+                  isLegalMove={legalMoveMap.has(square)}
+                  isCapture={legalMoveMap.get(square) ?? false}
+                >
+                  {children}
+                </LegalMoveSquare>
+              ),
+              darkSquareStyle: { backgroundColor: BOARD_DARK_SQUARE },
+              lightSquareStyle: { backgroundColor: BOARD_LIGHT_SQUARE },
+              darkSquareNotationStyle: { color: BOARD_LIGHT_SQUARE },
+              lightSquareNotationStyle: { color: BOARD_DARK_SQUARE },
+              arrows,
+            }}
+          />
+        </div>
+
+        {isComplete ? (
+          <p className="text-sm text-zinc-400">
+            {mistakes === 0 && hintsUsed === 0
+              ? s.lessonQuiz.perfect
+              : s.lessonQuiz.summary(mistakes, hintsUsed)}
+          </p>
+        ) : (
+          feedback === 'incorrect' && (
+            <p className="text-sm text-rose-400">{s.lessonQuiz.notQuiteTryAgain}</p>
+          )
+        )}
+
+        <p className="text-xs text-zinc-600">{s.lessonQuiz.keyboardHint}</p>
       </div>
 
-      {isComplete ? (
-        <p className="text-sm text-zinc-400">
-          {mistakes === 0 && hintsUsed === 0
-            ? s.lessonQuiz.perfect
-            : s.lessonQuiz.summary(mistakes, hintsUsed)}
-        </p>
-      ) : (
-        feedback === 'incorrect' && (
-          <p className="text-sm text-rose-400">{s.lessonQuiz.notQuiteTryAgain}</p>
-        )
+      {sidebarExtra && (
+        <div className="flex w-full flex-col gap-4 lg:max-w-sm lg:flex-1 xl:max-w-md">
+          {sidebarExtra}
+        </div>
       )}
-
-      <p className="text-xs text-zinc-600">{s.lessonQuiz.keyboardHint}</p>
     </div>
   )
 }

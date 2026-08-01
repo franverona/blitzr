@@ -69,8 +69,14 @@ export function LessonPractice({
           </div>
         </div>
         {gameStats && <LessonGameStats stats={gameStats} />}
-        <MoveExplanation moves={lesson.moves} />
-        {mode === 'study' ? <BoardView boardMaxWidthClassName="max-w-172" /> : <LessonQuiz />}
+        {mode === 'study' ? (
+          <BoardView
+            boardMaxWidthClassName="max-w-172"
+            sidebarExtra={<MoveExplanation moves={lesson.moves} />}
+          />
+        ) : (
+          <LessonQuiz sidebarExtra={<MoveExplanation moves={lesson.moves} />} />
+        )}
       </div>
     </BoardProvider>
   )
