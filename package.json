@@ -33,7 +33,7 @@
     "kysely": "^0.29.4",
     "next": "16.2.12",
     "react": "19.2.8",
-    "react-chessboard": "^5.10.0",
+    "react-chessboard": "^5.11.0",
     "react-dom": "19.2.8",
     "stockfish": "^18.0.8"
   },
