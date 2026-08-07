@@ -21,22 +21,48 @@ export function terminalEval(fen: string): PositionEval | null {
   return null
 }
 
+// Each position is evaluated independently (no shared search state between
+// plies), so multiple single-threaded engine Workers can churn through a
+// game's positions concurrently — capped well below hardwareConcurrency
+// since each Worker is itself a several-hundred-KB WASM instance, not a
+// free thread.
+const MAX_ENGINE_POOL_SIZE = 4
+
+function createEnginePool(wanted: number): StockfishEngine[] {
+  const size = Math.max(
+    1,
+    Math.min(MAX_ENGINE_POOL_SIZE, navigator.hardwareConcurrency || 1, wanted),
+  )
+  return Array.from({ length: size }, () => new StockfishEngine())
+}
+
 /**
- * Evaluates every position in a game, one at a time (a single Worker has one
- * engine thread; there's nothing to parallelize). Reports progress as each
- * position finishes so the caller can show something better than a spinner
- * for what's typically a several-second-long analysis.
+ * Evaluates every position in a game, spread across a pool of engines (each
+ * pulling the next not-yet-started position as soon as it's free — a simple
+ * work-stealing queue, since positions can take very different times to
+ * search). Reports progress as each position finishes so the caller can show
+ * something better than a spinner for what's typically a several-second-long
+ * analysis.
  */
 async function analyzePositions(
-  engine: StockfishEngine,
+  engines: StockfishEngine[],
   positions: string[],
   onProgress?: (done: number, total: number) => void,
 ): Promise<PositionEval[]> {
-  const evals: PositionEval[] = []
-  for (let i = 0; i < positions.length; i++) {
-    evals.push(terminalEval(positions[i]) ?? (await engine.evaluate(positions[i])))
-    onProgress?.(i + 1, positions.length)
+  const evals: PositionEval[] = new Array(positions.length)
+  let nextIndex = 0
+  let doneCount = 0
+
+  async function runOnEngine(engine: StockfishEngine): Promise<void> {
+    while (nextIndex < positions.length) {
+      const i = nextIndex++
+      evals[i] = terminalEval(positions[i]) ?? (await engine.evaluate(positions[i]))
+      doneCount++
+      onProgress?.(doneCount, positions.length)
+    }
   }
+
+  await Promise.all(engines.map(runOnEngine))
   return evals
 }
 
@@ -46,11 +72,11 @@ export async function analyzeGame(
   onProgress?: (done: number, total: number) => void,
 ): Promise<PositionEval[]> {
   const positions = buildPositions(initialFen, movesSan)
-  const engine = new StockfishEngine()
+  const engines = createEnginePool(positions.length)
   try {
-    return await analyzePositions(engine, positions, onProgress)
+    return await analyzePositions(engines, positions, onProgress)
   } finally {
-    engine.terminate()
+    engines.forEach((engine) => engine.terminate())
   }
 }
 
@@ -62,12 +88,13 @@ export interface BulkAnalysisProgress {
 }
 
 /**
- * Analyzes several games with a single shared engine — spinning up a fresh
- * Worker (loading the ~7MB WASM build, then a UCI handshake) per game would
- * repeat that setup cost for every game in what's meant to be a bulk catch-up
- * run. Each game's result is handed to `onGameDone` as soon as that game
- * finishes (not batched at the end) so a caller can persist incrementally —
- * if the run is stopped partway, whatever's already been saved stays saved.
+ * Analyzes several games with a single shared engine pool — spinning up a
+ * fresh Worker (loading the ~7MB WASM build, then a UCI handshake) per game
+ * would repeat that setup cost for every game in what's meant to be a bulk
+ * catch-up run, so the pool is built once and reused across every game.
+ * Each game's result is handed to `onGameDone` as soon as that game finishes
+ * (not batched at the end) so a caller can persist incrementally — if the
+ * run is stopped partway, whatever's already been saved stays saved.
  * `shouldContinue` is checked between games, not mid-game: a game already in
  * progress always finishes and gets saved, so there's never a partial-game
  * result to special-case.
@@ -78,13 +105,13 @@ export async function analyzeGames(
   onProgress?: (progress: BulkAnalysisProgress) => void,
   shouldContinue?: () => boolean,
 ): Promise<void> {
-  const engine = new StockfishEngine()
+  const engines = createEnginePool(MAX_ENGINE_POOL_SIZE)
   try {
     for (let g = 0; g < games.length; g++) {
       if (shouldContinue && !shouldContinue()) break
       const game = games[g]
       const positions = buildPositions(game.initialFen, game.movesSan)
-      const evals = await analyzePositions(engine, positions, (done, total) => {
+      const evals = await analyzePositions(engines, positions, (done, total) => {
         onProgress?.({
           gamesDone: g,
           gamesTotal: games.length,
@@ -95,6 +122,6 @@ export async function analyzeGames(
       await onGameDone(game.id, evals)
     }
   } finally {
-    engine.terminate()
+    engines.forEach((engine) => engine.terminate())
   }
 }
