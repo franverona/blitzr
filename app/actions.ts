@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { buildBlunderStats } from '@/lib/blunders'
 import { fetchPlayerAvatar } from '@/lib/chesscom/client'
 import { formatDate } from '@/lib/dates'
+import { getChesscomUsername } from '@/lib/config'
 import { getRepository } from '@/lib/db'
 import {
   buildDrillPrompt,
@@ -14,6 +15,7 @@ import {
   selectSessionCards,
 } from '@/lib/drill'
 import type { DrillCandidate } from '@/lib/drill'
+import { parseManualGame } from '@/lib/manualGame'
 import { buildOpeningFamilies, ecoFamilyLabel } from '@/lib/openings'
 import { countGamesReachingLine } from '@/lib/openingTheory'
 import { syncAllArchives } from '@/lib/sync'
@@ -70,6 +72,17 @@ export async function syncGames(): Promise<SyncResult> {
   revalidatePath('/')
   revalidatePath('/openings')
   return result
+}
+
+/** Games Chess.com's public API never exposes at all (e.g. "Play Bots"
+ *  personality games) still get a fresh, never-synced-again `id`, so a
+ *  future `syncGames()` can never overwrite or lose this row — see
+ *  `upsertGames()`'s `ON CONFLICT (id) DO NOTHING`. */
+export async function addManualGame(pgn: string): Promise<Game> {
+  const game = parseManualGame(pgn, getChesscomUsername())
+  await getRepository().upsertGames([game])
+  revalidatePath('/')
+  return game
 }
 
 export async function listRepertoire(color: RepertoireColor): Promise<RepertoireNode[]> {

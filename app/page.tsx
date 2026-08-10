@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { listAnalyzedGameIds, listGames } from './actions'
+import { AddPgnButton } from '@/components/AddPgnButton'
 import { BulkAnalyzeButton } from '@/components/BulkAnalyzeButton'
 import { GameList } from '@/components/GameList'
 import { SyncButton } from '@/components/SyncButton'
@@ -28,6 +29,7 @@ export default async function GamesPage({
         <div className="flex flex-wrap items-center gap-2">
           <BulkAnalyzeButton />
           <SyncButton />
+          <AddPgnButton />
         </div>
       </div>
 

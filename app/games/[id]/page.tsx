@@ -161,7 +161,7 @@ function GameHeader({
           )}
         </p>
       )}
-      {!isBotGame && (
+      {!isBotGame && game.url && (
         <a
           href={game.url}
           target="_blank"
