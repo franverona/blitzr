@@ -82,3 +82,17 @@ export async function fetchPlayerAvatar(username: string): Promise<string | null
     return null
   }
 }
+
+/** A bot-mode game's PGN White/Black header (e.g. "Hans") is a bot
+ *  personality's display name, not a real account — looking it up directly
+ *  via `fetchPlayerAvatar()` risks matching an unrelated real account that
+ *  happens to share the name (confirmed: chess.com has a real registered
+ *  user literally named "hans"). Chess.com does appear to back its official
+ *  bot personalities with a dedicated "<Name>-BOT" account (observed by
+ *  spot-checking a few known personalities — not documented anywhere), so
+ *  try that first. Still just a best-effort lookup: falls back to no avatar
+ *  the same way `fetchPlayerAvatar()` does if it doesn't exist for this
+ *  particular personality, rather than risk showing the wrong photo again. */
+export async function fetchBotAvatar(displayName: string): Promise<string | null> {
+  return fetchPlayerAvatar(`${displayName}-bot`)
+}

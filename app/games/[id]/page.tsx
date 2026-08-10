@@ -5,8 +5,8 @@ import { BoardNavControls, BoardProvider, BoardView } from '@/components/Board'
 import { AnalyzeButton, GameAnalysisProvider, GameSummary } from '@/components/GameAnalysisPanel'
 import { PlayerAvatar } from '@/components/PlayerAvatar'
 import { PositionChecklist } from '@/components/PositionChecklist'
-import { fetchPlayerAvatar } from '@/lib/chesscom/client'
-import { parsePgnHeaders } from '@/lib/chesscom/normalize'
+import { fetchBotAvatar, fetchPlayerAvatar } from '@/lib/chesscom/client'
+import { isBareBotNameEvent, parsePgnHeaders } from '@/lib/chesscom/normalize'
 import { formatDateTime } from '@/lib/dates'
 import { getStrings } from '@/lib/i18n/strings'
 import { diffGameAgainstRepertoire } from '@/lib/repertoire'
@@ -24,18 +24,32 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
   const game = await getGame(id)
   if (!game) notFound()
 
+  const event = parsePgnHeaders(game.pgn).Event
   // "Play vs Coach" bot games get a url/PGN Link from Chess.com's API that
   // never resolves to the actual game — no correct link exists, so don't
   // show one rather than link somewhere wrong.
-  const isBotGame = parsePgnHeaders(game.pgn).Event === 'Play vs Coach'
+  const isBotGame = event === 'Play vs Coach'
+  // A "Play vs Bot" opponent's "username" is a bare personality display
+  // name, not a real account — fetch its avatar differently (see
+  // fetchBotAvatar()) instead of risking a match against an unrelated real
+  // account that happens to share the same plain name.
+  const botColor: MyColor | null = isBareBotNameEvent(event)
+    ? game.myColor === 'white'
+      ? 'black'
+      : 'white'
+    : null
   const repertoireNodes = await listRepertoire(game.myColor)
   const diff = game.movesSan
     ? diffGameAgainstRepertoire(game.movesSan, game.myColor, repertoireNodes)
     : null
   const analysis = (await getGameAnalysis(id)) ?? null
   const [whiteAvatar, blackAvatar] = await Promise.all([
-    fetchPlayerAvatar(game.whiteUsername),
-    fetchPlayerAvatar(game.blackUsername),
+    botColor === 'white'
+      ? fetchBotAvatar(game.whiteUsername)
+      : fetchPlayerAvatar(game.whiteUsername),
+    botColor === 'black'
+      ? fetchBotAvatar(game.blackUsername)
+      : fetchPlayerAvatar(game.blackUsername),
   ])
 
   const body = (
@@ -161,7 +175,7 @@ function GameHeader({
           )}
         </p>
       )}
-      {!isBotGame && (
+      {!isBotGame && game.url && (
         <a
           href={game.url}
           target="_blank"
