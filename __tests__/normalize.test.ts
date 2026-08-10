@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   ecoNameFromUrl,
+  isBareBotNameEvent,
   normalizeGame,
   normalizeResult,
   parsePgnHeaders,
@@ -55,6 +56,21 @@ describe('parsePgnHeaders', () => {
 
   it('returns an empty object when there are no headers', () => {
     expect(parsePgnHeaders('1. e4 e5 *')).toEqual({})
+  })
+})
+
+describe('isBareBotNameEvent', () => {
+  it('recognizes "Play vs Bot", whose header is a bare personality name', () => {
+    expect(isBareBotNameEvent('Play vs Bot')).toBe(true)
+  })
+
+  it('excludes "Play vs Coach" — its header is already the real account name', () => {
+    expect(isBareBotNameEvent('Play vs Coach')).toBe(false)
+  })
+
+  it('returns false for a normal or missing Event', () => {
+    expect(isBareBotNameEvent('Live Chess')).toBe(false)
+    expect(isBareBotNameEvent(undefined)).toBe(false)
   })
 })
 
