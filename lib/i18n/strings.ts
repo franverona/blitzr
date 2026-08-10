@@ -198,6 +198,14 @@ const en = {
     synced: (archives: number, games: number) =>
       `Synced ${archives} archive${archives === 1 ? '' : 's'}, ${games} game${games === 1 ? '' : 's'} added.`,
   },
+  addPgn: {
+    button: 'Add game by PGN',
+    title: 'Add game by PGN',
+    placeholder: 'Paste PGN here…',
+    submit: 'Add game',
+    adding: 'Adding…',
+    genericError: 'Could not add this game.',
+  },
   drill: {
     hint: '💡 Hint',
     correct: 'Correct!',
@@ -520,6 +528,14 @@ const es: Strings = {
     failed: 'Error al sincronizar.',
     synced: (archives: number, games: number) =>
       `${archives} ${archives === 1 ? 'archivo sincronizado' : 'archivos sincronizados'}, ${games} ${games === 1 ? 'partida añadida' : 'partidas añadidas'}.`,
+  },
+  addPgn: {
+    button: 'Añadir partida por PGN',
+    title: 'Añadir partida por PGN',
+    placeholder: 'Pega el PGN aquí…',
+    submit: 'Añadir partida',
+    adding: 'Añadiendo…',
+    genericError: 'No se pudo añadir esta partida.',
   },
   drill: {
     hint: '💡 Pista',
