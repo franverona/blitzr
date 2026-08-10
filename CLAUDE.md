@@ -64,6 +64,7 @@ components/
   NavLinks.tsx                                 # active-tab nav
   SyncButton.tsx                                  # triggers the sync Server Action
   BulkAnalyzeButton.tsx                              # "Analyze all" across unanalyzed games
+  AddPgnButton.tsx                                     # paste-PGN dialog -> addManualGame()
 lib/
   config.ts                # getChesscomUsername()
   theme.ts                  # shared board/arrow color constants
@@ -84,6 +85,7 @@ lib/
   drill.ts                           # candidate-finding, card hydration, SM-2 scheduling
   blunders.ts                          # buildBlunderStats() — pure aggregation
   sync.ts                            # syncAllArchives()
+  manualGame.ts                        # parseManualGame() — pasted PGN -> Game
   i18n/
     locale.ts                # Locale type, getLocale() — reads NEXT_PUBLIC_LOCALE
     strings.ts                 # UI string dictionary, getStrings()
@@ -187,7 +189,37 @@ CASCADE` from a node to its subtree — requires the `foreign_keys` pragma), `ga
   game — no correct link is derivable, so `app/games/[id]/page.tsx` hides the "View on
   Chess.com" link when the PGN's `[Event]` header is `"Play vs Coach"`.
 - **"Play Bots" personality games don't appear in the public API at all** — nothing to sync,
-  nothing to fix.
+  nothing to fix. (They can still be analyzed via "Manually-added games" below.)
+- **"Play vs Bot" opponents' PGN username is a bare bot-personality display name** (e.g. "Hans"),
+  not a real account — looking it up directly for an avatar risks matching an unrelated real user
+  of the same name (confirmed live: a real user is registered as plain "hans").
+  `isBareBotNameEvent()` (`lib/chesscom/normalize.ts`) flags this case; `fetchBotAvatar()`
+  (`lib/chesscom/client.ts`) tries Chess.com's observed (undocumented) `<Name>-BOT` account
+  convention for the affected side instead, falling back to no avatar rather than trusting a bad
+  match. **"Play vs Coach" is deliberately excluded** — its header (e.g. "Coach-DrWolf") already
+  _is_ the coach's real dedicated account and resolves correctly as-is (confirmed live).
+
+## Manually-added games
+
+Some games never reach the synced `games` table because Chess.com's public API doesn't expose
+them at all ("Play Bots" personality games — see the quirk above). `parseManualGame()`
+(`lib/manualGame.ts`) builds a `Game` straight from a pasted PGN's own headers, mirroring
+`normalizeGame()`'s field mapping but throwing on unparseable movetext or a missing White/Black
+header rather than silently keeping `movesSan: null` — a manually-added game exists specifically
+to be analyzed, so a dead entry isn't useful; better to reject at input time. The `addManualGame()`
+Server Action (`app/actions.ts`) saves it via the existing `upsertGames()` — no new repository
+method or schema change was needed.
+
+Sync-safety is structural, not a new guarantee: each manual game gets a fresh
+`crypto.randomUUID()` id, and `upsertGames()` already does `INSERT ... ON CONFLICT (id) DO
+NOTHING` — sync only ever inserts ids it hasn't seen, never updates or deletes an existing row, so
+a manual game can't be overwritten or lost by a later `syncGames()`. `archiveYm` is set to the
+sentinel `'manual'`, which is inert everywhere except sync's own archive-status bookkeeping.
+
+`AddPgnButton` (paste-PGN dialog, same native-`<dialog>` convention as `AboutOpeningButton`) on
+the games page triggers this and redirects to the new game's page on success. The "View on
+Chess.com" link on `app/games/[id]/page.tsx` only renders when `game.url` is non-empty — a
+manually-added game only has one if its pasted PGN carried a `[Link]` header.
 
 ## Repertoire
 
