@@ -38,6 +38,7 @@ any way that implies endorsement or affiliation.
 - [x] Cross-game recurring-blunders aggregate
 - [x] Hand-authored opening and endgame lessons with an interactive board
 - [x] Position checklist — a live tactical scan of whatever position you're viewing
+- [x] Add a game by pasting its PGN — for games Chess.com's public API doesn't expose at all
 
 ## Stack
 
@@ -128,6 +129,14 @@ pnpm format:check    # Prettier (check)
 - Archives are fetched **serially**, never in parallel, and 429s are retried with backoff.
 - Games are synced incrementally: months already fully synced are skipped on future runs; the
   current month is always re-fetched since it can still gain new games.
+
+## Add a game by PGN
+
+Not every game reaches your synced history — Chess.com's "Play Bots" personality games don't
+appear in the public API at all. **Add game by PGN** on the Games page takes any pasted PGN and
+analyzes it exactly like a synced game: board replay, opening detection, repertoire diff, and
+Stockfish analysis all work the same. It's saved under its own freshly generated ID, so
+re-running **Sync games** afterward can never overwrite or remove it.
 
 ## Repertoire
 
