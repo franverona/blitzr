@@ -171,12 +171,13 @@ const en = {
     analyzeWithStockfish: 'Analyze with Stockfish',
     reanalyze: 'Re-analyze',
     analysisFailed: 'Analysis failed.',
-    cleanGameNoBlunders: 'Clean game — no significant blunders from either side.',
+    cleanGameNoBlunders: 'Clean game — no significant blunders from you.',
     stockfishAnalysis: 'Stockfish analysis',
-    noBlundersFoundClean: 'No blunders found by Stockfish — clean game.',
-    blundersFound: (n: number) => `${n} ${n === 1 ? 'blunder' : 'blunders'} found. Biggest:`,
-    biggestMoment: (isMine: boolean, isBlunder: boolean) =>
-      `Biggest moment: ${isMine ? 'you' : 'your opponent'} ${isBlunder ? 'blundered' : 'made a mistake'} on`,
+    noBlundersFoundClean: 'No blunders of yours found by Stockfish — clean game.',
+    blundersFound: (n: number) =>
+      `${n} of your ${n === 1 ? 'blunder' : 'blunders'} found. Biggest:`,
+    biggestMoment: (isBlunder: boolean) =>
+      `Biggest moment: you ${isBlunder ? 'blundered' : 'made a mistake'} on`,
   },
   bulkAnalyze: {
     button: 'Analyze all',
@@ -499,15 +500,13 @@ const es: Strings = {
     analyzeWithStockfish: 'Analizar con Stockfish',
     reanalyze: 'Reanalizar',
     analysisFailed: 'Error al analizar.',
-    cleanGameNoBlunders: 'Partida limpia — sin errores importantes de ningún lado.',
+    cleanGameNoBlunders: 'Partida limpia — sin errores importantes tuyos.',
     stockfishAnalysis: 'Análisis de Stockfish',
-    noBlundersFoundClean: 'Stockfish no encontró errores — partida limpia.',
+    noBlundersFoundClean: 'Stockfish no encontró errores tuyos — partida limpia.',
     blundersFound: (n: number) =>
-      `${n} ${n === 1 ? 'error encontrado' : 'errores encontrados'}. El peor:`,
-    biggestMoment: (isMine: boolean, isBlunder: boolean) =>
-      isMine
-        ? `Momento clave: cometiste ${isBlunder ? 'un error grave' : 'un error'} en`
-        : `Momento clave: tu rival cometió ${isBlunder ? 'un error grave' : 'un error'} en`,
+      `${n} ${n === 1 ? 'error tuyo encontrado' : 'errores tuyos encontrados'}. El peor:`,
+    biggestMoment: (isBlunder: boolean) =>
+      `Momento clave: cometiste ${isBlunder ? 'un error grave' : 'un error'} en`,
   },
   bulkAnalyze: {
     button: 'Analizar todas',

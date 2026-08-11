@@ -125,15 +125,21 @@ export function AnalyzeButton() {
 }
 
 /** A one-line plain-language recap of the game — the single biggest blunder,
- *  whose it was, and what it was in plain English via `describeMove()`.
- *  Renders nothing until the game has a saved analysis, same "quietly do
- *  nothing when not applicable yet" pattern as `RepertoireDiff`. */
+ *  and what it was in plain English via `describeMove()`. Scoped to the
+ *  account's own moves only (same convention as `buildBlunderStats()`,
+ *  `lib/blunders.ts`) — an opponent's, coach's, or bot's blunder isn't a
+ *  useful thing to review. Renders nothing until the game has a saved
+ *  analysis, same "quietly do nothing when not applicable yet" pattern as
+ *  `RepertoireDiff`. */
 export function GameSummary() {
   const { analysis, movesSan, myColor, positions } = useAnalysisContext()
   const s = getStrings()
   if (!analysis) return null
 
-  const worst = biggestBlunder(findBlunders(analysis.evals, movesSan))
+  const myBlunders = findBlunders(analysis.evals, movesSan).filter(
+    (b) => whiteToMove(b.ply) === (myColor === 'white'),
+  )
+  const worst = biggestBlunder(myBlunders)
   if (!worst) {
     return (
       <p className="text-sm text-zinc-500 dark:text-zinc-400">
@@ -142,13 +148,11 @@ export function GameSummary() {
     )
   }
 
-  const isMine = whiteToMove(worst.ply) === (myColor === 'white')
-  const moverColor = whiteToMove(worst.ply) ? 'white' : 'black'
-  const reason = detectBlunderReason(positions[worst.ply - 1], positions[worst.ply], moverColor)
+  const reason = detectBlunderReason(positions[worst.ply - 1], positions[worst.ply], myColor)
   const isBlunder = blunderSeverity(worst.swingCp) === 'blunder'
   return (
     <p className="text-sm text-zinc-500 dark:text-zinc-400">
-      {s.analysisPanel.biggestMoment(isMine, isBlunder)} {plyLabel(worst.ply)} {worst.moveSan} (
+      {s.analysisPanel.biggestMoment(isBlunder)} {plyLabel(worst.ply)} {worst.moveSan} (
       {describeMove(positions[worst.ply - 1], worst.moveSan)}).{' '}
       {reason && describeBlunderReason(reason)}
     </p>
@@ -156,11 +160,14 @@ export function GameSummary() {
 }
 
 function AnalysisDialog({ dialogRef }: { dialogRef: React.RefObject<HTMLDialogElement | null> }) {
-  const { analysis, movesSan, positions } = useAnalysisContext()
+  const { analysis, movesSan, myColor, positions } = useAnalysisContext()
   const s = getStrings()
   if (!analysis) return null
 
-  const blunders = findBlunders(analysis.evals, movesSan)
+  // Scoped to the account's own moves only — see `GameSummary`'s comment.
+  const blunders = findBlunders(analysis.evals, movesSan).filter(
+    (b) => whiteToMove(b.ply) === (myColor === 'white'),
+  )
   const worst = biggestBlunder(blunders)
 
   return (
@@ -196,17 +203,12 @@ function AnalysisDialog({ dialogRef }: { dialogRef: React.RefObject<HTMLDialogEl
             </p>
             <ul className="flex flex-col divide-y divide-zinc-800">
               {blunders.map((b) => {
-                const moverColor = whiteToMove(b.ply) ? 'white' : 'black'
-                const reason = detectBlunderReason(
-                  positions[b.ply - 1],
-                  positions[b.ply],
-                  moverColor,
-                )
+                const reason = detectBlunderReason(positions[b.ply - 1], positions[b.ply], myColor)
                 const betterMove = describeBetterMove(
                   positions[b.ply - 1],
                   b.moveSan,
                   b.evalBefore.bestMove,
-                  moverColor,
+                  myColor,
                 )
                 const bestMove = b.evalBefore.bestMove
                 return (
@@ -238,7 +240,7 @@ function AnalysisDialog({ dialogRef }: { dialogRef: React.RefObject<HTMLDialogEl
                         <PlanBoard
                           fenBefore={positions[b.ply - 1]}
                           moves={[bestMove.san, ...bestMove.bestLine]}
-                          boardOrientation={moverColor}
+                          boardOrientation={myColor}
                         />
                       )}
                     </div>

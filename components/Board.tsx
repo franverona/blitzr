@@ -136,7 +136,7 @@ export function BoardProvider({
 }
 
 export function BoardNavControls() {
-  const { ply, setPly, lastPly, movesSan, evals } = useBoardContext()
+  const { ply, setPly, lastPly, movesSan, evals, boardOrientation } = useBoardContext()
   const s = getStrings()
   const [isPlaying, setIsPlaying] = useState(false)
 
@@ -224,14 +224,25 @@ export function BoardNavControls() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [goToPrevious, goToNext, goToStart, togglePlaying])
 
-  // Every ply that's a blunder (200cp+ swing) for whoever just moved — same
-  // definition findBlunders() already uses for the analysis dialog/
-  // blunders page, reused here as "auto-play's stopping points" instead of
-  // a separate notion of what counts as relevant. `undefined` (unanalyzed
-  // game) just means autoplay has nothing to stop for except the end.
+  // Every ply that's a blunder (200cp+ swing) on the account's own move —
+  // same definition (and same "own moves only" scoping) findBlunders() plus
+  // GameAnalysisPanel's filter already use for the analysis dialog/blunders
+  // page, reused here as "auto-play's stopping points" instead of a
+  // separate notion of what counts as relevant. `boardOrientation` stands in
+  // for "my color" — game replay pages (the only callers with `evals`) fix
+  // it to the synced player's color for the whole session and never offer a
+  // flip control. `undefined` (unanalyzed game) just means autoplay has
+  // nothing to stop for except the end.
   const blunderPlies = useMemo(
-    () => (evals ? new Set(findBlunders(evals, movesSan).map((b) => b.ply)) : null),
-    [evals, movesSan],
+    () =>
+      evals
+        ? new Set(
+            findBlunders(evals, movesSan)
+              .filter((b) => whiteToMove(b.ply) === (boardOrientation === 'white'))
+              .map((b) => b.ply),
+          )
+        : null,
+    [evals, movesSan, boardOrientation],
   )
 
   useEffect(() => {
