@@ -13,6 +13,7 @@ import { getLocale, Locale } from './locale'
 const en = {
   common: {
     close: 'Close',
+    show: 'Show',
     vs: 'vs',
     betterWas: 'Better was',
     color: { white: 'White', black: 'Black' },
@@ -338,6 +339,7 @@ type Strings = typeof en
 const es: Strings = {
   common: {
     close: 'Cerrar',
+    show: 'Mostrar',
     vs: 'vs',
     betterWas: 'Mejor era',
     color: { white: 'Blancas', black: 'Negras' },
