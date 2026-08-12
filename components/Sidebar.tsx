@@ -47,12 +47,14 @@ export function Sidebar({
     // The toggle button lives on this wrapper, not on the scrollable <aside>
     // itself — overflow-y-auto implicitly makes overflow-x auto too (CSS: an
     // axis left "visible" while the other isn't computes to "auto"), which
-    // would clip a button positioned half outside the border.
+    // would clip a button positioned half outside the border. Its `top-9`
+    // is the logo row's own height (h-10) plus the aside's py-4 padding,
+    // so it lines up with the app name/icon row instead of the full sidebar.
     <div className={`relative flex h-full shrink-0 ${collapsed ? 'w-14' : 'w-14 md:w-40'}`}>
       <aside className="flex w-full flex-col gap-4 overflow-y-auto border-r border-zinc-200 px-2 py-4 dark:border-zinc-800">
         <Link
           href="/"
-          className="flex min-w-0 items-center gap-2 px-1 text-lg font-semibold tracking-tight"
+          className="flex h-10 min-w-0 items-center gap-2 px-1 text-lg font-semibold tracking-tight"
         >
           <Image src="/icon.svg" alt="" width={24} height={24} className="shrink-0" />
           <span className={`truncate ${labelClassName}`}>Blitzr</span>
@@ -76,7 +78,7 @@ export function Sidebar({
         type="button"
         onClick={toggle}
         aria-label={collapsed ? s.nav.expand : s.nav.collapse}
-        className="absolute top-1/2 -right-3 z-10 hidden size-6 -translate-y-1/2 items-center justify-center rounded-full border border-zinc-200 bg-zinc-50 text-zinc-500 shadow-sm hover:text-zinc-900 md:flex dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+        className="absolute top-9 -right-3 z-10 hidden size-6 -translate-y-1/2 items-center justify-center rounded-full border border-zinc-200 bg-zinc-50 text-zinc-500 shadow-sm hover:text-zinc-900 md:flex dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
       >
         <ChevronLeftIcon
           className={`size-3.5 transition-transform ${collapsed ? 'rotate-180' : ''}`}
