@@ -367,7 +367,7 @@ pnpm build
 
 ```bash
 pnpm dev              # development
-pnpm build && pnpm start -- -p 9877   # production (pm2 manages this)
+pnpm build && pnpm start -p 9877      # production (pm2 manages this)
 ```
 
 See README.md for full pm2 setup instructions.
