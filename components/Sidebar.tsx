@@ -44,43 +44,44 @@ export function Sidebar({
   const labelClassName = collapsed ? 'hidden' : 'hidden md:inline'
 
   return (
-    <aside
-      className={`flex shrink-0 flex-col gap-4 overflow-y-auto border-r border-zinc-200 px-2 py-4 dark:border-zinc-800 ${
-        collapsed ? 'w-14' : 'w-14 md:w-40'
-      }`}
-    >
-      <Link
-        href="/"
-        className="flex min-w-0 items-center gap-2 px-1 text-lg font-semibold tracking-tight"
-      >
-        <Image src="/icon.svg" alt="" width={24} height={24} className="shrink-0" />
-        <span className={`truncate ${labelClassName}`}>Blitzr</span>
-      </Link>
+    // The toggle button lives on this wrapper, not on the scrollable <aside>
+    // itself — overflow-y-auto implicitly makes overflow-x auto too (CSS: an
+    // axis left "visible" while the other isn't computes to "auto"), which
+    // would clip a button positioned half outside the border.
+    <div className={`relative flex h-full shrink-0 ${collapsed ? 'w-14' : 'w-14 md:w-40'}`}>
+      <aside className="flex w-full flex-col gap-4 overflow-y-auto border-r border-zinc-200 px-2 py-4 dark:border-zinc-800">
+        <Link
+          href="/"
+          className="flex min-w-0 items-center gap-2 px-1 text-lg font-semibold tracking-tight"
+        >
+          <Image src="/icon.svg" alt="" width={24} height={24} className="shrink-0" />
+          <span className={`truncate ${labelClassName}`}>Blitzr</span>
+        </Link>
+        <NavLinks collapsed={collapsed} />
+        <div className={collapsed ? 'hidden' : 'hidden md:block'}>
+          <BulkAnalysisIndicator />
+        </div>
+        {username && (
+          <div className="mt-auto flex items-center gap-2 border-t border-zinc-200 px-1 pt-3 dark:border-zinc-800">
+            <PlayerAvatar username={username} avatarUrl={avatarUrl} />
+            <span
+              className={`min-w-0 truncate text-sm font-medium text-zinc-700 dark:text-zinc-300 ${labelClassName}`}
+            >
+              {username}
+            </span>
+          </div>
+        )}
+      </aside>
       <button
         type="button"
         onClick={toggle}
         aria-label={collapsed ? s.nav.expand : s.nav.collapse}
-        className="hidden shrink-0 items-center gap-2 rounded-md px-3 py-1.5 text-sm text-zinc-500 hover:bg-zinc-200 hover:text-zinc-900 md:flex dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+        className="absolute top-1/2 -right-3 z-10 hidden size-6 -translate-y-1/2 items-center justify-center rounded-full border border-zinc-200 bg-zinc-50 text-zinc-500 shadow-sm hover:text-zinc-900 md:flex dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
       >
         <ChevronLeftIcon
-          className={`size-4 shrink-0 transition-transform ${collapsed ? 'rotate-180' : ''}`}
+          className={`size-3.5 transition-transform ${collapsed ? 'rotate-180' : ''}`}
         />
-        <span className={labelClassName}>{s.nav.collapse}</span>
       </button>
-      <NavLinks collapsed={collapsed} />
-      <div className={collapsed ? 'hidden' : 'hidden md:block'}>
-        <BulkAnalysisIndicator />
-      </div>
-      {username && (
-        <div className="mt-auto flex items-center gap-2 border-t border-zinc-200 px-1 pt-3 dark:border-zinc-800">
-          <PlayerAvatar username={username} avatarUrl={avatarUrl} />
-          <span
-            className={`min-w-0 truncate text-sm font-medium text-zinc-700 dark:text-zinc-300 ${labelClassName}`}
-          >
-            {username}
-          </span>
-        </div>
-      )}
-    </aside>
+    </div>
   )
 }
