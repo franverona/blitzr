@@ -311,7 +311,14 @@ export function BoardView({
   // the suggested move's plan) collide on shared DOM ids internally and
   // crash with "Square width not found".
   const boardId = useId()
-  const bestMove = evals?.[ply]?.bestMove
+  // Only surface the engine's suggestion (reveal arrow, "better was" text,
+  // and the PlanBoard below the main board) when it's a move for the user's
+  // own color to play next — same "own moves only" scoping GameAnalysisPanel
+  // already applies to the blunder list. `boardOrientation` stands in for
+  // "my color" (see blunderPlies below); an opponent's/bot's best move isn't
+  // useful to review.
+  const bestMove =
+    whiteToMove(ply + 1) === (boardOrientation === 'white') ? evals?.[ply]?.bestMove : undefined
 
   // Checklist findings shown directly on the board (arrows + highlighted
   // squares), not just as sidebar text — recomputed from the same pure
