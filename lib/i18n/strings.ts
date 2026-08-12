@@ -28,6 +28,8 @@ const en = {
     repertoire: 'Repertoire',
     drill: 'Drill',
     blunders: 'Blunders',
+    collapse: 'Collapse',
+    expand: 'Expand',
   },
   gameRow: {
     timeClassTooltips: {
@@ -354,6 +356,8 @@ const es: Strings = {
     repertoire: 'Repertorio',
     drill: 'Entrenar',
     blunders: 'Errores',
+    collapse: 'Contraer',
+    expand: 'Expandir',
   },
   gameRow: {
     timeClassTooltips: {
