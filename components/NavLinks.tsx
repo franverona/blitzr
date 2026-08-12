@@ -33,6 +33,14 @@ function isLinkActive(pathname: string, href: string): boolean {
 export function NavLinks({ collapsed }: { collapsed: boolean }) {
   const pathname = usePathname()
   const s = getStrings()
+  // Icon-only rows (mobile always, or md+ while collapsed) need a smaller,
+  // symmetric horizontal padding — the expanded px-3 leaves only 16px of a
+  // 40px-wide collapsed row, so a 20px icon overflows the padding box and
+  // gets clipped on one side by the aside's scroll clipping (overflow-y
+  // implicitly makes overflow-x non-visible too), reading as "off-center".
+  const iconRowClassName = collapsed
+    ? 'justify-center px-1.5'
+    : 'justify-center px-1.5 md:justify-start md:px-3'
 
   return (
     <nav className="flex flex-col gap-0.5">
@@ -45,13 +53,13 @@ export function NavLinks({ collapsed }: { collapsed: boolean }) {
             href={link.href}
             aria-current={isActive ? 'page' : undefined}
             title={label}
-            className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors ${
+            className={`flex items-center gap-2 rounded-md py-2 text-sm transition-colors ${iconRowClassName} ${
               isActive
                 ? 'bg-accent/20 font-medium text-zinc-900 dark:text-white'
                 : 'text-zinc-500 hover:bg-zinc-200 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100'
             }`}
           >
-            <link.Icon className="size-5 shrink-0" />
+            <link.Icon className={`size-5 shrink-0 ${isActive ? 'text-accent' : ''}`} />
             <span className={collapsed ? 'hidden' : 'hidden md:inline'}>{label}</span>
           </Link>
         )

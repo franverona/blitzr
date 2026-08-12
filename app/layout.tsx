@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
+import { cookies } from 'next/headers'
 import { Suspense } from 'react'
 import { BulkAnalysisProvider } from '@/components/BulkAnalysisProvider'
 import { RouteProgressBar } from '@/components/RouteProgressBar'
@@ -44,6 +45,10 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   // same "purely decorative, never breaks the page" contract PlayerAvatar's
   // other callers (the game page) rely on.
   const avatarUrl = username ? await fetchPlayerAvatar(username) : null
+  // Read server-side (instead of Sidebar reading localStorage client-side
+  // after mount) so the very first paint already renders the right width —
+  // no expanded-then-collapsed flash on refresh.
+  const sidebarCollapsed = (await cookies()).get('blitzr-sidebar-collapsed')?.value === '1'
 
   return (
     <html
@@ -55,7 +60,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           <RouteProgressBar />
         </Suspense>
         <BulkAnalysisProvider>
-          <Sidebar username={username} avatarUrl={avatarUrl} />
+          <Sidebar username={username} avatarUrl={avatarUrl} initialCollapsed={sidebarCollapsed} />
           <main className="min-w-0 flex-1 overflow-y-auto px-6 py-6">
             <div className="mx-auto max-w-7xl">{children}</div>
           </main>

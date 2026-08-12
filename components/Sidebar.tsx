@@ -2,46 +2,50 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { BulkAnalysisIndicator } from '@/components/BulkAnalysisIndicator'
 import { NavLinks } from '@/components/NavLinks'
 import { PlayerAvatar } from '@/components/PlayerAvatar'
 import { getStrings } from '@/lib/i18n/strings'
 import { ChevronLeftIcon } from './NavIcons'
 
-const COLLAPSED_KEY = 'blitzr-sidebar-collapsed'
+const COLLAPSED_COOKIE = 'blitzr-sidebar-collapsed'
 
 // Below `md` the sidebar is always icon-only — width and label visibility
 // both fall back to plain Tailwind breakpoints for that, no JS media query
-// needed. `collapsed` state only controls the md+ toggle; it's read from
-// localStorage after mount (a one-frame flash of "expanded" is an acceptable
-// tradeoff for a local single-user app, not worth a cookie round-trip).
+// needed. `collapsed` state only controls the md+ toggle. Its initial value
+// comes from a cookie read server-side (RootLayout), not localStorage read
+// client-side after mount — that would flash "expanded" on every refresh,
+// since the server can't see localStorage but can see a cookie.
 export function Sidebar({
   username,
   avatarUrl,
+  initialCollapsed,
 }: {
   username: string | null
   avatarUrl: string | null
+  initialCollapsed: boolean
 }) {
-  const [collapsed, setCollapsed] = useState(false)
+  const [collapsed, setCollapsed] = useState(initialCollapsed)
   const s = getStrings()
-
-  useEffect(() => {
-    // Reading localStorage during the initial render (instead of here) would
-    // mismatch the server-rendered HTML, since it isn't available server-side.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setCollapsed(localStorage.getItem(COLLAPSED_KEY) === '1')
-  }, [])
 
   function toggle() {
     setCollapsed((prev) => {
       const next = !prev
-      localStorage.setItem(COLLAPSED_KEY, next ? '1' : '0')
+      document.cookie = `${COLLAPSED_COOKIE}=${next ? '1' : '0'}; path=/; max-age=31536000; samesite=lax`
       return next
     })
   }
 
   const labelClassName = collapsed ? 'hidden' : 'hidden md:inline'
+  // Icon-only rows (mobile always, or md+ while collapsed) need a smaller,
+  // symmetric horizontal padding — the expanded px-3 leaves only 16px of a
+  // 40px-wide collapsed row, so a 20-24px icon overflows the padding box
+  // and gets clipped on one side by the aside's scroll clipping (overflow-y
+  // implicitly makes overflow-x non-visible too), reading as "off-center".
+  const iconRowClassName = collapsed
+    ? 'justify-center px-1.5'
+    : 'justify-center px-1.5 md:justify-start md:px-3'
 
   return (
     // The toggle button lives on this wrapper, not on the scrollable <aside>
@@ -54,9 +58,7 @@ export function Sidebar({
       <aside className="flex w-full flex-col gap-4 overflow-y-auto border-r border-zinc-200 px-2 py-4 dark:border-zinc-800">
         <Link
           href="/"
-          className={`flex h-10 min-w-0 items-center gap-2 px-1 text-lg font-semibold tracking-tight ${
-            collapsed ? 'justify-center' : 'justify-center md:justify-start'
-          }`}
+          className={`flex h-10 min-w-0 items-center gap-2 text-lg font-semibold tracking-tight ${iconRowClassName}`}
         >
           <Image src="/icon.svg" alt="" width={24} height={24} className="shrink-0" />
           <span className={`truncate ${labelClassName}`}>Blitzr</span>
