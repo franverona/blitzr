@@ -29,7 +29,7 @@ import {
 import type { PositionEval } from '@/lib/types'
 import { EvalBar } from './EvalBar'
 import { PieceMoveLabel } from './PieceMoveLabel'
-import { PlanBoard } from './PlanBoard'
+import { PlanBoardButton } from './PlanBoard'
 
 interface BoardContextValue {
   ply: number
@@ -312,7 +312,7 @@ export function BoardView({
   // crash with "Square width not found".
   const boardId = useId()
   // Only surface the engine's suggestion (reveal arrow, "better was" text,
-  // and the PlanBoard below the main board) when it's a move for the user's
+  // and its "Show" plan dialog) when it's a move for the user's
   // own color to play next — same "own moves only" scoping GameAnalysisPanel
   // already applies to the blunder list. `boardOrientation` stands in for
   // "my color" (see blunderPlies below); an opponent's/bot's best move isn't
@@ -434,17 +434,21 @@ export function BoardView({
           )}
         </p>
         {betterMove && (
-          <p className="text-xs text-amber-400">
+          // A <div>, not <p> — <dialog> (PlanBoardButton's, opened from
+          // here) is block-level and HTML forbids block content inside <p>,
+          // which React's hydration check enforces.
+          <div className="text-xs text-amber-400">
             {s.common.betterWas} {betterMove}
-          </p>
-        )}
-        {bestMove && bestMove.bestLine?.length > 0 && (
-          <PlanBoard
-            key={ply}
-            fenBefore={positions[ply]}
-            moves={[bestMove.san, ...bestMove.bestLine]}
-            boardOrientation={boardOrientation}
-          />
+            {bestMove && bestMove.bestLine?.length > 0 && (
+              <PlanBoardButton
+                key={ply}
+                betterMove={betterMove}
+                fenBefore={positions[ply]}
+                moves={[bestMove.san, ...bestMove.bestLine]}
+                boardOrientation={boardOrientation}
+              />
+            )}
+          </div>
         )}
       </div>
 
