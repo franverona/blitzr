@@ -29,9 +29,7 @@ export function PlanBoard({
 }) {
   const positions = buildPositions(fenBefore, moves)
   const lastPly = positions.length - 1
-  // Starts on the suggested move already played (ply 1), not the pre-move
-  // position the main board is already showing.
-  const [ply, setPly] = useState(Math.min(1, lastPly))
+  const [ply, setPly] = useState(0)
   // react-chessboard needs a unique `id` per instance — without one, this
   // board collides with whatever other Chessboard is on the page (the main
   // replay board, or another PlanBoard in a blunder list) on shared DOM ids
