@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useRef, useState, useTransition } from 'react'
 import { addManualGame } from '@/app/actions'
 import { getStrings } from '@/lib/i18n/strings'
+import { startRouteProgress } from './RouteProgressBar'
 
 // Same native <dialog> convention as AboutOpeningButton.tsx. Errors are
 // shown inline in the dialog (not a toast like SyncButton's) — the user
@@ -30,6 +31,7 @@ export function AddPgnButton() {
       try {
         const game = await addManualGame(pgn)
         dialogRef.current?.close()
+        startRouteProgress()
         router.push(`/games/${game.id}`)
       } catch (err) {
         setError(err instanceof Error ? err.message : s.addPgn.genericError)
