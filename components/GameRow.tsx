@@ -5,6 +5,7 @@ import { formatDate } from '@/lib/dates'
 import { getStrings } from '@/lib/i18n/strings'
 import type { Game } from '@/lib/types'
 import { KnightIcon } from './KnightIcon'
+import { startRouteProgress } from './RouteProgressBar'
 
 const RESULT_BADGE_STYLES: Record<Game['myResult'], string> = {
   win: 'bg-emerald-900/40 text-emerald-400',
@@ -20,6 +21,7 @@ export function GameRow({ game, isAnalyzed }: { game: Game; isAnalyzed: boolean 
   const timeClassTooltip = s.gameRow.timeClassTooltips[game.timeClass]
 
   function open() {
+    startRouteProgress()
     router.push(`/games/${game.id}`)
   }
 
