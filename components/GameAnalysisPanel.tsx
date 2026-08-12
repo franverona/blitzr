@@ -19,7 +19,7 @@ import { describeBetterMove, describeBlunderReason, detectBlunderReason } from '
 import type { GameAnalysis, MyColor } from '@/lib/types'
 import { BlunderSeverityBadge } from './BlunderSeverityBadge'
 import { EvalHelp } from './EvalHelp'
-import { PlanBoard } from './PlanBoard'
+import { PlanBoardButton } from './PlanBoard'
 
 interface AnalysisContextValue {
   analysis: GameAnalysis | null
@@ -212,38 +212,33 @@ function AnalysisDialog({ dialogRef }: { dialogRef: React.RefObject<HTMLDialogEl
                 )
                 const bestMove = b.evalBefore.bestMove
                 return (
-                  <li key={b.ply} className="py-4 first:pt-0 last:pb-0">
-                    <div className="flex flex-wrap items-start gap-4">
-                      <div className="flex min-w-56 flex-1 flex-col gap-1.5">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <BlunderSeverityBadge swingCp={b.swingCp} />
-                          <span className="text-sm text-zinc-300">
-                            {plyLabel(b.ply)} {b.moveSan}: {formatEval(b.evalBefore)} →{' '}
-                            {formatEval(b.evalAfter)} ({formatSwing(b)})
-                          </span>
-                        </div>
-                        <div className="text-base text-zinc-300">
-                          {describeMove(positions[b.ply - 1], b.moveSan)}
-                        </div>
-                        {reason && (
-                          <div className="text-sm text-zinc-500">
-                            {describeBlunderReason(reason)}
-                          </div>
-                        )}
-                        {betterMove && (
-                          <div className="text-sm text-zinc-500">
-                            {s.common.betterWas} {betterMove}
-                          </div>
+                  <li key={b.ply} className="flex flex-col gap-1.5 py-4 first:pt-0 last:pb-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <BlunderSeverityBadge swingCp={b.swingCp} />
+                      <span className="text-sm text-zinc-300">
+                        {plyLabel(b.ply)} {b.moveSan}: {formatEval(b.evalBefore)} →{' '}
+                        {formatEval(b.evalAfter)} ({formatSwing(b)})
+                      </span>
+                    </div>
+                    <div className="text-base text-zinc-300">
+                      {describeMove(positions[b.ply - 1], b.moveSan)}
+                    </div>
+                    {reason && (
+                      <div className="text-sm text-zinc-500">{describeBlunderReason(reason)}</div>
+                    )}
+                    {betterMove && (
+                      <div className="text-sm text-zinc-500">
+                        {s.common.betterWas} {betterMove}
+                        {bestMove && bestMove.bestLine?.length > 0 && (
+                          <PlanBoardButton
+                            betterMove={betterMove}
+                            fenBefore={positions[b.ply - 1]}
+                            moves={[bestMove.san, ...bestMove.bestLine]}
+                            boardOrientation={myColor}
+                          />
                         )}
                       </div>
-                      {betterMove && bestMove && bestMove.bestLine?.length > 0 && (
-                        <PlanBoard
-                          fenBefore={positions[b.ply - 1]}
-                          moves={[bestMove.san, ...bestMove.bestLine]}
-                          boardOrientation={myColor}
-                        />
-                      )}
-                    </div>
+                    )}
                   </li>
                 )
               })}
