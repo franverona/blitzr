@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { getStrings } from '@/lib/i18n/strings'
 import type { DrillSourceType } from '@/lib/types'
+import { startRouteProgress } from './RouteProgressBar'
 
 /** URL-driven deck filters (`?type=`/`?opening=`), same pattern as
  *  `RepertoireBoard.tsx`'s `ColorTab` — a real navigation, not client state,
@@ -58,7 +59,10 @@ export function DrillFilters({
       {availableOpenings.length > 0 && (
         <select
           value={opening ?? ''}
-          onChange={(e) => router.push(hrefFor({ opening: e.target.value || undefined }))}
+          onChange={(e) => {
+            startRouteProgress()
+            router.push(hrefFor({ opening: e.target.value || undefined }))
+          }}
           className="rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1 text-zinc-300"
         >
           <option value="">{s.drillFilters.allOpenings}</option>

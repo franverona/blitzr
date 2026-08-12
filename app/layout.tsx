@@ -2,10 +2,12 @@ import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import Image from 'next/image'
 import Link from 'next/link'
+import { Suspense } from 'react'
 import { BulkAnalysisIndicator } from '@/components/BulkAnalysisIndicator'
 import { BulkAnalysisProvider } from '@/components/BulkAnalysisProvider'
 import { NavLinks } from '@/components/NavLinks'
 import { PlayerAvatar } from '@/components/PlayerAvatar'
+import { RouteProgressBar } from '@/components/RouteProgressBar'
 import { fetchPlayerAvatar } from '@/lib/chesscom/client'
 import { getChesscomUsername } from '@/lib/config'
 import { getLocale } from '@/lib/i18n/locale'
@@ -53,6 +55,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       className={`dark ${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex h-full overflow-hidden bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
+        <Suspense fallback={null}>
+          <RouteProgressBar />
+        </Suspense>
         <BulkAnalysisProvider>
           <aside className="flex w-40 shrink-0 flex-col gap-4 overflow-y-auto border-r border-zinc-200 px-2 py-4 dark:border-zinc-800">
             <Link
