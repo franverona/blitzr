@@ -84,7 +84,7 @@ projects on 3000.
 ```bash
 npm install -g pm2
 pnpm build
-pm2 start "pnpm start -- -p 9877" --name blitzr
+pm2 start "pnpm start -p 9877" --name blitzr
 pm2 save
 pm2 startup   # follow the printed command to register with launchd
 ```
