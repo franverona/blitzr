@@ -44,14 +44,14 @@ export function NavLinks({ collapsed }: { collapsed: boolean }) {
             key={link.href}
             href={link.href}
             aria-current={isActive ? 'page' : undefined}
-            title={collapsed ? label : undefined}
+            title={label}
             className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors ${
               isActive
                 ? 'bg-accent/20 font-medium text-zinc-900 dark:text-white'
                 : 'text-zinc-500 hover:bg-zinc-200 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100'
             }`}
           >
-            <link.Icon className="size-4 shrink-0" />
+            <link.Icon className="size-5 shrink-0" />
             <span className={collapsed ? 'hidden' : 'hidden md:inline'}>{label}</span>
           </Link>
         )

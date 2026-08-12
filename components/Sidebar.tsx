@@ -54,7 +54,9 @@ export function Sidebar({
       <aside className="flex w-full flex-col gap-4 overflow-y-auto border-r border-zinc-200 px-2 py-4 dark:border-zinc-800">
         <Link
           href="/"
-          className="flex h-10 min-w-0 items-center gap-2 px-1 text-lg font-semibold tracking-tight"
+          className={`flex h-10 min-w-0 items-center gap-2 px-1 text-lg font-semibold tracking-tight ${
+            collapsed ? 'justify-center' : 'justify-center md:justify-start'
+          }`}
         >
           <Image src="/icon.svg" alt="" width={24} height={24} className="shrink-0" />
           <span className={`truncate ${labelClassName}`}>Blitzr</span>
