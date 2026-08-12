@@ -3,14 +3,22 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { getStrings } from '@/lib/i18n/strings'
+import {
+  ChessPawnIcon,
+  DumbbellIcon,
+  GraduationCapIcon,
+  LibraryBigIcon,
+  ShieldAlertIcon,
+  SwatchBookIcon,
+} from './NavIcons'
 
 const LINK_ROUTES = [
-  { href: '/', key: 'games' },
-  { href: '/openings', key: 'openings' },
-  { href: '/learn', key: 'learn' },
-  { href: '/repertoire', key: 'repertoire' },
-  { href: '/drill', key: 'drill' },
-  { href: '/blunders', key: 'blunders' },
+  { href: '/', key: 'games', Icon: ChessPawnIcon },
+  { href: '/openings', key: 'openings', Icon: SwatchBookIcon },
+  { href: '/learn', key: 'learn', Icon: GraduationCapIcon },
+  { href: '/repertoire', key: 'repertoire', Icon: LibraryBigIcon },
+  { href: '/drill', key: 'drill', Icon: DumbbellIcon },
+  { href: '/blunders', key: 'blunders', Icon: ShieldAlertIcon },
 ] as const
 
 // Nested detail routes don't share their section's own path prefix in one
@@ -22,7 +30,7 @@ function isLinkActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`)
 }
 
-export function NavLinks() {
+export function NavLinks({ collapsed }: { collapsed: boolean }) {
   const pathname = usePathname()
   const s = getStrings()
 
@@ -30,18 +38,21 @@ export function NavLinks() {
     <nav className="flex flex-col gap-0.5">
       {LINK_ROUTES.map((link) => {
         const isActive = isLinkActive(pathname, link.href)
+        const label = s.nav[link.key]
         return (
           <Link
             key={link.href}
             href={link.href}
             aria-current={isActive ? 'page' : undefined}
-            className={`rounded-md px-3 py-2 text-sm transition-colors ${
+            title={collapsed ? label : undefined}
+            className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors ${
               isActive
                 ? 'bg-accent/20 font-medium text-zinc-900 dark:text-white'
                 : 'text-zinc-500 hover:bg-zinc-200 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100'
             }`}
           >
-            {s.nav[link.key]}
+            <link.Icon className="size-4 shrink-0" />
+            <span className={collapsed ? 'hidden' : 'hidden md:inline'}>{label}</span>
           </Link>
         )
       })}
