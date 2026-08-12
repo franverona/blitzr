@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import { BulkAnalysisIndicator } from '@/components/BulkAnalysisIndicator'
 import { NavLinks } from '@/components/NavLinks'
 import { PlayerAvatar } from '@/components/PlayerAvatar'
+import { getStrings } from '@/lib/i18n/strings'
 import { ChevronLeftIcon } from './NavIcons'
 
 const COLLAPSED_KEY = 'blitzr-sidebar-collapsed'
@@ -23,6 +24,7 @@ export function Sidebar({
   avatarUrl: string | null
 }) {
   const [collapsed, setCollapsed] = useState(false)
+  const s = getStrings()
 
   useEffect(() => {
     // Reading localStorage during the initial render (instead of here) would
@@ -47,25 +49,24 @@ export function Sidebar({
         collapsed ? 'w-14' : 'w-14 md:w-40'
       }`}
     >
-      <div className="flex items-center justify-between gap-1">
-        <Link
-          href="/"
-          className="flex min-w-0 items-center gap-2 text-lg font-semibold tracking-tight"
-        >
-          <Image src="/icon.svg" alt="" width={24} height={24} className="shrink-0" />
-          <span className={`truncate ${labelClassName}`}>Blitzr</span>
-        </Link>
-        <button
-          type="button"
-          onClick={toggle}
-          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          className="hidden shrink-0 rounded-md p-1 text-zinc-500 hover:bg-zinc-200 hover:text-zinc-900 md:block dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
-        >
-          <ChevronLeftIcon
-            className={`size-4 transition-transform ${collapsed ? 'rotate-180' : ''}`}
-          />
-        </button>
-      </div>
+      <Link
+        href="/"
+        className="flex min-w-0 items-center gap-2 px-1 text-lg font-semibold tracking-tight"
+      >
+        <Image src="/icon.svg" alt="" width={24} height={24} className="shrink-0" />
+        <span className={`truncate ${labelClassName}`}>Blitzr</span>
+      </Link>
+      <button
+        type="button"
+        onClick={toggle}
+        aria-label={collapsed ? s.nav.expand : s.nav.collapse}
+        className="hidden shrink-0 items-center gap-2 rounded-md px-3 py-1.5 text-sm text-zinc-500 hover:bg-zinc-200 hover:text-zinc-900 md:flex dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+      >
+        <ChevronLeftIcon
+          className={`size-4 shrink-0 transition-transform ${collapsed ? 'rotate-180' : ''}`}
+        />
+        <span className={labelClassName}>{s.nav.collapse}</span>
+      </button>
       <NavLinks collapsed={collapsed} />
       <div className={collapsed ? 'hidden' : 'hidden md:block'}>
         <BulkAnalysisIndicator />
