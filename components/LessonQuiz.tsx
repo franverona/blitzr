@@ -6,7 +6,14 @@ import { Chessboard } from 'react-chessboard'
 import { whiteToMove } from '@/lib/drill'
 import { getStrings } from '@/lib/i18n/strings'
 import { legalDestinations } from '@/lib/legalMoves'
-import { BOARD_DARK_SQUARE, BOARD_LIGHT_SQUARE, REVEAL_ARROW_COLOR } from '@/lib/theme'
+import {
+  BOARD_DARK_SQUARE,
+  BOARD_DARK_SQUARE_NOTATION_STYLE,
+  BOARD_LIGHT_SQUARE,
+  BOARD_LIGHT_SQUARE_NOTATION_STYLE,
+  BOARD_NOTATION_SIZE_STYLE,
+  REVEAL_ARROW_COLOR,
+} from '@/lib/theme'
 import { useBoardContext } from './Board'
 import { LegalMoveSquare } from './LegalMoveSquare'
 
@@ -233,8 +240,10 @@ export function LessonQuiz({
               ),
               darkSquareStyle: { backgroundColor: BOARD_DARK_SQUARE },
               lightSquareStyle: { backgroundColor: BOARD_LIGHT_SQUARE },
-              darkSquareNotationStyle: { color: BOARD_LIGHT_SQUARE },
-              lightSquareNotationStyle: { color: BOARD_DARK_SQUARE },
+              darkSquareNotationStyle: BOARD_DARK_SQUARE_NOTATION_STYLE,
+              lightSquareNotationStyle: BOARD_LIGHT_SQUARE_NOTATION_STYLE,
+              alphaNotationStyle: BOARD_NOTATION_SIZE_STYLE,
+              numericNotationStyle: BOARD_NOTATION_SIZE_STYLE,
               arrows,
             }}
           />
