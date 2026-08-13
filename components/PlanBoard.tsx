@@ -4,7 +4,14 @@ import { useId, useMemo, useRef, useState } from 'react'
 import { Chessboard } from 'react-chessboard'
 import { getStrings } from '@/lib/i18n/strings'
 import { buildPositions } from '@/lib/positions'
-import { BOARD_ANIMATION_DURATION_MS, BOARD_DARK_SQUARE, BOARD_LIGHT_SQUARE } from '@/lib/theme'
+import {
+  BOARD_ANIMATION_DURATION_MS,
+  BOARD_DARK_SQUARE,
+  BOARD_DARK_SQUARE_NOTATION_STYLE,
+  BOARD_LIGHT_SQUARE,
+  BOARD_LIGHT_SQUARE_NOTATION_STYLE,
+  BOARD_NOTATION_SIZE_STYLE,
+} from '@/lib/theme'
 
 /** A small interactive stepper through the engine's suggested move and its
  *  follow-up plan — SAN text alone doesn't let a beginner "see" where a
@@ -50,10 +57,14 @@ export function PlanBoard({
             position: positions[ply],
             boardOrientation,
             allowDragging: false,
-            showNotation: false,
+            showNotation: true,
             animationDurationInMs: BOARD_ANIMATION_DURATION_MS,
             darkSquareStyle: { backgroundColor: BOARD_DARK_SQUARE },
             lightSquareStyle: { backgroundColor: BOARD_LIGHT_SQUARE },
+            darkSquareNotationStyle: BOARD_DARK_SQUARE_NOTATION_STYLE,
+            lightSquareNotationStyle: BOARD_LIGHT_SQUARE_NOTATION_STYLE,
+            alphaNotationStyle: BOARD_NOTATION_SIZE_STYLE,
+            numericNotationStyle: BOARD_NOTATION_SIZE_STYLE,
           }}
         />
       </div>
@@ -160,7 +171,7 @@ export function PlanBoardButton({
           e.stopPropagation()
           setPly((p) => (e.key === 'ArrowLeft' ? Math.max(0, p - 1) : Math.min(lastPly, p + 1)))
         }}
-        className="fixed top-1/2 left-1/2 m-0 max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg border border-zinc-700 bg-zinc-900 p-0 text-left text-zinc-100 backdrop:bg-black/60"
+        className="fixed top-1/2 left-1/2 m-0 max-w-xl -translate-x-1/2 -translate-y-1/2 rounded-lg border border-zinc-700 bg-zinc-900 p-0 text-left text-zinc-100 backdrop:bg-black/60"
       >
         <div className="flex flex-col gap-3 p-5">
           <div className="flex items-center justify-between gap-4">

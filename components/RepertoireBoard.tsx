@@ -10,7 +10,14 @@ import { getStrings } from '@/lib/i18n/strings'
 import { legalDestinations } from '@/lib/legalMoves'
 import { buildRepertoireIndex } from '@/lib/repertoire'
 import { describeBlunderReason, detectBlunderReason } from '@/lib/tactics'
-import { BOARD_ANIMATION_DURATION_MS, BOARD_DARK_SQUARE, BOARD_LIGHT_SQUARE } from '@/lib/theme'
+import {
+  BOARD_ANIMATION_DURATION_MS,
+  BOARD_DARK_SQUARE,
+  BOARD_DARK_SQUARE_NOTATION_STYLE,
+  BOARD_LIGHT_SQUARE,
+  BOARD_LIGHT_SQUARE_NOTATION_STYLE,
+  BOARD_NOTATION_SIZE_STYLE,
+} from '@/lib/theme'
 import type { RepertoireColor, RepertoireNode } from '@/lib/types'
 import { LegalMoveSquare } from './LegalMoveSquare'
 import { RepertoireTree } from './RepertoireTree'
@@ -213,8 +220,10 @@ export function RepertoireBoard({
                 ),
                 darkSquareStyle: { backgroundColor: BOARD_DARK_SQUARE },
                 lightSquareStyle: { backgroundColor: BOARD_LIGHT_SQUARE },
-                darkSquareNotationStyle: { color: BOARD_LIGHT_SQUARE },
-                lightSquareNotationStyle: { color: BOARD_DARK_SQUARE },
+                darkSquareNotationStyle: BOARD_DARK_SQUARE_NOTATION_STYLE,
+                lightSquareNotationStyle: BOARD_LIGHT_SQUARE_NOTATION_STYLE,
+                alphaNotationStyle: BOARD_NOTATION_SIZE_STYLE,
+                numericNotationStyle: BOARD_NOTATION_SIZE_STYLE,
               }}
             />
           </div>
