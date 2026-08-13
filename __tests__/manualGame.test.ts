@@ -74,4 +74,15 @@ describe('parseManualGame', () => {
     const pgn = '[White "A"]\n[Black "B"]\n\n1. e4 P@e5 *'
     expect(() => parseManualGame(pgn, 'fverona')).toThrow()
   })
+
+  it('stamps the header date with the current time-of-day, not midnight', () => {
+    const game = parseManualGame(BOT_GAME_PGN, 'fverona')
+    const headerMidnightUtcSec = Date.UTC(2026, 7, 10) / 1000
+    const nowSec = Math.floor(Date.now() / 1000)
+    // Same calendar day as the header, but not stuck at exactly midnight —
+    // and never later than "now".
+    expect(game.endTime).toBeGreaterThanOrEqual(headerMidnightUtcSec)
+    expect(game.endTime).toBeLessThan(headerMidnightUtcSec + 86_400)
+    expect(game.endTime).toBeLessThanOrEqual(nowSec)
+  })
 })
