@@ -21,11 +21,20 @@ function myResultFromPgnResult(pgnResult: string | undefined, color: MyColor): M
 }
 
 // Chess.com's Date/EndDate headers are "YYYY.MM.DD", which Date.parse()
-// doesn't accept directly.
+// doesn't accept directly, and — unlike a synced game's real endTime — never
+// carry a time-of-day, so Date.parse() lands on midnight UTC. Left as-is,
+// that always sorts *below* any already-synced game from later the same day
+// (games list is `ORDER BY end_time desc`), making a same-day manual add look
+// like it never happened. Stamping the header's calendar date with the
+// current time-of-day keeps the date accurate (still needed for an older
+// pasted PGN, e.g. a friend's game) while making a same-day add sort where it
+// belongs — at/near the top, alongside "now".
 function endTimeFromPgnDate(headers: Record<string, string>): number {
   const raw = headers.EndDate ?? headers.Date
-  const parsed = raw ? Date.parse(raw.replace(/\./g, '-')) : NaN
-  return Number.isNaN(parsed) ? Date.now() : Math.floor(parsed / 1000)
+  const parsedDateOnly = raw ? Date.parse(raw.replace(/\./g, '-')) : NaN
+  if (Number.isNaN(parsedDateOnly)) return Math.floor(Date.now() / 1000)
+  const msSinceMidnightUtc = Date.now() % 86_400_000
+  return Math.floor((parsedDateOnly + msSinceMidnightUtc) / 1000)
 }
 
 function ratingFromHeader(value: string | undefined): number | null {
