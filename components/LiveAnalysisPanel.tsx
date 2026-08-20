@@ -128,11 +128,13 @@ export function LiveAnalysisPanel() {
                     would corrupt the explore branch rather than just show a
                     stale number. Swaps to a checkmark once queued, both as
                     feedback that the click landed and so it doesn't look
-                    like it's still offering to be pressed again. */}
+                    like it's still offering to be pressed again — only when
+                    `playExploreLine()` actually reports success, so a line
+                    that turned out stale after all (see its own comment)
+                    doesn't claim to be queued when nothing happened. */}
                 <button
                   onClick={() => {
-                    playExploreLine(moves)
-                    setQueuedIndex(i)
+                    if (playExploreLine(moves)) setQueuedIndex(i)
                   }}
                   disabled={thinking || isQueued}
                   aria-label={isQueued ? s.liveAnalysis.lineQueued : s.liveAnalysis.playLine}

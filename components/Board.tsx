@@ -102,8 +102,12 @@ interface BoardContextValue {
    *  through: each manual move re-searches and replaces the very line being
    *  copied. Stops at the first move that doesn't apply (e.g. a stale line
    *  for a position the board has since moved on from) rather than applying
-   *  a partial line from the wrong position. */
-  playExploreLine: (sanMoves: string[]) => void
+   *  a partial line from the wrong position. Returns whether *anything* was
+   *  applied — false (a no-op) only when even the first move didn't apply,
+   *  so a caller offering its own success feedback (`LiveAnalysisPanel`'s
+   *  queued checkmark) doesn't show it for a line that silently did
+   *  nothing. */
+  playExploreLine: (sanMoves: string[]) => boolean
   /** Discards the whole explored branch's moves and jumps back to its start
    *  (ply 0) without leaving exploring mode — the "actually get rid of this
    *  line" companion to the ◀/⏮ nav, which only moves the *pointer* back
@@ -174,8 +178,30 @@ export function BoardProvider({
 
   const [exploring, setExploring] = useState(false)
   const [exploreBaseFen, setExploreBaseFen] = useState<string | null>(null)
-  const [explorePath, setExplorePath] = useState<string[]>([])
-  const [explorePly, setExplorePly] = useState(0)
+  const [explorePath, setExplorePathState] = useState<string[]>([])
+  const [explorePly, setExplorePlyState] = useState(0)
+  // Refs mirror the two states above, updated synchronously by the wrapper
+  // setters below — `attemptExploreMove`/`playExploreLine` read *these*,
+  // not the state values, when computing "where the branch currently is."
+  // Same reasoning (and pattern) as `RepertoireBoard`'s `nodesRef`/`pathRef`:
+  // two explore moves fired back-to-back, faster than a render, would
+  // otherwise both compute their "current position" from the same
+  // pre-update closure — the second move then gets evaluated against (and
+  // spliced into the path at) the position from *before* the first move,
+  // not after it.
+  const explorePathRef = useRef(explorePath)
+  const explorePlyRef = useRef(explorePly)
+
+  function setExplorePath(updater: string[] | ((prev: string[]) => string[])) {
+    explorePathRef.current =
+      typeof updater === 'function' ? updater(explorePathRef.current) : updater
+    setExplorePathState(explorePathRef.current)
+  }
+  function setExplorePly(updater: number | ((prev: number) => number)) {
+    explorePlyRef.current = typeof updater === 'function' ? updater(explorePlyRef.current) : updater
+    setExplorePlyState(explorePlyRef.current)
+  }
+
   const explorePositions = useMemo(
     () => (exploreBaseFen !== null ? buildPositions(exploreBaseFen, explorePath) : []),
     [exploreBaseFen, explorePath],
@@ -198,7 +224,10 @@ export function BoardProvider({
 
   const attemptExploreMove = useCallback(
     (from: string, to: string): boolean => {
-      const fen = explorePositions[explorePly]
+      const currentPly = explorePlyRef.current
+      const fen = (exploreBaseFen ? buildPositions(exploreBaseFen, explorePathRef.current) : [])[
+        currentPly
+      ]
       if (!fen) return false
       const chess = new Chess(fen)
       let move
@@ -208,17 +237,21 @@ export function BoardProvider({
         return false
       }
       if (!move) return false
-      setExplorePath((prev) => [...prev.slice(0, explorePly), move.san])
-      setExplorePly((p) => p + 1)
+      setExplorePath((prev) => [...prev.slice(0, currentPly), move.san])
+      setExplorePly(currentPly + 1)
       return true
     },
-    [explorePositions, explorePly],
+    [exploreBaseFen],
   )
 
   const playExploreLine = useCallback(
-    (sanMoves: string[]) => {
-      const fromFen = exploring ? explorePositions[explorePly] : positions[ply]
-      if (!fromFen) return
+    (sanMoves: string[]): boolean => {
+      const currentlyExploring = exploring
+      const currentPly = explorePlyRef.current
+      const fromFen = currentlyExploring
+        ? (exploreBaseFen ? buildPositions(exploreBaseFen, explorePathRef.current) : [])[currentPly]
+        : positions[ply]
+      if (!fromFen) return false
 
       // Validated as a real replay from the current position rather than
       // trusted as-is — the line's moves were computed for whatever
@@ -239,22 +272,23 @@ export function BoardProvider({
         if (!move) break
         validSan.push(move.san)
       }
-      if (validSan.length === 0) return
+      if (validSan.length === 0) return false
 
       // Queues the line onto the branch without jumping to its end — the
       // point is to step through it one move at a time via the ◀/▶ nav
       // (already explore-path-aware, see `BoardNavControls`), watching each
       // move land individually, not to land straight on the final position.
-      if (exploring) {
-        setExplorePath((prev) => [...prev.slice(0, explorePly), ...validSan])
+      if (currentlyExploring) {
+        setExplorePath((prev) => [...prev.slice(0, currentPly), ...validSan])
       } else {
         setExploreBaseFen(positions[ply])
         setExplorePath(validSan)
         setExplorePly(0)
         setExploring(true)
       }
+      return true
     },
-    [exploring, explorePositions, explorePly, positions, ply],
+    [exploring, exploreBaseFen, positions, ply],
   )
 
   const resetExploreLine = useCallback(() => {
@@ -641,6 +675,7 @@ export function BoardView({
     setPly,
     hiddenFindingKeys,
     exploring,
+    explorePly,
     displayFen,
     exitExploring,
     attemptExploreMove,
@@ -803,17 +838,26 @@ export function BoardView({
   // react-chessboard's slide animation looks great for a single adjacent-ply
   // step (the ◀/▶ buttons, or clicking the very next move in the list) but
   // tries to animate every piece that differs at once for a multi-ply jump
-  // (Start/End, or clicking a move further down the list), which reads as a
-  // flicker/blink rather than a clean cut. Only animate the adjacent case;
-  // swap instantly for everything else. `prevPly` is updated during render
-  // (React's documented "adjust state when a prop changes" pattern) rather
-  // than a ref, so the comparison stays render-safe instead of reading
+  // (Start/End, clicking a move further down the list, playing a whole
+  // engine line onto the explore branch then jumping into it, or clicking a
+  // move in the "your line" strip), which reads as a flicker/blink rather
+  // than a clean cut. Only animate the adjacent case; swap instantly for
+  // everything else — `navPly` is `explorePly` while exploring, `ply`
+  // otherwise, so this covers both nav systems the same way; switching
+  // between the two modes is treated as non-adjacent too, since the two
+  // numbering spaces don't mean anything compared against each other.
+  // `prevNavPly`/`prevExploring` are updated during render (React's
+  // documented "adjust state when a prop changes" pattern) rather than a
+  // ref, so the comparison stays render-safe instead of reading
   // ref.current mid-render.
-  const [prevPly, setPrevPly] = useState(ply)
+  const navPly = exploring ? explorePly : ply
+  const [prevNavPly, setPrevNavPly] = useState(navPly)
+  const [prevExploring, setPrevExploring] = useState(exploring)
   const [isAdjacentStep, setIsAdjacentStep] = useState(false)
-  if (ply !== prevPly) {
-    setIsAdjacentStep(Math.abs(ply - prevPly) === 1)
-    setPrevPly(ply)
+  if (navPly !== prevNavPly || exploring !== prevExploring) {
+    setIsAdjacentStep(exploring === prevExploring && Math.abs(navPly - prevNavPly) === 1)
+    setPrevNavPly(navPly)
+    setPrevExploring(exploring)
   }
 
   return (
@@ -846,7 +890,7 @@ export function BoardView({
                       </LegalMoveSquare>
                     )
                   : undefined,
-                showAnimations: exploring || isAdjacentStep,
+                showAnimations: isAdjacentStep,
                 animationDurationInMs: BOARD_ANIMATION_DURATION_MS,
                 darkSquareStyle: { backgroundColor: BOARD_DARK_SQUARE },
                 lightSquareStyle: { backgroundColor: BOARD_LIGHT_SQUARE },
