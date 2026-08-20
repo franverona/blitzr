@@ -173,6 +173,16 @@ export interface PositionEval {
   bestMove: BestMove | null
 }
 
+/** One line from a live MultiPV search (`StockfishEngine.evaluateLines()`) —
+ *  same eval shape as `PositionEval` but without its `bestMove` field, which
+ *  reads oddly for a line that isn't necessarily *the* best one. `cp`/`mate`
+ *  are normalized to White's perspective, same convention as `PositionEval`. */
+export interface EngineLine {
+  cp: number | null
+  mate: number | null
+  move: BestMove
+}
+
 export interface GameAnalysis {
   gameId: string
   /** One eval per position, same length/indexing as a game's positions

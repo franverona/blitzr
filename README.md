@@ -39,6 +39,8 @@ any way that implies endorsement or affiliation.
 - [x] Hand-authored opening and endgame lessons with an interactive board
 - [x] Position checklist — a live tactical scan of whatever position you're viewing
 - [x] Add a game by pasting its PGN — for games Chess.com's public API doesn't expose at all
+- [x] Live multi-line engine analysis + free-move exploration on a game's board
+      (chess.com's analysis-tab experience)
 
 ## Stack
 
@@ -195,6 +197,21 @@ the engine's own expected follow-up is available, it shows up as a "Plan: ..." l
 suggestion, and — since a short move list still asks you to picture the position yourself — as a
 small interactive board underneath it, with its own Start/Previous/Next/End controls so you can
 actually step through where the plan leads instead of just reading it.
+
+### Live analysis and free exploration
+
+Alongside the batch "Analyze" pass above, a game's page also runs the engine live: an **Engine
+lines** panel next to the board shows the top 3 candidate moves — with eval and a short expected
+continuation for each — for whatever position you're currently looking at, re-searching every
+time you step to a different move. Nothing here is saved; it's a live readout, not a stored
+analysis.
+
+**Explore moves** turns the board itself interactive: drag or click a piece to try something
+other than what was actually played, branching off freely from wherever you are in the game. The
+engine lines above keep following along with your own moves, so you can test an idea and
+immediately see how the engine rates it. Nothing about your branch is saved either — the ◀/▶
+buttons step back and forth through it while you're exploring, and clicking any move in the
+game's own move list (or the toggle again) drops it and returns you to the recorded game.
 
 ### Reading the evaluation
 

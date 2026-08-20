@@ -10,11 +10,13 @@ import {
   useRef,
   useState,
 } from 'react'
+import { Chess } from 'chess.js'
 import { Chessboard } from 'react-chessboard'
 import { describeEval, findBlunders, formatEval } from '@/lib/analysis'
 import { buildPositionChecklist, findingKey, findingMarks } from '@/lib/checklist'
 import { whiteToMove } from '@/lib/drill'
 import { getStrings } from '@/lib/i18n/strings'
+import { legalDestinations } from '@/lib/legalMoves'
 import { formatMaterialDiff, materialDiff } from '@/lib/material'
 import { buildPositions } from '@/lib/positions'
 import { describeBetterMove } from '@/lib/tactics'
@@ -31,6 +33,7 @@ import {
 } from '@/lib/theme'
 import type { PositionEval } from '@/lib/types'
 import { EvalBar } from './EvalBar'
+import { LegalMoveSquare } from './LegalMoveSquare'
 import { PieceMoveLabel } from './PieceMoveLabel'
 import { PlanBoardButton } from './PlanBoard'
 
@@ -57,6 +60,35 @@ interface BoardContextValue {
    *  doesn't turn into unremovable clutter on a busy position. */
   hiddenFindingKeys: Set<string>
   toggleFindingVisibility: (key: string) => void
+  /** Free-move exploration off the currently-displayed recorded ply, chess.com
+   *  analysis-tab style — see `ExploreToggleButton`/`LiveAnalysisPanel`. Kept
+   *  entirely separate from `ply`/`positions` (the recorded game) rather than
+   *  extending that ply concept: exploration is a branch that doesn't belong
+   *  to the game, never persists, and can be discarded by exiting. */
+  exploring: boolean
+  /** SAN moves played since `startExploring()`, from whatever ply was current
+   *  at that moment. */
+  explorePath: string[]
+  /** How far into `explorePath` the board is currently showing (0 =
+   *  exploration's own starting position). */
+  explorePly: number
+  /** FEN per explore step, same indexing convention as `positions` —
+   *  `explorePositions[0]` is the branch point, before `explorePath[0]`. */
+  explorePositions: string[]
+  /** Whatever FEN the board should actually render right now — the recorded
+   *  `positions[ply]` normally, or the current explore step while exploring.
+   *  The one thing every consumer that draws *a* position (not the move
+   *  list) should read instead of `positions[ply]` directly. */
+  displayFen: string
+  startExploring: () => void
+  exitExploring: () => void
+  setExplorePly: (updater: number | ((ply: number) => number)) => void
+  /** Attempts `from`->`to` on the current explore position, always promoting
+   *  to queen (same simplification `RepertoireBoard` makes — underpromotion
+   *  essentially never comes up here either). Returns whether it was legal;
+   *  playing it truncates any explored moves past the current explore ply,
+   *  same "new move overwrites the future" rule a normal board edit implies. */
+  attemptExploreMove: (from: string, to: string) => boolean
 }
 
 // The nav controls (⏮◀▶⏭) live in the page header, next to the analysis
@@ -117,6 +149,49 @@ export function BoardProvider({
     })
   }, [])
 
+  const [exploring, setExploring] = useState(false)
+  const [exploreBaseFen, setExploreBaseFen] = useState<string | null>(null)
+  const [explorePath, setExplorePath] = useState<string[]>([])
+  const [explorePly, setExplorePly] = useState(0)
+  const explorePositions = useMemo(
+    () => (exploreBaseFen !== null ? buildPositions(exploreBaseFen, explorePath) : []),
+    [exploreBaseFen, explorePath],
+  )
+  const displayFen = exploring ? (explorePositions[explorePly] ?? exploreBaseFen!) : positions[ply]
+
+  const startExploring = useCallback(() => {
+    setExploreBaseFen(positions[ply])
+    setExplorePath([])
+    setExplorePly(0)
+    setExploring(true)
+  }, [positions, ply])
+
+  const exitExploring = useCallback(() => {
+    setExploring(false)
+    setExploreBaseFen(null)
+    setExplorePath([])
+    setExplorePly(0)
+  }, [])
+
+  const attemptExploreMove = useCallback(
+    (from: string, to: string): boolean => {
+      const fen = explorePositions[explorePly]
+      if (!fen) return false
+      const chess = new Chess(fen)
+      let move
+      try {
+        move = chess.move({ from, to, promotion: 'q' })
+      } catch {
+        return false
+      }
+      if (!move) return false
+      setExplorePath((prev) => [...prev.slice(0, explorePly), move.san])
+      setExplorePly((p) => p + 1)
+      return true
+    },
+    [explorePositions, explorePly],
+  )
+
   return (
     <BoardContext.Provider
       value={{
@@ -131,6 +206,15 @@ export function BoardProvider({
         evals,
         hiddenFindingKeys,
         toggleFindingVisibility,
+        exploring,
+        explorePath,
+        explorePly,
+        explorePositions,
+        displayFen,
+        startExploring,
+        exitExploring,
+        setExplorePly,
+        attemptExploreMove,
       }}
     >
       {children}
@@ -138,8 +222,38 @@ export function BoardProvider({
   )
 }
 
+/** Toggles free-move exploration on and off — see `BoardContextValue`'s
+ *  `exploring` comment. Sits next to `AnalyzeButton` in the game page header,
+ *  same "button up top, results live wherever they're relevant" split as
+ *  that button's own dialog. */
+export function ExploreToggleButton() {
+  const { exploring, startExploring, exitExploring } = useBoardContext()
+  const s = getStrings()
+  return (
+    <button
+      onClick={exploring ? exitExploring : startExploring}
+      className={`rounded-md border px-3 py-1.5 text-sm font-medium whitespace-nowrap ${
+        exploring ? 'border-accent bg-accent/20 text-white' : 'border-zinc-700 hover:bg-zinc-800'
+      }`}
+    >
+      {exploring ? s.liveAnalysis.exitExplore : s.liveAnalysis.explore}
+    </button>
+  )
+}
+
 export function BoardNavControls() {
-  const { ply, setPly, lastPly, movesSan, evals, boardOrientation } = useBoardContext()
+  const {
+    ply,
+    setPly,
+    lastPly,
+    movesSan,
+    evals,
+    boardOrientation,
+    exploring,
+    explorePath,
+    explorePly,
+    setExplorePly,
+  } = useBoardContext()
   const s = getStrings()
   const [isPlaying, setIsPlaying] = useState(false)
 
@@ -159,30 +273,46 @@ export function BoardNavControls() {
     isPlayingRef.current = isPlaying
   })
 
+  // While exploring, these step through the *explore* path instead of the
+  // recorded game — same buttons/keyboard shortcuts, just repointed at
+  // whichever sequence the board is currently showing, rather than adding a
+  // second row of nav controls just for exploration.
+  const displayPly = exploring ? explorePly : ply
+  const displayLastPly = exploring ? explorePath.length : lastPly
+
   const goToStart = useCallback(() => {
     setIsPlaying(false)
-    setPly(0)
-  }, [setPly])
+    if (exploring) setExplorePly(0)
+    else setPly(0)
+  }, [setPly, exploring, setExplorePly])
   const goToPrevious = useCallback(() => {
     setIsPlaying(false)
-    setPly((p) => Math.max(0, p - 1))
-  }, [setPly])
+    if (exploring) setExplorePly((p) => Math.max(0, p - 1))
+    else setPly((p) => Math.max(0, p - 1))
+  }, [setPly, exploring, setExplorePly])
   const goToNext = useCallback(() => {
     setIsPlaying(false)
-    setPly((p) => Math.min(lastPly, p + 1))
-  }, [setPly, lastPly])
+    if (exploring) setExplorePly((p) => Math.min(explorePath.length, p + 1))
+    else setPly((p) => Math.min(lastPly, p + 1))
+  }, [setPly, lastPly, exploring, setExplorePly, explorePath.length])
   const goToEnd = useCallback(() => {
     setIsPlaying(false)
-    setPly(lastPly)
-  }, [setPly, lastPly])
+    if (exploring) setExplorePly(explorePath.length)
+    else setPly(lastPly)
+  }, [setPly, lastPly, exploring, setExplorePly, explorePath.length])
+  // Auto-play (with its blunder-stopping logic below) is a recorded-game
+  // feature only — there's no engine-flagged "blunder" to stop on for a
+  // free-explored line, so this is simply a no-op while exploring; the
+  // button itself is also disabled in that state (see the JSX below).
   const togglePlaying = useCallback(() => {
+    if (exploring) return
     if (isPlayingRef.current) {
       setIsPlaying(false)
       return
     }
     if (plyRef.current >= lastPly) setPly(0) // restart from the beginning if already at the end
     setIsPlaying(true)
-  }, [lastPly, setPly])
+  }, [lastPly, setPly, exploring])
 
   // Left/right arrow keys step through the game the same as the ◀/▶
   // buttons, Space toggles Play/Pause, and 0 jumps to the start — global,
@@ -260,25 +390,37 @@ export function BoardNavControls() {
 
   return (
     <div className="flex items-center gap-2 text-sm">
-      <NavButton onClick={goToStart} disabled={ply === 0} label={s.board.navLabels.start}>
+      <NavButton onClick={goToStart} disabled={displayPly === 0} label={s.board.navLabels.start}>
         ⏮
       </NavButton>
-      <NavButton onClick={goToPrevious} disabled={ply === 0} label={s.board.navLabels.previous}>
+      <NavButton
+        onClick={goToPrevious}
+        disabled={displayPly === 0}
+        label={s.board.navLabels.previous}
+      >
         ◀
       </NavButton>
       <span className="min-w-16 text-center text-zinc-400 tabular-nums">
-        {ply} / {lastPly}
+        {displayPly} / {displayLastPly}
       </span>
-      <NavButton onClick={goToNext} disabled={ply === lastPly} label={s.board.navLabels.next}>
+      <NavButton
+        onClick={goToNext}
+        disabled={displayPly === displayLastPly}
+        label={s.board.navLabels.next}
+      >
         ▶
       </NavButton>
-      <NavButton onClick={goToEnd} disabled={ply === lastPly} label={s.board.navLabels.end}>
+      <NavButton
+        onClick={goToEnd}
+        disabled={displayPly === displayLastPly}
+        label={s.board.navLabels.end}
+      >
         ⏭
       </NavButton>
       <span className="mx-1 h-4 w-px bg-zinc-700" />
       <button
         onClick={togglePlaying}
-        disabled={lastPly === 0}
+        disabled={lastPly === 0 || exploring}
         className={`rounded-md border px-2.5 py-1 disabled:opacity-40 ${
           isPlaying ? 'border-accent bg-accent/20 text-white' : 'border-zinc-700 hover:bg-zinc-800'
         }`}
@@ -306,8 +448,21 @@ export function BoardView({
    *  nothing for them. */
   sidebarExtra?: React.ReactNode
 } = {}) {
-  const { ply, positions, boardOrientation, result, movesSan, evals, setPly, hiddenFindingKeys } =
-    useBoardContext()
+  const {
+    ply,
+    positions,
+    boardOrientation,
+    result,
+    movesSan,
+    evals,
+    setPly,
+    hiddenFindingKeys,
+    exploring,
+    explorePath,
+    displayFen,
+    exitExploring,
+    attemptExploreMove,
+  } = useBoardContext()
   const s = getStrings()
   // react-chessboard needs a unique `id` per instance — without one, two
   // simultaneous boards on the same page (this one plus a PlanBoard showing
@@ -319,9 +474,50 @@ export function BoardView({
   // own color to play next — same "own moves only" scoping GameAnalysisPanel
   // already applies to the blunder list. `boardOrientation` stands in for
   // "my color" (see blunderPlies below); an opponent's/bot's best move isn't
-  // useful to review.
+  // useful to review. Also suppressed entirely while exploring — it's tied to
+  // the *recorded* ply's saved analysis, which no longer matches whatever
+  // free-explored position the board is actually showing.
   const bestMove =
-    whiteToMove(ply + 1) === (boardOrientation === 'white') ? evals?.[ply]?.bestMove : undefined
+    !exploring && whiteToMove(ply + 1) === (boardOrientation === 'white')
+      ? evals?.[ply]?.bestMove
+      : undefined
+
+  // Click/drag-to-move while exploring — same selected-square + legal-move-dot
+  // pattern `RepertoireBoard` uses, minus the persistence: a move here only
+  // ever updates in-memory explore state (`attemptExploreMove`).
+  const [selectedSquare, setSelectedSquare] = useState<string | null>(null)
+  const legalMoves = useMemo(
+    () => (exploring && selectedSquare ? legalDestinations(displayFen, selectedSquare) : []),
+    [exploring, selectedSquare, displayFen],
+  )
+  const legalMoveMap = useMemo(
+    () => new Map(legalMoves.map((m) => [m.to, m.isCapture])),
+    [legalMoves],
+  )
+
+  function handleExploreDrop({
+    sourceSquare,
+    targetSquare,
+  }: {
+    sourceSquare: string
+    targetSquare: string | null
+  }): boolean {
+    if (!targetSquare) return false
+    return attemptExploreMove(sourceSquare, targetSquare)
+  }
+
+  function handleExploreSquareClick({ square, piece }: { square: string; piece: unknown | null }) {
+    if (selectedSquare) {
+      if (selectedSquare === square) {
+        setSelectedSquare(null)
+        return
+      }
+      const moved = attemptExploreMove(selectedSquare, square)
+      setSelectedSquare(!moved && piece ? square : null)
+      return
+    }
+    if (piece) setSelectedSquare(square)
+  }
 
   // Checklist findings shown directly on the board (arrows + highlighted
   // squares), not just as sidebar text — recomputed from the same pure
@@ -407,15 +603,35 @@ export function BoardView({
     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-center">
       <div className={`flex w-full shrink-0 flex-col gap-3 ${boardMaxWidthClassName}`}>
         <div className="flex items-stretch gap-2">
-          {evals?.[ply] && <EvalBar evaluation={evals[ply]} boardOrientation={boardOrientation} />}
+          {!exploring && evals?.[ply] && (
+            <EvalBar evaluation={evals[ply]} boardOrientation={boardOrientation} />
+          )}
           <div className={`w-full overflow-hidden rounded shadow-lg ${boardMaxWidthClassName}`}>
             <Chessboard
               options={{
                 id: boardId,
-                position: positions[ply],
+                position: displayFen,
                 boardOrientation,
-                allowDragging: false,
-                showAnimations: isAdjacentStep,
+                allowDragging: exploring,
+                onPieceDrop: exploring ? handleExploreDrop : undefined,
+                onSquareClick: exploring ? handleExploreSquareClick : undefined,
+                // squareRenderer takes over a square's background entirely
+                // (react-chessboard only auto-applies squareStyles when it's
+                // absent) — used only while exploring, for the legal-move
+                // dots; the checklist's squareStyles below is what draws
+                // outside exploration instead.
+                squareRenderer: exploring
+                  ? ({ square, children }) => (
+                      <LegalMoveSquare
+                        isSelected={square === selectedSquare}
+                        isLegalMove={legalMoveMap.has(square)}
+                        isCapture={legalMoveMap.get(square) ?? false}
+                      >
+                        {children}
+                      </LegalMoveSquare>
+                    )
+                  : undefined,
+                showAnimations: exploring || isAdjacentStep,
                 animationDurationInMs: BOARD_ANIMATION_DURATION_MS,
                 darkSquareStyle: { backgroundColor: BOARD_DARK_SQUARE },
                 lightSquareStyle: { backgroundColor: BOARD_LIGHT_SQUARE },
@@ -423,21 +639,26 @@ export function BoardView({
                 lightSquareNotationStyle: BOARD_LIGHT_SQUARE_NOTATION_STYLE,
                 alphaNotationStyle: BOARD_NOTATION_SIZE_STYLE,
                 numericNotationStyle: BOARD_NOTATION_SIZE_STYLE,
-                squareStyles: checklistSquareStyles.styles,
-                arrows: boardArrows,
+                squareStyles: exploring ? undefined : checklistSquareStyles.styles,
+                arrows: exploring ? [] : boardArrows,
               }}
             />
           </div>
         </div>
         <p className="text-xs text-zinc-400">
-          {s.board.material} {formatMaterialDiff(materialDiff(positions[ply]))}
-          {evals?.[ply] && (
+          {s.board.material} {formatMaterialDiff(materialDiff(displayFen))}
+          {!exploring && evals?.[ply] && (
             <>
               {' '}
               · {describeEval(evals[ply])} ({formatEval(evals[ply])})
             </>
           )}
         </p>
+        {exploring && explorePath.length > 0 && (
+          <p className="text-xs text-zinc-400">
+            {s.liveAnalysis.yourLine} {explorePath.join(' ')}
+          </p>
+        )}
         {betterMove && (
           // A <div>, not <p> — <dialog> (PlanBoardButton's, opened from
           // here) is block-level and HTML forbids block content inside <p>,
@@ -458,7 +679,19 @@ export function BoardView({
       </div>
 
       <div className="flex w-full flex-col gap-4 lg:max-w-sm lg:flex-1 xl:max-w-md">
-        <MoveList movesSan={movesSan} ply={ply} onSelect={setPly} result={result} />
+        <MoveList
+          movesSan={movesSan}
+          ply={ply}
+          onSelect={(p) => {
+            // Clicking a recorded move while exploring reads as "go back to
+            // the actual game here" — exit exploration rather than leaving
+            // the board showing an explored position next to a move-list
+            // selection that no longer matches it.
+            if (exploring) exitExploring()
+            setPly(p)
+          }}
+          result={result}
+        />
         {sidebarExtra}
       </div>
     </div>

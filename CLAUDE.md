@@ -263,6 +263,40 @@ principal variation) covers that case, rendered as a step-through-able `PlanBoar
 state) instead of plain SAN text — used from both `Board.tsx` and `GameAnalysisPanel.tsx`, so
 react-chessboard's `options.id` must be unique per instance (`useId()`) or it crashes.
 
+### Live analysis and free exploration
+
+A game's page also has a chess.com-analysis-tab-style mode, entirely separate from the batch
+"Analyze" pass above: `LiveAnalysisPanel.tsx` shows the engine's top 3 candidate lines
+(`StockfishEngine.evaluateLines()`, MultiPV) for whatever position is currently on screen,
+re-searching on every change rather than running once and persisting. `ExploreToggleButton`
+(`Board.tsx`) makes the board itself draggable/clickable, branching freely off the current ply —
+reusing `RepertoireBoard`'s click/drag-to-move + `LegalMoveSquare` pattern, minus the
+persistence. Both are ephemeral: nothing about a MultiPV search or an explored branch is ever
+saved, unlike `GameAnalysis`/`repertoire_moves`.
+
+Explore state (`exploring`/`explorePath`/`explorePly`/`explorePositions`/`displayFen`) lives in
+`BoardContext` alongside the recorded game's `ply`, deliberately kept as a _separate_ branch
+rather than extending the `ply` concept — an explored line doesn't belong to the game and can be
+discarded by exiting. `BoardNavControls`' ◀/▶/⏮/⏭ repoint at the explore path while exploring
+(same buttons, not a second nav row); the recorded-game-only Play/auto-advance is disabled in
+that state since there's no engine-flagged blunder to stop on for a free line. Everything tied to
+the _recorded_ ply's saved analysis (the reveal arrow, "better was" text, `EvalBar`) is
+suppressed while exploring rather than trying to reconcile it with an arbitrary explored
+position — `LiveAnalysisPanel` supersedes it there.
+
+`StockfishEngine.evaluateLines()` sets the engine's MultiPV option before every search rather
+than tracking whether it's already at the right value (cheap to resend; never interleaved with
+plain `evaluate()` calls since each caller owns its own engine instance). Its message-parsing is
+split into a pure, Worker-free `parseMultiPvOutput()` — same "pure logic split out for unit
+testing" pattern `parseBestMove`/`parseBestLine` already use, since `evaluateLines()` itself
+needs a real browser Worker and isn't unit-tested (same exemption `evaluate()`/`analyzeGame()`
+already have). `LiveAnalysisPanel` owns one long-lived engine (its own Worker) for as long as
+it's mounted — unlike the batch pool that tears down after one run — and coalesces searches to
+never more than one in flight: the engine and its request queue are created together in a single
+effect (not two effects independently touching a shared ref), so a dev-only React Strict Mode
+remount can't leave a drain loop `await`-ing a promise from an already-terminated Worker, which
+would otherwise never resolve and hang the panel on "Thinking…" forever.
+
 ## Drilling
 
 A drillable position is fully derivable from existing data (`games.moves_san`,
@@ -379,3 +413,13 @@ See README.md for full pm2 setup instructions.
 - **Conventional commits for both commit messages and PR titles** (`feat: …`, `fix: …`,
   `chore: …`, `style: …`), lowercase subject — enforced on commits by commitlint
   (`.husky/commit-msg`), and applied by convention (not enforced by tooling) to PR titles too.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

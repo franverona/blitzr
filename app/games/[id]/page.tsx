@@ -1,8 +1,9 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getGame, getGameAnalysis, listRepertoire } from '../../actions'
-import { BoardNavControls, BoardProvider, BoardView } from '@/components/Board'
+import { BoardNavControls, BoardProvider, BoardView, ExploreToggleButton } from '@/components/Board'
 import { AnalyzeButton, GameAnalysisProvider, GameSummary } from '@/components/GameAnalysisPanel'
+import { LiveAnalysisPanel } from '@/components/LiveAnalysisPanel'
 import { PlayerAvatar } from '@/components/PlayerAvatar'
 import { PositionChecklist } from '@/components/PositionChecklist'
 import { fetchBotAvatar, fetchPlayerAvatar } from '@/lib/chesscom/client'
@@ -63,6 +64,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
         />
         <div className="flex items-center gap-4">
           {game.movesSan && <BoardNavControls />}
+          {game.movesSan && <ExploreToggleButton />}
           {game.movesSan && <AnalyzeButton />}
         </div>
       </div>
@@ -72,6 +74,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
           boardMaxWidthClassName="max-w-160 xl:max-w-172 2xl:max-w-184"
           sidebarExtra={
             <>
+              <LiveAnalysisPanel />
               {diff && (
                 <RepertoireDiff
                   diff={diff}
