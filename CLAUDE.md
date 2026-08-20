@@ -263,6 +263,102 @@ principal variation) covers that case, rendered as a step-through-able `PlanBoar
 state) instead of plain SAN text — used from both `Board.tsx` and `GameAnalysisPanel.tsx`, so
 react-chessboard's `options.id` must be unique per instance (`useId()`) or it crashes.
 
+### Live analysis and free exploration
+
+A game's page also has a chess.com-analysis-tab-style mode, entirely separate from the batch
+"Analyze" pass above: `LiveAnalysisPanel.tsx` shows the engine's top 3 candidate lines
+(`StockfishEngine.evaluateLines()`, MultiPV) for whatever position is currently on screen,
+re-searching on every change rather than running once and persisting. `ExploreToggleButton`
+(`Board.tsx`) makes the board itself draggable/clickable, branching freely off the current ply —
+reusing `RepertoireBoard`'s click/drag-to-move + `LegalMoveSquare` pattern, minus the
+persistence. Both are ephemeral: nothing about a MultiPV search or an explored branch is ever
+saved, unlike `GameAnalysis`/`repertoire_moves`.
+
+Explore state (`exploring`/`explorePath`/`explorePly`/`explorePositions`/`displayFen`) lives in
+`BoardContext` alongside the recorded game's `ply`, deliberately kept as a _separate_ branch
+rather than extending the `ply` concept — an explored line doesn't belong to the game and can be
+discarded by exiting. `explorePath`/`explorePly` are backed by refs (`explorePathRef`/
+`explorePlyRef`), not read straight from the state closure, in `attemptExploreMove()` and
+`playExploreLine()` — same `nodesRef`/`pathRef` pattern `RepertoireBoard` uses and for the same
+reason: two explore moves fired faster than a render would otherwise both compute "the current
+position" from the same pre-update value. `BoardNavControls`' ◀/▶/⏮/⏭ repoint at the explore path
+while exploring (same buttons, not a second nav row); the recorded-game-only Play/auto-advance is
+disabled in that state since there's no engine-flagged blunder to stop on for a free line. The
+_recorded_ ply's saved-analysis reveal arrow and "better was" blunder-coaching text (own-color-
+only, unchanged) are suppressed while exploring — they're tied to a specific recorded ply,
+meaningless for an arbitrary explored position — but the live engine's own read of the board
+(eval bar, best-move arrow, below) is not: it's sourced from whatever `displayFen` actually is,
+so it works in both modes. `BoardView`'s `isAdjacentStep` (only animate a single-step move, not a
+multi-ply jump — see its own comment) tracks `explorePly` while exploring and `ply` otherwise via
+one `navPly` value, rather than only ever tracking `ply`; switching in or out of exploring counts
+as non-adjacent too, since the two numbering spaces aren't comparable.
+
+The engine itself is owned by `LiveAnalysisProvider` (`Board.tsx`, not `LiveAnalysisPanel.tsx` —
+see its own comment for why: it needs `useBoardContext()`, and `BoardView` needs its `lines`, so
+either direction of a cross-file import between the two files would be circular). Its context
+value carries `fen` and `thinking` alongside `lines` — `fen` is which position the _lines_
+actually came from, not whatever `displayFen` happens to be by the time a consumer renders, since
+a search in flight lags navigation by up to its movetime; `thinking` is true whenever a search is
+running or queued (cleared only once its result is the latest one requested), and drives
+`LiveAnalysisPanel`'s corner spinner. `BoardView`'s best-move arrow checks `fen === displayFen`
+before drawing anything from `lines` (a stale arrow pointing at the wrong squares would be worse
+than no arrow), while its eval bar deliberately does **not** — it shows the latest completed
+search's number even if a newer one (for wherever the board has since moved to) hasn't finished
+yet, so the bar doesn't blink out and back in on every single move/step. Between the two eval
+sources, the _saved_ batch analysis wins when one exists and the board isn't exploring (instant
+on load, no waiting on a fresh search); the live line is the fallback for an unanalyzed game, and
+the only source at all while exploring. The best-move arrow has no such preference: the live
+line's arrow always wins over the saved one when both are in play, and — unlike the saved-
+analysis arrow — is drawn for either color's move, not just the user's own; chess.com shows what
+it thinks is best regardless of whose turn it is, and now so does this. `LiveAnalysisPanel`'s own
+line list doesn't need the `fen === displayFen` check the arrow does, since it always renders
+`lines` relative to that same `fen`, so the two never disagree with each other even when both lag
+the board.
+
+Each engine line, and the explore branch's own "your line" strip (below), render chess.com-style
+through a shared `MoveSequence` component rather than a bare space-joined SAN string —
+`formatMoveSequence()` (`lib/san.ts`) attaches a move number and color to each move in a sequence
+starting from an arbitrary FEN (unlike a game's own `movesSan`, always move 1 White — a line can
+start from either color to move), and `MoveSequence` renders each one through `PieceMoveLabel`
+(the same piece-icon-on-a-colored-square component the game's own move list already uses), with
+the move number shown only before White's move (or once, as "N…", if the sequence opens with
+Black) — matching `MoveList`'s "N." vs "N…" convention above. `MoveSequence` lives in its own
+file rather than either `Board.tsx` or `LiveAnalysisPanel.tsx`: an engine line's moves are plain
+text, but the explore branch's own line needs a highlighted `currentIndex` and a clickable
+`onSelectIndex` (jump straight to that point in the branch), and putting either variant in one of
+the two files already importing from each other in one direction would make it circular.
+
+`StockfishEngine.evaluateLines()` sets the engine's MultiPV option before every search rather
+than tracking whether it's already at the right value (cheap to resend; never interleaved with
+plain `evaluate()` calls since each caller owns its own engine instance). Its message-parsing is
+split into a pure, Worker-free `parseMultiPvOutput()` — same "pure logic split out for unit
+testing" pattern `parseBestMove`/`parseBestLine` already use, since `evaluateLines()` itself
+needs a real browser Worker and isn't unit-tested (same exemption `evaluate()`/`analyzeGame()`
+already have). `LiveAnalysisProvider` owns one long-lived engine (its own Worker) for as long as
+it's mounted — unlike the batch pool that tears down after one run — and coalesces searches to
+never more than one in flight: the engine and its request queue are created together in a single
+effect (not two effects independently touching a shared ref), so a dev-only React Strict Mode
+remount can't leave a drain loop `await`-ing a promise from an already-terminated Worker, which
+would otherwise never resolve and hang the panel on "Thinking…" forever.
+
+Each engine line also has a ▶ button, wired to `playExploreLine()` (`BoardContext`) — plays that
+whole line onto the explore branch at once (starting exploring first if not already), replaying
+each move through chess.js so a line that's gone stale (the position moved on since the search
+that produced it) stops at the first move that no longer applies rather than corrupting the
+branch, and returns whether anything actually got applied so `LiveAnalysisPanel` only shows its
+"queued" checkmark feedback on real success. It deliberately leaves `explorePly` where it was
+instead of jumping to the line's end — the point is for the existing ◀/▶ nav to step through it
+one move at a time afterward, watching each move land individually, not to make the user manually
+drag out a multi-move suggestion themselves (which, before this existed, lost its own reference
+partway through: each manual move re-searches and replaces the very line being copied). The
+resulting branch is shown as its own "your line" strip pinned inside the panel, above the
+candidate lines rather than below the board — tied to `explorePath` itself, not to a search
+result, so stepping through it survives the lines below it refreshing around it on every
+navigation. A ✕ button there calls `resetExploreLine()`, which empties the branch and jumps back
+to ply 0 without leaving exploring mode — distinct from the ◀/⏮ nav, which only moves the
+_pointer_ back and leaves the line itself in place to walk into again, and from exiting
+exploration entirely, which would also drop back to the recorded game.
+
 ## Drilling
 
 A drillable position is fully derivable from existing data (`games.moves_san`,
@@ -327,6 +423,12 @@ component's own comments for layout-history and a react-chessboard duplicate-arr
 (arrows are keyed by start/end square only, not color — dedupe before handing the list to
 `Chessboard`).
 
+The sidebar panel itself scans `displayFen` (see "Live analysis and free exploration" below), so
+it follows a free-explored branch, not just the recorded game — the on-board highlight/arrow
+drawing in `BoardView` doesn't (it's tied to the recorded ply's own logic and stays off while
+exploring, by the same reasoning that suppresses the saved-analysis reveal arrow there), so a
+busy explored position gets the sidebar text callout but not the board overlay.
+
 ## Internationalization (i18n)
 
 English and Spanish, chosen once per deployment via `NEXT_PUBLIC_LOCALE`
@@ -379,3 +481,13 @@ See README.md for full pm2 setup instructions.
 - **Conventional commits for both commit messages and PR titles** (`feat: …`, `fix: …`,
   `chore: …`, `style: …`), lowercase subject — enforced on commits by commitlint
   (`.husky/commit-msg`), and applied by convention (not enforced by tooling) to PR titles too.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

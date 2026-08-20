@@ -15,9 +15,14 @@ import { EvalHelp } from './EvalHelp'
 // this column from growing past the board for no reason. `open` defaults
 // to true only when there's actually something to see.
 export function PositionChecklist({ myColor }: { myColor: MyColor }) {
-  const { positions, ply, hiddenFindingKeys, toggleFindingVisibility } = useBoardContext()
+  // `displayFen`, not `positions[ply]` — the latter is only ever the
+  // recorded game's position, so this would keep scanning wherever the
+  // game replay last was instead of following a free-explored branch
+  // (`ExploreToggleButton`, Board.tsx), which is exactly the kind of
+  // "position I'm stuck on" this panel is meant to help with.
+  const { displayFen, hiddenFindingKeys, toggleFindingVisibility } = useBoardContext()
   const s = getStrings()
-  const findings = buildPositionChecklist(positions[ply])
+  const findings = buildPositionChecklist(displayFen)
   const mine = findings.filter((f) => f.side === myColor)
   const opponent = findings.filter((f) => f.side !== myColor)
 
