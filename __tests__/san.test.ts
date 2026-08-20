@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { describeMove, hintPieceName, plyLabel, splitSanPiece } from '@/lib/san'
+import { describeMove, formatMoveSequence, hintPieceName, plyLabel, splitSanPiece } from '@/lib/san'
 
 describe('splitSanPiece', () => {
   it('splits a leading piece letter off piece moves', () => {
@@ -119,5 +119,31 @@ describe('hintPieceName (Spanish)', () => {
     expect(hintPieceName('Nc7', 'es')).toBe('caballo')
     expect(hintPieceName('e4', 'es')).toBe('peón')
     expect(hintPieceName('O-O', 'es')).toBe('enroque')
+  })
+})
+
+describe('formatMoveSequence', () => {
+  it('numbers moves starting from White to move', () => {
+    const fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 5'
+    expect(formatMoveSequence(fen, ['e4', 'e5', 'Nf3'])).toEqual([
+      { moveNumber: 5, color: 'white', san: 'e4' },
+      { moveNumber: 5, color: 'black', san: 'e5' },
+      { moveNumber: 6, color: 'white', san: 'Nf3' },
+    ])
+  })
+
+  it('keeps the same move number for a sequence that opens with Black to move', () => {
+    // After 5. e4 — Black to move, still move 5.
+    const fen = 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 5'
+    expect(formatMoveSequence(fen, ['e5', 'Nf3', 'Nc6'])).toEqual([
+      { moveNumber: 5, color: 'black', san: 'e5' },
+      { moveNumber: 6, color: 'white', san: 'Nf3' },
+      { moveNumber: 6, color: 'black', san: 'Nc6' },
+    ])
+  })
+
+  it('returns an empty array for an empty sequence', () => {
+    const fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+    expect(formatMoveSequence(fen, [])).toEqual([])
   })
 })

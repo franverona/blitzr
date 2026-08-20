@@ -19,6 +19,7 @@ import { getStrings } from '@/lib/i18n/strings'
 import { legalDestinations } from '@/lib/legalMoves'
 import { formatMaterialDiff, materialDiff } from '@/lib/material'
 import { buildPositions } from '@/lib/positions'
+import { StockfishEngine } from '@/lib/stockfish/client'
 import { describeBetterMove } from '@/lib/tactics'
 import {
   BOARD_ANIMATION_DURATION_MS,
@@ -31,7 +32,7 @@ import {
   CHECKLIST_SQUARE_COLOR,
   REVEAL_ARROW_COLOR,
 } from '@/lib/theme'
-import type { PositionEval } from '@/lib/types'
+import type { EngineLine, PositionEval } from '@/lib/types'
 import { EvalBar } from './EvalBar'
 import { LegalMoveSquare } from './LegalMoveSquare'
 import { PieceMoveLabel } from './PieceMoveLabel'
@@ -220,6 +221,99 @@ export function BoardProvider({
       {children}
     </BoardContext.Provider>
   )
+}
+
+interface LiveAnalysisContextValue {
+  /** The engine's top `MULTI_PV` candidate lines for `fen` below — null until
+   *  the first search completes. */
+  lines: EngineLine[] | null
+  /** Which position `lines` was actually computed for. A search in flight
+   *  lags `displayFen` by up to `MOVETIME_MS` plus WASM search time, so a
+   *  consumer that draws something *on the board* (the live best-move arrow,
+   *  the eval bar) needs to check this against `displayFen` itself before
+   *  using `lines` — otherwise a fast navigation could show an arrow for
+   *  wherever the engine was last asked about, not where the board actually
+   *  is now. `LiveAnalysisPanel`'s own line list doesn't need this check: it
+   *  renders `lines` relative to this same `fen`, so the two always agree
+   *  with each other even when both lag the board. */
+  fen: string | null
+}
+
+const LiveAnalysisContext = createContext<LiveAnalysisContextValue | null>(null)
+
+export function useLiveAnalysisContext(): LiveAnalysisContextValue {
+  const ctx = useContext(LiveAnalysisContext)
+  if (!ctx) throw new Error('Must be used within <LiveAnalysisProvider>')
+  return ctx
+}
+
+// Fewer lines and a shorter search than the batch "Analyze" pass
+// (`GameAnalysisPanel`) — this re-searches on every ply/explore step instead
+// of once per game, so it needs to feel responsive rather than exhaustive.
+const LIVE_MULTI_PV = 3
+const LIVE_MOVETIME_MS = 600
+
+/**
+ * Owns the continuous MultiPV engine search behind both `LiveAnalysisPanel`
+ * (the line list) and `BoardView`'s live eval bar / best-move arrow — one
+ * engine instance and search queue shared by both consumers, kept live for
+ * `displayFen` (recorded ply or explored branch) alike. Defined here rather
+ * than in LiveAnalysisPanel.tsx because it needs `useBoardContext()`, and
+ * `BoardView` needs its `lines` — either direction of a cross-file import
+ * between the two would be circular.
+ */
+export function LiveAnalysisProvider({ children }: { children: React.ReactNode }) {
+  const { displayFen } = useBoardContext()
+  const [state, setState] = useState<LiveAnalysisContextValue>({ lines: null, fen: null })
+
+  // Bridges the fen-change effect below into the engine-owning effect's own
+  // request queue, rather than two effects independently reading/writing a
+  // shared ref — a dev-only Strict Mode remount then can't leave a drain
+  // loop `await`-ing a promise from an already-terminated engine instance
+  // (that Worker never emits another message, so the loop would hang
+  // forever instead of picking up the fresh instance). Each mount of the
+  // effect below gets its own engine *and* its own closed-over queue state,
+  // so there's nothing for an old and a new instance to share.
+  const requestRef = useRef<(fen: string) => void>(() => {})
+
+  useEffect(() => {
+    const engine = new StockfishEngine()
+    let cancelled = false
+    // ponytail: never more than one search in flight — if the position
+    // moves on again before the current search resolves, only the latest
+    // requested FEN gets re-run once the engine is free, rather than
+    // queuing every intermediate position or teaching StockfishEngine a
+    // `stop` command just for this.
+    let pendingFen: string | null = null
+    let busy = false
+
+    async function drain() {
+      busy = true
+      while (pendingFen && !cancelled) {
+        const fen = pendingFen
+        pendingFen = null
+        const lines = await engine.evaluateLines(fen, LIVE_MULTI_PV, LIVE_MOVETIME_MS)
+        if (!cancelled && !pendingFen) setState({ lines, fen })
+      }
+      busy = false
+    }
+
+    requestRef.current = (fen) => {
+      pendingFen = fen
+      if (!busy) drain()
+    }
+
+    return () => {
+      cancelled = true
+      engine.terminate()
+    }
+  }, [])
+
+  useEffect(() => {
+    requestRef.current(displayFen)
+  }, [displayFen])
+
+  return <LiveAnalysisContext.Provider value={state}>{children}</LiveAnalysisContext.Provider>
 }
 
 /** Toggles free-move exploration on and off — see `BoardContextValue`'s
@@ -464,6 +558,22 @@ export function BoardView({
     attemptExploreMove,
   } = useBoardContext()
   const s = getStrings()
+  // The live engine's current top line, only once it's actually caught up
+  // with `displayFen` (see `LiveAnalysisContextValue.fen`'s comment) — used
+  // for the eval bar and best-move arrow below, both of which need to agree
+  // with whatever position the board is showing right now rather than
+  // whatever the engine was last asked about.
+  const { lines: liveLines, fen: liveFen } = useLiveAnalysisContext()
+  const liveLine = liveFen === displayFen ? (liveLines?.[0] ?? undefined) : undefined
+  const liveEval: PositionEval | undefined = liveLine
+    ? { cp: liveLine.cp, mate: liveLine.mate, bestMove: null }
+    : undefined
+  // Saved batch analysis wins when it exists and the board is showing the
+  // recorded game (instant on load, no waiting on a fresh search) — the live
+  // line is the fallback for an unanalyzed game, and the *only* source while
+  // exploring, since a saved eval only ever covers the recorded ply, never a
+  // free-explored position.
+  const barEval = exploring ? liveEval : (evals?.[ply] ?? liveEval)
   // react-chessboard needs a unique `id` per instance — without one, two
   // simultaneous boards on the same page (this one plus a PlanBoard showing
   // the suggested move's plan) collide on shared DOM ids internally and
@@ -551,26 +661,41 @@ export function BoardView({
     }
     return { styles, arrows: [...arrowsByKey.values()] }
   }, [positions, ply, hiddenFindingKeys])
-  // Merge with the engine's own suggested-move arrow, deduped the same way —
+  // Merge with the engine's own suggested-move arrows, deduped the same way —
   // react-chessboard keys each arrow by its start/end squares alone (not by
-  // color), so a checklist arrow landing on the exact same two squares as
-  // the reveal arrow would otherwise hand it two arrows sharing one key. The
-  // reveal arrow wins when they collide: it's the primary "what to play
-  // instead" callout, the checklist one is supplementary.
+  // color), so a checklist arrow landing on the exact same two squares as a
+  // reveal arrow would otherwise hand it two arrows sharing one key. Two
+  // different reveal arrows can be in play at once here: `bestMove` (the
+  // *saved* batch analysis's suggestion, own-color-only, tied to the
+  // blunder-coaching "better was" text below) and `liveLine` (the live
+  // engine's current top line, shown for either color, in both replay and
+  // exploring — see `barEval`'s comment above for why the two arrows can
+  // point at different moves when the live search hasn't caught up yet).
+  // The live arrow wins when they collide: it's the freshest read of the
+  // position actually on screen.
   const boardArrows = useMemo(() => {
     const arrows = new Map<string, { startSquare: string; endSquare: string; color: string }>()
-    for (const arrow of checklistSquareStyles.arrows) {
-      arrows.set(`${arrow.startSquare}-${arrow.endSquare}`, arrow)
+    if (!exploring) {
+      for (const arrow of checklistSquareStyles.arrows) {
+        arrows.set(`${arrow.startSquare}-${arrow.endSquare}`, arrow)
+      }
+      if (bestMove) {
+        arrows.set(`${bestMove.from}-${bestMove.to}`, {
+          startSquare: bestMove.from,
+          endSquare: bestMove.to,
+          color: REVEAL_ARROW_COLOR,
+        })
+      }
     }
-    if (bestMove) {
-      arrows.set(`${bestMove.from}-${bestMove.to}`, {
-        startSquare: bestMove.from,
-        endSquare: bestMove.to,
+    if (liveLine) {
+      arrows.set(`${liveLine.move.from}-${liveLine.move.to}`, {
+        startSquare: liveLine.move.from,
+        endSquare: liveLine.move.to,
         color: REVEAL_ARROW_COLOR,
       })
     }
     return [...arrows.values()]
-  }, [checklistSquareStyles.arrows, bestMove])
+  }, [checklistSquareStyles.arrows, bestMove, exploring, liveLine])
   // positions[ply] is 0-indexed (ply plies already played), while
   // whiteToMove() takes the 1-indexed "which move number is this" — ply+1
   // converts between the two conventions.
@@ -603,9 +728,7 @@ export function BoardView({
     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-center">
       <div className={`flex w-full shrink-0 flex-col gap-3 ${boardMaxWidthClassName}`}>
         <div className="flex items-stretch gap-2">
-          {!exploring && evals?.[ply] && (
-            <EvalBar evaluation={evals[ply]} boardOrientation={boardOrientation} />
-          )}
+          {barEval && <EvalBar evaluation={barEval} boardOrientation={boardOrientation} />}
           <div className={`w-full overflow-hidden rounded shadow-lg ${boardMaxWidthClassName}`}>
             <Chessboard
               options={{
@@ -640,17 +763,17 @@ export function BoardView({
                 alphaNotationStyle: BOARD_NOTATION_SIZE_STYLE,
                 numericNotationStyle: BOARD_NOTATION_SIZE_STYLE,
                 squareStyles: exploring ? undefined : checklistSquareStyles.styles,
-                arrows: exploring ? [] : boardArrows,
+                arrows: boardArrows,
               }}
             />
           </div>
         </div>
         <p className="text-xs text-zinc-400">
           {s.board.material} {formatMaterialDiff(materialDiff(displayFen))}
-          {!exploring && evals?.[ply] && (
+          {barEval && (
             <>
               {' '}
-              · {describeEval(evals[ply])} ({formatEval(evals[ply])})
+              · {describeEval(barEval)} ({formatEval(barEval)})
             </>
           )}
         </p>

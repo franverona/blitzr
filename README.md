@@ -202,16 +202,19 @@ actually step through where the plan leads instead of just reading it.
 
 Alongside the batch "Analyze" pass above, a game's page also runs the engine live: an **Engine
 lines** panel next to the board shows the top 3 candidate moves — with eval and a short expected
-continuation for each — for whatever position you're currently looking at, re-searching every
-time you step to a different move. Nothing here is saved; it's a live readout, not a stored
-analysis.
+continuation for each, formatted chess.com-style with a piece icon and move number per move, not
+just bare algebraic text — for whatever position you're currently looking at, re-searching every
+time you step to a different move. An eval bar and an arrow pointing at the engine's current top
+move appear right on the board too, for either side to move, not just your own. Nothing here is
+saved; it's a live readout, not a stored analysis.
 
 **Explore moves** turns the board itself interactive: drag or click a piece to try something
 other than what was actually played, branching off freely from wherever you are in the game. The
-engine lines above keep following along with your own moves, so you can test an idea and
-immediately see how the engine rates it. Nothing about your branch is saved either — the ◀/▶
-buttons step back and forth through it while you're exploring, and clicking any move in the
-game's own move list (or the toggle again) drops it and returns you to the recorded game.
+engine lines, eval bar, and best-move arrow all keep following along with your own moves, so you
+can test an idea and immediately see how the engine rates it. Nothing about your branch is saved
+either — the ◀/▶ buttons step back and forth through it while you're exploring, and clicking any
+move in the game's own move list (or the toggle again) drops it and returns you to the recorded
+game.
 
 ### Reading the evaluation
 

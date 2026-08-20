@@ -1,7 +1,13 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getGame, getGameAnalysis, listRepertoire } from '../../actions'
-import { BoardNavControls, BoardProvider, BoardView, ExploreToggleButton } from '@/components/Board'
+import {
+  BoardNavControls,
+  BoardProvider,
+  BoardView,
+  ExploreToggleButton,
+  LiveAnalysisProvider,
+} from '@/components/Board'
 import { AnalyzeButton, GameAnalysisProvider, GameSummary } from '@/components/GameAnalysisPanel'
 import { LiveAnalysisPanel } from '@/components/LiveAnalysisPanel'
 import { PlayerAvatar } from '@/components/PlayerAvatar'
@@ -121,7 +127,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
         myColor={game.myColor}
         initialAnalysis={analysis}
       >
-        {body}
+        <LiveAnalysisProvider>{body}</LiveAnalysisProvider>
       </GameAnalysisProvider>
     </BoardProvider>
   )

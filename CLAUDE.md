@@ -279,10 +279,36 @@ Explore state (`exploring`/`explorePath`/`explorePly`/`explorePositions`/`displa
 rather than extending the `ply` concept — an explored line doesn't belong to the game and can be
 discarded by exiting. `BoardNavControls`' ◀/▶/⏮/⏭ repoint at the explore path while exploring
 (same buttons, not a second nav row); the recorded-game-only Play/auto-advance is disabled in
-that state since there's no engine-flagged blunder to stop on for a free line. Everything tied to
-the _recorded_ ply's saved analysis (the reveal arrow, "better was" text, `EvalBar`) is
-suppressed while exploring rather than trying to reconcile it with an arbitrary explored
-position — `LiveAnalysisPanel` supersedes it there.
+that state since there's no engine-flagged blunder to stop on for a free line. The _recorded_
+ply's saved-analysis reveal arrow and "better was" blunder-coaching text (own-color-only,
+unchanged) are suppressed while exploring — they're tied to a specific recorded ply, meaningless
+for an arbitrary explored position — but the live engine's own read of the board (eval bar,
+best-move arrow, below) is not: it's sourced from whatever `displayFen` actually is, so it works
+in both modes.
+
+The engine itself is owned by `LiveAnalysisProvider` (`Board.tsx`, not `LiveAnalysisPanel.tsx` —
+see its own comment for why: it needs `useBoardContext()`, and `BoardView` needs its `lines`,
+so either direction of a cross-file import between the two files would be circular). Its context
+value carries `fen` alongside `lines` — which position the _lines_ actually came from, not
+whatever `displayFen` happens to be by the time a consumer renders — since a search in flight
+lags navigation by up to its movetime; `BoardView` checks `fen === displayFen` before drawing
+anything on the board from it (a stale arrow pointing at the wrong position would be worse than
+no arrow), while `LiveAnalysisPanel`'s own line list doesn't need that check since it always
+renders `lines` relative to that same `fen`. `BoardView`'s eval bar prefers the _saved_ batch
+analysis when one exists and the board isn't exploring (instant on load, no waiting on a fresh
+search) and falls back to the live line otherwise — the only source for an unanalyzed game, and
+the only source at all while exploring. The best-move arrow itself has no such preference: the
+live line's arrow always wins over the saved one when both are in play, and — unlike the
+saved-analysis arrow — is drawn for either color's move, not just the user's own; chess.com shows
+what it thinks is best regardless of whose turn it is, and now so does this.
+
+Each engine line renders chess.com-style, not as a bare space-joined SAN string:
+`formatMoveSequence()` (`lib/san.ts`) attaches a move number and color to each move in a
+sequence starting from an arbitrary FEN (unlike a game's own `movesSan`, always move 1 White — a
+line can start from either color to move), and `LiveAnalysisPanel` renders each one through
+`PieceMoveLabel` (the same piece-icon-on-a-colored-square component the game's own move list
+already uses), with the move number shown only before White's move (or once, as "N…", if the
+line opens with Black) — matching `MoveList`'s "N." vs "N…" convention above.
 
 `StockfishEngine.evaluateLines()` sets the engine's MultiPV option before every search rather
 than tracking whether it's already at the right value (cheap to resend; never interleaved with
@@ -290,7 +316,7 @@ plain `evaluate()` calls since each caller owns its own engine instance). Its me
 split into a pure, Worker-free `parseMultiPvOutput()` — same "pure logic split out for unit
 testing" pattern `parseBestMove`/`parseBestLine` already use, since `evaluateLines()` itself
 needs a real browser Worker and isn't unit-tested (same exemption `evaluate()`/`analyzeGame()`
-already have). `LiveAnalysisPanel` owns one long-lived engine (its own Worker) for as long as
+already have). `LiveAnalysisProvider` owns one long-lived engine (its own Worker) for as long as
 it's mounted — unlike the batch pool that tears down after one run — and coalesces searches to
 never more than one in flight: the engine and its request queue are created together in a single
 effect (not two effects independently touching a shared ref), so a dev-only React Strict Mode
