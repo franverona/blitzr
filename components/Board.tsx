@@ -237,6 +237,13 @@ interface LiveAnalysisContextValue {
    *  renders `lines` relative to this same `fen`, so the two always agree
    *  with each other even when both lag the board. */
   fen: string | null
+  /** True whenever `lines`/`fen` don't yet reflect the latest position asked
+   *  for — a search is either running or queued up behind one. Drives
+   *  `LiveAnalysisPanel`'s corner spinner: the panel keeps showing the last
+   *  completed lines while a new search catches up, rather than blanking
+   *  out on every navigation, so this is the only signal that something is
+   *  actually happening in the meantime. */
+  thinking: boolean
 }
 
 const LiveAnalysisContext = createContext<LiveAnalysisContextValue | null>(null)
@@ -264,7 +271,14 @@ const LIVE_MOVETIME_MS = 600
  */
 export function LiveAnalysisProvider({ children }: { children: React.ReactNode }) {
   const { displayFen } = useBoardContext()
-  const [state, setState] = useState<LiveAnalysisContextValue>({ lines: null, fen: null })
+  // `thinking: true` from the start — the effect below fires its first
+  // search essentially immediately on mount, so defaulting to `false` here
+  // would just be a one-frame flash before it flips.
+  const [state, setState] = useState<LiveAnalysisContextValue>({
+    lines: null,
+    fen: null,
+    thinking: true,
+  })
 
   // Bridges the fen-change effect below into the engine-owning effect's own
   // request queue, rather than two effects independently reading/writing a
@@ -293,13 +307,17 @@ export function LiveAnalysisProvider({ children }: { children: React.ReactNode }
         const fen = pendingFen
         pendingFen = null
         const lines = await engine.evaluateLines(fen, LIVE_MULTI_PV, LIVE_MOVETIME_MS)
-        if (!cancelled && !pendingFen) setState({ lines, fen })
+        // Still thinking if a newer request already came in while this
+        // search ran — the loop picks it up next iteration instead of
+        // applying this now-stale result.
+        if (!cancelled && !pendingFen) setState({ lines, fen, thinking: false })
       }
       busy = false
     }
 
     requestRef.current = (fen) => {
       pendingFen = fen
+      setState((prev) => ({ ...prev, thinking: true }))
       if (!busy) drain()
     }
 
@@ -558,15 +576,14 @@ export function BoardView({
     attemptExploreMove,
   } = useBoardContext()
   const s = getStrings()
-  // The live engine's current top line, only once it's actually caught up
-  // with `displayFen` (see `LiveAnalysisContextValue.fen`'s comment) — used
-  // for the eval bar and best-move arrow below, both of which need to agree
-  // with whatever position the board is showing right now rather than
-  // whatever the engine was last asked about.
   const { lines: liveLines, fen: liveFen } = useLiveAnalysisContext()
-  const liveLine = liveFen === displayFen ? (liveLines?.[0] ?? undefined) : undefined
-  const liveEval: PositionEval | undefined = liveLine
-    ? { cp: liveLine.cp, mate: liveLine.mate, bestMove: null }
+  // Eval bar: always the latest completed search's top line, even if a newer
+  // search (for wherever the board has since moved to) hasn't finished yet —
+  // briefly showing the *previous* position's number beats the bar blinking
+  // out and back in on every single move/step, which is what gating this on
+  // `liveFen === displayFen` (like the arrow below) used to do.
+  const liveEval: PositionEval | undefined = liveLines?.[0]
+    ? { cp: liveLines[0].cp, mate: liveLines[0].mate, bestMove: null }
     : undefined
   // Saved batch analysis wins when it exists and the board is showing the
   // recorded game (instant on load, no waiting on a fresh search) — the live
@@ -574,6 +591,11 @@ export function BoardView({
   // exploring, since a saved eval only ever covers the recorded ply, never a
   // free-explored position.
   const barEval = exploring ? liveEval : (evals?.[ply] ?? liveEval)
+  // Best-move arrow: unlike the bar above, a stale arrow would point at the
+  // *wrong squares* on the position now on screen, not just show a slightly
+  // outdated number — worth the (much shorter, same-tick) gap where no live
+  // arrow shows rather than a momentarily wrong one.
+  const liveLine = liveFen === displayFen ? (liveLines?.[0] ?? undefined) : undefined
   // react-chessboard needs a unique `id` per instance — without one, two
   // simultaneous boards on the same page (this one plus a PlanBoard showing
   // the suggested move's plan) collide on shared DOM ids internally and

@@ -18,12 +18,27 @@ import { PieceMoveLabel } from './PieceMoveLabel'
  * `LiveAnalysisProvider` (Board.tsx) — this component is just the list.
  */
 export function LiveAnalysisPanel() {
-  const { lines, fen } = useLiveAnalysisContext()
+  const { lines, fen, thinking } = useLiveAnalysisContext()
   const s = getStrings()
 
   return (
     <div className="flex flex-col gap-1 rounded-md border border-zinc-800 bg-zinc-900/50 text-sm">
-      <p className="px-3 pt-3 text-xs font-semibold text-zinc-500">{s.liveAnalysis.panelTitle}</p>
+      <div className="flex items-center justify-between px-3 pt-3">
+        <p className="text-xs font-semibold text-zinc-500">{s.liveAnalysis.panelTitle}</p>
+        {/* Small, quiet corner spinner rather than replacing the list every
+            time a new search kicks off — stepping to a different move should
+            still show the *previous* position's lines until the new ones are
+            ready, with just this as the "still working on it" signal, not a
+            flash back to an empty/loading panel on every navigation. */}
+        {thinking && (
+          <div
+            role="status"
+            aria-label={s.liveAnalysis.thinking}
+            title={s.liveAnalysis.thinking}
+            className="h-3 w-3 shrink-0 animate-spin rounded-full border-2 border-zinc-700 border-t-zinc-400"
+          />
+        )}
+      </div>
       <div className="flex flex-col divide-y divide-zinc-800">
         {lines === null || fen === null ? (
           <p className="px-3 pb-3 text-zinc-500">{s.liveAnalysis.thinking}</p>
