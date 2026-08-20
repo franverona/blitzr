@@ -336,6 +336,7 @@ const en = {
     thinking: 'Thinking…',
     yourLine: 'Your line:',
     playLine: 'Play this line on the board',
+    lineQueued: 'Queued — step through it with ◀/▶',
   },
   metadata: {
     title: 'Blitzr',
@@ -680,6 +681,7 @@ const es: Strings = {
     thinking: 'Pensando…',
     yourLine: 'Tu línea:',
     playLine: 'Reproducir esta línea en el tablero',
+    lineQueued: 'En cola — recórrela con ◀/▶',
   },
   metadata: {
     title: 'Blitzr',

@@ -627,7 +627,6 @@ export function BoardView({
     setPly,
     hiddenFindingKeys,
     exploring,
-    explorePath,
     displayFen,
     exitExploring,
     attemptExploreMove,
@@ -856,11 +855,6 @@ export function BoardView({
             </>
           )}
         </p>
-        {exploring && explorePath.length > 0 && (
-          <p className="text-xs text-zinc-400">
-            {s.liveAnalysis.yourLine} {explorePath.join(' ')}
-          </p>
-        )}
         {betterMove && (
           // A <div>, not <p> — <dialog> (PlanBoardButton's, opened from
           // here) is block-level and HTML forbids block content inside <p>,
