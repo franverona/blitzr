@@ -216,6 +216,16 @@ either — the ◀/▶ buttons step back and forth through it while you're explo
 move in the game's own move list (or the toggle again) drops it and returns you to the recorded
 game.
 
+Each engine line also has a ▶ button — click it to play that whole suggested line onto the board
+at once, instead of dragging each of its moves out yourself (which used to lose its own point of
+reference partway through, since every move you make re-searches and replaces the very line
+you're trying to follow). It lands you right back where you clicked from rather than jumping to
+the line's end, so the ◀/▶ buttons step through it one move at a time, watching each one land. The
+line stays visible as its own "Your line" strip pinned at the top of the Engine lines panel — not
+tucked below the board, and not something that disappears the moment the candidate lines below it
+refresh for wherever you've stepped to — with a ✕ next to it to clear the branch and jump back to
+exactly where you started exploring, without having to exit and re-enter exploration mode.
+
 ### Reading the evaluation
 
 - **Centipawns (cp)**, shown as e.g. `+1.4` or `-0.8`: material/positional advantage in units of
