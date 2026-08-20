@@ -40,8 +40,13 @@ export function MoveSequence({
   return (
     <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-1 gap-y-1">
       {formatted.map((move, i) => {
+        // zinc-500, not a darker shade — matches MoveList's own move-number
+        // color (Board.tsx) exactly, which stays this same shade regardless
+        // of whether that pair is the active one. A darker gray here reads
+        // fine against the light theme it was picked against but is too low
+        // -contrast against this panel's near-black background.
         const numberLabel = (move.color === 'white' || i === 0) && (
-          <span className="text-zinc-600">
+          <span className="text-zinc-500">
             {move.moveNumber}
             {move.color === 'white' ? '.' : '…'}
           </span>
