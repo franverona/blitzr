@@ -90,6 +90,20 @@ interface BoardContextValue {
    *  playing it truncates any explored moves past the current explore ply,
    *  same "new move overwrites the future" rule a normal board edit implies. */
   attemptExploreMove: (from: string, to: string) => boolean
+  /** Queues a whole SAN sequence (e.g. an engine line's suggested moves)
+   *  onto the explore branch at once, starting exploring first if not
+   *  already — so clicking "play this line" works equally from a normal
+   *  replay ply or mid-exploration. Leaves `explorePly` where it was rather
+   *  than jumping to the line's end: the point is to let the ◀/▶ nav step
+   *  through it one move at a time afterward, watching each move land
+   *  individually, not to just present the final position. Lets a user
+   *  follow a multi-move suggestion this way without manually dragging each
+   *  piece — which, before this existed, lost its own reference partway
+   *  through: each manual move re-searches and replaces the very line being
+   *  copied. Stops at the first move that doesn't apply (e.g. a stale line
+   *  for a position the board has since moved on from) rather than applying
+   *  a partial line from the wrong position. */
+  playExploreLine: (sanMoves: string[]) => void
 }
 
 // The nav controls (⏮◀▶⏭) live in the page header, next to the analysis
@@ -193,6 +207,48 @@ export function BoardProvider({
     [explorePositions, explorePly],
   )
 
+  const playExploreLine = useCallback(
+    (sanMoves: string[]) => {
+      const fromFen = exploring ? explorePositions[explorePly] : positions[ply]
+      if (!fromFen) return
+
+      // Validated as a real replay from the current position rather than
+      // trusted as-is — the line's moves were computed for whatever
+      // position the engine had last finished searching, which callers
+      // guard against being stale (see the field's own comment), but
+      // replaying here is what actually stops a line at the first move
+      // that doesn't apply instead of corrupting the explore path with an
+      // illegal one.
+      const chess = new Chess(fromFen)
+      const validSan: string[] = []
+      for (const san of sanMoves) {
+        let move
+        try {
+          move = chess.move(san)
+        } catch {
+          break
+        }
+        if (!move) break
+        validSan.push(move.san)
+      }
+      if (validSan.length === 0) return
+
+      // Queues the line onto the branch without jumping to its end — the
+      // point is to step through it one move at a time via the ◀/▶ nav
+      // (already explore-path-aware, see `BoardNavControls`), watching each
+      // move land individually, not to land straight on the final position.
+      if (exploring) {
+        setExplorePath((prev) => [...prev.slice(0, explorePly), ...validSan])
+      } else {
+        setExploreBaseFen(positions[ply])
+        setExplorePath(validSan)
+        setExplorePly(0)
+        setExploring(true)
+      }
+    },
+    [exploring, explorePositions, explorePly, positions, ply],
+  )
+
   return (
     <BoardContext.Provider
       value={{
@@ -216,6 +272,7 @@ export function BoardProvider({
         exitExploring,
         setExplorePly,
         attemptExploreMove,
+        playExploreLine,
       }}
     >
       {children}

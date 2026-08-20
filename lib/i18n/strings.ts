@@ -335,6 +335,7 @@ const en = {
     panelTitle: 'Engine lines',
     thinking: 'Thinking…',
     yourLine: 'Your line:',
+    playLine: 'Play this line on the board',
   },
   metadata: {
     title: 'Blitzr',
@@ -678,6 +679,7 @@ const es: Strings = {
     panelTitle: 'Líneas del motor',
     thinking: 'Pensando…',
     yourLine: 'Tu línea:',
+    playLine: 'Reproducir esta línea en el tablero',
   },
   metadata: {
     title: 'Blitzr',

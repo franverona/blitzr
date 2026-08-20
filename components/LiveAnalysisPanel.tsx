@@ -3,7 +3,7 @@
 import { formatEval } from '@/lib/analysis'
 import { getStrings } from '@/lib/i18n/strings'
 import { formatMoveSequence } from '@/lib/san'
-import { useLiveAnalysisContext } from './Board'
+import { useBoardContext, useLiveAnalysisContext } from './Board'
 import { PieceMoveLabel } from './PieceMoveLabel'
 
 /**
@@ -19,6 +19,7 @@ import { PieceMoveLabel } from './PieceMoveLabel'
  */
 export function LiveAnalysisPanel() {
   const { lines, fen, thinking } = useLiveAnalysisContext()
+  const { playExploreLine } = useBoardContext()
   const s = getStrings()
 
   return (
@@ -43,14 +44,35 @@ export function LiveAnalysisPanel() {
         {lines === null || fen === null ? (
           <p className="px-3 pb-3 text-zinc-500">{s.liveAnalysis.thinking}</p>
         ) : (
-          lines.map((line, i) => (
-            <div key={i} className="flex gap-2 px-3 py-2">
-              <span className="w-12 shrink-0 font-mono text-zinc-200 tabular-nums">
-                {formatEval({ cp: line.cp, mate: line.mate, bestMove: null })}
-              </span>
-              <EngineLineMoves fen={fen} moves={[line.move.san, ...line.move.bestLine]} />
-            </div>
-          ))
+          lines.map((line, i) => {
+            const moves = [line.move.san, ...line.move.bestLine]
+            return (
+              <div key={i} className="flex items-center gap-2 px-3 py-2">
+                <span className="w-12 shrink-0 font-mono text-zinc-200 tabular-nums">
+                  {formatEval({ cp: line.cp, mate: line.mate, bestMove: null })}
+                </span>
+                <EngineLineMoves fen={fen} moves={moves} />
+                {/* Plays the whole line onto the board at once (starting
+                    exploring first if not already), rather than making the
+                    user manually replay it move by move — which, before this
+                    existed, lost its own reference partway through: each
+                    manual move re-searches and replaces the very line being
+                    followed. Disabled while `thinking` — see that field's
+                    comment — a stale line played from the wrong position
+                    would corrupt the explore branch rather than just show a
+                    stale number. */}
+                <button
+                  onClick={() => playExploreLine(moves)}
+                  disabled={thinking}
+                  aria-label={s.liveAnalysis.playLine}
+                  title={s.liveAnalysis.playLine}
+                  className="shrink-0 rounded px-1.5 py-0.5 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-200 disabled:opacity-30"
+                >
+                  ▶
+                </button>
+              </div>
+            )
+          })
         )}
       </div>
     </div>
@@ -64,7 +86,7 @@ export function LiveAnalysisPanel() {
 function EngineLineMoves({ fen, moves }: { fen: string; moves: string[] }) {
   const formatted = formatMoveSequence(fen, moves)
   return (
-    <span className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 text-zinc-400">
+    <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-1.5 gap-y-1 text-zinc-400">
       {formatted.map((move, i) => (
         <span key={i} className="inline-flex items-center gap-1">
           {(move.color === 'white' || i === 0) && (
