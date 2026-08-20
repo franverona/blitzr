@@ -329,6 +329,16 @@ const en = {
       show: 'Show on board',
     },
   },
+  liveAnalysis: {
+    explore: '♟ Explore moves',
+    exitExplore: 'Exit exploration',
+    panelTitle: 'Engine lines',
+    thinking: 'Thinking…',
+    yourLine: 'Your line:',
+    playLine: 'Play this line on the board',
+    lineQueued: 'Queued — step through it with ◀/▶',
+    resetLine: 'Clear this line — back to where you started exploring',
+  },
   metadata: {
     title: 'Blitzr',
     description:
@@ -664,6 +674,16 @@ const es: Strings = {
       hide: 'Ocultar en el tablero',
       show: 'Mostrar en el tablero',
     },
+  },
+  liveAnalysis: {
+    explore: '♟ Explorar jugadas',
+    exitExplore: 'Salir de la exploración',
+    panelTitle: 'Líneas del motor',
+    thinking: 'Pensando…',
+    yourLine: 'Tu línea:',
+    playLine: 'Reproducir esta línea en el tablero',
+    lineQueued: 'En cola — recórrela con ◀/▶',
+    resetLine: 'Borrar esta línea — volver a donde empezaste a explorar',
   },
   metadata: {
     title: 'Blitzr',

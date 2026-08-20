@@ -39,6 +39,8 @@ any way that implies endorsement or affiliation.
 - [x] Hand-authored opening and endgame lessons with an interactive board
 - [x] Position checklist — a live tactical scan of whatever position you're viewing
 - [x] Add a game by pasting its PGN — for games Chess.com's public API doesn't expose at all
+- [x] Live multi-line engine analysis + free-move exploration on a game's board
+      (chess.com's analysis-tab experience)
 
 ## Stack
 
@@ -195,6 +197,34 @@ the engine's own expected follow-up is available, it shows up as a "Plan: ..." l
 suggestion, and — since a short move list still asks you to picture the position yourself — as a
 small interactive board underneath it, with its own Start/Previous/Next/End controls so you can
 actually step through where the plan leads instead of just reading it.
+
+### Live analysis and free exploration
+
+Alongside the batch "Analyze" pass above, a game's page also runs the engine live: an **Engine
+lines** panel next to the board shows the top 3 candidate moves — with eval and a short expected
+continuation for each, formatted chess.com-style with a piece icon and move number per move, not
+just bare algebraic text — for whatever position you're currently looking at, re-searching every
+time you step to a different move. An eval bar and an arrow pointing at the engine's current top
+move appear right on the board too, for either side to move, not just your own. Nothing here is
+saved; it's a live readout, not a stored analysis.
+
+**Explore moves** turns the board itself interactive: drag or click a piece to try something
+other than what was actually played, branching off freely from wherever you are in the game. The
+engine lines, eval bar, and best-move arrow all keep following along with your own moves, so you
+can test an idea and immediately see how the engine rates it. Nothing about your branch is saved
+either — the ◀/▶ buttons step back and forth through it while you're exploring, and clicking any
+move in the game's own move list (or the toggle again) drops it and returns you to the recorded
+game.
+
+Each engine line also has a ▶ button — click it to play that whole suggested line onto the board
+at once, instead of dragging each of its moves out yourself (which used to lose its own point of
+reference partway through, since every move you make re-searches and replaces the very line
+you're trying to follow). It lands you right back where you clicked from rather than jumping to
+the line's end, so the ◀/▶ buttons step through it one move at a time, watching each one land. The
+line stays visible as its own "Your line" strip pinned at the top of the Engine lines panel — not
+tucked below the board, and not something that disappears the moment the candidate lines below it
+refresh for wherever you've stepped to — with a ✕ next to it to clear the branch and jump back to
+exactly where you started exploring, without having to exit and re-enter exploration mode.
 
 ### Reading the evaluation
 

@@ -1,5 +1,5 @@
 import { Chess } from 'chess.js'
-import type { BestMove, PositionEval } from '../types'
+import type { BestMove, EngineLine, PositionEval } from '../types'
 
 // The "lite single-threaded" build — no COOP/COEP headers required, unlike
 // the multi-threaded build, and fast enough for on-demand per-game analysis.
@@ -50,6 +50,54 @@ export function parseBestLine(fen: string, pvUci: string[]): string[] {
     }
   }
   return sanMoves
+}
+
+/** Parses a full transcript of `info`/`bestmove` lines from a MultiPV search
+ *  into one `EngineLine` per requested PV slot, sorted 1..N — each `info`
+ *  line for a given `multipv N` updates that slot, last one before
+ *  `bestmove` wins, same rule `evaluate()` applies to its single line. Pure
+ *  and Worker-free, unlike `evaluateLines()` itself, so this (not the
+ *  Worker-driving method) is what's actually unit-tested — same split as
+ *  `parseBestMove`/`parseBestLine` above. */
+export function parseMultiPvOutput(fen: string, uciLines: string[]): EngineLine[] {
+  const whiteToMove = isWhiteToMove(fen)
+  const slots = new Map<number, { cp: number | null; mate: number | null; pv: string[] }>()
+
+  for (const line of uciLines) {
+    const multipvMatch = line.match(/\bmultipv (\d+)\b/)
+    const mateMatch = line.match(/score mate (-?\d+)/)
+    const cpMatch = line.match(/score cp (-?\d+)/)
+    const pvMatch = line.match(/\bpv\b (.+)$/)
+    if (!mateMatch && !cpMatch && !pvMatch) continue
+
+    const idx = multipvMatch ? Number(multipvMatch[1]) : 1
+    const slot = slots.get(idx) ?? { cp: null, mate: null, pv: [] }
+    if (mateMatch) {
+      const mate = Number(mateMatch[1])
+      slot.mate = whiteToMove ? mate : -mate
+      slot.cp = null
+    } else if (cpMatch) {
+      const cp = Number(cpMatch[1])
+      slot.cp = whiteToMove ? cp : -cp
+      slot.mate = null
+    }
+    if (pvMatch) slot.pv = pvMatch[1].trim().split(/\s+/)
+    slots.set(idx, slot)
+  }
+
+  const result: EngineLine[] = []
+  for (const idx of [...slots.keys()].sort((a, b) => a - b)) {
+    const slot = slots.get(idx)!
+    if (slot.pv.length === 0) continue
+    const move = parseBestMove(fen, slot.pv[0])
+    if (!move) continue
+    result.push({
+      cp: slot.cp,
+      mate: slot.mate,
+      move: { ...move, bestLine: parseBestLine(fen, slot.pv).slice(1, 1 + BEST_LINE_PLIES) },
+    })
+  }
+  return result
 }
 
 /**
@@ -127,6 +175,38 @@ export class StockfishEngine {
       }
 
       this.worker.addEventListener('message', onMessage)
+      this.worker.postMessage(`position fen ${fen}`)
+      this.worker.postMessage(`go movetime ${movetimeMs}`)
+    })
+  }
+
+  /**
+   * Like `evaluate()`, but asks for the top `multiPv` candidate lines
+   * instead of just one — the "here are 3 winning variants" view a live
+   * analysis panel needs (`LiveAnalysisPanel.tsx`), vs. `evaluate()`'s
+   * single line, which is all bulk per-game blunder-finding needs. Sets the
+   * engine's MultiPV option before every search rather than tracking
+   * whether it's already at the right value — cheap to resend, and this
+   * method is never interleaved with `evaluate()` calls on the same engine
+   * instance (each caller owns its own `StockfishEngine`), so there's
+   * nothing to leave in a stale state for another caller to trip over.
+   */
+  async evaluateLines(fen: string, multiPv: number, movetimeMs = 500): Promise<EngineLine[]> {
+    await this.readyPromise
+
+    return new Promise((resolve) => {
+      const transcript: string[] = []
+
+      const onMessage = (event: MessageEvent<string>) => {
+        transcript.push(event.data)
+        if (event.data.startsWith('bestmove')) {
+          this.worker.removeEventListener('message', onMessage)
+          resolve(parseMultiPvOutput(fen, transcript))
+        }
+      }
+
+      this.worker.addEventListener('message', onMessage)
+      this.worker.postMessage(`setoption name MultiPV value ${multiPv}`)
       this.worker.postMessage(`position fen ${fen}`)
       this.worker.postMessage(`go movetime ${movetimeMs}`)
     })

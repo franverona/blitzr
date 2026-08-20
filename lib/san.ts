@@ -97,6 +97,33 @@ export function describeMove(fenBefore: string, san: string, locale: Locale = ge
   return description
 }
 
+export interface FormattedMove {
+  moveNumber: number
+  color: 'white' | 'black'
+  san: string
+}
+
+/**
+ * Attaches a move number and color to each SAN move in a sequence, starting
+ * from whatever move number/side-to-move `fen` itself is at — unlike a
+ * game's own `movesSan` (always move 1, White), a sequence like an engine
+ * line's principal variation can start from any position, either color to
+ * move. Drives chess.com-style rendering (`PieceMoveLabel` per move, "N."
+ * only before White's move / "N…" once if the sequence opens with Black).
+ */
+export function formatMoveSequence(fen: string, sanMoves: string[]): FormattedMove[] {
+  const [, sideToMove, , , , fullmove] = fen.split(' ')
+  let moveNumber = Number(fullmove)
+  let color: 'white' | 'black' = sideToMove === 'b' ? 'black' : 'white'
+
+  return sanMoves.map((san) => {
+    const entry: FormattedMove = { moveNumber, color, san }
+    if (color === 'black') moveNumber++
+    color = color === 'white' ? 'black' : 'white'
+    return entry
+  })
+}
+
 /**
  * A low-detail hint of what kind of move a SAN move is, e.g. "knight",
  * "pawn", "castling" — enough to nudge without revealing the square. Reuses
