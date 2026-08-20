@@ -19,8 +19,15 @@ import { MoveSequence } from './MoveSequence'
  */
 export function LiveAnalysisPanel() {
   const { lines, fen, thinking } = useLiveAnalysisContext()
-  const { exploring, explorePath, explorePly, explorePositions, playExploreLine, setExplorePly } =
-    useBoardContext()
+  const {
+    exploring,
+    explorePath,
+    explorePly,
+    explorePositions,
+    playExploreLine,
+    resetExploreLine,
+    setExplorePly,
+  } = useBoardContext()
   const s = getStrings()
 
   // Which line (by index into the *current* `lines` array) was just sent to
@@ -81,6 +88,18 @@ export function LiveAnalysisPanel() {
             currentIndex={explorePly - 1}
             onSelectIndex={(i) => setExplorePly(i + 1)}
           />
+          {/* The ◀/⏮ nav only moves the *pointer* back through this same
+              line, leaving it in place to walk into again — this is the
+              "actually get rid of it" action, back to a clean branch at the
+              position exploring started from, still exploring. */}
+          <button
+            onClick={resetExploreLine}
+            aria-label={s.liveAnalysis.resetLine}
+            title={s.liveAnalysis.resetLine}
+            className="ml-auto shrink-0 rounded px-1.5 py-0.5 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-200"
+          >
+            ✕
+          </button>
         </div>
       )}
       <div className="flex flex-col divide-y divide-zinc-800">

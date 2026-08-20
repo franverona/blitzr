@@ -104,6 +104,14 @@ interface BoardContextValue {
    *  for a position the board has since moved on from) rather than applying
    *  a partial line from the wrong position. */
   playExploreLine: (sanMoves: string[]) => void
+  /** Discards the whole explored branch's moves and jumps back to its start
+   *  (ply 0) without leaving exploring mode — the "actually get rid of this
+   *  line" companion to the ◀/⏮ nav, which only moves the *pointer* back
+   *  and leaves the moves themselves in place, ready to walk forward into
+   *  again. Lets a user who played (or dragged out) a line they don't want
+   *  get back to a clean branch to try something else, without needing to
+   *  exit exploring and re-enter it. */
+  resetExploreLine: () => void
 }
 
 // The nav controls (⏮◀▶⏭) live in the page header, next to the analysis
@@ -249,6 +257,11 @@ export function BoardProvider({
     [exploring, explorePositions, explorePly, positions, ply],
   )
 
+  const resetExploreLine = useCallback(() => {
+    setExplorePath([])
+    setExplorePly(0)
+  }, [])
+
   return (
     <BoardContext.Provider
       value={{
@@ -273,6 +286,7 @@ export function BoardProvider({
         setExplorePly,
         attemptExploreMove,
         playExploreLine,
+        resetExploreLine,
       }}
     >
       {children}
