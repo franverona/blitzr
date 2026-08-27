@@ -83,7 +83,12 @@ export type DbType = 'sqlite'
 export interface GameRepository {
   /** Insert games, ignoring any whose id already exists. Returns the number attempted. */
   upsertGames(games: Game[]): Promise<number>
-  listGames(params?: { limit?: number; offset?: number }): Promise<{ games: Game[]; total: number }>
+  /** `opponent` matches either side's username (substring, case-insensitive). */
+  listGames(params?: {
+    limit?: number
+    offset?: number
+    opponent?: string
+  }): Promise<{ games: Game[]; total: number }>
   /** Unpaginated — used for the openings aggregation, which needs every game. */
   listAllGames(): Promise<Game[]>
   getGame(id: string): Promise<Game | undefined>

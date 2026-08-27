@@ -288,6 +288,8 @@ const en = {
   },
   gamesPage: {
     title: 'Games',
+    searchPlaceholder: 'Search by opponent name…',
+    search: 'Search',
     previous: 'Previous',
     next: 'Next',
     pageOf: (page: number, total: number) => `Page ${page} of ${total}`,
@@ -644,6 +646,8 @@ const es: Strings = {
   },
   gamesPage: {
     title: 'Partidas',
+    searchPlaceholder: 'Buscar por nombre del rival…',
+    search: 'Buscar',
     previous: 'Anterior',
     next: 'Siguiente',
     pageOf: (page: number, total: number) => `Página ${page} de ${total}`,

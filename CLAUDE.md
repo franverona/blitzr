@@ -39,6 +39,7 @@ app/
   blunders/page.tsx              # cross-game blunder aggregate
 components/
   GameList.tsx / GameRow.tsx  # games table
+  GameSearchForm.tsx            # opponent-name filter above the games list
   Board.tsx                    # read-only replay board (BoardProvider/BoardNavControls/BoardView)
   EvalBar.tsx                   # eval fill bar next to the board
   RepertoireBoard.tsx            # editable board that builds the repertoire tree

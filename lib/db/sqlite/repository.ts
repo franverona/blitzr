@@ -1,4 +1,4 @@
-import { Kysely } from 'kysely'
+import { Kysely, type ExpressionBuilder } from 'kysely'
 import type {
   DbSchema,
   DrillCardsTable,
@@ -148,24 +148,28 @@ export class SqliteGameRepository implements GameRepository {
   }
 
   async listGames(
-    params: { limit?: number; offset?: number } = {},
+    params: { limit?: number; offset?: number; opponent?: string } = {},
   ): Promise<{ games: Game[]; total: number }> {
     const db = await this.ready()
     const limit = params.limit ?? 50
     const offset = params.offset ?? 0
+    const opponent = params.opponent?.trim()
+    const opponentFilter = (eb: ExpressionBuilder<DbSchema, 'games'>) =>
+      eb.or([
+        eb('white_username', 'like', `%${opponent}%`),
+        eb('black_username', 'like', `%${opponent}%`),
+      ])
+
+    let rowsQuery = db.selectFrom('games').selectAll()
+    let countQuery = db.selectFrom('games').select(({ fn }) => fn.countAll<number>().as('count'))
+    if (opponent) {
+      rowsQuery = rowsQuery.where(opponentFilter)
+      countQuery = countQuery.where(opponentFilter)
+    }
 
     const [rows, countRow] = await Promise.all([
-      db
-        .selectFrom('games')
-        .selectAll()
-        .orderBy('end_time', 'desc')
-        .limit(limit)
-        .offset(offset)
-        .execute(),
-      db
-        .selectFrom('games')
-        .select(({ fn }) => fn.countAll<number>().as('count'))
-        .executeTakeFirstOrThrow(),
+      rowsQuery.orderBy('end_time', 'desc').limit(limit).offset(offset).execute(),
+      countQuery.executeTakeFirstOrThrow(),
     ])
 
     return { games: rows.map(rowToGame), total: Number(countRow.count) }
