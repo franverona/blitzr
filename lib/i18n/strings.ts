@@ -181,6 +181,7 @@ const en = {
       `${n} of your ${n === 1 ? 'blunder' : 'blunders'} found. Biggest:`,
     biggestMoment: (isBlunder: boolean) =>
       `Biggest moment: you ${isBlunder ? 'blundered' : 'made a mistake'} on`,
+    moveQualityLink: 'Move quality',
     accuracy: 'Accuracy',
     you: 'You',
     opponent: 'Opponent',
@@ -534,6 +535,7 @@ const es: Strings = {
       `${n} ${n === 1 ? 'error tuyo encontrado' : 'errores tuyos encontrados'}. El peor:`,
     biggestMoment: (isBlunder: boolean) =>
       `Momento clave: cometiste ${isBlunder ? 'un error grave' : 'un error'} en`,
+    moveQualityLink: 'Calidad de jugadas',
     accuracy: 'Precisión',
     you: 'Tú',
     opponent: 'Rival',

@@ -270,11 +270,12 @@ react-chessboard's `options.id` must be unique per instance (`useId()`) or it cr
 "blunder" cutoff is deliberately the same `BLUNDER_THRESHOLD_CP` `findBlunders()` uses, so the
 two never disagree about what counts as a blunder. `summarizeMoveQuality()` also scores each
 move's accuracy from its win% drop (`evalBarPercent()`'s own logistic curve, the same one the
-eval bar renders), using the standard Lichess accuracy formula, averaged per side. Rendered as
-`MoveQualityTable` in `GameAnalysisPanel.tsx`'s results dialog, labeled "You"/"Opponent" rather
-than by username — this app only ever has one user. Deliberately doesn't attempt Chess.com's
-Brilliant/Great/Book/Miss tiers (need sacrifice/opening-book detection this app doesn't have) or
-its "Game Score" number (not a documented formula).
+eval bar renders), using the standard Lichess accuracy formula, averaged per side. `MoveQualityLink`
+(`GameAnalysisPanel.tsx`) renders as a link below the move list, opening its own small dialog with
+the table — a separate trigger from `AnalyzeButton`'s blunder-by-blunder dialog, not a duplicate of
+it — labeled "You"/"Opponent" rather than by username since this app only ever has one user.
+Deliberately doesn't attempt Chess.com's Brilliant/Great/Book/Miss tiers (need sacrifice/opening-
+book detection this app doesn't have) or its "Game Score" number (not a documented formula).
 
 ### Live analysis and free exploration
 

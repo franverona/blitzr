@@ -8,7 +8,12 @@ import {
   ExploreToggleButton,
   LiveAnalysisProvider,
 } from '@/components/Board'
-import { AnalyzeButton, GameAnalysisProvider, GameSummary } from '@/components/GameAnalysisPanel'
+import {
+  AnalyzeButton,
+  GameAnalysisProvider,
+  GameSummary,
+  MoveQualityLink,
+} from '@/components/GameAnalysisPanel'
 import { LiveAnalysisPanel } from '@/components/LiveAnalysisPanel'
 import { PlayerAvatar } from '@/components/PlayerAvatar'
 import { PositionChecklist } from '@/components/PositionChecklist'
@@ -80,6 +85,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
           boardMaxWidthClassName="max-w-160 xl:max-w-172 2xl:max-w-184"
           sidebarExtra={
             <>
+              <MoveQualityLink />
               <LiveAnalysisPanel />
               {diff && (
                 <RepertoireDiff
