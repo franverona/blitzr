@@ -164,7 +164,7 @@ as it goes. Each game's result is saved as soon as that game finishes, so closin
 partway through (or clicking Cancel) doesn't lose what's already done — running it again later
 just picks up wherever it left off.
 
-Every game's header also links out to the opening's Chess.com page ("Learn more about this
+Every game's page also links out to the opening's Chess.com page ("Learn more about this
 opening"), and once a game's analyzed, a one-line "Biggest moment" summary and a running
 material count (a plain piece-value tally — no engine needed, works even before you've
 analyzed) show up alongside the board. Blunder lists spell moves out in plain English too

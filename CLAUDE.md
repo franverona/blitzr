@@ -123,6 +123,11 @@ file, not here — this section is only cross-cutting rules that span multiple f
   otherwise) and its board column needs the same `boardMaxWidthClassName` cap as the board
   itself — without that cap, long suggestion text can widen the column and shift the whole row
   sideways between plies.
+- **A long, unbreakable text line (an opening name, etc.) needs its own full-width row** — sharing
+  a flex row with fixed-content siblings (nav buttons, badges) starves them of space and forces an
+  overflow instead of a wrap. `app/games/[id]/page.tsx`'s `OpeningLine` was pulled out of
+  `GameHeader` (which shares its row with the board's nav/explore/analyze buttons) for exactly this
+  reason — a long opening name there broke that row at moderate viewport widths.
 - **Server Actions** for all DB reads/writes and the sync/analysis triggers — no API routes.
 - **Domain types are camelCase** (`lib/types.ts`); **DB columns are snake_case**
   (`lib/db/types.ts`). Each repository implementation maps between them explicitly — never leak
