@@ -65,7 +65,7 @@ current month.
 
 The games list explains chess jargon as you hover it — the time class column (bullet/blitz/rapid/
 daily) tells you what each one means in minutes-per-player, the same way ECO codes and repertoire
-terms are explained elsewhere in the app.
+terms are explained elsewhere in the app. A search box above the list filters by opponent name.
 
 SQLite is created automatically at `./data/blitzr.db` on first run — no config needed beyond
 your username. To reset, delete the file and re-sync.

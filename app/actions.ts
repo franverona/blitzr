@@ -37,7 +37,7 @@ import type {
 } from '@/lib/types'
 
 export async function listGames(
-  params: { limit?: number; offset?: number } = {},
+  params: { limit?: number; offset?: number; opponent?: string } = {},
 ): Promise<{ games: Game[]; total: number }> {
   return getRepository().listGames(params)
 }

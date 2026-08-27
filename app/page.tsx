@@ -3,6 +3,7 @@ import { listAnalyzedGameIds, listGames } from './actions'
 import { AddPgnButton } from '@/components/AddPgnButton'
 import { BulkAnalyzeButton } from '@/components/BulkAnalyzeButton'
 import { GameList } from '@/components/GameList'
+import { GameSearchForm } from '@/components/GameSearchForm'
 import { SyncButton } from '@/components/SyncButton'
 import { getStrings } from '@/lib/i18n/strings'
 
@@ -11,12 +12,13 @@ const PAGE_SIZE = 50
 export default async function GamesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string }>
+  searchParams: Promise<{ page?: string; q?: string }>
 }) {
-  const { page: pageParam } = await searchParams
+  const { page: pageParam, q } = await searchParams
   const page = Math.max(1, Number(pageParam) || 1)
+  const opponent = q?.trim() || undefined
   const [{ games, total }, analyzedGameIds] = await Promise.all([
-    listGames({ limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE }),
+    listGames({ limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE, opponent }),
     listAnalyzedGameIds(),
   ])
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
@@ -33,17 +35,19 @@ export default async function GamesPage({
         </div>
       </div>
 
+      <GameSearchForm key={q ?? ''} defaultValue={q ?? ''} />
+
       <GameList games={games} analyzedGameIds={analyzedGameIds} />
 
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-4 text-sm">
-          <PageLink page={page - 1} disabled={page <= 1}>
+          <PageLink page={page - 1} q={q} disabled={page <= 1}>
             {s.gamesPage.previous}
           </PageLink>
           <span className="text-zinc-500 dark:text-zinc-400">
             {s.gamesPage.pageOf(page, totalPages)}
           </span>
-          <PageLink page={page + 1} disabled={page >= totalPages}>
+          <PageLink page={page + 1} q={q} disabled={page >= totalPages}>
             {s.gamesPage.next}
           </PageLink>
         </div>
@@ -54,18 +58,22 @@ export default async function GamesPage({
 
 function PageLink({
   page,
+  q,
   disabled,
   children,
 }: {
   page: number
+  q?: string
   disabled: boolean
   children: React.ReactNode
 }) {
   if (disabled) {
     return <span className="text-zinc-300 dark:text-zinc-700">{children}</span>
   }
+  const params = new URLSearchParams({ page: String(page) })
+  if (q) params.set('q', q)
   return (
-    <Link href={`/?page=${page}`} className="hover:underline">
+    <Link href={`/?${params}`} className="hover:underline">
       {children}
     </Link>
   )
