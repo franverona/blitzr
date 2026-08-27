@@ -3,6 +3,7 @@ import { listAnalyzedGameIds, listGames } from './actions'
 import { AddPgnButton } from '@/components/AddPgnButton'
 import { BulkAnalyzeButton } from '@/components/BulkAnalyzeButton'
 import { GameList } from '@/components/GameList'
+import { GameSearchForm } from '@/components/GameSearchForm'
 import { SyncButton } from '@/components/SyncButton'
 import { getStrings } from '@/lib/i18n/strings'
 
@@ -34,21 +35,7 @@ export default async function GamesPage({
         </div>
       </div>
 
-      <form className="flex items-center gap-2">
-        <input
-          type="search"
-          name="q"
-          defaultValue={q ?? ''}
-          placeholder={s.gamesPage.searchPlaceholder}
-          className="w-full max-w-xs rounded-md border border-zinc-300 px-3 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900"
-        />
-        <button
-          type="submit"
-          className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
-        >
-          {s.gamesPage.search}
-        </button>
-      </form>
+      <GameSearchForm key={q ?? ''} defaultValue={q ?? ''} />
 
       <GameList games={games} analyzedGameIds={analyzedGameIds} />
 
