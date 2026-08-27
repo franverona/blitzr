@@ -12,6 +12,7 @@ import {
 } from '@/lib/analysis'
 import { whiteToMove } from '@/lib/drill'
 import { getStrings } from '@/lib/i18n/strings'
+import { MOVE_QUALITY_TIERS, summarizeMoveQuality } from '@/lib/moveQuality'
 import { buildPositions } from '@/lib/positions'
 import { describeMove, plyLabel } from '@/lib/san'
 import { analyzeGame } from '@/lib/stockfish/analyze'
@@ -159,6 +160,50 @@ export function GameSummary() {
   )
 }
 
+/** Chess.com-style accuracy + move-quality tally, "You" vs "Opponent" (this
+ *  app only ever has one user, so naming the columns by side rather than by
+ *  username keeps it simple — see CLAUDE.md's "single-user" scope). Skips
+ *  Chess.com's Brilliant/Great/Book/Miss tiers (need sacrifice/opening-book
+ *  detection this app doesn't have) and its "Game Score" row (not a
+ *  documented formula, not worth faking a number for). */
+function MoveQualityTable() {
+  const { analysis, movesSan, myColor } = useAnalysisContext()
+  const s = getStrings()
+  if (!analysis) return null
+
+  const summary = summarizeMoveQuality(analysis.evals, movesSan)
+  const mine = myColor === 'white' ? summary.white : summary.black
+  const theirs = myColor === 'white' ? summary.black : summary.white
+
+  return (
+    <div className="overflow-x-auto rounded-lg border border-zinc-800">
+      <table className="w-full text-sm">
+        <thead className="bg-zinc-950 text-left text-xs tracking-wide text-zinc-500 uppercase">
+          <tr>
+            <th className="px-3 py-2"></th>
+            <th className="px-3 py-2 text-right">{s.analysisPanel.you}</th>
+            <th className="px-3 py-2 text-right">{s.analysisPanel.opponent}</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-zinc-800">
+          <tr className="font-medium">
+            <td className="px-3 py-2">{s.analysisPanel.accuracy}</td>
+            <td className="px-3 py-2 text-right">{mine.accuracy}</td>
+            <td className="px-3 py-2 text-right">{theirs.accuracy}</td>
+          </tr>
+          {MOVE_QUALITY_TIERS.map((tier) => (
+            <tr key={tier} className="text-zinc-400">
+              <td className="px-3 py-2">{s.analysisPanel.moveQuality[tier]}</td>
+              <td className="px-3 py-2 text-right">{mine.counts[tier]}</td>
+              <td className="px-3 py-2 text-right">{theirs.counts[tier]}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
 function AnalysisDialog({ dialogRef }: { dialogRef: React.RefObject<HTMLDialogElement | null> }) {
   const { analysis, movesSan, myColor, positions } = useAnalysisContext()
   const s = getStrings()
@@ -189,6 +234,8 @@ function AnalysisDialog({ dialogRef }: { dialogRef: React.RefObject<HTMLDialogEl
             ✕
           </button>
         </div>
+
+        <MoveQualityTable />
 
         {blunders.length === 0 ? (
           <p className="text-sm text-emerald-600 dark:text-emerald-400">

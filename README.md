@@ -191,6 +191,10 @@ suggestion. A game's page opens on the first move already played rather than the
 blunder rather than requiring you to step through every quiet move to find one — until it reaches
 the end, or you pause it yourself. `0` jumps back to the start.
 
+The analysis dialog also shows a Chess.com-style accuracy table — one accuracy score (0-100) and
+a tally of Best/Excellent/Good/Inaccuracy/Mistake/Blunder moves, for you and your opponent — built
+entirely from the same saved analysis, no extra engine work needed.
+
 Not every good move pays off immediately — sometimes the point only becomes clear a few moves
 later, which is hard to judge from notation alone if you can't calculate that far ahead yet. When
 the engine's own expected follow-up is available, it shows up as a "Plan: ..." line next to the

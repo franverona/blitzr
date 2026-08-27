@@ -181,6 +181,17 @@ const en = {
       `${n} of your ${n === 1 ? 'blunder' : 'blunders'} found. Biggest:`,
     biggestMoment: (isBlunder: boolean) =>
       `Biggest moment: you ${isBlunder ? 'blundered' : 'made a mistake'} on`,
+    accuracy: 'Accuracy',
+    you: 'You',
+    opponent: 'Opponent',
+    moveQuality: {
+      best: 'Best',
+      excellent: 'Excellent',
+      good: 'Good',
+      inaccuracy: 'Inaccuracy',
+      mistake: 'Mistake',
+      blunder: 'Blunder',
+    },
   },
   bulkAnalyze: {
     button: 'Analyze all',
@@ -523,6 +534,17 @@ const es: Strings = {
       `${n} ${n === 1 ? 'error tuyo encontrado' : 'errores tuyos encontrados'}. El peor:`,
     biggestMoment: (isBlunder: boolean) =>
       `Momento clave: cometiste ${isBlunder ? 'un error grave' : 'un error'} en`,
+    accuracy: 'Precisión',
+    you: 'Tú',
+    opponent: 'Rival',
+    moveQuality: {
+      best: 'Mejor',
+      excellent: 'Excelente',
+      good: 'Buena',
+      inaccuracy: 'Imprecisión',
+      mistake: 'Error',
+      blunder: 'Error grave',
+    },
   },
   bulkAnalyze: {
     button: 'Analizar todas',

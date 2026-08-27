@@ -263,6 +263,19 @@ principal variation) covers that case, rendered as a step-through-able `PlanBoar
 state) instead of plain SAN text — used from both `Board.tsx` and `GameAnalysisPanel.tsx`, so
 react-chessboard's `options.id` must be unique per instance (`useId()`) or it crashes.
 
+`lib/moveQuality.ts` builds a Chess.com-style per-game review from the same saved
+`GameAnalysis.evals` — no extra engine work. `classifyMoveQuality()` buckets each move's
+`moveSwingCp()` (the swing calc `findBlunders()` already used, now exported from
+`lib/analysis.ts` so both can share it) into best/excellent/good/inaccuracy/mistake/blunder; its
+"blunder" cutoff is deliberately the same `BLUNDER_THRESHOLD_CP` `findBlunders()` uses, so the
+two never disagree about what counts as a blunder. `summarizeMoveQuality()` also scores each
+move's accuracy from its win% drop (`evalBarPercent()`'s own logistic curve, the same one the
+eval bar renders), using the standard Lichess accuracy formula, averaged per side. Rendered as
+`MoveQualityTable` in `GameAnalysisPanel.tsx`'s results dialog, labeled "You"/"Opponent" rather
+than by username — this app only ever has one user. Deliberately doesn't attempt Chess.com's
+Brilliant/Great/Book/Miss tiers (need sacrifice/opening-book detection this app doesn't have) or
+its "Game Score" number (not a documented formula).
+
 ### Live analysis and free exploration
 
 A game's page also has a chess.com-analysis-tab-style mode, entirely separate from the batch
