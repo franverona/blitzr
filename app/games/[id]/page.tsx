@@ -73,7 +73,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
           whiteAvatar={whiteAvatar}
           blackAvatar={blackAvatar}
         />
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center justify-end gap-4">
           {game.movesSan && <BoardNavControls />}
           {game.movesSan && <ExploreToggleButton />}
           {game.movesSan && <AnalyzeButton />}

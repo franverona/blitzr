@@ -127,7 +127,11 @@ file, not here — this section is only cross-cutting rules that span multiple f
   a flex row with fixed-content siblings (nav buttons, badges) starves them of space and forces an
   overflow instead of a wrap. `app/games/[id]/page.tsx`'s `OpeningLine` was pulled out of
   `GameHeader` (which shares its row with the board's nav/explore/analyze buttons) for exactly this
-  reason — a long opening name there broke that row at moderate viewport widths.
+  reason — a long opening name there broke that row at moderate viewport widths. That button row
+  itself also needs `flex-wrap` (`justify-end` so a wrapped second line still hugs the right edge)
+  — three variable-width controls (nav cluster, explore toggle, analyze button, the last two
+  Spanish-locale-dependent) in a non-wrapping row overflow well before mobile width; without it,
+  a button's own text wraps mid-label instead of the row wrapping between buttons.
 - **Server Actions** for all DB reads/writes and the sync/analysis triggers — no API routes.
 - **Domain types are camelCase** (`lib/types.ts`); **DB columns are snake_case**
   (`lib/db/types.ts`). Each repository implementation maps between them explicitly — never leak
