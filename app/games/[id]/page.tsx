@@ -8,7 +8,12 @@ import {
   ExploreToggleButton,
   LiveAnalysisProvider,
 } from '@/components/Board'
-import { AnalyzeButton, GameAnalysisProvider, GameSummary } from '@/components/GameAnalysisPanel'
+import {
+  AnalyzeButton,
+  GameAnalysisProvider,
+  GameSummary,
+  MoveQualityLink,
+} from '@/components/GameAnalysisPanel'
 import { LiveAnalysisPanel } from '@/components/LiveAnalysisPanel'
 import { PlayerAvatar } from '@/components/PlayerAvatar'
 import { PositionChecklist } from '@/components/PositionChecklist'
@@ -68,18 +73,21 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
           whiteAvatar={whiteAvatar}
           blackAvatar={blackAvatar}
         />
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center justify-end gap-4">
           {game.movesSan && <BoardNavControls />}
           {game.movesSan && <ExploreToggleButton />}
           {game.movesSan && <AnalyzeButton />}
         </div>
       </div>
 
+      <OpeningLine game={game} />
+
       {game.movesSan ? (
         <BoardView
           boardMaxWidthClassName="max-w-160 xl:max-w-172 2xl:max-w-184"
           sidebarExtra={
             <>
+              <MoveQualityLink />
               <LiveAnalysisPanel />
               {diff && (
                 <RepertoireDiff
@@ -133,6 +141,37 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
   )
 }
 
+/** The opening name/ECO code/"Learn more" link, on its own full-width row
+ *  below the header — not squeezed into `GameHeader`'s column, which shares
+ *  its row with the nav/explore/analyze buttons and has limited width to
+ *  work with. A long opening name (e.g. "Scandinavian Defense Blackburne
+ *  Kloosterboer Gambit: 3.dxc6") forced that row to overflow rather than
+ *  wrap when it lived there — full page width gives it room to wrap on its
+ *  own instead. */
+function OpeningLine({ game }: { game: Game }) {
+  const s = getStrings()
+  if (!game.ecoName) return null
+  return (
+    <p className="text-xs text-zinc-500 dark:text-zinc-400">
+      {game.ecoName} (
+      {game.ecoCode ? <abbr title={s.gamePage.ecoTooltip}>{game.ecoCode}</abbr> : s.gamePage.noEco})
+      {game.ecoUrl && (
+        <>
+          {' · '}
+          <a
+            href={game.ecoUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:underline dark:text-blue-400"
+          >
+            {s.gamePage.learnMoreAboutOpening}
+          </a>
+        </>
+      )}
+    </p>
+  )
+}
+
 function GameHeader({
   game,
   isBotGame,
@@ -160,30 +199,6 @@ function GameHeader({
         {formatDateTime(game.endTime)} · {timeClassLabel} ·{' '}
         {s.gamePage.playing(s.common.color[game.myColor])} · {s.common.result[game.myResult]}
       </p>
-      {game.ecoName && (
-        <p className="text-xs text-zinc-500 dark:text-zinc-400">
-          {game.ecoName} (
-          {game.ecoCode ? (
-            <abbr title={s.gamePage.ecoTooltip}>{game.ecoCode}</abbr>
-          ) : (
-            s.gamePage.noEco
-          )}
-          )
-          {game.ecoUrl && (
-            <>
-              {' · '}
-              <a
-                href={game.ecoUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:underline dark:text-blue-400"
-              >
-                {s.gamePage.learnMoreAboutOpening}
-              </a>
-            </>
-          )}
-        </p>
-      )}
       {!isBotGame && game.url && (
         <a
           href={game.url}

@@ -164,7 +164,7 @@ as it goes. Each game's result is saved as soon as that game finishes, so closin
 partway through (or clicking Cancel) doesn't lose what's already done — running it again later
 just picks up wherever it left off.
 
-Every game's header also links out to the opening's Chess.com page ("Learn more about this
+Every game's page also links out to the opening's Chess.com page ("Learn more about this
 opening"), and once a game's analyzed, a one-line "Biggest moment" summary and a running
 material count (a plain piece-value tally — no engine needed, works even before you've
 analyzed) show up alongside the board. Blunder lists spell moves out in plain English too
@@ -190,6 +190,10 @@ suggestion. A game's page opens on the first move already played rather than the
 **Play** button (or the Space key) auto-advances through the game — pausing automatically on a
 blunder rather than requiring you to step through every quiet move to find one — until it reaches
 the end, or you pause it yourself. `0` jumps back to the start.
+
+A **Move quality** link below the move list opens a Chess.com-style accuracy table — one accuracy
+score (0-100) and a tally of Best/Excellent/Good/Inaccuracy/Mistake/Blunder moves, for you and your
+opponent — built entirely from the same saved analysis, no extra engine work needed.
 
 Not every good move pays off immediately — sometimes the point only becomes clear a few moves
 later, which is hard to judge from notation alone if you can't calculate that far ahead yet. When

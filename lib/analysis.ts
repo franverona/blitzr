@@ -5,7 +5,7 @@ import type { Blunder, PositionEval } from './types'
 // A swing at or above this size (in centipawns, from the mover's own
 // perspective) counts as a blunder. Mate-losing swings always qualify — see
 // evalToCp below.
-const BLUNDER_THRESHOLD_CP = 200
+export const BLUNDER_THRESHOLD_CP = 200
 
 export type BlunderSeverity = 'mistake' | 'blunder'
 
@@ -27,6 +27,25 @@ function evalToCp(evaluation: PositionEval): number {
 }
 
 /**
+ * How much worse the position got for the side that just moved, in
+ * centipawns, comparing the position before and after their move (mate
+ * scores folded in via evalToCp). Positive means the move cost them;
+ * negative or zero means it held or improved their position. Shared by
+ * findBlunders() (which only cares once this crosses BLUNDER_THRESHOLD_CP)
+ * and lib/moveQuality.ts's finer-grained per-move tiering (which needs the
+ * exact number for every move, not just the ones that cross that line).
+ */
+export function moveSwingCp(
+  before: PositionEval,
+  after: PositionEval,
+  whiteToMove: boolean,
+): number {
+  const moverBefore = whiteToMove ? evalToCp(before) : -evalToCp(before)
+  const moverAfter = whiteToMove ? evalToCp(after) : -evalToCp(after)
+  return moverBefore - moverAfter
+}
+
+/**
  * Walks a game's per-position evals (White's perspective, same indexing as
  * the positions array — evals[i] is before movesSan[i], evals[i+1] after)
  * and flags every move where the player who just moved made their own
@@ -40,10 +59,7 @@ export function findBlunders(evals: PositionEval[], movesSan: string[]): Blunder
     const after = evals[i + 1]
     if (!before || !after) continue
 
-    const whiteToMove = i % 2 === 0
-    const moverBefore = whiteToMove ? evalToCp(before) : -evalToCp(before)
-    const moverAfter = whiteToMove ? evalToCp(after) : -evalToCp(after)
-    const swingCp = moverBefore - moverAfter
+    const swingCp = moveSwingCp(before, after, i % 2 === 0)
 
     if (swingCp >= BLUNDER_THRESHOLD_CP) {
       blunders.push({

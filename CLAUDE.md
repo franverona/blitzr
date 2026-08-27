@@ -123,6 +123,15 @@ file, not here — this section is only cross-cutting rules that span multiple f
   otherwise) and its board column needs the same `boardMaxWidthClassName` cap as the board
   itself — without that cap, long suggestion text can widen the column and shift the whole row
   sideways between plies.
+- **A long, unbreakable text line (an opening name, etc.) needs its own full-width row** — sharing
+  a flex row with fixed-content siblings (nav buttons, badges) starves them of space and forces an
+  overflow instead of a wrap. `app/games/[id]/page.tsx`'s `OpeningLine` was pulled out of
+  `GameHeader` (which shares its row with the board's nav/explore/analyze buttons) for exactly this
+  reason — a long opening name there broke that row at moderate viewport widths. That button row
+  itself also needs `flex-wrap` (`justify-end` so a wrapped second line still hugs the right edge)
+  — three variable-width controls (nav cluster, explore toggle, analyze button, the last two
+  Spanish-locale-dependent) in a non-wrapping row overflow well before mobile width; without it,
+  a button's own text wraps mid-label instead of the row wrapping between buttons.
 - **Server Actions** for all DB reads/writes and the sync/analysis triggers — no API routes.
 - **Domain types are camelCase** (`lib/types.ts`); **DB columns are snake_case**
   (`lib/db/types.ts`). Each repository implementation maps between them explicitly — never leak
@@ -262,6 +271,20 @@ Not every better move has a one-ply tactical reason. `BestMove.bestLine` (the en
 principal variation) covers that case, rendered as a step-through-able `PlanBoard` (own `ply`
 state) instead of plain SAN text — used from both `Board.tsx` and `GameAnalysisPanel.tsx`, so
 react-chessboard's `options.id` must be unique per instance (`useId()`) or it crashes.
+
+`lib/moveQuality.ts` builds a Chess.com-style per-game review from the same saved
+`GameAnalysis.evals` — no extra engine work. `classifyMoveQuality()` buckets each move's
+`moveSwingCp()` (the swing calc `findBlunders()` already used, now exported from
+`lib/analysis.ts` so both can share it) into best/excellent/good/inaccuracy/mistake/blunder; its
+"blunder" cutoff is deliberately the same `BLUNDER_THRESHOLD_CP` `findBlunders()` uses, so the
+two never disagree about what counts as a blunder. `summarizeMoveQuality()` also scores each
+move's accuracy from its win% drop (`evalBarPercent()`'s own logistic curve, the same one the
+eval bar renders), using the standard Lichess accuracy formula, averaged per side. `MoveQualityLink`
+(`GameAnalysisPanel.tsx`) renders as a link below the move list, opening its own small dialog with
+the table — a separate trigger from `AnalyzeButton`'s blunder-by-blunder dialog, not a duplicate of
+it — labeled "You"/"Opponent" rather than by username since this app only ever has one user.
+Deliberately doesn't attempt Chess.com's Brilliant/Great/Book/Miss tiers (need sacrifice/opening-
+book detection this app doesn't have) or its "Game Score" number (not a documented formula).
 
 ### Live analysis and free exploration
 
