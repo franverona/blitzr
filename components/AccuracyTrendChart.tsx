@@ -69,6 +69,21 @@ export function AccuracyTrendChart({ points }: { points: AccuracyTrendPoint[] })
   const averages = useMemo(() => rollingAverageAccuracy(points), [points])
   const xTicks = useMemo(() => xTickIndices(points.length), [points.length])
 
+  // A stale hoverIndex from a longer series would otherwise index past the
+  // end of a shorter one after a date-range filter narrows `points` — the
+  // mouse doesn't necessarily cross the svg's edge (and so never fires its
+  // own onMouseLeave) on the way to clicking a preset button elsewhere in
+  // the same row. Adjusted during render rather than a useEffect — same
+  // "set state while rendering, guarded by a prev-value comparison" pattern
+  // GameSearchForm uses for its own accValue resync (see its own comment):
+  // an effect here would cost an extra render and trip the
+  // react-hooks/set-state-in-effect lint rule.
+  const [prevPoints, setPrevPoints] = useState(points)
+  if (points !== prevPoints) {
+    setPrevPoints(points)
+    setHoverIndex(null)
+  }
+
   if (points.length === 0) {
     return <p className="text-sm text-zinc-500 dark:text-zinc-400">{s.accuracyTrend.empty}</p>
   }
@@ -207,7 +222,7 @@ export function AccuracyTrendChart({ points }: { points: AccuracyTrendPoint[] })
                 ),
             )}
 
-          {hoverIndex !== null && (
+          {hoverIndex !== null && hovered && (
             <>
               <line
                 x1={xFor(hoverIndex, points.length)}
@@ -220,7 +235,7 @@ export function AccuracyTrendChart({ points }: { points: AccuracyTrendPoint[] })
               />
               <circle
                 cx={xFor(hoverIndex, points.length)}
-                cy={yFor(points[hoverIndex].accuracy)}
+                cy={yFor(hovered.accuracy)}
                 r={4}
                 className="fill-accent stroke-zinc-50 dark:stroke-zinc-950"
                 strokeWidth={2}
