@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition } from 'react'
 import { syncGames } from '@/app/actions'
 import { getStrings } from '@/lib/i18n/strings'
+import { RefreshCwIcon } from './NavIcons'
 
 const TOAST_DURATION_MS = 4000
 
@@ -40,8 +41,9 @@ export function SyncButton() {
       <button
         onClick={handleClick}
         disabled={isPending}
-        className="rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+        className="flex items-center gap-1.5 rounded-md border border-zinc-700 px-2.5 py-1 text-sm font-medium text-zinc-100 hover:bg-zinc-800 disabled:opacity-50"
       >
+        <RefreshCwIcon className={`size-4 shrink-0 ${isPending ? 'animate-spin' : ''}`} />
         {isPending ? s.sync.syncing : s.sync.button}
       </button>
       {toast && (

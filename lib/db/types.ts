@@ -4,6 +4,8 @@ import type {
   DrillSourceType,
   Game,
   GameAnalysis,
+  MyColor,
+  MyResult,
   RepertoireColor,
   RepertoireNode,
 } from '../types'
@@ -81,13 +83,27 @@ export interface DbSchema {
 export type DbType = 'sqlite'
 
 export interface GameRepository {
-  /** Insert games, ignoring any whose id already exists. Returns the number attempted. */
+  /** Insert games, ignoring any whose id already exists. Returns the number
+   *  actually newly inserted, not the number attempted — the sync toast
+   *  (`s.sync.synced`) reports this, so it has to reflect real new games,
+   *  not archive-months re-checked. */
   upsertGames(games: Game[]): Promise<number>
-  /** `opponent` matches either side's username (substring, case-insensitive). */
+  /** `opponent` matches either side's username (substring, case-insensitive).
+   *  `result`/`color`/`rated` are exact-match filters, all independently
+   *  optional and combinable. `gameIds`, when given, restricts to that exact
+   *  id set (an empty array short-circuits to no results without querying)
+   *  — used for the accuracy filter, which is computed in application code
+   *  (see `getGameAccuracyById()`) rather than stored as a column, so it
+   *  narrows to a set of ids before this call rather than becoming a SQL
+   *  predicate of its own. */
   listGames(params?: {
     limit?: number
     offset?: number
     opponent?: string
+    result?: MyResult
+    color?: MyColor
+    rated?: boolean
+    gameIds?: string[]
   }): Promise<{ games: Game[]; total: number }>
   /** Unpaginated — used for the openings aggregation, which needs every game. */
   listAllGames(): Promise<Game[]>

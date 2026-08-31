@@ -45,7 +45,7 @@ export function LessonPractice({
       initialPly={mode === 'study' ? 1 : 0}
     >
       <div className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-200 pb-4 dark:border-zinc-800">
           <h1 className="text-xl font-semibold">{lesson.name[locale]}</h1>
           <div className="flex items-center gap-2">
             <ModeTab
