@@ -6,7 +6,6 @@ import { getStrings } from '@/lib/i18n/strings'
 import type { Game, GameAccuracy } from '@/lib/types'
 import { accuracyPillClass } from './GameAnalysisPanel'
 import { KnightIcon } from './KnightIcon'
-import { PlayerAvatar } from './PlayerAvatar'
 import { startRouteProgress } from './RouteProgressBar'
 
 const RESULT_BADGE_STYLES: Record<Game['myResult'], string> = {
@@ -51,17 +50,7 @@ export function GameRow({ game, accuracy }: { game: Game; accuracy: GameAccuracy
       <td className="px-3 py-2">
         <KnightIcon color={game.myColor} />
       </td>
-      <td className="px-3 py-2">
-        <div className="flex items-center gap-2">
-          {/* ponytail: no Chess.com fetch here — a games-list page renders
-           *  up to PAGE_SIZE rows, and firing a live avatar request per
-           *  unique opponent on every page load (the game page's own
-           *  fetchPlayerAvatar() pattern) isn't worth the request volume
-           *  for a decorative badge. Initial-letter fallback only. */}
-          <PlayerAvatar username={opponent} avatarUrl={null} size={24} />
-          {opponent}
-        </div>
-      </td>
+      <td className="px-3 py-2">{opponent}</td>
       <td className="px-3 py-2">
         <span
           className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium ${RESULT_BADGE_STYLES[game.myResult]}`}
