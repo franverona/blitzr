@@ -343,6 +343,20 @@ export interface GameAccuracy {
   blunders: number
 }
 
+/** One analyzed game's own-side accuracy, for the /blunders accuracy trend
+ *  chart — same number `GameAccuracy` carries, plus the date/label a trend
+ *  needs to plot and order by that a bare id-keyed map doesn't. See
+ *  `buildAccuracyTrend()` in lib/accuracyTrend.ts. */
+export interface AccuracyTrendPoint {
+  gameId: string
+  /** Unix seconds, same as Game.endTime — kept numeric rather than
+   *  pre-formatted so the chart can space points by real elapsed time if it
+   *  ever needs to; display text goes through formatDate() instead. */
+  endTime: number
+  accuracy: number
+  gameLabel: string
+}
+
 export interface BlunderStats {
   totalGames: number
   analyzedGames: number
@@ -350,6 +364,10 @@ export interface BlunderStats {
   byOpening: BlunderGroupStat[]
   byPiece: BlunderGroupStat[]
   worst: WorstBlunder[]
+  /** Oldest-first, one point per analyzed game in scope — see
+   *  buildAccuracyTrend(). Independent of totalBlunders/worst above: a
+   *  clean-sheet stretch still produces points here. */
+  trend: AccuracyTrendPoint[]
 }
 
 /** A `DrillCard` hydrated into something a drill session can actually show. */
