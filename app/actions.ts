@@ -6,6 +6,7 @@ import { fetchPlayerAvatar } from '@/lib/chesscom/client'
 import { formatDate } from '@/lib/dates'
 import { getChesscomUsername } from '@/lib/config'
 import { getRepository } from '@/lib/db'
+import type { GameRepository } from '@/lib/db/types'
 import {
   buildDrillPrompt,
   findBlunderCandidates,
@@ -39,7 +40,7 @@ import type {
 } from '@/lib/types'
 
 export async function listGames(
-  params: { limit?: number; offset?: number; opponent?: string } = {},
+  params: Parameters<GameRepository['listGames']>[0] = {},
 ): Promise<{ games: Game[]; total: number }> {
   return getRepository().listGames(params)
 }

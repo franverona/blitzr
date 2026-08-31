@@ -148,8 +148,15 @@ export class SqliteGameRepository implements GameRepository {
   }
 
   async listGames(
-    params: { limit?: number; offset?: number; opponent?: string } = {},
+    params: Parameters<GameRepository['listGames']>[0] = {},
   ): Promise<{ games: Game[]; total: number }> {
+    // An empty (not undefined) gameIds means the accuracy filter matched
+    // nothing — short-circuit rather than issuing `where id in ()`, which
+    // SQLite rejects.
+    if (params.gameIds && params.gameIds.length === 0) {
+      return { games: [], total: 0 }
+    }
+
     const db = await this.ready()
     const limit = params.limit ?? 50
     const offset = params.offset ?? 0
@@ -165,6 +172,23 @@ export class SqliteGameRepository implements GameRepository {
     if (opponent) {
       rowsQuery = rowsQuery.where(opponentFilter)
       countQuery = countQuery.where(opponentFilter)
+    }
+    if (params.result) {
+      rowsQuery = rowsQuery.where('my_result', '=', params.result)
+      countQuery = countQuery.where('my_result', '=', params.result)
+    }
+    if (params.color) {
+      rowsQuery = rowsQuery.where('my_color', '=', params.color)
+      countQuery = countQuery.where('my_color', '=', params.color)
+    }
+    if (params.rated !== undefined) {
+      const rated = params.rated ? 1 : 0
+      rowsQuery = rowsQuery.where('rated', '=', rated)
+      countQuery = countQuery.where('rated', '=', rated)
+    }
+    if (params.gameIds) {
+      rowsQuery = rowsQuery.where('id', 'in', params.gameIds)
+      countQuery = countQuery.where('id', 'in', params.gameIds)
     }
 
     const [rows, countRow] = await Promise.all([

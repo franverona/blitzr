@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useRef, useState, useTransition } from 'react'
 import { addManualGame } from '@/app/actions'
 import { getStrings } from '@/lib/i18n/strings'
+import { CirclePlusIcon } from './NavIcons'
 import { startRouteProgress } from './RouteProgressBar'
 
 // Same native <dialog> convention as AboutOpeningButton.tsx. Errors are
@@ -43,8 +44,9 @@ export function AddPgnButton() {
     <>
       <button
         onClick={open}
-        className="rounded-md border border-zinc-700 px-3 py-1.5 text-sm font-medium text-zinc-100 hover:bg-zinc-800"
+        className="flex items-center gap-1.5 rounded-md border border-zinc-700 px-2.5 py-1 text-sm font-medium text-zinc-100 hover:bg-zinc-800"
       >
+        <CirclePlusIcon className="size-4 shrink-0" />
         {s.addPgn.button}
       </button>
       <dialog

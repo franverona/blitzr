@@ -39,7 +39,7 @@ app/
   blunders/page.tsx              # cross-game blunder aggregate
 components/
   GameList.tsx / GameRow.tsx  # games table
-  GameSearchForm.tsx            # opponent-name filter above the games list
+  GameSearchForm.tsx            # opponent search + result/color/rated/accuracy filters above the games list
   Board.tsx                    # read-only replay board (BoardProvider/BoardNavControls/BoardView)
   EvalBar.tsx                   # eval fill bar next to the board
   RepertoireBoard.tsx            # editable board that builds the repertoire tree
@@ -163,7 +163,16 @@ file, not here — this section is only cross-cutting rules that span multiple f
 - **A component that seeds state with `useState(initialX)` needs `key={id}`** wherever the same
   instance can receive new props for a different record (`GameAnalysisProvider`/`BoardProvider`
   keyed on `game.id`, `LessonPractice`/`DrillSession` keyed on `lesson.slug`/filter values) —
-  otherwise switching records shows stale state instead of the new props.
+  otherwise switching records shows stale state instead of the new props. The inverse also
+  applies: a filter whose own UI needs to survive its _own_ navigation (the accuracy popover in
+  `GameSearchForm.tsx` — see "Games list filters" below) has to stay _out_ of that key, and
+  re-sync its state from the changed prop by hand instead.
+- **Every page-level header — the `<h1>` row, plus whatever title-adjacent actions/tabs sit next
+  to it — gets `border-b border-zinc-200 dark:border-zinc-800 pb-4`**, separating it from the
+  page's own filters/content below. Same divider color pair the games table and filter chips
+  already use elsewhere, applied uniformly: `app/page.tsx`, `app/openings/page.tsx`,
+  `app/blunders/page.tsx`, `app/drill/page.tsx`, `app/learn/page.tsx`, `app/games/[id]/page.tsx`,
+  `RepertoireBoard.tsx`, `LessonPractice.tsx`.
 
 ## Database backend
 
@@ -262,6 +271,14 @@ indicator — the accuracy pill already doubles as one. `saveGameAnalysis()` rev
 not just the game page and `/blunders`, so the columns update live while a bulk run is in
 progress instead of needing a manual refresh.
 
+`BulkAnalyzeButton` disables itself (with a `title` tooltip) when there's nothing left to
+analyze — `app/page.tsx` runs `getUnanalyzedGames()` alongside `getGameAccuracyById()` on every
+games-list load and passes its `.length > 0` down as a `hasUnanalyzedGames` prop. That prop is
+only a page-load snapshot, not authoritative (another tab, or the per-game Analyze button, can
+finish the last one afterward) — `start()` still re-checks and falls back to the
+`nothingToAnalyze` toast regardless, same as before this existed. It naturally goes stale-and-
+refreshes correctly on its own since `saveGameAnalysis()` already revalidates `/`.
+
 Plain-English explanations layer on top: `describeMove()` (`lib/san.ts`) turns a SAN move into a
 sentence; `detectHangingPiece()`/`detectFork()`/`detectSkewer()`/`detectPin()`
 (`lib/hangingPiece.ts`/`lib/tactics.ts`) say _why_ a move was a blunder — deliberately narrow v1
@@ -319,6 +336,16 @@ so it works in both modes. `BoardView`'s `isAdjacentStep` (only animate a single
 multi-ply jump — see its own comment) tracks `explorePly` while exploring and `ply` otherwise via
 one `navPly` value, rather than only ever tracking `ply`; switching in or out of exploring counts
 as non-adjacent too, since the two numbering spaces aren't comparable.
+
+`useLiveAnalysisContext()` falls back to a "no live line" default (`{ lines: null, fen: null,
+thinking: false }`) rather than throwing when there's no `<LiveAnalysisProvider>` above it —
+`BoardView` calls it unconditionally, but `/learn` lessons (`LessonPractice.tsx`) render
+`BoardView` without that provider on purpose: there's no saved analysis to prefer either, so
+wrapping every lesson in one would mean spinning up a real Stockfish Worker and a continuous
+MultiPV search just to view a hand-authored line, contradicting `/learn`'s otherwise deliberately
+lightweight design (see "Learn openings" below). The fallback value is exactly what a _wrapped_
+consumer already sees before its first search resolves, so this isn't a special case `BoardView`
+needs to know about — a lesson page just always looks like "still waiting on the first result."
 
 The engine itself is owned by `LiveAnalysisProvider` (`Board.tsx`, not `LiveAnalysisPanel.tsx` —
 see its own comment for why: it needs `useBoardContext()`, and `BoardView` needs its `lines`, so
@@ -385,6 +412,39 @@ navigation. A ✕ button there calls `resetExploreLine()`, which empties the bra
 to ply 0 without leaving exploring mode — distinct from the ◀/⏮ nav, which only moves the
 _pointer_ back and leaves the line itself in place to walk into again, and from exiting
 exploration entirely, which would also drop back to the recorded game.
+
+## Games list filters
+
+`GameSearchForm.tsx` combines a debounced opponent-name search with `result`/`color`/`rated`
+dropdowns and an accuracy-threshold popover — all URL-driven (`?q=`/`result=`/`color=`/`rated=`/
+`accOp=`/`accValue=`), not client state, so a filtered view survives a reload or a shared link.
+`app/page.tsx` reads them server-side and threads them into `listGames()`; `result`/`color`/
+`rated` become plain `WHERE` clauses in `lib/db/sqlite/repository.ts`, and `PageLink` carries them
+through pagination.
+
+Accuracy is the one filter that can't become a SQL predicate — it's computed in application code
+from saved analysis (`getGameAccuracyById()`), not a stored column. An active accuracy filter
+narrows that map to a matching id set server-side in `app/page.tsx`, then hands it to
+`listGames()` as a `gameIds` param — a plain `WHERE id IN (...)`, short-circuited to an empty
+result without querying when the set is empty (SQLite rejects `WHERE id IN ()`).
+
+The accuracy control is a trigger button + popover (`≥`/`≤` toggle plus a range slider), not a
+bare inline slider — an earlier version sat directly in the filter row and reflowed every other
+control around it as it appeared/disappeared. The popover has to survive its own navigations
+(pick a direction, then drag the slider) without closing, so `accOp`/`accValue` are deliberately
+left out of `GameSearchForm`'s remount `key` in `app/page.tsx` — every other filter's change
+remounts the form to resync its `useState` from fresh props, but that would also reset the
+popover's local `open` state on every slider drag. With no remount, the slider's own `accuracy`
+state instead re-syncs from the `accValue` prop by comparing against a stored `prevAccValue` and
+calling `setState` during render — React's documented pattern for this; a `useEffect` doing the
+same trips the `react-hooks/set-state-in-effect` lint rule and costs an extra render.
+
+The opponent-name field and the slider both navigate on a debounce (`SEARCH_DEBOUNCE_MS`,
+400ms) — typing or dragging shouldn't fire a navigation per keystroke/pixel. The four discrete
+filters navigate immediately on change, same "URL-driven, no client state" pattern `DrillFilters`
+already used. Clearing the search box (backspace to empty, or the native "×" button) is the one
+exception that skips the debounce and navigates right away, rather than leaving a stale filtered
+list up for the rest of the debounce window.
 
 ## Drilling
 
@@ -500,6 +560,12 @@ pnpm build && pnpm start -p 9877      # production (pm2 manages this)
 ```
 
 See README.md for full pm2 setup instructions.
+
+**`pnpm build` corrupts a live `pnpm dev`'s Turbopack cache if both run against the same working
+directory** — they share `.next/`, and a production build clobbers the dev server's incremental
+state, making it silently serve stale code (no error, just old behavior) until restarted. If
+"before considering a feature or fix done" needs to run `pnpm build` while a dev server is up,
+restart that dev server afterward.
 
 ## Git workflow
 

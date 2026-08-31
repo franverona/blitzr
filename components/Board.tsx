@@ -353,10 +353,21 @@ interface LiveAnalysisContextValue {
 
 const LiveAnalysisContext = createContext<LiveAnalysisContextValue | null>(null)
 
+// No lines, nothing in flight — what BoardView already treats as "no live
+// line to show" while a real search is still catching up, so handing this
+// back to a caller with no <LiveAnalysisProvider> is indistinguishable from
+// one that has the provider but hasn't gotten a result yet.
+const NO_LIVE_ANALYSIS: LiveAnalysisContextValue = { lines: null, fen: null, thinking: false }
+
+/** Optional, not required — `/learn` lessons render `BoardView` without ever
+ *  wrapping it in `LiveAnalysisProvider` (no saved analysis to prefer either,
+ *  so there'd be nothing to fall back to but a live search, and lesson pages
+ *  are deliberately lightweight: no engine Worker spun up just to view a
+ *  hand-authored line). Falling back to "no live line" here instead of
+ *  throwing lets `BoardView` work either way, rather than forcing every
+ *  caller to opt into a continuously-searching Stockfish instance. */
 export function useLiveAnalysisContext(): LiveAnalysisContextValue {
-  const ctx = useContext(LiveAnalysisContext)
-  if (!ctx) throw new Error('Must be used within <LiveAnalysisProvider>')
-  return ctx
+  return useContext(LiveAnalysisContext) ?? NO_LIVE_ANALYSIS
 }
 
 // Fewer lines and a shorter search than the batch "Analyze" pass

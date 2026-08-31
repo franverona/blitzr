@@ -67,7 +67,12 @@ The games list explains chess jargon as you hover it — the time class column (
 daily) tells you what each one means in minutes-per-player, the same way ECO codes and repertoire
 terms are explained elsewhere in the app. Each row also shows your accuracy and mistake/blunder
 counts once that game's been analyzed (blank until then), plus your rating at the time for rated
-games. A search box above the list filters by opponent name.
+games. A search box above the list filters by opponent name as you type (no button to click), and
+dropdowns next to it narrow by result, color, and rated/unrated — all combinable, and shareable as
+a link since they live in the URL. An accuracy filter (≥ or ≤ a threshold, dragged on a slider)
+sits in its own small popover next to the rest. **Analyze all** disables itself once every synced
+game already has a saved analysis, rather than requiring a click to find out there's nothing left
+to do.
 
 SQLite is created automatically at `./data/blitzr.db` on first run — no config needed beyond
 your username. To reset, delete the file and re-sync.
