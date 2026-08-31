@@ -333,6 +333,16 @@ export interface WorstBlunder {
   betterMove: string | null
 }
 
+/** Own-side accuracy + mistake/blunder counts for one analyzed game — the
+ *  games list's precision/errors columns, same `summarizeMoveQuality()`
+ *  numbers `MoveQualityLink` shows on the game page, just picked out for
+ *  whichever color the account played. */
+export interface GameAccuracy {
+  accuracy: number
+  mistakes: number
+  blunders: number
+}
+
 export interface BlunderStats {
   totalGames: number
   analyzedGames: number

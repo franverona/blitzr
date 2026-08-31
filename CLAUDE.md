@@ -253,11 +253,14 @@ rather than owned by the games-page button — a run started there needs to keep
 visible via `BulkAnalysisIndicator` in the sidebar, after the user navigates to another page,
 not get cancelled the moment its trigger unmounts. `analyzeGames()` (`lib/stockfish/analyze.ts`)
 only checks its `shouldContinue` callback between games, so Cancel always lets an in-flight game
-finish and save rather than abandoning a partial result. The games list's "Analyzed" column
-(`listAnalyzedGameIds()`, `app/actions.ts`) is a separate lookup from `Game` itself — kept out of
-that domain type since most callers (openings aggregation, etc.) have no use for it — and
-`saveGameAnalysis()` revalidates `/` too, not just the game page and `/blunders`, so the column
-updates live while a bulk run is in progress instead of needing a manual refresh.
+finish and save rather than abandoning a partial result. The games list's own-side accuracy and
+mistake/blunder-count columns (`getGameAccuracyById()`, `app/actions.ts`) come from a separate
+`listAllGames()` + `listAllGameAnalyses()` join and `summarizeMoveQuality()`, not a `Game` field —
+kept out of that domain type since most callers (openings aggregation, etc.) have no use for it.
+A game with no saved analysis yet shows `—` in both columns rather than a separate "Analyzed"
+indicator — the accuracy pill already doubles as one. `saveGameAnalysis()` revalidates `/` too,
+not just the game page and `/blunders`, so the columns update live while a bulk run is in
+progress instead of needing a manual refresh.
 
 Plain-English explanations layer on top: `describeMove()` (`lib/san.ts`) turns a SAN move into a
 sentence; `detectHangingPiece()`/`detectFork()`/`detectSkewer()`/`detectPin()`

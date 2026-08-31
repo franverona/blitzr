@@ -175,7 +175,7 @@ export function GameSummary() {
  *  (not just inside the dialog) so it's visible at a glance without a click —
  *  as a colored pill, same "badge, not bare text" convention as
  *  `BlunderSeverityBadge`, so a good/bad accuracy reads at a glance too. */
-function accuracyPillClass(accuracy: number): string {
+export function accuracyPillClass(accuracy: number): string {
   if (accuracy >= 90) return 'bg-emerald-900/40 text-emerald-400'
   if (accuracy >= 70) return 'bg-amber-900/40 text-amber-400'
   return 'bg-rose-900/40 text-rose-400'
