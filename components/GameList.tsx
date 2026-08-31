@@ -29,7 +29,6 @@ export function GameList({
             <th className="px-3 py-2 text-center">{s.gameList.headers.accuracy}</th>
             <th className="px-3 py-2 text-center">{s.gameList.headers.errors}</th>
             <th className="px-3 py-2">{s.gameList.headers.timeClass}</th>
-            <th className="px-3 py-2">{s.gameList.headers.analyzed}</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">

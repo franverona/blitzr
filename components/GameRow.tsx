@@ -86,17 +86,6 @@ export function GameRow({ game, accuracy }: { game: Game; accuracy: GameAccuracy
           game.timeClass
         )}
       </td>
-      <td className="px-3 py-2 text-center">
-        {accuracy ? (
-          <abbr title={s.gameList.analyzedTooltip} className="text-emerald-500 no-underline">
-            ✓
-          </abbr>
-        ) : (
-          <abbr title={s.gameList.notAnalyzedTooltip} className="text-zinc-700 no-underline">
-            —
-          </abbr>
-        )}
-      </td>
     </tr>
   )
 }
