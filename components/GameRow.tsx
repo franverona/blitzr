@@ -60,7 +60,12 @@ export function GameRow({ game, accuracy }: { game: Game; accuracy: GameAccuracy
           {s.common.result[game.myResult]}
         </span>
       </td>
-      <td className="px-3 py-2 text-right text-zinc-400 tabular-nums">{myRating ?? '—'}</td>
+      <td className="px-3 py-2 text-right text-zinc-400 tabular-nums">
+        {/* Unrated games (bot/coach practice, manually-added PGNs) don't
+         *  carry a meaningful rating number — the account's snapshot rating
+         *  shows up regardless, but it isn't *this game's* rating. */}
+        {game.rated && myRating != null ? myRating : '—'}
+      </td>
       <td className="px-3 py-2 text-center">
         {accuracy ? (
           <span
