@@ -305,6 +305,25 @@ const en = {
     summary: (blunders: number, analyzed: number, total: number) =>
       `${blunders} ${blunders === 1 ? 'blunder' : 'blunders'} across ${analyzed} of ${total} synced games analyzed by Stockfish.`,
   },
+  dateRangeFilter: {
+    from: 'From',
+    to: 'To',
+    clear: 'Clear',
+    presets: {
+      today: 'Today',
+      last3Days: 'Last 3 days',
+      lastWeek: 'Last week',
+      last2Weeks: 'Last 2 weeks',
+    },
+  },
+  accuracyTrend: {
+    title: 'Accuracy over time',
+    caption: (window: number) =>
+      `Each dot is one analyzed game; the line is your rolling average over the last ${window} games.`,
+    empty: 'No analyzed games in this range yet.',
+    tooltipAverage: (n: number) => `${n}-game average`,
+    showDots: 'Show individual games',
+  },
   drillPage: {
     title: 'Drill',
   },
@@ -668,6 +687,25 @@ const es: Strings = {
     title: 'Errores',
     summary: (blunders: number, analyzed: number, total: number) =>
       `${blunders} ${blunders === 1 ? 'error' : 'errores'} en ${analyzed} de ${total} partidas sincronizadas analizadas por Stockfish.`,
+  },
+  dateRangeFilter: {
+    from: 'Desde',
+    to: 'Hasta',
+    clear: 'Borrar',
+    presets: {
+      today: 'Hoy',
+      last3Days: 'Últimos 3 días',
+      lastWeek: 'Última semana',
+      last2Weeks: 'Últimas 2 semanas',
+    },
+  },
+  accuracyTrend: {
+    title: 'Precisión a lo largo del tiempo',
+    caption: (window: number) =>
+      `Cada punto es una partida analizada; la línea es tu media móvil de las últimas ${window} partidas.`,
+    empty: 'Aún no hay partidas analizadas en este rango.',
+    tooltipAverage: (n: number) => `Media de ${n} partidas`,
+    showDots: 'Mostrar partidas individuales',
   },
   drillPage: {
     title: 'Entrenar',

@@ -55,6 +55,8 @@ components/
   FlipBoardButton.tsx                           # flips board orientation on a lesson
   MiniBoard.tsx                                   # small board preview for /learn index cards
   BlunderStats.tsx                       # by-opening/by-piece/worst-blunders aggregate view
+  AccuracyTrendChart.tsx                   # own-side accuracy-over-time chart on /blunders
+  DateRangeFilter.tsx                        # from/to + preset date-range filter, scopes /blunders
   EvalHelp.tsx                             # shared eval/blunder/swing/tactics glossary
   BlunderSeverityBadge.tsx                   # Mistake/Blunder severity pill
   LegalMoveSquare.tsx                    # legal-move dot/ring/selected square highlighting
@@ -70,7 +72,7 @@ lib/
   config.ts                # getChesscomUsername()
   theme.ts                  # shared board/arrow color constants
   types.ts                  # domain types
-  dates.ts                   # formatDate/formatDateTime — hand-formatted, not Intl
+  dates.ts                   # formatDate/formatDateTime/startOfDaySeconds/endOfDaySeconds — hand-formatted, not Intl
   san.ts                       # SAN/move-number display helpers, describeMove()
   material.ts                    # materialDiff()/formatMaterialDiff()
   hangingPiece.ts                # detectHangingPiece()/hangingSquares()/describe*()
@@ -85,6 +87,7 @@ lib/
   analysis.ts                       # findBlunders(), biggestBlunder(), formatEval()
   drill.ts                           # candidate-finding, card hydration, SM-2 scheduling
   blunders.ts                          # buildBlunderStats() — pure aggregation
+  accuracyTrend.ts                       # buildAccuracyTrend()/rollingAverageAccuracy() — /blunders trend chart
   sync.ts                            # syncAllArchives()
   manualGame.ts                        # parseManualGame() — pasted PGN -> Game
   i18n/
@@ -465,6 +468,37 @@ shortcuts) — see its own comments for the specific React patterns involved.
 fresh on every `/blunders` load, scoped to analyzed games and the account's own moves only.
 Grouped by opening family and by moved piece. `blunderSeverity()` (`lib/analysis.ts`) labels
 each blunder "Mistake" (200–399cp) or "Blunder" (400cp+), shown via `BlunderSeverityBadge`.
+`buildBlunderStats()`'s own return type is `Omit<BlunderStats, 'trend'>` — it stays
+blunder-specific and knows nothing about the accuracy trend below; `getBlunderStats()`
+(`app/actions.ts`) merges the two.
+
+`getBlunderStats()` takes an optional `{ from, to }` date-range filter, narrowing `games` once
+(`startOfDaySeconds()`/`endOfDaySeconds()`, `lib/dates.ts` — local calendar-day boundaries,
+matching `formatDate()`'s own convention) before it feeds both `buildBlunderStats()` and
+`buildAccuracyTrend()` below — so a custom range scopes every section of the page from one
+filter, not just the chart. `DateRangeFilter.tsx` is the URL-driven (`?from=&to=`) control: Today
+/ Last 3 days / Last week / Last 2 weeks presets plus two native `<input type="date">` fields in
+the same row, same "survives reload, shareable link" pattern `GameSearchForm`'s own filters use
+(see "Games list filters" below).
+
+`AccuracyTrendChart.tsx` renders own-side accuracy per analyzed game as a hand-rolled SVG line
+chart — no charting library for one line. `buildAccuracyTrend()`/`rollingAverageAccuracy()`
+(`lib/accuracyTrend.ts`) are pure functions in the same "aggregation over already-stored data"
+mold as `buildBlunderStats()`: one point per analyzed game (oldest first, the same
+`summarizeMoveQuality()` the games list's own accuracy column uses) plus a trailing 10-game
+rolling average that shrinks its window for the first few points instead of leaving them
+undefined. The x-axis is **game index, not calendar date** — real play sessions are bursty (a
+dozen bot games in one sitting), so date-spacing would pile points on top of each other on a busy
+day and waste width on the gaps between sessions; index-spacing keeps every game equally legible
+regardless of when it was played. A handful of evenly-spaced x-axis reference dates, plus each
+dot's own hover tooltip, still ground the reader in real time without spacing by it. Muted raw
+per-game dots (toggleable off) sit under a single accent-colored average line — the "emphasis"
+form (one series is the point, the rest is context), so it needs no legend. `hoverIndex` resets
+whenever `points` changes (same render-time prev-value-comparison pattern `GameSearchForm` uses
+for its own `accValue` resync below, not a `useEffect`) — a stale index from a longer series
+would otherwise index past the end of a shorter one once the date filter narrows the range, since
+the mouse doesn't necessarily cross the chart's own edge on the way to clicking a preset button
+elsewhere in the same row.
 
 ## Learn openings
 

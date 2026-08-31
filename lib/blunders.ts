@@ -73,13 +73,16 @@ function pieceKey(moveSan: string, locale: Locale): { key: string; label: string
  * Cross-game blunder aggregate, scoped to whatever games already have a
  * saved Stockfish analysis (there's no bulk "analyze everything" job) —
  * mirrors `buildOpeningFamilies` (`lib/openings.ts`): a pure function over
- * already-stored data, no new persistence.
+ * already-stored data, no new persistence. Excludes `BlunderStats.trend` —
+ * that's a separate concern (`buildAccuracyTrend()`, lib/accuracyTrend.ts)
+ * merged in by the caller (`getBlunderStats()`, app/actions.ts), not
+ * something this blunder-specific aggregate needs to know about.
  */
 export function buildBlunderStats(
   games: Game[],
   analysesByGameId: Map<string, GameAnalysis>,
   locale: Locale = getLocale(),
-): BlunderStats {
+): Omit<BlunderStats, 'trend'> {
   const byOpening = new Map<string, GroupAcc>()
   const byPiece = new Map<string, GroupAcc>()
   const worst: BlunderCandidate[] = []
