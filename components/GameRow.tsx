@@ -26,6 +26,7 @@ export function GameRow({ game, accuracy }: { game: Game; accuracy: GameAccuracy
   const s = getStrings()
   const router = useRouter()
   const opponent = game.myColor === 'white' ? game.blackUsername : game.whiteUsername
+  const myRating = game.myColor === 'white' ? game.whiteRating : game.blackRating
   const date = formatDate(game.endTime)
   const timeClassTooltip = s.gameRow.timeClassTooltips[game.timeClass]
 
@@ -59,6 +60,7 @@ export function GameRow({ game, accuracy }: { game: Game; accuracy: GameAccuracy
           {s.common.result[game.myResult]}
         </span>
       </td>
+      <td className="px-3 py-2 text-right text-zinc-400 tabular-nums">{myRating ?? '—'}</td>
       <td className="px-3 py-2 text-center">
         {accuracy ? (
           <span

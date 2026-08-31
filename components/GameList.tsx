@@ -26,6 +26,7 @@ export function GameList({
             <th className="px-3 py-2">{s.gameList.headers.color}</th>
             <th className="px-3 py-2">{s.gameList.headers.opponent}</th>
             <th className="px-3 py-2">{s.gameList.headers.result}</th>
+            <th className="px-3 py-2 text-right">{s.gameList.headers.rating}</th>
             <th className="px-3 py-2 text-center">{s.gameList.headers.accuracy}</th>
             <th className="px-3 py-2 text-center">{s.gameList.headers.errors}</th>
             <th className="px-3 py-2">{s.gameList.headers.timeClass}</th>
