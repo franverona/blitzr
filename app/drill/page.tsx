@@ -19,7 +19,9 @@ export default async function DrillPage({
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-xl font-semibold">{getStrings().drillPage.title}</h1>
+      <h1 className="border-b border-zinc-200 pb-4 text-xl font-semibold dark:border-zinc-800">
+        {getStrings().drillPage.title}
+      </h1>
       <DrillFilters
         sourceType={sourceType}
         opening={opening}

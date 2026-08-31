@@ -1,5 +1,6 @@
-// Sidebar nav icons — lucide's outline SVGs inlined directly (six fixed
-// glyphs don't justify a lucide-react dependency).
+// Lucide's outline SVGs inlined directly — sidebar nav icons plus a few
+// header action-button icons (this handful of fixed glyphs doesn't justify a
+// lucide-react dependency).
 type IconProps = { className?: string }
 
 const svgProps = {
@@ -82,6 +83,44 @@ export function ChevronLeftIcon({ className }: IconProps) {
   return (
     <svg {...svgProps} className={className}>
       <path d="m15 18-6-6 6-6" />
+    </svg>
+  )
+}
+
+export function CpuIcon({ className }: IconProps) {
+  return (
+    <svg {...svgProps} className={className}>
+      <rect x="4" y="4" width="16" height="16" rx="2" />
+      <rect x="9" y="9" width="6" height="6" />
+      <path d="M15 2v2" />
+      <path d="M15 20v2" />
+      <path d="M2 15h2" />
+      <path d="M2 9h2" />
+      <path d="M20 15h2" />
+      <path d="M20 9h2" />
+      <path d="M9 2v2" />
+      <path d="M9 20v2" />
+    </svg>
+  )
+}
+
+export function RefreshCwIcon({ className }: IconProps) {
+  return (
+    <svg {...svgProps} className={className}>
+      <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+      <path d="M3 3v5h5" />
+      <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
+      <path d="M16 16h5v5" />
+    </svg>
+  )
+}
+
+export function CirclePlusIcon({ className }: IconProps) {
+  return (
+    <svg {...svgProps} className={className}>
+      <circle cx="12" cy="12" r="10" />
+      <path d="M8 12h8" />
+      <path d="M12 8v8" />
     </svg>
   )
 }

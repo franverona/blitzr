@@ -65,8 +65,10 @@ export default function LearnPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-xl font-semibold">{s.learnPage.title}</h1>
-      <p className="text-sm text-zinc-500 dark:text-zinc-400">{s.learnPage.intro}</p>
+      <div className="flex flex-col gap-1 border-b border-zinc-200 pb-4 dark:border-zinc-800">
+        <h1 className="text-xl font-semibold">{s.learnPage.title}</h1>
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">{s.learnPage.intro}</p>
+      </div>
 
       <div className="flex items-center gap-2">
         <CategoryTab

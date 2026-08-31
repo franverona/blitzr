@@ -66,7 +66,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
 
   const body = (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-start justify-between gap-4">
+      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-zinc-200 pb-4 dark:border-zinc-800">
         <GameHeader
           game={game}
           isBotGame={isBotGame}
