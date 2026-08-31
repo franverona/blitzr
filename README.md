@@ -35,7 +35,8 @@ any way that implies endorsement or affiliation.
 - [x] Stockfish (WASM) analysis — blunder detection, plus tactical explanations (hanging pieces,
       forks, pins, skewers)
 - [x] Spaced-repetition drilling
-- [x] Cross-game recurring-blunders aggregate
+- [x] Cross-game recurring-blunders aggregate, with an accuracy-over-time trend and a
+      date-range filter
 - [x] Hand-authored opening and endgame lessons with an interactive board
 - [x] Position checklist — a live tactical scan of whatever position you're viewing
 - [x] Add a game by pasting its PGN — for games Chess.com's public API doesn't expose at all
@@ -300,11 +301,20 @@ to the next card, and H triggers the hint — no mouse needed.
 ## Blunders
 
 On `/blunders`, every blunder from your own moves — across every game that's been analyzed so
-far — is rolled up into one view: grouped by opening, grouped by moved piece, and a top-10
-"worst blunders" list (each entry in plain English, not just algebraic notation, plus a hung-piece
-explanation when that's what happened) linking back to each game. It's scoped to whatever's been
-analyzed (analyze more games, individually or with **Analyze all**, to fill it in further) rather
-than implying full coverage of your history.
+far — is rolled up into one view: an accuracy-over-time chart, grouped by opening, grouped by
+moved piece, and a top-10 "worst blunders" list (each entry in plain English, not just algebraic
+notation, plus a hung-piece explanation when that's what happened) linking back to each game.
+It's scoped to whatever's been analyzed (analyze more games, individually or with **Analyze
+all**, to fill it in further) rather than implying full coverage of your history.
+
+The chart plots your own-side accuracy for every analyzed game — muted dots (hideable with a
+checkbox) under a rolling 10-game-average line — a metric that works the same whether a game was
+rated, unrated, or against a bot, unlike Chess.com's own rating. Games are spaced by the order
+they were played rather than by calendar date, so a run of several games in one sitting doesn't
+pile up on top of each other; hover any point to see that exact game's date and accuracy. A
+date-range filter above it — Today / Last 3 days / Last week / Last 2 weeks presets, or a custom
+from/to — narrows the chart and every table below it together, and it's shareable as a link since
+it lives in the URL too.
 
 ## Learn
 

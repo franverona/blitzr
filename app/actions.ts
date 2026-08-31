@@ -2,9 +2,10 @@
 
 import { revalidatePath } from 'next/cache'
 import { cache } from 'react'
+import { buildAccuracyTrend } from '@/lib/accuracyTrend'
 import { buildBlunderStats } from '@/lib/blunders'
 import { fetchPlayerAvatar } from '@/lib/chesscom/client'
-import { formatDate } from '@/lib/dates'
+import { endOfDaySeconds, formatDate, startOfDaySeconds } from '@/lib/dates'
 import { getChesscomUsername } from '@/lib/config'
 import { getRepository } from '@/lib/db'
 import type { GameRepository } from '@/lib/db/types'
@@ -48,6 +49,22 @@ import type {
 const cachedListAllGames = cache(() => getRepository().listAllGames())
 const cachedListAllGameAnalyses = cache(() => getRepository().listAllGameAnalyses())
 
+/** Narrows to games whose endTime falls within an inclusive from/to range —
+ *  both undefined (the common case, no filter applied) returns `games`
+ *  as-is. Shared by every section of /blunders (the aggregates and the
+ *  accuracy trend alike), so a custom range scopes the whole page from one
+ *  filter rather than each section reading its own slice. */
+function filterByDateRange(games: Game[], filters?: { from?: string; to?: string }): Game[] {
+  if (!filters?.from && !filters?.to) return games
+  const fromSeconds = filters.from ? startOfDaySeconds(filters.from) : undefined
+  const toSeconds = filters.to ? endOfDaySeconds(filters.to) : undefined
+  return games.filter(
+    (g) =>
+      (fromSeconds === undefined || g.endTime >= fromSeconds) &&
+      (toSeconds === undefined || g.endTime <= toSeconds),
+  )
+}
+
 export async function listGames(
   params: Parameters<GameRepository['listGames']>[0] = {},
 ): Promise<{ games: Game[]; total: number }> {
@@ -68,10 +85,20 @@ export async function getLessonGameStats(moves: string[]): Promise<LessonGameSta
   return countGamesReachingLine(games, moves)
 }
 
-export async function getBlunderStats(): Promise<BlunderStats> {
-  const [games, analyses] = await Promise.all([cachedListAllGames(), cachedListAllGameAnalyses()])
+export async function getBlunderStats(filters?: {
+  from?: string
+  to?: string
+}): Promise<BlunderStats> {
+  const [allGames, analyses] = await Promise.all([
+    cachedListAllGames(),
+    cachedListAllGameAnalyses(),
+  ])
+  const games = filterByDateRange(allGames, filters)
   const analysesByGameId = new Map(analyses.map((a) => [a.gameId, a]))
-  return buildBlunderStats(games, analysesByGameId)
+  return {
+    ...buildBlunderStats(games, analysesByGameId),
+    trend: buildAccuracyTrend(games, analysesByGameId),
+  }
 }
 
 export async function getArchiveSyncStatus(): Promise<ArchiveSyncStatus[]> {
