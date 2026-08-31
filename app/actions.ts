@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { cache } from 'react'
 import { buildBlunderStats } from '@/lib/blunders'
 import { fetchPlayerAvatar } from '@/lib/chesscom/client'
 import { formatDate } from '@/lib/dates'
@@ -39,6 +40,14 @@ import type {
   UnanalyzedGame,
 } from '@/lib/types'
 
+// `listAllGames`/`listAllGameAnalyses` are full-table reads (every row,
+// every `moves_san`/`evals` JSON column parsed) — several actions below need
+// both, and a single page (the games list) calls more than one of those
+// actions in the same request. `cache()` memoizes per request, so the same
+// two queries run once no matter how many callers ask for them.
+const cachedListAllGames = cache(() => getRepository().listAllGames())
+const cachedListAllGameAnalyses = cache(() => getRepository().listAllGameAnalyses())
+
 export async function listGames(
   params: Parameters<GameRepository['listGames']>[0] = {},
 ): Promise<{ games: Game[]; total: number }> {
@@ -50,18 +59,17 @@ export async function getGame(id: string): Promise<Game | undefined> {
 }
 
 export async function listOpenings(): Promise<OpeningFamily[]> {
-  const games = await getRepository().listAllGames()
+  const games = await cachedListAllGames()
   return buildOpeningFamilies(games)
 }
 
 export async function getLessonGameStats(moves: string[]): Promise<LessonGameStats> {
-  const games = await getRepository().listAllGames()
+  const games = await cachedListAllGames()
   return countGamesReachingLine(games, moves)
 }
 
 export async function getBlunderStats(): Promise<BlunderStats> {
-  const repo = getRepository()
-  const [games, analyses] = await Promise.all([repo.listAllGames(), repo.listAllGameAnalyses()])
+  const [games, analyses] = await Promise.all([cachedListAllGames(), cachedListAllGameAnalyses()])
   const analysesByGameId = new Map(analyses.map((a) => [a.gameId, a]))
   return buildBlunderStats(games, analysesByGameId)
 }
@@ -118,8 +126,7 @@ export async function saveGameAnalysis(gameId: string, evals: PositionEval[]): P
  *  positions to analyze and are skipped, same as the per-game Analyze
  *  button's visibility. */
 export async function getUnanalyzedGames(): Promise<UnanalyzedGame[]> {
-  const repo = getRepository()
-  const [games, analyses] = await Promise.all([repo.listAllGames(), repo.listAllGameAnalyses()])
+  const [games, analyses] = await Promise.all([cachedListAllGames(), cachedListAllGameAnalyses()])
   const analyzedIds = new Set(analyses.map((a) => a.gameId))
 
   return games
@@ -142,8 +149,7 @@ export async function getUnanalyzedGames(): Promise<UnanalyzedGame[]> {
  *  `getUnanalyzedGames()`), so there's no separate id-only variant. Same
  *  `listAllGames()` + `listAllGameAnalyses()` join `getBlunderStats()` uses. */
 export async function getGameAccuracyById(): Promise<Record<string, GameAccuracy>> {
-  const repo = getRepository()
-  const [games, analyses] = await Promise.all([repo.listAllGames(), repo.listAllGameAnalyses()])
+  const [games, analyses] = await Promise.all([cachedListAllGames(), cachedListAllGameAnalyses()])
   const analysesByGameId = new Map(analyses.map((a) => [a.gameId, a]))
 
   const result: Record<string, GameAccuracy> = {}
@@ -190,10 +196,10 @@ export async function getDrillDeck(filters?: {
 }> {
   const repo = getRepository()
   const [games, whiteNodes, blackNodes, analyses, existingCards] = await Promise.all([
-    repo.listAllGames(),
+    cachedListAllGames(),
     repo.listRepertoireNodes('white'),
     repo.listRepertoireNodes('black'),
-    repo.listAllGameAnalyses(),
+    cachedListAllGameAnalyses(),
     repo.listDrillCards(),
   ])
 
