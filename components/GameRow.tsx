@@ -14,6 +14,14 @@ const RESULT_BADGE_STYLES: Record<Game['myResult'], string> = {
   loss: 'bg-rose-900/40 text-rose-400',
 }
 
+// ponytail: plain unicode glyphs, not an icon component/library — three
+// static characters don't earn an SVG asset.
+const RESULT_BADGE_GLYPHS: Record<Game['myResult'], string> = {
+  win: '▲',
+  draw: '●',
+  loss: '▼',
+}
+
 export function GameRow({ game, accuracy }: { game: Game; accuracy: GameAccuracy | undefined }) {
   const s = getStrings()
   const router = useRouter()
@@ -45,8 +53,9 @@ export function GameRow({ game, accuracy }: { game: Game; accuracy: GameAccuracy
       <td className="px-3 py-2">{opponent}</td>
       <td className="px-3 py-2">
         <span
-          className={`rounded px-2 py-0.5 text-xs font-medium ${RESULT_BADGE_STYLES[game.myResult]}`}
+          className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium ${RESULT_BADGE_STYLES[game.myResult]}`}
         >
+          <span aria-hidden="true">{RESULT_BADGE_GLYPHS[game.myResult]}</span>
           {s.common.result[game.myResult]}
         </span>
       </td>
