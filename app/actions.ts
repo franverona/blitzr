@@ -16,6 +16,7 @@ import {
 } from '@/lib/drill'
 import type { DrillCandidate } from '@/lib/drill'
 import { parseManualGame } from '@/lib/manualGame'
+import { summarizeMoveQuality } from '@/lib/moveQuality'
 import { buildOpeningFamilies, ecoFamilyLabel } from '@/lib/openings'
 import { countGamesReachingLine } from '@/lib/openingTheory'
 import { syncAllArchives } from '@/lib/sync'
@@ -26,6 +27,7 @@ import type {
   DrillPrompt,
   DrillSourceType,
   Game,
+  GameAccuracy,
   GameAnalysis,
   LessonGameStats,
   OpeningFamily,
@@ -132,12 +134,30 @@ export async function getUnanalyzedGames(): Promise<UnanalyzedGame[]> {
     })
 }
 
-/** Every game id that already has saved analysis — for the games list's
- *  per-row "analyzed" indicator, the inverse of `getUnanalyzedGames()`'s
- *  own analyzed-id lookup. */
-export async function listAnalyzedGameIds(): Promise<string[]> {
-  const analyses = await getRepository().listAllGameAnalyses()
-  return analyses.map((a) => a.gameId)
+/** Own-side accuracy + mistake/blunder counts, keyed by game id, for every
+ *  analyzed game — the games list's precision/errors columns. Also doubles
+ *  as the "analyzed" lookup (a game with saved analysis always has parseable
+ *  `movesSan`, since analysis can only be triggered on one that does — see
+ *  `getUnanalyzedGames()`), so there's no separate id-only variant. Same
+ *  `listAllGames()` + `listAllGameAnalyses()` join `getBlunderStats()` uses. */
+export async function getGameAccuracyById(): Promise<Record<string, GameAccuracy>> {
+  const repo = getRepository()
+  const [games, analyses] = await Promise.all([repo.listAllGames(), repo.listAllGameAnalyses()])
+  const analysesByGameId = new Map(analyses.map((a) => [a.gameId, a]))
+
+  const result: Record<string, GameAccuracy> = {}
+  for (const game of games) {
+    const analysis = analysesByGameId.get(game.id)
+    if (!analysis || !game.movesSan) continue
+    const summary = summarizeMoveQuality(analysis.evals, game.movesSan)
+    const mine = game.myColor === 'white' ? summary.white : summary.black
+    result[game.id] = {
+      accuracy: mine.accuracy,
+      mistakes: mine.counts.mistake,
+      blunders: mine.counts.blunder,
+    }
+  }
+  return result
 }
 
 function cardKey(c: { gameId: string; sourceType: DrillSourceType; ply: number }): string {

@@ -3,7 +3,8 @@
 import { useRouter } from 'next/navigation'
 import { formatDate } from '@/lib/dates'
 import { getStrings } from '@/lib/i18n/strings'
-import type { Game } from '@/lib/types'
+import type { Game, GameAccuracy } from '@/lib/types'
+import { accuracyPillClass } from './GameAnalysisPanel'
 import { KnightIcon } from './KnightIcon'
 import { startRouteProgress } from './RouteProgressBar'
 
@@ -13,7 +14,7 @@ const RESULT_BADGE_STYLES: Record<Game['myResult'], string> = {
   loss: 'bg-rose-900/40 text-rose-400',
 }
 
-export function GameRow({ game, isAnalyzed }: { game: Game; isAnalyzed: boolean }) {
+export function GameRow({ game, accuracy }: { game: Game; accuracy: GameAccuracy | undefined }) {
   const s = getStrings()
   const router = useRouter()
   const opponent = game.myColor === 'white' ? game.blackUsername : game.whiteUsername
@@ -49,7 +50,32 @@ export function GameRow({ game, isAnalyzed }: { game: Game; isAnalyzed: boolean 
           {s.common.result[game.myResult]}
         </span>
       </td>
-      <td className="px-3 py-2 text-zinc-400">{game.ecoName ?? '—'}</td>
+      <td className="px-3 py-2 text-center">
+        {accuracy ? (
+          <span
+            className={`rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums ${accuracyPillClass(accuracy.accuracy)}`}
+          >
+            {accuracy.accuracy}
+          </span>
+        ) : (
+          <span className="text-zinc-700">—</span>
+        )}
+      </td>
+      <td className="px-3 py-2 text-center tabular-nums">
+        {accuracy ? (
+          <span className="inline-flex items-center gap-1.5">
+            <abbr title={s.blunderBadge.titles.mistake} className="text-amber-400 no-underline">
+              {accuracy.mistakes}
+            </abbr>
+            <span className="text-zinc-700">/</span>
+            <abbr title={s.blunderBadge.titles.blunder} className="text-rose-400 no-underline">
+              {accuracy.blunders}
+            </abbr>
+          </span>
+        ) : (
+          <span className="text-zinc-700">—</span>
+        )}
+      </td>
       <td className="px-3 py-2 text-zinc-400">
         {timeClassTooltip ? (
           <abbr title={timeClassTooltip}>
@@ -61,7 +87,7 @@ export function GameRow({ game, isAnalyzed }: { game: Game; isAnalyzed: boolean 
         )}
       </td>
       <td className="px-3 py-2 text-center">
-        {isAnalyzed ? (
+        {accuracy ? (
           <abbr title={s.gameList.analyzedTooltip} className="text-emerald-500 no-underline">
             ✓
           </abbr>
