@@ -25,21 +25,26 @@ export function BulkAnalyzeButton({ hasUnanalyzedGames }: { hasUnanalyzedGames: 
         }
         className="flex items-center gap-1.5 rounded-md border border-zinc-700 px-2.5 py-1 text-sm font-medium whitespace-nowrap hover:bg-zinc-800 disabled:opacity-50"
       >
-        <CpuIcon className="size-4 shrink-0" />
-        {s.bulkAnalyze.button}
-      </button>
-      {progress && (
-        <div className="flex items-center gap-2 text-sm text-zinc-400">
-          <span>
+        {progress ? (
+          <span className="size-4 shrink-0 animate-spin rounded-full border-2 border-zinc-600 border-t-zinc-300" />
+        ) : (
+          <CpuIcon className="size-4 shrink-0" />
+        )}
+        {progress ? (
+          <>
             {s.bulkAnalyze.analyzingProgress(progress.gamesDone + 1, progress.gamesTotal)}
             {progress.positionsTotal > 0 &&
               ` ${s.bulkAnalyze.positionsProgress(progress.positionsDone, progress.positionsTotal)}`}
             …
-          </span>
-          <button onClick={cancel} className="text-zinc-500 underline hover:text-zinc-200">
-            {s.bulkAnalyze.cancel}
-          </button>
-        </div>
+          </>
+        ) : (
+          s.bulkAnalyze.button
+        )}
+      </button>
+      {progress && (
+        <button onClick={cancel} className="text-sm text-zinc-500 underline hover:text-zinc-200">
+          {s.bulkAnalyze.cancel}
+        </button>
       )}
     </div>
   )
