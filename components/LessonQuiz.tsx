@@ -201,7 +201,7 @@ export function LessonQuiz({
                 and start over mid-line without playing through the rest first. */}
             <button
               onClick={handleRestart}
-              className="rounded-md border border-zinc-700 px-3 py-1.5 text-sm font-medium hover:bg-zinc-800"
+              className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
             >
               {s.lessonQuiz.restart}
             </button>
@@ -209,7 +209,7 @@ export function LessonQuiz({
               <button
                 onClick={handleHint}
                 disabled={revealed || !isMyTurn}
-                className="rounded-md border border-zinc-700 px-3 py-1.5 text-sm font-medium hover:bg-zinc-800 disabled:opacity-40"
+                className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium hover:bg-zinc-100 disabled:opacity-40 dark:border-zinc-700 dark:hover:bg-zinc-800"
               >
                 {s.lessonQuiz.showMove}
               </button>
@@ -250,14 +250,16 @@ export function LessonQuiz({
         </div>
 
         {isComplete ? (
-          <p className="text-sm text-zinc-400">
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">
             {mistakes === 0 && hintsUsed === 0
               ? s.lessonQuiz.perfect
               : s.lessonQuiz.summary(mistakes, hintsUsed)}
           </p>
         ) : (
           feedback === 'incorrect' && (
-            <p className="text-sm text-rose-400">{s.lessonQuiz.notQuiteTryAgain}</p>
+            <p className="text-sm text-rose-600 dark:text-rose-400">
+              {s.lessonQuiz.notQuiteTryAgain}
+            </p>
           )
         )}
 

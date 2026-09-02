@@ -84,8 +84,8 @@ export function BulkAnalysisProvider({ children }: { children: React.ReactNode }
           onClick={() => setToast(null)}
           className={`fixed right-4 bottom-4 z-50 max-w-sm cursor-pointer rounded-md border px-4 py-2.5 text-sm shadow-lg ${
             toast.isError
-              ? 'border-rose-900 bg-rose-950 text-rose-200'
-              : 'border-zinc-700 bg-zinc-900 text-zinc-100'
+              ? 'border-rose-300 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-200'
+              : 'border-zinc-200 bg-zinc-50 text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100'
           }`}
         >
           {toast.text}

@@ -50,8 +50,8 @@ function CategoryTab({
       onClick={onClick}
       className={`rounded-md border px-3 py-1 text-sm ${
         active
-          ? 'border-accent bg-accent/20 text-white'
-          : 'border-zinc-700 text-zinc-400 hover:bg-zinc-800'
+          ? 'border-accent bg-accent/20 text-zinc-900 dark:text-white'
+          : 'border-zinc-300 text-zinc-500 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800'
       }`}
     >
       {label}

@@ -31,6 +31,11 @@ const en = {
     collapse: 'Collapse',
     expand: 'Expand',
   },
+  settings: {
+    trigger: 'Settings',
+    title: 'Settings',
+    darkTheme: 'Dark theme',
+  },
   gameRow: {
     timeClassTooltips: {
       bullet: 'Bullet — under 3 minutes per player',
@@ -407,6 +412,11 @@ const es: Strings = {
     blunders: 'Errores',
     collapse: 'Contraer',
     expand: 'Expandir',
+  },
+  settings: {
+    trigger: 'Ajustes',
+    title: 'Ajustes',
+    darkTheme: 'Tema oscuro',
   },
   gameRow: {
     timeClassTooltips: {

@@ -203,7 +203,7 @@ function AccuracyFilterPopover({
       </button>
 
       {open && (
-        <div className="absolute top-full right-0 z-20 mt-1 flex w-96 flex-col gap-2 rounded-md border border-zinc-300 bg-white p-3 text-sm shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
+        <div className="absolute top-full right-0 z-20 mt-1 flex w-96 flex-col gap-2 rounded-md border border-zinc-300 bg-zinc-50 p-3 text-sm shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
           <div className="flex gap-1">
             {(['', 'gte', 'lte'] as const).map((op) => (
               <button

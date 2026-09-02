@@ -29,9 +29,9 @@ export function PositionChecklist({ myColor }: { myColor: MyColor }) {
   return (
     <details
       open={findings.length > 0}
-      className="rounded-md border border-zinc-800 bg-zinc-900/50 text-sm"
+      className="rounded-md border border-zinc-200 bg-zinc-50 text-sm dark:border-zinc-800 dark:bg-zinc-900/50"
     >
-      <summary className="cursor-pointer p-4 font-semibold text-zinc-200 select-none">
+      <summary className="cursor-pointer p-4 font-semibold text-zinc-700 select-none dark:text-zinc-200">
         {s.gamePage.checklist.summary(findings.length)}
       </summary>
       <div className="flex flex-col gap-3 px-4 pb-4">
@@ -67,7 +67,7 @@ function ChecklistSection({
   const s = getStrings()
   return (
     <div className="flex flex-col gap-1">
-      <h3 className="text-xs font-medium text-zinc-400">{title}</h3>
+      <h3 className="text-xs font-medium text-zinc-500 dark:text-zinc-400">{title}</h3>
       {findings.length === 0 ? (
         <p className="text-zinc-500">{s.gamePage.checklist.clean}</p>
       ) : (
@@ -77,12 +77,16 @@ function ChecklistSection({
             const isHidden = hiddenFindingKeys.has(key)
             return (
               <li key={key} className="flex items-start justify-between gap-2">
-                <span className={isHidden ? 'text-zinc-500 line-through' : 'text-zinc-300'}>
+                <span
+                  className={
+                    isHidden ? 'text-zinc-500 line-through' : 'text-zinc-700 dark:text-zinc-300'
+                  }
+                >
                   {describeChecklistFinding(f)}
                 </span>
                 <button
                   onClick={() => toggleFindingVisibility(key)}
-                  className="shrink-0 text-xs text-zinc-500 hover:text-zinc-300 hover:underline"
+                  className="shrink-0 text-xs text-zinc-500 hover:text-zinc-900 hover:underline dark:hover:text-zinc-300"
                 >
                   {isHidden ? s.gamePage.checklist.show : s.gamePage.checklist.hide}
                 </button>

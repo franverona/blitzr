@@ -49,7 +49,7 @@ export function LiveAnalysisPanel() {
   }
 
   return (
-    <div className="flex flex-col gap-1 rounded-md border border-zinc-800 bg-zinc-900/50 text-sm">
+    <div className="flex flex-col gap-1 rounded-md border border-zinc-200 bg-zinc-50 text-sm dark:border-zinc-800 dark:bg-zinc-900/50">
       <div className="flex items-center justify-between px-3 pt-3">
         <p className="text-xs font-semibold text-zinc-500">{s.liveAnalysis.panelTitle}</p>
         {/* Small, quiet corner spinner rather than replacing the list every
@@ -62,7 +62,7 @@ export function LiveAnalysisPanel() {
             role="status"
             aria-label={s.liveAnalysis.thinking}
             title={s.liveAnalysis.thinking}
-            className="h-3 w-3 shrink-0 animate-spin rounded-full border-2 border-zinc-700 border-t-zinc-400"
+            className="h-3 w-3 shrink-0 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-600 dark:border-zinc-700 dark:border-t-zinc-400"
           />
         )}
       </div>
@@ -80,7 +80,7 @@ export function LiveAnalysisPanel() {
         // `explorePly` and let a click jump straight to any other point in
         // the same branch — the same explore-path-aware ◀/▶ nav in
         // `BoardNavControls` does, just from here too.
-        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 border-t border-b border-zinc-800 px-3 py-2 text-xs">
+        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 border-t border-b border-zinc-200 px-3 py-2 text-xs dark:border-zinc-800">
           <span className="shrink-0 font-semibold text-zinc-500">{s.liveAnalysis.yourLine}</span>
           <MoveSequence
             fen={explorePositions[0]}
@@ -96,13 +96,13 @@ export function LiveAnalysisPanel() {
             onClick={resetExploreLine}
             aria-label={s.liveAnalysis.resetLine}
             title={s.liveAnalysis.resetLine}
-            className="ml-auto shrink-0 rounded px-1.5 py-0.5 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-200"
+            className="ml-auto shrink-0 rounded px-1.5 py-0.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
           >
             ✕
           </button>
         </div>
       )}
-      <div className="flex flex-col divide-y divide-zinc-800">
+      <div className="flex flex-col divide-y divide-zinc-200 dark:divide-zinc-800">
         {lines === null || fen === null ? (
           <p className="px-3 pb-3 text-zinc-500">{s.liveAnalysis.thinking}</p>
         ) : (
@@ -114,7 +114,7 @@ export function LiveAnalysisPanel() {
                 key={i}
                 className={`flex items-center gap-2 px-3 py-2 ${isQueued ? 'bg-accent/10' : ''}`}
               >
-                <span className="w-12 shrink-0 font-mono text-zinc-200 tabular-nums">
+                <span className="w-12 shrink-0 font-mono text-zinc-700 tabular-nums dark:text-zinc-200">
                   {formatEval({ cp: line.cp, mate: line.mate, bestMove: null })}
                 </span>
                 <MoveSequence fen={fen} moves={moves} />
@@ -141,8 +141,8 @@ export function LiveAnalysisPanel() {
                   title={isQueued ? s.liveAnalysis.lineQueued : s.liveAnalysis.playLine}
                   className={`shrink-0 rounded px-1.5 py-0.5 disabled:opacity-100 ${
                     isQueued
-                      ? 'text-emerald-400'
-                      : 'text-zinc-500 hover:bg-zinc-800 hover:text-zinc-200 disabled:opacity-30'
+                      ? 'text-emerald-600 dark:text-emerald-400'
+                      : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 disabled:opacity-30 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'
                   }`}
                 >
                   {isQueued ? '✓' : '▶'}

@@ -15,7 +15,7 @@ export function FlipBoardButton() {
     <button
       onClick={() => setBoardOrientation((o) => (o === 'white' ? 'black' : 'white'))}
       aria-label={s.flipBoard.ariaLabel}
-      className="flex h-7 w-7 items-center justify-center rounded-full border border-zinc-700 text-xs text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
+      className="flex h-7 w-7 items-center justify-center rounded-full border border-zinc-300 text-xs text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
     >
       ⇅
     </button>

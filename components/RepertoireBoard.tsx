@@ -180,18 +180,18 @@ export function RepertoireBoard({
           <button
             onClick={() => setPath([])}
             disabled={path.length === 0}
-            className="rounded-md border border-zinc-700 px-2.5 py-1 hover:bg-zinc-800 disabled:opacity-40"
+            className="rounded-md border border-zinc-300 px-2.5 py-1 hover:bg-zinc-100 disabled:opacity-40 dark:border-zinc-700 dark:hover:bg-zinc-800"
           >
             {s.repertoire.start}
           </button>
           <button
             onClick={() => setPath((p) => p.slice(0, -1))}
             disabled={path.length === 0}
-            className="rounded-md border border-zinc-700 px-2.5 py-1 hover:bg-zinc-800 disabled:opacity-40"
+            className="rounded-md border border-zinc-300 px-2.5 py-1 hover:bg-zinc-100 disabled:opacity-40 dark:border-zinc-700 dark:hover:bg-zinc-800"
           >
             {s.repertoire.back}
           </button>
-          <span className="mx-1 h-4 w-px bg-zinc-700" />
+          <span className="mx-1 h-4 w-px bg-zinc-300 dark:bg-zinc-700" />
           <HelpButton />
           <ColorTab color="white" active={color === 'white'} />
           <ColorTab color="black" active={color === 'black'} />
@@ -232,13 +232,13 @@ export function RepertoireBoard({
             <button
               onClick={handleDelete}
               disabled={!currentNode || deleting}
-              className="rounded-md border border-rose-900 px-2.5 py-1 text-rose-400 hover:bg-rose-950 disabled:opacity-40"
+              className="rounded-md border border-rose-300 px-2.5 py-1 text-rose-600 hover:bg-rose-50 disabled:opacity-40 dark:border-rose-900 dark:text-rose-400 dark:hover:bg-rose-950"
             >
               {s.repertoire.deleteLine}
             </button>
           </div>
 
-          {error && <p className="text-sm text-rose-400">{error}</p>}
+          {error && <p className="text-sm text-rose-600 dark:text-rose-400">{error}</p>}
           {hangingReason && (
             <p className="text-sm text-amber-600 dark:text-amber-400">
               {describeBlunderReason(hangingReason)}
@@ -254,8 +254,8 @@ export function RepertoireBoard({
                   onClick={() => setPath((p) => [...p.slice(0, -1), sibling])}
                   className={`rounded px-2 py-0.5 ${
                     sibling.id === currentNode?.id
-                      ? 'bg-accent/50 font-medium text-white'
-                      : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
+                      ? 'bg-accent/50 font-medium text-zinc-900 dark:text-white'
+                      : 'bg-zinc-200 text-zinc-700 hover:bg-zinc-300 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700'
                   }`}
                 >
                   {sibling.moveSan}
@@ -278,8 +278,8 @@ function ColorTab({ color, active }: { color: RepertoireColor; active: boolean }
       href={`/repertoire?color=${color}`}
       className={`rounded-md border px-3 py-1 ${
         active
-          ? 'border-accent bg-accent/20 text-white'
-          : 'border-zinc-700 text-zinc-400 hover:bg-zinc-800'
+          ? 'border-accent bg-accent/20 text-zinc-900 dark:text-white'
+          : 'border-zinc-300 text-zinc-500 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800'
       }`}
     >
       {s.common.color[color]}
@@ -296,7 +296,7 @@ function HelpButton() {
       <button
         onClick={() => dialogRef.current?.showModal()}
         aria-label={s.repertoire.helpAriaLabel}
-        className="flex h-7 w-7 items-center justify-center rounded-full border border-zinc-700 text-xs text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
+        className="flex h-7 w-7 items-center justify-center rounded-full border border-zinc-300 text-xs text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
       >
         ?
       </button>
@@ -305,7 +305,7 @@ function HelpButton() {
         onClick={(e) => {
           if (e.target === e.currentTarget) dialogRef.current?.close()
         }}
-        className="fixed top-1/2 left-1/2 m-0 max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-lg border border-zinc-700 bg-zinc-900 p-0 text-left text-zinc-100 backdrop:bg-black/60"
+        className="fixed top-1/2 left-1/2 m-0 max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-lg border border-zinc-200 bg-zinc-50 p-0 text-left text-zinc-900 backdrop:bg-black/60 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
       >
         <div className="flex flex-col gap-3 p-5">
           <div className="flex items-center justify-between gap-4">
@@ -313,13 +313,13 @@ function HelpButton() {
             <button
               onClick={() => dialogRef.current?.close()}
               aria-label={s.common.close}
-              className="text-zinc-500 hover:text-zinc-200"
+              className="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
             >
               ✕
             </button>
           </div>
-          <p className="text-sm text-zinc-400">{s.repertoire.helpP1}</p>
-          <p className="text-sm text-zinc-400">{s.repertoire.helpP2}</p>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">{s.repertoire.helpP1}</p>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">{s.repertoire.helpP2}</p>
         </div>
       </dialog>
     </>

@@ -57,7 +57,7 @@ export function MoveSequence({
           return (
             <span
               key={i}
-              className={`inline-flex items-center gap-1 ${isCurrent ? 'font-semibold text-white' : 'text-zinc-400'}`}
+              className={`inline-flex items-center gap-1 ${isCurrent ? 'font-semibold text-zinc-900 dark:text-white' : 'text-zinc-500 dark:text-zinc-400'}`}
             >
               {numberLabel}
               <PieceMoveLabel san={move.san} color={move.color} />
@@ -70,8 +70,8 @@ export function MoveSequence({
             onClick={() => onSelectIndex(i)}
             className={`inline-flex items-center gap-1 rounded px-1 py-0.5 ${
               isCurrent
-                ? 'bg-accent/40 font-semibold text-white'
-                : 'text-zinc-400 hover:bg-zinc-800'
+                ? 'bg-accent/40 font-semibold text-zinc-900 dark:text-white'
+                : 'text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800'
             }`}
           >
             {numberLabel}

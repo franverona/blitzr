@@ -9,9 +9,9 @@ import { KnightIcon } from './KnightIcon'
 import { startRouteProgress } from './RouteProgressBar'
 
 const RESULT_BADGE_STYLES: Record<Game['myResult'], string> = {
-  win: 'bg-emerald-900/40 text-emerald-400',
-  draw: 'bg-zinc-700/50 text-zinc-300',
-  loss: 'bg-rose-900/40 text-rose-400',
+  win: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400',
+  draw: 'bg-zinc-200 text-zinc-700 dark:bg-zinc-700/50 dark:text-zinc-300',
+  loss: 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-400',
 }
 
 // ponytail: plain unicode glyphs, not an icon component/library — three
@@ -45,7 +45,7 @@ export function GameRow({ game, accuracy }: { game: Game; accuracy: GameAccuracy
         }
       }}
       tabIndex={0}
-      className="cursor-pointer outline-none hover:bg-zinc-900/50 focus:bg-zinc-900/50"
+      className="cursor-pointer outline-none hover:bg-zinc-100 focus:bg-zinc-100 dark:hover:bg-zinc-900/50 dark:focus:bg-zinc-900/50"
     >
       <td className="px-3 py-2 whitespace-nowrap">{date}</td>
       <td className="px-3 py-2">
@@ -80,11 +80,17 @@ export function GameRow({ game, accuracy }: { game: Game; accuracy: GameAccuracy
       <td className="px-3 py-2 text-center tabular-nums">
         {accuracy ? (
           <span className="inline-flex items-center gap-1.5">
-            <abbr title={s.blunderBadge.titles.mistake} className="text-amber-400 no-underline">
+            <abbr
+              title={s.blunderBadge.titles.mistake}
+              className="text-amber-600 no-underline dark:text-amber-400"
+            >
               {accuracy.mistakes}
             </abbr>
             <span className="text-zinc-700">/</span>
-            <abbr title={s.blunderBadge.titles.blunder} className="text-rose-400 no-underline">
+            <abbr
+              title={s.blunderBadge.titles.blunder}
+              className="text-rose-600 no-underline dark:text-rose-400"
+            >
               {accuracy.blunders}
             </abbr>
           </span>

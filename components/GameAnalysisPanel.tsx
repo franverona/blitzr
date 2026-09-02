@@ -103,7 +103,7 @@ export function AnalyzeButton() {
         {analysis && (
           <button
             onClick={() => dialogRef.current?.showModal()}
-            className="text-sm text-zinc-400 hover:text-zinc-100"
+            className="text-sm text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
           >
             {s.analysisPanel.viewAnalysis}
           </button>
@@ -111,7 +111,7 @@ export function AnalyzeButton() {
         <button
           onClick={handleAnalyze}
           disabled={progress !== null}
-          className="rounded-md border border-zinc-700 px-3 py-1.5 text-sm font-medium whitespace-nowrap hover:bg-zinc-800 disabled:opacity-50"
+          className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium whitespace-nowrap hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:hover:bg-zinc-800"
         >
           {progress
             ? `${analysis ? s.analysisPanel.reanalyzing : s.analysisPanel.analyzing}… (${progress.done}/${progress.total})`
@@ -120,7 +120,7 @@ export function AnalyzeButton() {
               : s.analysisPanel.analyzeWithStockfish}
         </button>
       </div>
-      {error && <p className="text-sm text-rose-400">{error}</p>}
+      {error && <p className="text-sm text-rose-600 dark:text-rose-400">{error}</p>}
       <AnalysisDialog dialogRef={dialogRef} />
     </div>
   )
@@ -184,9 +184,10 @@ export function GameSummary() {
  *  as a colored pill, same "badge, not bare text" convention as
  *  `BlunderSeverityBadge`, so a good/bad accuracy reads at a glance too. */
 export function accuracyPillClass(accuracy: number): string {
-  if (accuracy >= 90) return 'bg-emerald-900/40 text-emerald-400'
-  if (accuracy >= 70) return 'bg-amber-900/40 text-amber-400'
-  return 'bg-rose-900/40 text-rose-400'
+  if (accuracy >= 90)
+    return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400'
+  if (accuracy >= 70) return 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400'
+  return 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-400'
 }
 
 export function MoveQualityLink() {
@@ -200,7 +201,7 @@ export function MoveQualityLink() {
 
   return (
     <div className="flex items-center gap-2 self-start text-sm">
-      <span className="text-zinc-400">{s.analysisPanel.accuracy}</span>
+      <span className="text-zinc-500 dark:text-zinc-400">{s.analysisPanel.accuracy}</span>
       <span
         className={`rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums ${accuracyPillClass(mine.accuracy)}`}
       >
@@ -208,7 +209,7 @@ export function MoveQualityLink() {
       </span>
       <button
         onClick={() => dialogRef.current?.showModal()}
-        className="text-zinc-400 hover:text-zinc-100"
+        className="text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
       >
         {s.analysisPanel.moveQualityLink}
       </button>
@@ -236,7 +237,7 @@ function MoveQualityDialog({
       onClick={(e) => {
         if (e.target === e.currentTarget) dialogRef.current?.close()
       }}
-      className="fixed top-1/2 left-1/2 m-0 w-[95vw] max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg border border-zinc-700 bg-zinc-900 p-0 text-left text-zinc-100 backdrop:bg-black/60"
+      className="fixed top-1/2 left-1/2 m-0 w-[95vw] max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg border border-zinc-200 bg-zinc-50 p-0 text-left text-zinc-900 backdrop:bg-black/60 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
     >
       <div className="flex flex-col gap-4 p-6">
         <div className="flex items-center justify-between gap-4">
@@ -244,28 +245,28 @@ function MoveQualityDialog({
           <button
             onClick={() => dialogRef.current?.close()}
             aria-label={s.common.close}
-            className="text-zinc-500 hover:text-zinc-200"
+            className="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
           >
             ✕
           </button>
         </div>
-        <div className="overflow-x-auto rounded-lg border border-zinc-800">
+        <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
           <table className="w-full text-sm">
-            <thead className="bg-zinc-950 text-left text-xs tracking-wide text-zinc-500 uppercase">
+            <thead className="bg-zinc-100 text-left text-xs tracking-wide text-zinc-500 uppercase dark:bg-zinc-950">
               <tr>
                 <th className="px-3 py-2"></th>
                 <th className="px-3 py-2 text-right">{s.analysisPanel.you}</th>
                 <th className="px-3 py-2 text-right">{s.analysisPanel.opponent}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-800">
+            <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
               <tr className="font-medium">
                 <td className="px-3 py-2">{s.analysisPanel.accuracy}</td>
                 <td className="px-3 py-2 text-right">{mine.accuracy}</td>
                 <td className="px-3 py-2 text-right">{theirs.accuracy}</td>
               </tr>
               {MOVE_QUALITY_TIERS.map((tier) => (
-                <tr key={tier} className="text-zinc-400">
+                <tr key={tier} className="text-zinc-500 dark:text-zinc-400">
                   <td className="px-3 py-2">{s.analysisPanel.moveQuality[tier]}</td>
                   <td className="px-3 py-2 text-right">{mine.counts[tier]}</td>
                   <td className="px-3 py-2 text-right">{theirs.counts[tier]}</td>
@@ -296,7 +297,7 @@ function AnalysisDialog({ dialogRef }: { dialogRef: React.RefObject<HTMLDialogEl
       onClick={(e) => {
         if (e.target === e.currentTarget) dialogRef.current?.close()
       }}
-      className="fixed top-1/2 left-1/2 m-0 max-h-[85vh] w-[95vw] max-w-3xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg border border-zinc-700 bg-zinc-900 p-0 text-left text-zinc-100 backdrop:bg-black/60"
+      className="fixed top-1/2 left-1/2 m-0 max-h-[85vh] w-[95vw] max-w-3xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg border border-zinc-200 bg-zinc-50 p-0 text-left text-zinc-900 backdrop:bg-black/60 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
     >
       <div className="flex flex-col gap-4 p-6">
         <div className="flex items-center justify-between gap-4">
@@ -304,7 +305,7 @@ function AnalysisDialog({ dialogRef }: { dialogRef: React.RefObject<HTMLDialogEl
           <button
             onClick={() => dialogRef.current?.close()}
             aria-label={s.common.close}
-            className="text-zinc-500 hover:text-zinc-200"
+            className="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
           >
             ✕
           </button>
@@ -321,7 +322,7 @@ function AnalysisDialog({ dialogRef }: { dialogRef: React.RefObject<HTMLDialogEl
               {worst!.moveSan} ({formatEval(worst!.evalBefore)} → {formatEval(worst!.evalAfter)},{' '}
               {describeEval(worst!.evalAfter).toLowerCase()}).
             </p>
-            <ul className="flex flex-col divide-y divide-zinc-800">
+            <ul className="flex flex-col divide-y divide-zinc-200 dark:divide-zinc-800">
               {blunders.map((b) => {
                 const reason = detectBlunderReason(positions[b.ply - 1], positions[b.ply], myColor)
                 const betterMove = describeBetterMove(
@@ -335,12 +336,12 @@ function AnalysisDialog({ dialogRef }: { dialogRef: React.RefObject<HTMLDialogEl
                   <li key={b.ply} className="flex flex-col gap-1.5 py-4 first:pt-0 last:pb-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <BlunderSeverityBadge swingCp={b.swingCp} />
-                      <span className="text-sm text-zinc-300">
+                      <span className="text-sm text-zinc-700 dark:text-zinc-300">
                         {plyLabel(b.ply)} {b.moveSan}: {formatEval(b.evalBefore)} →{' '}
                         {formatEval(b.evalAfter)} ({formatSwing(b)})
                       </span>
                     </div>
-                    <div className="text-base text-zinc-300">
+                    <div className="text-base text-zinc-700 dark:text-zinc-300">
                       {describeMove(positions[b.ply - 1], b.moveSan)}
                     </div>
                     {reason && (
