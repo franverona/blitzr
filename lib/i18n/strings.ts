@@ -35,6 +35,13 @@ const en = {
     trigger: 'Settings',
     title: 'Settings',
     darkTheme: 'Dark theme',
+    boardColors: 'Board colors',
+    presets: {
+      green: 'Green',
+      brown: 'Brown',
+      blue: 'Blue',
+      purple: 'Purple',
+    } as Record<string, string>,
   },
   gameRow: {
     timeClassTooltips: {
@@ -417,6 +424,13 @@ const es: Strings = {
     trigger: 'Ajustes',
     title: 'Ajustes',
     darkTheme: 'Tema oscuro',
+    boardColors: 'Colores del tablero',
+    presets: {
+      green: 'Verde',
+      brown: 'Marrón',
+      blue: 'Azul',
+      purple: 'Morado',
+    },
   },
   gameRow: {
     timeClassTooltips: {

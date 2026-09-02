@@ -162,14 +162,36 @@ file, not here — this section is only cross-cutting rules that span multiple f
   just a `dark:` prefix kept on the old value. The light palette is deliberately muted, not stark
   white: page canvas is `bg-zinc-100` (`app/layout.tsx`'s `<body>`), elevated surfaces (dialogs,
   panels, popovers) are `bg-zinc-50` one step lighter — pure white read as "excessively bright"
-  in practice. `BOARD_DARK_SQUARE`/`BOARD_LIGHT_SQUARE`/`EvalBar`'s black/white gauge are
-  deliberately exempt (see `lib/theme.ts`'s and `EvalBar.tsx`'s own comments) — they mimic fixed
-  chess.com conventions (board squares, army-color eval gauge), not the app's own UI chrome.
-- **Board colors and animation timing have one source of truth**: `lib/theme.ts` for
-  react-chessboard props a Tailwind class can't reach, and the `accent` Tailwind color
-  (`app/globals.css`) for everywhere a className can. `BOARD_ANIMATION_DURATION_MS` (150ms,
-  vs. react-chessboard's 300ms default) minimizes how long a captured piece visibly overlaps its
-  capturer; every board in the app (`Board.tsx`, `PlanBoard.tsx`, `RepertoireBoard.tsx`) shares it.
+  in practice. `EvalBar`'s black/white gauge is deliberately exempt (see its own comment) — it
+  mimics chess.com's fixed army-color eval convention, not the app's own light/dark UI chrome.
+  The board's own square colors are a _separate_ user preference (below), not tied to this
+  toggle at all.
+- **Board colors are one of four presets (green/brown/blue/purple), not a free-form picker** —
+  `BOARD_COLOR_PRESETS`/`getBoardColorPreset()` (`lib/theme.ts`) are the data; `useBoardColors()`
+  (`components/BoardColorsProvider.tsx`) is the per-viewer resolved value every board consumes
+  (`Board.tsx`, `RepertoireBoard.tsx`, `DrillSession.tsx`, `LessonQuiz.tsx`, `PlanBoard.tsx`,
+  `MiniBoard.tsx`, plus the decorative move-list swatches in `PieceMoveLabel.tsx`/
+  `BlunderStats.tsx`). Picked from the same Settings dialog as the theme switch
+  (`Sidebar.tsx`), stored in a `blitzr-board-color` cookie (the preset id only) and read
+  server-side in `app/layout.tsx` — a plain localStorage preference read only after mount was
+  tried first and produces a real, visible flash-then-swap on every load: unlike `--color-accent`
+  (a CSS custom property, patchable by a pre-paint script), react-chessboard's square colors are
+  plain inline-style _props_, which only a value already known at server-render time can get
+  right the first time. `app/layout.tsx` bakes the resolved preset straight into `<html>`'s own
+  inline `style` (for `--color-accent`) and into `BoardColorsProvider`'s initial state (for the
+  squares) from that one cookie read, rather than a client script mutating `<html>` after the
+  fact — the earlier script-based version of this actually broke hydration (React diffs
+  `<html>`'s attributes against what it rendered; an out-of-band script write shows up as a
+  mismatch). **The cookie name itself has to stay a literal string duplicated in both
+  `app/layout.tsx` and `BoardColorsProvider.tsx`, not a shared exported constant** — a Server
+  Component importing a plain value from a `'use client'` module doesn't reliably get the real
+  value across that boundary (it silently read as `undefined` here, which made every cookie look
+  absent); `THEME_COOKIE`/`COLLAPSED_COOKIE` in `Sidebar.tsx` already duplicate their own literals
+  against `layout.tsx` for the same reason.
+- **Board animation timing has one source of truth**: `BOARD_ANIMATION_DURATION_MS`
+  (`lib/theme.ts`), 150ms vs. react-chessboard's 300ms default, minimizes how long a captured
+  piece visibly overlaps its capturer; every board in the app (`Board.tsx`, `PlanBoard.tsx`,
+  `RepertoireBoard.tsx`) shares it.
 - **`BoardNavControls`** binds arrow keys to prev/next, Space to Play/Pause, and `0` to Start —
   globally, throttled to `BOARD_ANIMATION_DURATION_MS` so rapid input can't cut an animation
   short. Mounted only on `games/[id]` and `/learn`'s Study mode (not Quiz mode).

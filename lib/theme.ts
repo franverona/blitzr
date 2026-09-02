@@ -4,25 +4,49 @@
 // strings, not classNames. The board green/light-square pair and the
 // reveal-arrow amber were previously copy-pasted as raw literals across
 // every board-rendering component; `--color-accent` in app/globals.css is
-// the Tailwind-class equivalent of BOARD_DARK_SQUARE for everywhere a
-// className can reach instead (e.g. `bg-accent/20` for the active-tab tint).
+// the Tailwind-class equivalent of the board's dark-square color for
+// everywhere a className can reach instead (e.g. `bg-accent/20` for the
+// active-tab tint).
 
-/** The board's dark-square color — also the app's brand/accent green,
- *  exposed as the `accent` Tailwind theme color (`app/globals.css`) for
- *  anywhere a className can reach instead of an inline style. */
-export const BOARD_DARK_SQUARE = '#769656'
+/** A handful of chess.com-style presets — no free-form picker, so there's
+ *  always a small, known set of colors to resolve server-side (see
+ *  `getBoardColorPreset()` below) rather than an arbitrary stored string. */
+export interface BoardColorPreset {
+  id: 'green' | 'brown' | 'blue' | 'purple'
+  dark: string
+  light: string
+}
 
-export const BOARD_LIGHT_SQUARE = '#eeeed2'
+export const BOARD_COLOR_PRESETS: BoardColorPreset[] = [
+  { id: 'green', dark: '#769656', light: '#eeeed2' },
+  { id: 'brown', dark: '#b58863', light: '#f0d9b5' },
+  { id: 'blue', dark: '#6e9ac2', light: '#dbe6f0' },
+  { id: 'purple', dark: '#8877b3', light: '#e6e1f5' },
+]
+
+/** Looks up a preset by id, falling back to the default (green) for a
+ *  missing/stale/tampered cookie value — shared by `app/layout.tsx` (server,
+ *  resolving the cookie before first paint) and `BoardColorsProvider`
+ *  (client, resolving the same cookie value passed down as its initial
+ *  prop), so the two can never disagree about what an id means. */
+export function getBoardColorPreset(id: string | undefined): BoardColorPreset {
+  return BOARD_COLOR_PRESETS.find((preset) => preset.id === id) ?? BOARD_COLOR_PRESETS[0]
+}
 
 /** react-chessboard's coordinate labels default to a same-theme brown/tan
  *  pair (its own default light/dark square colors) rather than an actual
- *  color swap, so on this app's green/cream board they render low-contrast.
+ *  color swap, so on a non-default board they'd render low-contrast.
  *  Swapping each square's label to the *other* square's background color
  *  keeps them legible, and bold keeps them readable at a glance. Every board
  *  with `showNotation: true` (`Board.tsx`, `DrillSession.tsx`,
- *  `LessonQuiz.tsx`, `RepertoireBoard.tsx`, `PlanBoard.tsx`) shares these. */
-export const BOARD_DARK_SQUARE_NOTATION_STYLE = { color: BOARD_LIGHT_SQUARE, fontWeight: 'bold' }
-export const BOARD_LIGHT_SQUARE_NOTATION_STYLE = { color: BOARD_DARK_SQUARE, fontWeight: 'bold' }
+ *  `LessonQuiz.tsx`, `RepertoireBoard.tsx`, `PlanBoard.tsx`) shares these,
+ *  via `useBoardColors()` (`components/BoardColorsProvider.tsx`). */
+export function boardNotationStyles(dark: string, light: string) {
+  return {
+    darkSquareNotationStyle: { color: light, fontWeight: 'bold' as const },
+    lightSquareNotationStyle: { color: dark, fontWeight: 'bold' as const },
+  }
+}
 
 /** The letter/number glyphs render in their own nested span with their own
  *  inline `fontSize` (react-chessboard's `alphaNotationStyle`/

@@ -8,15 +8,9 @@ import { getStrings } from '@/lib/i18n/strings'
 import { legalDestinations } from '@/lib/legalMoves'
 import { hintPieceName } from '@/lib/san'
 import { describeBlunderReason, detectBlunderReason } from '@/lib/tactics'
-import {
-  BOARD_DARK_SQUARE,
-  BOARD_DARK_SQUARE_NOTATION_STYLE,
-  BOARD_LIGHT_SQUARE,
-  BOARD_LIGHT_SQUARE_NOTATION_STYLE,
-  BOARD_NOTATION_SIZE_STYLE,
-  REVEAL_ARROW_COLOR,
-} from '@/lib/theme'
+import { BOARD_NOTATION_SIZE_STYLE, REVEAL_ARROW_COLOR } from '@/lib/theme'
 import type { BlunderReason, DrillPrompt } from '@/lib/types'
+import { useBoardColors } from './BoardColorsProvider'
 import { LegalMoveSquare } from './LegalMoveSquare'
 import { PlayerAvatar } from './PlayerAvatar'
 
@@ -80,6 +74,7 @@ export function DrillSession({
   // to accept fresh server data, which would reintroduce the exact
   // revalidation-reshuffle problem this snapshot exists to prevent.
   const s = getStrings()
+  const boardColors = useBoardColors()
   const [sessionPrompts, setSessionPrompts] = useState(prompts)
   const [sessionTotalCards] = useState(totalCards)
   const [sessionDueCount] = useState(dueCount)
@@ -320,10 +315,10 @@ export function DrillSession({
                 {children}
               </LegalMoveSquare>
             ),
-            darkSquareStyle: { backgroundColor: BOARD_DARK_SQUARE },
-            lightSquareStyle: { backgroundColor: BOARD_LIGHT_SQUARE },
-            darkSquareNotationStyle: BOARD_DARK_SQUARE_NOTATION_STYLE,
-            lightSquareNotationStyle: BOARD_LIGHT_SQUARE_NOTATION_STYLE,
+            darkSquareStyle: { backgroundColor: boardColors.dark },
+            lightSquareStyle: { backgroundColor: boardColors.light },
+            darkSquareNotationStyle: boardColors.darkSquareNotationStyle,
+            lightSquareNotationStyle: boardColors.lightSquareNotationStyle,
             alphaNotationStyle: BOARD_NOTATION_SIZE_STYLE,
             numericNotationStyle: BOARD_NOTATION_SIZE_STYLE,
             arrows,

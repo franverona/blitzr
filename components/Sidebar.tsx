@@ -7,6 +7,8 @@ import { BulkAnalysisIndicator } from '@/components/BulkAnalysisIndicator'
 import { NavLinks } from '@/components/NavLinks'
 import { PlayerAvatar } from '@/components/PlayerAvatar'
 import { getStrings } from '@/lib/i18n/strings'
+import { BOARD_COLOR_PRESETS } from '@/lib/theme'
+import { useBoardColors } from './BoardColorsProvider'
 import { ChevronLeftIcon, SettingsIcon } from './NavIcons'
 
 const COLLAPSED_COOKIE = 'blitzr-sidebar-collapsed'
@@ -142,6 +144,7 @@ function SettingsButton({
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const s = getStrings()
+  const boardColors = useBoardColors()
 
   return (
     <>
@@ -184,6 +187,30 @@ function SettingsButton({
               <span className="absolute left-1 h-4 w-4 rounded-full bg-white transition-transform peer-checked:translate-x-5" />
             </span>
           </label>
+          <div className="flex flex-col gap-2 border-t border-zinc-200 pt-4 text-sm dark:border-zinc-800">
+            <span>{s.settings.boardColors}</span>
+            <div className="flex flex-wrap gap-2">
+              {BOARD_COLOR_PRESETS.map((preset) => (
+                <button
+                  key={preset.id}
+                  type="button"
+                  onClick={() => boardColors.setBoardColorPreset(preset.id)}
+                  aria-label={s.settings.presets[preset.id]}
+                  title={s.settings.presets[preset.id]}
+                  className={`size-8 shrink-0 overflow-hidden rounded-full border-2 ${
+                    boardColors.presetId === preset.id ? 'border-accent' : 'border-transparent'
+                  }`}
+                >
+                  <span
+                    className="block h-full w-full"
+                    style={{
+                      background: `linear-gradient(135deg, ${preset.light} 50%, ${preset.dark} 50%)`,
+                    }}
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </dialog>
     </>

@@ -4,14 +4,8 @@ import { useId, useMemo, useRef, useState } from 'react'
 import { Chessboard } from 'react-chessboard'
 import { getStrings } from '@/lib/i18n/strings'
 import { buildPositions } from '@/lib/positions'
-import {
-  BOARD_ANIMATION_DURATION_MS,
-  BOARD_DARK_SQUARE,
-  BOARD_DARK_SQUARE_NOTATION_STYLE,
-  BOARD_LIGHT_SQUARE,
-  BOARD_LIGHT_SQUARE_NOTATION_STYLE,
-  BOARD_NOTATION_SIZE_STYLE,
-} from '@/lib/theme'
+import { BOARD_ANIMATION_DURATION_MS, BOARD_NOTATION_SIZE_STYLE } from '@/lib/theme'
+import { useBoardColors } from './BoardColorsProvider'
 
 /** A small interactive stepper through the engine's suggested move and its
  *  follow-up plan — SAN text alone doesn't let a beginner "see" where a
@@ -47,6 +41,7 @@ export function PlanBoard({
   // internally and crashes with "Square width not found".
   const boardId = useId()
   const s = getStrings()
+  const boardColors = useBoardColors()
 
   return (
     <div className="flex w-full shrink-0 flex-col gap-3">
@@ -59,10 +54,10 @@ export function PlanBoard({
             allowDragging: false,
             showNotation: true,
             animationDurationInMs: BOARD_ANIMATION_DURATION_MS,
-            darkSquareStyle: { backgroundColor: BOARD_DARK_SQUARE },
-            lightSquareStyle: { backgroundColor: BOARD_LIGHT_SQUARE },
-            darkSquareNotationStyle: BOARD_DARK_SQUARE_NOTATION_STYLE,
-            lightSquareNotationStyle: BOARD_LIGHT_SQUARE_NOTATION_STYLE,
+            darkSquareStyle: { backgroundColor: boardColors.dark },
+            lightSquareStyle: { backgroundColor: boardColors.light },
+            darkSquareNotationStyle: boardColors.darkSquareNotationStyle,
+            lightSquareNotationStyle: boardColors.lightSquareNotationStyle,
             alphaNotationStyle: BOARD_NOTATION_SIZE_STYLE,
             numericNotationStyle: BOARD_NOTATION_SIZE_STYLE,
           }}

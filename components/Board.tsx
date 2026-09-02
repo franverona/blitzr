@@ -23,16 +23,13 @@ import { StockfishEngine } from '@/lib/stockfish/client'
 import { describeBetterMove } from '@/lib/tactics'
 import {
   BOARD_ANIMATION_DURATION_MS,
-  BOARD_DARK_SQUARE,
-  BOARD_DARK_SQUARE_NOTATION_STYLE,
-  BOARD_LIGHT_SQUARE,
-  BOARD_LIGHT_SQUARE_NOTATION_STYLE,
   BOARD_NOTATION_SIZE_STYLE,
   CHECKLIST_ARROW_COLOR,
   CHECKLIST_SQUARE_COLOR,
   REVEAL_ARROW_COLOR,
 } from '@/lib/theme'
 import type { EngineLine, PositionEval } from '@/lib/types'
+import { useBoardColors } from './BoardColorsProvider'
 import { EvalBar } from './EvalBar'
 import { LegalMoveSquare } from './LegalMoveSquare'
 import { PieceMoveLabel } from './PieceMoveLabel'
@@ -696,6 +693,7 @@ export function BoardView({
     attemptExploreMove,
   } = useBoardContext()
   const s = getStrings()
+  const boardColors = useBoardColors()
   const { lines: liveLines, fen: liveFen } = useLiveAnalysisContext()
   // Eval bar: always the latest completed search's top line, even if a newer
   // search (for wherever the board has since moved to) hasn't finished yet —
@@ -907,10 +905,10 @@ export function BoardView({
                   : undefined,
                 showAnimations: isAdjacentStep,
                 animationDurationInMs: BOARD_ANIMATION_DURATION_MS,
-                darkSquareStyle: { backgroundColor: BOARD_DARK_SQUARE },
-                lightSquareStyle: { backgroundColor: BOARD_LIGHT_SQUARE },
-                darkSquareNotationStyle: BOARD_DARK_SQUARE_NOTATION_STYLE,
-                lightSquareNotationStyle: BOARD_LIGHT_SQUARE_NOTATION_STYLE,
+                darkSquareStyle: { backgroundColor: boardColors.dark },
+                lightSquareStyle: { backgroundColor: boardColors.light },
+                darkSquareNotationStyle: boardColors.darkSquareNotationStyle,
+                lightSquareNotationStyle: boardColors.lightSquareNotationStyle,
                 alphaNotationStyle: BOARD_NOTATION_SIZE_STYLE,
                 numericNotationStyle: BOARD_NOTATION_SIZE_STYLE,
                 squareStyles: exploring ? undefined : checklistSquareStyles.styles,
