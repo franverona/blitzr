@@ -6,15 +6,9 @@ import { Chessboard } from 'react-chessboard'
 import { whiteToMove } from '@/lib/drill'
 import { getStrings } from '@/lib/i18n/strings'
 import { legalDestinations } from '@/lib/legalMoves'
-import {
-  BOARD_DARK_SQUARE,
-  BOARD_DARK_SQUARE_NOTATION_STYLE,
-  BOARD_LIGHT_SQUARE,
-  BOARD_LIGHT_SQUARE_NOTATION_STYLE,
-  BOARD_NOTATION_SIZE_STYLE,
-  REVEAL_ARROW_COLOR,
-} from '@/lib/theme'
+import { BOARD_NOTATION_SIZE_STYLE, REVEAL_ARROW_COLOR } from '@/lib/theme'
 import { useBoardContext } from './Board'
+import { useBoardColors } from './BoardColorsProvider'
 import { LegalMoveSquare } from './LegalMoveSquare'
 
 // How long an auto-played opponent move sits highlighted before the next
@@ -60,6 +54,7 @@ export function LessonQuiz({
 }) {
   const { ply, setPly, positions, lastPly, boardOrientation, movesSan } = useBoardContext()
   const s = getStrings()
+  const boardColors = useBoardColors()
   const [feedback, setFeedback] = useState<'incorrect' | null>(null)
   const [mistakes, setMistakes] = useState(0)
   const [hintsUsed, setHintsUsed] = useState(0)
@@ -238,10 +233,10 @@ export function LessonQuiz({
                   {children}
                 </LegalMoveSquare>
               ),
-              darkSquareStyle: { backgroundColor: BOARD_DARK_SQUARE },
-              lightSquareStyle: { backgroundColor: BOARD_LIGHT_SQUARE },
-              darkSquareNotationStyle: BOARD_DARK_SQUARE_NOTATION_STYLE,
-              lightSquareNotationStyle: BOARD_LIGHT_SQUARE_NOTATION_STYLE,
+              darkSquareStyle: { backgroundColor: boardColors.dark },
+              lightSquareStyle: { backgroundColor: boardColors.light },
+              darkSquareNotationStyle: boardColors.darkSquareNotationStyle,
+              lightSquareNotationStyle: boardColors.lightSquareNotationStyle,
               alphaNotationStyle: BOARD_NOTATION_SIZE_STYLE,
               numericNotationStyle: BOARD_NOTATION_SIZE_STYLE,
               arrows,

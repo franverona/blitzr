@@ -1,7 +1,7 @@
 'use client'
 
 import { Chessboard } from 'react-chessboard'
-import { BOARD_DARK_SQUARE, BOARD_LIGHT_SQUARE } from '@/lib/theme'
+import { useBoardColors } from './BoardColorsProvider'
 
 /** A small, non-interactive board snapshot of a single position — used as a
  *  visual preview on the /learn index cards (the lesson's resulting
@@ -15,6 +15,7 @@ export function MiniBoard({
   fen: string
   boardOrientation?: 'white' | 'black'
 }) {
+  const boardColors = useBoardColors()
   return (
     <div className="aspect-square w-full overflow-hidden rounded">
       <Chessboard
@@ -23,8 +24,8 @@ export function MiniBoard({
           boardOrientation,
           allowDragging: false,
           showNotation: false,
-          darkSquareStyle: { backgroundColor: BOARD_DARK_SQUARE },
-          lightSquareStyle: { backgroundColor: BOARD_LIGHT_SQUARE },
+          darkSquareStyle: { backgroundColor: boardColors.dark },
+          lightSquareStyle: { backgroundColor: boardColors.light },
         }}
       />
     </div>
