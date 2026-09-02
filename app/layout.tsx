@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { cookies } from 'next/headers'
 import { Suspense } from 'react'
+import { BoardColorsProvider } from '@/components/BoardColorsProvider'
 import { BulkAnalysisProvider } from '@/components/BulkAnalysisProvider'
 import { RouteProgressBar } from '@/components/RouteProgressBar'
 import { Sidebar } from '@/components/Sidebar'
@@ -9,6 +10,7 @@ import { fetchPlayerAvatar } from '@/lib/chesscom/client'
 import { getChesscomUsername } from '@/lib/config'
 import { getLocale } from '@/lib/i18n/locale'
 import { getStrings } from '@/lib/i18n/strings'
+import { getBoardColorPreset } from '@/lib/theme'
 import './globals.css'
 
 const geistSans = Geist({
@@ -56,6 +58,15 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   // Defaults to dark (the app's look before this setting existed) rather
   // than light, so an existing user with no cookie yet sees no change.
   const theme = (await cookies()).get('blitzr-theme')?.value === 'light' ? 'light' : 'dark'
+  // Same server-read-cookie, zero-flash pattern as theme above — board
+  // colors used to be a client-only localStorage preference, but
+  // react-chessboard's square colors are plain inline-style props, not
+  // something a pre-paint script can patch onto already-rendered DOM (that
+  // approach also fought React's own hydration diffing on <html>'s style
+  // attribute). Resolving the preset server-side and baking it into both
+  // <html>'s inline style and BoardColorsProvider's initial state means
+  // there's nothing left to visibly correct once the client mounts.
+  const boardColorPreset = getBoardColorPreset((await cookies()).get('blitzr-board-color')?.value)
 
   return (
     <html
@@ -68,22 +79,25 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       ]
         .filter(Boolean)
         .join(' ')}
+      style={{ '--color-accent': boardColorPreset.dark } as React.CSSProperties}
     >
       <body className="flex h-full overflow-hidden bg-zinc-100 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
         <Suspense fallback={null}>
           <RouteProgressBar />
         </Suspense>
-        <BulkAnalysisProvider>
-          <Sidebar
-            username={username}
-            avatarUrl={avatarUrl}
-            initialCollapsed={sidebarCollapsed}
-            initialTheme={theme}
-          />
-          <main className="min-w-0 flex-1 overflow-y-auto px-6 py-6">
-            <div className="mx-auto max-w-7xl">{children}</div>
-          </main>
-        </BulkAnalysisProvider>
+        <BoardColorsProvider initialPresetId={boardColorPreset.id}>
+          <BulkAnalysisProvider>
+            <Sidebar
+              username={username}
+              avatarUrl={avatarUrl}
+              initialCollapsed={sidebarCollapsed}
+              initialTheme={theme}
+            />
+            <main className="min-w-0 flex-1 overflow-y-auto px-6 py-6">
+              <div className="mx-auto max-w-7xl">{children}</div>
+            </main>
+          </BulkAnalysisProvider>
+        </BoardColorsProvider>
       </body>
     </html>
   )
