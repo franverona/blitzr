@@ -26,7 +26,7 @@ export function RepertoireTree({
   }
 
   return (
-    <div className="w-full overflow-y-auto rounded border border-zinc-800 bg-zinc-900 py-2 text-sm lg:max-h-160 lg:max-w-xs lg:flex-1">
+    <div className="w-full overflow-y-auto rounded border border-zinc-200 bg-zinc-50 py-2 text-sm lg:max-h-160 lg:max-w-xs lg:flex-1 dark:border-zinc-800 dark:bg-zinc-900">
       {roots.map((node) => (
         <TreeNode
           key={node.id}
@@ -63,7 +63,9 @@ function TreeNode({
       <button
         onClick={() => onSelectPath(path)}
         className={`block w-full px-2 py-1 text-left ${
-          isActive ? 'bg-accent/50 font-medium text-white' : 'text-zinc-300 hover:bg-zinc-800'
+          isActive
+            ? 'bg-accent/50 font-medium text-zinc-900 dark:text-white'
+            : 'text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800'
         }`}
       >
         <span className="mr-1 text-zinc-500">{plyLabel(node.ply)}</span>

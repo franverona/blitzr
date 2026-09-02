@@ -185,13 +185,13 @@ export function DrillSession({
     return (
       <div className="mx-auto flex w-full max-w-140 flex-col gap-3">
         <p className="text-lg font-medium">{s.drill.sessionComplete}</p>
-        <p className="text-sm text-zinc-400">
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">
           {s.drill.tally(tally.correct, tally.incorrect, sessionPrompts.length)}
         </p>
         <div className="flex flex-wrap items-center gap-3">
           <button
             onClick={handleRestart}
-            className="w-fit rounded-md border border-zinc-700 px-3 py-1.5 text-sm font-medium hover:bg-zinc-800"
+            className="w-fit rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
           >
             {s.drill.shuffleAndRestart}
           </button>
@@ -296,7 +296,7 @@ export function DrillSession({
         <button
           onClick={handleHint}
           disabled={hintLevel >= 3 || !!feedback}
-          className={`shrink-0 rounded-md border border-zinc-700 px-3 py-1.5 text-sm font-medium hover:bg-zinc-800 disabled:opacity-40 ${feedback ? 'invisible' : ''}`}
+          className={`shrink-0 rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium hover:bg-zinc-100 disabled:opacity-40 dark:border-zinc-700 dark:hover:bg-zinc-800 ${feedback ? 'invisible' : ''}`}
         >
           {s.drill.hint}
         </button>
@@ -345,7 +345,7 @@ export function DrillSession({
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-3">
             <p
-              className={`text-sm ${feedback === 'correct' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-400'}`}
+              className={`text-sm ${feedback === 'correct' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
             >
               {feedback === 'correct'
                 ? s.drill.correct
@@ -353,7 +353,7 @@ export function DrillSession({
             </p>
             <button
               onClick={handleNext}
-              className="rounded-md border border-zinc-700 px-3 py-1.5 text-sm font-medium hover:bg-zinc-800"
+              className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
             >
               {s.drill.next}
             </button>

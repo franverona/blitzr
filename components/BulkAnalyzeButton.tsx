@@ -23,10 +23,10 @@ export function BulkAnalyzeButton({ hasUnanalyzedGames }: { hasUnanalyzedGames: 
         title={
           !hasUnanalyzedGames && progress === null ? s.bulkAnalyze.nothingToAnalyze : undefined
         }
-        className="flex items-center gap-1.5 rounded-md border border-zinc-700 px-2.5 py-1 text-sm font-medium whitespace-nowrap hover:bg-zinc-800 disabled:opacity-50"
+        className="flex items-center gap-1.5 rounded-md border border-zinc-300 px-2.5 py-1 text-sm font-medium whitespace-nowrap hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:hover:bg-zinc-800"
       >
         {progress ? (
-          <span className="size-4 shrink-0 animate-spin rounded-full border-2 border-zinc-600 border-t-zinc-300" />
+          <span className="size-4 shrink-0 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-600 dark:border-zinc-600 dark:border-t-zinc-300" />
         ) : (
           <CpuIcon className="size-4 shrink-0" />
         )}

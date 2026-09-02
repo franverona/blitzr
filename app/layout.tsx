@@ -69,7 +69,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         .filter(Boolean)
         .join(' ')}
     >
-      <body className="flex h-full overflow-hidden bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
+      <body className="flex h-full overflow-hidden bg-zinc-100 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
         <Suspense fallback={null}>
           <RouteProgressBar />
         </Suspense>
