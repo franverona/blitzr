@@ -2,8 +2,8 @@ import { blunderSeverity } from '@/lib/analysis'
 import { getStrings } from '@/lib/i18n/strings'
 
 const STYLES = {
-  mistake: 'bg-amber-900/40 text-amber-400',
-  blunder: 'bg-rose-900/40 text-rose-400',
+  mistake: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400',
+  blunder: 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-400',
 } as const
 
 export function BlunderSeverityBadge({ swingCp }: { swingCp: number }) {

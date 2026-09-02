@@ -16,6 +16,9 @@ export function EvalBar({
 
   return (
     <div
+      // Deliberately not theme-aware — same as the board's own square colors
+      // (lib/theme.ts), this mimics chess.com's black/white eval gauge, not
+      // a themed UI surface.
       className={`flex w-3 shrink-0 flex-col ${justify} overflow-hidden bg-zinc-950`}
       title={`${describeEval(evaluation)} (${formatEval(evaluation)})`}
     >

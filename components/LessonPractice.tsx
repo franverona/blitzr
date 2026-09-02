@@ -58,7 +58,7 @@ export function LessonPractice({
               active={mode === 'quiz'}
               onClick={() => setMode('quiz')}
             />
-            <span className="mx-1 h-4 w-px bg-zinc-700" />
+            <span className="mx-1 h-4 w-px bg-zinc-300 dark:bg-zinc-700" />
             {mode === 'study' && <BoardNavControls />}
             <FlipBoardButton />
             <AboutOpeningButton
@@ -112,8 +112,8 @@ function ModeTab({
       onClick={onClick}
       className={`rounded-md border px-3 py-1 text-sm ${
         active
-          ? 'border-accent bg-accent/20 text-white'
-          : 'border-zinc-700 text-zinc-400 hover:bg-zinc-800'
+          ? 'border-accent bg-accent/20 text-zinc-900 dark:text-white'
+          : 'border-zinc-300 text-zinc-500 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800'
       }`}
     >
       {label}

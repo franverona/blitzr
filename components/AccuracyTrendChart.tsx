@@ -246,7 +246,7 @@ export function AccuracyTrendChart({ points }: { points: AccuracyTrendPoint[] })
 
         {hovered && hoveredAverage !== null && (
           <div
-            className="pointer-events-none absolute top-0 flex flex-col gap-0.5 rounded-md border border-zinc-200 bg-white px-2 py-1.5 text-xs whitespace-nowrap shadow-lg dark:border-zinc-700 dark:bg-zinc-900"
+            className="pointer-events-none absolute top-0 flex flex-col gap-0.5 rounded-md border border-zinc-200 bg-zinc-50 px-2 py-1.5 text-xs whitespace-nowrap shadow-lg dark:border-zinc-700 dark:bg-zinc-900"
             style={{ left: `${hoverXPercent}%`, transform: 'translateX(-50%)' }}
           >
             <span className="font-medium text-zinc-900 dark:text-zinc-100">

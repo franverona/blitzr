@@ -22,7 +22,7 @@ export function PlayerAvatar({
   }
 
   return (
-    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm bg-zinc-700 text-sm font-medium text-zinc-300">
+    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm bg-zinc-300 text-sm font-medium text-zinc-700 dark:bg-zinc-700 dark:text-zinc-300">
       {username.charAt(0).toUpperCase()}
     </span>
   )

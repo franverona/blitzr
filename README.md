@@ -42,6 +42,7 @@ any way that implies endorsement or affiliation.
 - [x] Add a game by pasting its PGN — for games Chess.com's public API doesn't expose at all
 - [x] Live multi-line engine analysis + free-move exploration on a game's board
       (chess.com's analysis-tab experience)
+- [x] Light/dark theme toggle (Settings, in the sidebar)
 
 ## Stack
 

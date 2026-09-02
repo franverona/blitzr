@@ -41,7 +41,7 @@ export function SyncButton() {
       <button
         onClick={handleClick}
         disabled={isPending}
-        className="flex items-center gap-1.5 rounded-md border border-zinc-700 px-2.5 py-1 text-sm font-medium text-zinc-100 hover:bg-zinc-800 disabled:opacity-50"
+        className="flex items-center gap-1.5 rounded-md border border-zinc-300 px-2.5 py-1 text-sm font-medium text-zinc-900 hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-100 dark:hover:bg-zinc-800"
       >
         <RefreshCwIcon className={`size-4 shrink-0 ${isPending ? 'animate-spin' : ''}`} />
         {isPending ? s.sync.syncing : s.sync.button}
@@ -52,8 +52,8 @@ export function SyncButton() {
           onClick={() => setToast(null)}
           className={`fixed right-4 bottom-4 z-50 max-w-sm cursor-pointer rounded-md border px-4 py-2.5 text-sm shadow-lg ${
             toast.isError
-              ? 'border-rose-900 bg-rose-950 text-rose-200'
-              : 'border-zinc-700 bg-zinc-900 text-zinc-100'
+              ? 'border-rose-300 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-200'
+              : 'border-zinc-200 bg-zinc-50 text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100'
           }`}
         >
           {toast.text}
