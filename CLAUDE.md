@@ -146,6 +146,25 @@ file, not here — this section is only cross-cutting rules that span multiple f
   everything walks the array in application code; nothing queries at ply granularity in SQL.
 - **Openings aggregation, repertoire diffing, and blunder detection are pure functions**, not
   repository methods — backend-agnostic and directly unit-testable.
+- **Light/dark theme is a manual toggle, not system-preference-driven** — a `blitzr-theme`
+  cookie (`light`/`dark`, default `dark`), read server-side in `app/layout.tsx` to pick the
+  `.dark` class on `<html>` before first paint (same "avoid a flash on refresh" pattern the
+  sidebar's own `blitzr-sidebar-collapsed` cookie already used). The trigger is a gear-icon
+  "Settings" row in `Sidebar.tsx`, pinned directly above the username row (both inside one
+  `mt-auto` wrapper, not two separate `mt-auto`s — flexbox splits free space across every auto
+  margin on the shared axis, so two would push them apart instead of flush together) — opens a
+  small dialog with a single light/dark switch (`SettingsButton`, same native `<dialog>`
+  convention as `AboutOpeningButton`/`RepertoireBoard`'s `HelpButton`), deliberately tucked away
+  rather than a top-level sidebar button. Every component needs an explicit light-mode class
+  alongside its `dark:` one — Tailwind's `dark:` variant is an _override_ of the unprefixed
+  (light) value, not a toggle between two prefixed ones, so a color picked only for a
+  permanently-dark app (e.g. `bg-zinc-900`, `text-zinc-100`) needs a light counterpart added, not
+  just a `dark:` prefix kept on the old value. The light palette is deliberately muted, not stark
+  white: page canvas is `bg-zinc-100` (`app/layout.tsx`'s `<body>`), elevated surfaces (dialogs,
+  panels, popovers) are `bg-zinc-50` one step lighter — pure white read as "excessively bright"
+  in practice. `BOARD_DARK_SQUARE`/`BOARD_LIGHT_SQUARE`/`EvalBar`'s black/white gauge are
+  deliberately exempt (see `lib/theme.ts`'s and `EvalBar.tsx`'s own comments) — they mimic fixed
+  chess.com conventions (board squares, army-color eval gauge), not the app's own UI chrome.
 - **Board colors and animation timing have one source of truth**: `lib/theme.ts` for
   react-chessboard props a Tailwind class can't reach, and the `accent` Tailwind color
   (`app/globals.css`) for everywhere a className can. `BOARD_ANIMATION_DURATION_MS` (150ms,
