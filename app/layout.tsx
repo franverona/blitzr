@@ -27,7 +27,11 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  colorScheme: 'dark',
+  // Both are supported now (light is the default, dark via the .dark class
+  // — see globals.css); the per-theme CSS color-scheme property there is
+  // what actually drives native form-control/scrollbar rendering per toggle
+  // state, this is just the pre-hydration/no-JS fallback.
+  colorScheme: 'light dark',
 }
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -49,18 +53,33 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   // after mount) so the very first paint already renders the right width —
   // no expanded-then-collapsed flash on refresh.
   const sidebarCollapsed = (await cookies()).get('blitzr-sidebar-collapsed')?.value === '1'
+  // Defaults to dark (the app's look before this setting existed) rather
+  // than light, so an existing user with no cookie yet sees no change.
+  const theme = (await cookies()).get('blitzr-theme')?.value === 'light' ? 'light' : 'dark'
 
   return (
     <html
       lang={getLocale()}
-      className={`dark ${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={[
+        theme === 'dark' ? 'dark' : '',
+        geistSans.variable,
+        geistMono.variable,
+        'h-full antialiased',
+      ]
+        .filter(Boolean)
+        .join(' ')}
     >
       <body className="flex h-full overflow-hidden bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
         <Suspense fallback={null}>
           <RouteProgressBar />
         </Suspense>
         <BulkAnalysisProvider>
-          <Sidebar username={username} avatarUrl={avatarUrl} initialCollapsed={sidebarCollapsed} />
+          <Sidebar
+            username={username}
+            avatarUrl={avatarUrl}
+            initialCollapsed={sidebarCollapsed}
+            initialTheme={theme}
+          />
           <main className="min-w-0 flex-1 overflow-y-auto px-6 py-6">
             <div className="mx-auto max-w-7xl">{children}</div>
           </main>

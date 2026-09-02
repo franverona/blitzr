@@ -1,12 +1,24 @@
 @import 'tailwindcss';
 
-/* Dark mode is forced on (see className="dark" in app/layout.tsx) rather than
-   following system preference — this repo has no light theme. */
+/* Theme is a manual light/dark toggle (blitzr-theme cookie, read server-side
+   in app/layout.tsx to pick the .dark class before first paint), not
+   system-preference-driven — see Sidebar.tsx's toggle button. */
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
+  --background: #ffffff;
+  --foreground: #171717;
+  /* Tells the browser which native form-control/scrollbar rendering matches
+     the active theme (see .dark override below) — CSS color-scheme, not the
+     less granular <meta name="color-scheme"> (app/layout.tsx's viewport
+     export covers that as a fallback for the pre-hydration instant). */
+  color-scheme: light;
+}
+
+.dark {
   --background: #0a0a0a;
   --foreground: #ededed;
+  color-scheme: dark;
 }
 
 @theme inline {

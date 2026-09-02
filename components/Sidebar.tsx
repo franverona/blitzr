@@ -7,9 +7,10 @@ import { BulkAnalysisIndicator } from '@/components/BulkAnalysisIndicator'
 import { NavLinks } from '@/components/NavLinks'
 import { PlayerAvatar } from '@/components/PlayerAvatar'
 import { getStrings } from '@/lib/i18n/strings'
-import { ChevronLeftIcon } from './NavIcons'
+import { ChevronLeftIcon, MoonIcon, SunIcon } from './NavIcons'
 
 const COLLAPSED_COOKIE = 'blitzr-sidebar-collapsed'
+const THEME_COOKIE = 'blitzr-theme'
 
 // Below `md` the sidebar is always icon-only — width and label visibility
 // both fall back to plain Tailwind breakpoints for that, no JS media query
@@ -21,18 +22,33 @@ export function Sidebar({
   username,
   avatarUrl,
   initialCollapsed,
+  initialTheme,
 }: {
   username: string | null
   avatarUrl: string | null
   initialCollapsed: boolean
+  initialTheme: 'light' | 'dark'
 }) {
   const [collapsed, setCollapsed] = useState(initialCollapsed)
+  const [theme, setTheme] = useState(initialTheme)
   const s = getStrings()
 
   function toggle() {
     setCollapsed((prev) => {
       const next = !prev
       document.cookie = `${COLLAPSED_COOKIE}=${next ? '1' : '0'}; path=/; max-age=31536000; samesite=lax`
+      return next
+    })
+  }
+
+  // The `dark` class lives on <html> (app/layout.tsx), not anything Sidebar
+  // itself renders, so toggling it needs a direct DOM write rather than
+  // relying on this component's own re-render.
+  function toggleTheme() {
+    setTheme((prev) => {
+      const next = prev === 'dark' ? 'light' : 'dark'
+      document.documentElement.classList.toggle('dark', next === 'dark')
+      document.cookie = `${THEME_COOKIE}=${next}; path=/; max-age=31536000; samesite=lax`
       return next
     })
   }
@@ -67,6 +83,22 @@ export function Sidebar({
         <div className={collapsed ? 'hidden' : 'hidden md:block'}>
           <BulkAnalysisIndicator />
         </div>
+        <button
+          type="button"
+          onClick={toggleTheme}
+          title={theme === 'dark' ? s.nav.switchToLight : s.nav.switchToDark}
+          aria-label={theme === 'dark' ? s.nav.switchToLight : s.nav.switchToDark}
+          className={`flex items-center gap-2 rounded-md py-2 text-sm text-zinc-500 transition-colors hover:bg-zinc-200 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100 ${iconRowClassName}`}
+        >
+          {theme === 'dark' ? (
+            <SunIcon className="size-5 shrink-0" />
+          ) : (
+            <MoonIcon className="size-5 shrink-0" />
+          )}
+          <span className={labelClassName}>
+            {theme === 'dark' ? s.nav.switchToLight : s.nav.switchToDark}
+          </span>
+        </button>
         {username && (
           <div className="mt-auto flex items-center gap-2 border-t border-zinc-200 px-1 pt-3 dark:border-zinc-800">
             <PlayerAvatar username={username} avatarUrl={avatarUrl} />
