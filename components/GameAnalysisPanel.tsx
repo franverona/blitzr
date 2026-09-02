@@ -18,6 +18,7 @@ import { describeMove, plyLabel } from '@/lib/san'
 import { analyzeGame } from '@/lib/stockfish/analyze'
 import { describeBetterMove, describeBlunderReason, detectBlunderReason } from '@/lib/tactics'
 import type { GameAnalysis, MyColor } from '@/lib/types'
+import { useBoardContext } from './Board'
 import { BlunderSeverityBadge } from './BlunderSeverityBadge'
 import { EvalHelp } from './EvalHelp'
 import { PlanBoardButton } from './PlanBoard'
@@ -134,6 +135,7 @@ export function AnalyzeButton() {
  *  `RepertoireDiff`. */
 export function GameSummary() {
   const { analysis, movesSan, myColor, positions } = useAnalysisContext()
+  const { setPly } = useBoardContext()
   const s = getStrings()
   if (!analysis) return null
 
@@ -153,8 +155,14 @@ export function GameSummary() {
   const isBlunder = blunderSeverity(worst.swingCp) === 'blunder'
   return (
     <p className="text-sm text-zinc-500 dark:text-zinc-400">
-      {s.analysisPanel.biggestMoment(isBlunder)} {plyLabel(worst.ply)} {worst.moveSan} (
-      {describeMove(positions[worst.ply - 1], worst.moveSan)}).{' '}
+      {s.analysisPanel.biggestMoment(isBlunder)}{' '}
+      <button
+        onClick={() => setPly(worst.ply)}
+        className="font-medium text-blue-600 hover:underline dark:text-blue-400"
+      >
+        {plyLabel(worst.ply)} {worst.moveSan}
+      </button>{' '}
+      ({describeMove(positions[worst.ply - 1], worst.moveSan)}).{' '}
       {reason && describeBlunderReason(reason)}
     </p>
   )
