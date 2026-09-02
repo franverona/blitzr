@@ -2,12 +2,12 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { BulkAnalysisIndicator } from '@/components/BulkAnalysisIndicator'
 import { NavLinks } from '@/components/NavLinks'
 import { PlayerAvatar } from '@/components/PlayerAvatar'
 import { getStrings } from '@/lib/i18n/strings'
-import { ChevronLeftIcon, MoonIcon, SunIcon } from './NavIcons'
+import { ChevronLeftIcon, SettingsIcon } from './NavIcons'
 
 const COLLAPSED_COOKIE = 'blitzr-sidebar-collapsed'
 const THEME_COOKIE = 'blitzr-theme'
@@ -83,32 +83,31 @@ export function Sidebar({
         <div className={collapsed ? 'hidden' : 'hidden md:block'}>
           <BulkAnalysisIndicator />
         </div>
-        <button
-          type="button"
-          onClick={toggleTheme}
-          title={theme === 'dark' ? s.nav.switchToLight : s.nav.switchToDark}
-          aria-label={theme === 'dark' ? s.nav.switchToLight : s.nav.switchToDark}
-          className={`flex items-center gap-2 rounded-md py-2 text-sm text-zinc-500 transition-colors hover:bg-zinc-200 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100 ${iconRowClassName}`}
-        >
-          {theme === 'dark' ? (
-            <SunIcon className="size-5 shrink-0" />
-          ) : (
-            <MoonIcon className="size-5 shrink-0" />
+        {/* Settings sits directly above the username row, both pinned to the
+            bottom together — a single mt-auto on this wrapper, not one on
+            each child, since flexbox splits free space evenly across every
+            auto margin on the same axis: two separate ones here would've
+            pushed Settings only partway down instead of flush against the
+            username row above it. */}
+        <div className="mt-auto flex flex-col">
+          <SettingsButton
+            theme={theme}
+            toggleTheme={toggleTheme}
+            iconRowClassName={iconRowClassName}
+            labelClassName={labelClassName}
+            className="mb-2"
+          />
+          {username && (
+            <div className="flex items-center gap-2 border-t border-zinc-200 px-1 pt-3 dark:border-zinc-800">
+              <PlayerAvatar username={username} avatarUrl={avatarUrl} />
+              <span
+                className={`min-w-0 truncate text-sm font-medium text-zinc-700 dark:text-zinc-300 ${labelClassName}`}
+              >
+                {username}
+              </span>
+            </div>
           )}
-          <span className={labelClassName}>
-            {theme === 'dark' ? s.nav.switchToLight : s.nav.switchToDark}
-          </span>
-        </button>
-        {username && (
-          <div className="mt-auto flex items-center gap-2 border-t border-zinc-200 px-1 pt-3 dark:border-zinc-800">
-            <PlayerAvatar username={username} avatarUrl={avatarUrl} />
-            <span
-              className={`min-w-0 truncate text-sm font-medium text-zinc-700 dark:text-zinc-300 ${labelClassName}`}
-            >
-              {username}
-            </span>
-          </div>
-        )}
+        </div>
       </aside>
       <button
         type="button"
@@ -121,5 +120,72 @@ export function Sidebar({
         />
       </button>
     </div>
+  )
+}
+
+// A dialog trigger rather than the theme toggle sitting directly in the nav
+// column — same native <dialog> convention as AboutOpeningButton/
+// RepertoireBoard's HelpButton. Room for other per-viewer preferences later
+// without adding more top-level sidebar rows.
+function SettingsButton({
+  theme,
+  toggleTheme,
+  iconRowClassName,
+  labelClassName,
+  className = '',
+}: {
+  theme: 'light' | 'dark'
+  toggleTheme: () => void
+  iconRowClassName: string
+  labelClassName: string
+  className?: string
+}) {
+  const dialogRef = useRef<HTMLDialogElement>(null)
+  const s = getStrings()
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => dialogRef.current?.showModal()}
+        className={`flex items-center gap-2 rounded-md py-2 text-sm text-zinc-500 transition-colors hover:bg-zinc-200 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100 ${iconRowClassName} ${className}`}
+      >
+        <SettingsIcon className="size-5 shrink-0" />
+        <span className={labelClassName}>{s.settings.trigger}</span>
+      </button>
+      <dialog
+        ref={dialogRef}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) dialogRef.current?.close()
+        }}
+        className="fixed top-1/2 left-1/2 m-0 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-lg border border-zinc-200 bg-zinc-50 p-0 text-left text-zinc-900 backdrop:bg-black/60 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+      >
+        <div className="flex flex-col gap-4 p-5">
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="text-sm font-semibold">{s.settings.title}</h2>
+            <button
+              onClick={() => dialogRef.current?.close()}
+              aria-label={s.common.close}
+              className="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
+            >
+              ✕
+            </button>
+          </div>
+          <label className="flex items-center justify-between gap-4 text-sm">
+            {s.settings.darkTheme}
+            <span className="relative inline-flex shrink-0 items-center">
+              <input
+                type="checkbox"
+                checked={theme === 'dark'}
+                onChange={toggleTheme}
+                className="peer sr-only"
+              />
+              <span className="peer-checked:bg-accent h-6 w-11 rounded-full bg-zinc-300 transition-colors dark:bg-zinc-700" />
+              <span className="absolute left-1 h-4 w-4 rounded-full bg-white transition-transform peer-checked:translate-x-5" />
+            </span>
+          </label>
+        </div>
+      </dialog>
+    </>
   )
 }

@@ -30,8 +30,11 @@ const en = {
     blunders: 'Blunders',
     collapse: 'Collapse',
     expand: 'Expand',
-    switchToLight: 'Switch to light theme',
-    switchToDark: 'Switch to dark theme',
+  },
+  settings: {
+    trigger: 'Settings',
+    title: 'Settings',
+    darkTheme: 'Dark theme',
   },
   gameRow: {
     timeClassTooltips: {
@@ -409,8 +412,11 @@ const es: Strings = {
     blunders: 'Errores',
     collapse: 'Contraer',
     expand: 'Expandir',
-    switchToLight: 'Cambiar a tema claro',
-    switchToDark: 'Cambiar a tema oscuro',
+  },
+  settings: {
+    trigger: 'Ajustes',
+    title: 'Ajustes',
+    darkTheme: 'Tema oscuro',
   },
   gameRow: {
     timeClassTooltips: {
