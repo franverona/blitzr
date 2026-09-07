@@ -162,6 +162,9 @@ const en = {
     },
     startingPositionButton: 'Starting position',
     material: 'Material:',
+    checkmate: 'Checkmate',
+    winner: 'Winner',
+    draw: 'Draw',
   },
   moveExplanation: {
     startingPosition: 'Starting position.',
@@ -555,6 +558,9 @@ const es: Strings = {
     },
     startingPositionButton: 'Posición inicial',
     material: 'Material:',
+    checkmate: 'Jaque mate',
+    winner: 'Ganador',
+    draw: 'Tablas',
   },
   moveExplanation: {
     startingPosition: 'Posición inicial.',

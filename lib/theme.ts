@@ -79,3 +79,14 @@ export const BOARD_ANIMATION_DURATION_MS = 150
  *  color for two different meanings would make them hard to tell apart. */
 export const CHECKLIST_ARROW_COLOR = 'rgba(244, 63, 94, 0.9)'
 export const CHECKLIST_SQUARE_COLOR = 'rgba(244, 63, 94, 0.35)'
+
+/** Tints the mated/winning/drawn king's own square, chess.com-style, behind
+ *  its "Checkmate"/"Winner"/"Draw" badge (`GameEndBadge`, `Board.tsx`) — the
+ *  same rose as `CHECKLIST_SQUARE_COLOR` for the losing king (still "danger",
+ *  just a different source), a parallel emerald/zinc pair for the other two
+ *  outcomes. */
+export const GAME_END_SQUARE_COLORS = {
+  loss: CHECKLIST_SQUARE_COLOR,
+  win: 'rgba(16, 185, 129, 0.35)',
+  draw: 'rgba(161, 161, 170, 0.35)',
+}
