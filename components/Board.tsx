@@ -33,7 +33,7 @@ import type { EngineLine, PositionEval } from '@/lib/types'
 import { useBoardColors } from './BoardColorsProvider'
 import { EvalBar } from './EvalBar'
 import { LegalMoveSquare } from './LegalMoveSquare'
-import { PieceMoveLabel } from './PieceMoveLabel'
+import { MoveList } from './MoveList'
 import { PlanBoardButton } from './PlanBoard'
 
 interface BoardContextValue {
@@ -772,11 +772,12 @@ export function BoardView({
    *  for width. */
   boardMaxWidthClassName?: string
   /** Extra content stacked below the move list, in the same width-capped
-   *  sidebar column — e.g. the game page's `PositionChecklist`, which needs
-   *  to stay next to the board so stepping through moves never requires
-   *  scrolling to see it. Undefined for every other caller (`/learn`
-   *  lessons have no such per-position sidebar content), so this changes
-   *  nothing for them. */
+   *  sidebar column — e.g. `/learn`'s `MoveExplanation`. The move list
+   *  itself grows to fill any leftover height in the column (`MoveList`'s
+   *  `lg:flex-1`), so this should stay short; a tall stack belongs behind
+   *  its own trigger instead (see the game page's `DetailsDialogTrigger`,
+   *  which moved its own accuracy/engine-lines/checklist panels there for
+   *  exactly that reason). Undefined for a caller with nothing to add here. */
   sidebarExtra?: React.ReactNode
 } = {}) {
   const {
@@ -1023,9 +1024,44 @@ export function BoardView({
     setPrevExploring(exploring)
   }
 
+  // Makes the move list as tall as the board column next to it (board +
+  // material line + the occasional "better was" line), so it fills the
+  // sidebar instead of stopping a few rows in. Plain CSS (`align-items:
+  // stretch`, a `flex-1` move list) can't do this: a flex/grid row's own
+  // "auto" height is computed from each item's own natural content size,
+  // and the move list's *own* content (every move, unclamped) is what
+  // that resolves to before stretch ever applies — the two are circular.
+  // An explicit measured height breaks that circularity. Only applied at
+  // the `lg:` breakpoint (1024px, Tailwind's default), where the columns
+  // actually sit side by side — below that they stack, and the move list
+  // should just size to its own content. `ResizeObserver` (not just a
+  // resize listener) so a ply change that adds/removes the "better was"
+  // line, changing the board column's height without changing the
+  // viewport, still re-measures.
+  const boardColumnRef = useRef<HTMLDivElement>(null)
+  const [sidebarHeight, setSidebarHeight] = useState<number | undefined>(undefined)
+  useEffect(() => {
+    const el = boardColumnRef.current
+    if (!el) return
+    const query = window.matchMedia('(min-width: 1024px)')
+    const measure = () =>
+      setSidebarHeight(query.matches ? el.getBoundingClientRect().height : undefined)
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(el)
+    query.addEventListener('change', measure)
+    return () => {
+      observer.disconnect()
+      query.removeEventListener('change', measure)
+    }
+  }, [])
+
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-center">
-      <div className={`flex w-full shrink-0 flex-col gap-3 ${boardMaxWidthClassName}`}>
+      <div
+        ref={boardColumnRef}
+        className={`flex w-full shrink-0 flex-col gap-3 ${boardMaxWidthClassName}`}
+      >
         <div className="flex items-stretch gap-2">
           {barEval && <EvalBar evaluation={barEval} boardOrientation={boardOrientation} />}
           {/* The `overflow-hidden` that clips the board image to its rounded
@@ -1112,7 +1148,10 @@ export function BoardView({
         )}
       </div>
 
-      <div className="flex w-full flex-col gap-4 lg:max-w-sm lg:flex-1 xl:max-w-md">
+      <div
+        className="flex min-h-0 w-full flex-col gap-4 lg:max-w-sm lg:flex-1 xl:max-w-md"
+        style={sidebarHeight ? { height: sidebarHeight } : undefined}
+      >
         <MoveList
           movesSan={movesSan}
           ply={ply}
@@ -1125,6 +1164,9 @@ export function BoardView({
             setPly(p)
           }}
           result={result}
+          evals={evals}
+          positions={positions}
+          myColor={boardOrientation}
         />
         {sidebarExtra}
       </div>
@@ -1152,103 +1194,5 @@ function NavButton({
     >
       {children}
     </button>
-  )
-}
-
-interface MoveEntry {
-  san: string
-  ply: number
-}
-
-interface MovePair {
-  moveNumber: number
-  white?: MoveEntry
-  black?: MoveEntry
-}
-
-function buildMovePairs(movesSan: string[]): MovePair[] {
-  const pairs: MovePair[] = []
-  movesSan.forEach((san, i) => {
-    const ply = i + 1
-    if (i % 2 === 0) {
-      pairs.push({ moveNumber: Math.floor(i / 2) + 1, white: { san, ply } })
-    } else {
-      pairs[pairs.length - 1].black = { san, ply }
-    }
-  })
-  return pairs
-}
-
-function MoveList({
-  movesSan,
-  ply,
-  onSelect,
-  result,
-}: {
-  movesSan: string[]
-  ply: number
-  onSelect: (ply: number) => void
-  result?: string
-}) {
-  const pairs = useMemo(() => buildMovePairs(movesSan), [movesSan])
-  const activeRef = useRef<HTMLButtonElement>(null)
-  const s = getStrings()
-
-  useEffect(() => {
-    activeRef.current?.scrollIntoView({ block: 'nearest' })
-  }, [ply])
-
-  return (
-    <div className="flex w-full flex-col overflow-hidden rounded border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900">
-      <button
-        ref={ply === 0 ? activeRef : undefined}
-        onClick={() => onSelect(0)}
-        className={`border-b border-zinc-200 px-3 py-1.5 text-left text-sm dark:border-zinc-800 ${
-          ply === 0
-            ? 'bg-accent/50 font-semibold text-zinc-900 dark:text-white'
-            : 'text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800/60'
-        }`}
-      >
-        {s.board.startingPositionButton}
-      </button>
-      <ol className="max-h-70 overflow-y-auto text-sm">
-        {pairs.map((pair, i) => (
-          <li
-            key={pair.moveNumber}
-            className={`flex ${i % 2 === 1 ? 'bg-zinc-100 dark:bg-zinc-800/25' : ''}`}
-          >
-            <span className="w-8 shrink-0 px-2 py-1.5 text-zinc-500 tabular-nums">
-              {pair.moveNumber}.
-            </span>
-            {(['white', 'black'] as const).map((side) => {
-              const move = pair[side]
-              if (!move) {
-                return <span key={side} className="flex-1 px-2 py-1.5" />
-              }
-              const isActive = move.ply === ply
-              return (
-                <button
-                  key={side}
-                  ref={isActive ? activeRef : undefined}
-                  onClick={() => onSelect(move.ply)}
-                  className={`flex-1 px-2 py-1.5 text-left ${
-                    isActive
-                      ? 'bg-accent/50 font-semibold text-zinc-900 dark:text-white'
-                      : 'text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800/60'
-                  }`}
-                >
-                  <PieceMoveLabel san={move.san} color={side} />
-                </button>
-              )
-            })}
-          </li>
-        ))}
-        {result && (
-          <li className="px-2 py-1.5 font-medium text-zinc-500 dark:text-zinc-400">
-            <span className="pl-8">{result}</span>
-          </li>
-        )}
-      </ol>
-    </div>
   )
 }

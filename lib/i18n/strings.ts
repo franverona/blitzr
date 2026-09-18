@@ -182,17 +182,12 @@ const en = {
     },
   },
   analysisPanel: {
-    viewAnalysis: 'View analysis',
     analyzing: 'Analyzing',
     reanalyzing: 'Re-analyzing',
     analyzeWithStockfish: 'Analyze with Stockfish',
     reanalyze: 'Re-analyze',
     analysisFailed: 'Analysis failed.',
     cleanGameNoBlunders: 'Clean game — no significant blunders from you.',
-    stockfishAnalysis: 'Stockfish analysis',
-    noBlundersFoundClean: 'No blunders of yours found by Stockfish — clean game.',
-    blundersFound: (n: number) =>
-      `${n} of your ${n === 1 ? 'blunder' : 'blunders'} found. Biggest:`,
     biggestMoment: (isBlunder: boolean) =>
       `Biggest moment: you ${isBlunder ? 'blundered' : 'made a mistake'} on`,
     moveQualityLink: 'Move quality',
@@ -358,6 +353,8 @@ const en = {
       'ECO code — a standard reference number for this opening, used to group games by opening regardless of the exact move order',
     learnMoreAboutOpening: 'Learn more about this opening',
     viewOnChessCom: 'View on Chess.com',
+    viewDetails: 'Details',
+    gameDetails: 'Game details',
     unparsedMoves: `This game's moves couldn't be parsed (likely a non-standard variant) — showing the raw PGN instead.`,
     playing: (color: string) => `playing ${color}`,
     noRepertoireYet: (color: string) => `No ${color} repertoire defined yet —`,
@@ -578,17 +575,12 @@ const es: Strings = {
     },
   },
   analysisPanel: {
-    viewAnalysis: 'Ver análisis',
     analyzing: 'Analizando',
     reanalyzing: 'Reanalizando',
     analyzeWithStockfish: 'Analizar con Stockfish',
     reanalyze: 'Reanalizar',
     analysisFailed: 'Error al analizar.',
     cleanGameNoBlunders: 'Partida limpia — sin errores importantes tuyos.',
-    stockfishAnalysis: 'Análisis de Stockfish',
-    noBlundersFoundClean: 'Stockfish no encontró errores tuyos — partida limpia.',
-    blundersFound: (n: number) =>
-      `${n} ${n === 1 ? 'error tuyo encontrado' : 'errores tuyos encontrados'}. El peor:`,
     biggestMoment: (isBlunder: boolean) =>
       `Momento clave: cometiste ${isBlunder ? 'un error grave' : 'un error'} en`,
     moveQualityLink: 'Calidad de jugadas',
@@ -757,6 +749,8 @@ const es: Strings = {
       'Código ECO — un número de referencia estándar para esta apertura, usado para agrupar partidas por apertura sin importar el orden exacto de jugadas',
     learnMoreAboutOpening: 'Aprender más sobre esta apertura',
     viewOnChessCom: 'Ver en Chess.com',
+    viewDetails: 'Detalles',
+    gameDetails: 'Detalles de la partida',
     unparsedMoves:
       'No se pudieron interpretar las jugadas de esta partida (probablemente una variante no estándar) — mostrando el PGN sin procesar en su lugar.',
     playing: (color: string) => `jugando con ${color}`,
