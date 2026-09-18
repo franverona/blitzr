@@ -66,7 +66,7 @@ function BlunderDetail({
     : null
 
   return (
-    <li className="bg-accent/10 flex flex-col gap-1.5 border-t border-zinc-200 px-3 py-3 dark:border-zinc-800">
+    <li className="bg-accent/10 flex flex-col gap-3 border-t border-zinc-200 px-3 py-4 dark:border-zinc-800">
       <div className="flex flex-wrap items-center gap-2">
         <BlunderSeverityBadge swingCp={blunder.swingCp} />
         <span className="text-xs text-zinc-500 dark:text-zinc-400">
@@ -96,7 +96,7 @@ function BlunderDetail({
         </div>
       )}
       {bestMove && bestMove.bestLine?.length > 0 && (
-        <div className="text-xs text-zinc-500 dark:text-zinc-400">
+        <div className="text-sm text-zinc-700 dark:text-zinc-300">
           <MoveSequence fen={fenBefore} moves={[bestMove.san, ...bestMove.bestLine]} />
         </div>
       )}
