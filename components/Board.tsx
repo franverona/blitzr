@@ -33,7 +33,7 @@ import type { EngineLine, PositionEval } from '@/lib/types'
 import { useBoardColors } from './BoardColorsProvider'
 import { EvalBar } from './EvalBar'
 import { LegalMoveSquare } from './LegalMoveSquare'
-import { PieceMoveLabel } from './PieceMoveLabel'
+import { MoveList } from './MoveList'
 import { PlanBoardButton } from './PlanBoard'
 
 interface BoardContextValue {
@@ -1125,6 +1125,9 @@ export function BoardView({
             setPly(p)
           }}
           result={result}
+          evals={evals}
+          positions={positions}
+          myColor={boardOrientation}
         />
         {sidebarExtra}
       </div>
@@ -1152,103 +1155,5 @@ function NavButton({
     >
       {children}
     </button>
-  )
-}
-
-interface MoveEntry {
-  san: string
-  ply: number
-}
-
-interface MovePair {
-  moveNumber: number
-  white?: MoveEntry
-  black?: MoveEntry
-}
-
-function buildMovePairs(movesSan: string[]): MovePair[] {
-  const pairs: MovePair[] = []
-  movesSan.forEach((san, i) => {
-    const ply = i + 1
-    if (i % 2 === 0) {
-      pairs.push({ moveNumber: Math.floor(i / 2) + 1, white: { san, ply } })
-    } else {
-      pairs[pairs.length - 1].black = { san, ply }
-    }
-  })
-  return pairs
-}
-
-function MoveList({
-  movesSan,
-  ply,
-  onSelect,
-  result,
-}: {
-  movesSan: string[]
-  ply: number
-  onSelect: (ply: number) => void
-  result?: string
-}) {
-  const pairs = useMemo(() => buildMovePairs(movesSan), [movesSan])
-  const activeRef = useRef<HTMLButtonElement>(null)
-  const s = getStrings()
-
-  useEffect(() => {
-    activeRef.current?.scrollIntoView({ block: 'nearest' })
-  }, [ply])
-
-  return (
-    <div className="flex w-full flex-col overflow-hidden rounded border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900">
-      <button
-        ref={ply === 0 ? activeRef : undefined}
-        onClick={() => onSelect(0)}
-        className={`border-b border-zinc-200 px-3 py-1.5 text-left text-sm dark:border-zinc-800 ${
-          ply === 0
-            ? 'bg-accent/50 font-semibold text-zinc-900 dark:text-white'
-            : 'text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800/60'
-        }`}
-      >
-        {s.board.startingPositionButton}
-      </button>
-      <ol className="max-h-70 overflow-y-auto text-sm">
-        {pairs.map((pair, i) => (
-          <li
-            key={pair.moveNumber}
-            className={`flex ${i % 2 === 1 ? 'bg-zinc-100 dark:bg-zinc-800/25' : ''}`}
-          >
-            <span className="w-8 shrink-0 px-2 py-1.5 text-zinc-500 tabular-nums">
-              {pair.moveNumber}.
-            </span>
-            {(['white', 'black'] as const).map((side) => {
-              const move = pair[side]
-              if (!move) {
-                return <span key={side} className="flex-1 px-2 py-1.5" />
-              }
-              const isActive = move.ply === ply
-              return (
-                <button
-                  key={side}
-                  ref={isActive ? activeRef : undefined}
-                  onClick={() => onSelect(move.ply)}
-                  className={`flex-1 px-2 py-1.5 text-left ${
-                    isActive
-                      ? 'bg-accent/50 font-semibold text-zinc-900 dark:text-white'
-                      : 'text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800/60'
-                  }`}
-                >
-                  <PieceMoveLabel san={move.san} color={side} />
-                </button>
-              )
-            })}
-          </li>
-        ))}
-        {result && (
-          <li className="px-2 py-1.5 font-medium text-zinc-500 dark:text-zinc-400">
-            <span className="pl-8">{result}</span>
-          </li>
-        )}
-      </ol>
-    </div>
   )
 }

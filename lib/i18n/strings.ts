@@ -182,17 +182,12 @@ const en = {
     },
   },
   analysisPanel: {
-    viewAnalysis: 'View analysis',
     analyzing: 'Analyzing',
     reanalyzing: 'Re-analyzing',
     analyzeWithStockfish: 'Analyze with Stockfish',
     reanalyze: 'Re-analyze',
     analysisFailed: 'Analysis failed.',
     cleanGameNoBlunders: 'Clean game — no significant blunders from you.',
-    stockfishAnalysis: 'Stockfish analysis',
-    noBlundersFoundClean: 'No blunders of yours found by Stockfish — clean game.',
-    blundersFound: (n: number) =>
-      `${n} of your ${n === 1 ? 'blunder' : 'blunders'} found. Biggest:`,
     biggestMoment: (isBlunder: boolean) =>
       `Biggest moment: you ${isBlunder ? 'blundered' : 'made a mistake'} on`,
     moveQualityLink: 'Move quality',
@@ -578,17 +573,12 @@ const es: Strings = {
     },
   },
   analysisPanel: {
-    viewAnalysis: 'Ver análisis',
     analyzing: 'Analizando',
     reanalyzing: 'Reanalizando',
     analyzeWithStockfish: 'Analizar con Stockfish',
     reanalyze: 'Reanalizar',
     analysisFailed: 'Error al analizar.',
     cleanGameNoBlunders: 'Partida limpia — sin errores importantes tuyos.',
-    stockfishAnalysis: 'Análisis de Stockfish',
-    noBlundersFoundClean: 'Stockfish no encontró errores tuyos — partida limpia.',
-    blundersFound: (n: number) =>
-      `${n} ${n === 1 ? 'error tuyo encontrado' : 'errores tuyos encontrados'}. El peor:`,
     biggestMoment: (isBlunder: boolean) =>
       `Momento clave: cometiste ${isBlunder ? 'un error grave' : 'un error'} en`,
     moveQualityLink: 'Calidad de jugadas',
