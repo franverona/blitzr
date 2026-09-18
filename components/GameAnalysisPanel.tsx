@@ -2,26 +2,16 @@
 
 import { createContext, useContext, useMemo, useRef, useState } from 'react'
 import { saveGameAnalysis } from '@/app/actions'
-import {
-  biggestBlunder,
-  blunderSeverity,
-  describeEval,
-  findBlunders,
-  formatEval,
-  formatSwing,
-} from '@/lib/analysis'
+import { biggestBlunder, blunderSeverity, findBlunders } from '@/lib/analysis'
 import { whiteToMove } from '@/lib/drill'
 import { getStrings } from '@/lib/i18n/strings'
 import { MOVE_QUALITY_TIERS, summarizeMoveQuality } from '@/lib/moveQuality'
 import { buildPositions } from '@/lib/positions'
 import { describeMove, plyLabel } from '@/lib/san'
 import { analyzeGame } from '@/lib/stockfish/analyze'
-import { describeBetterMove, describeBlunderReason, detectBlunderReason } from '@/lib/tactics'
+import { describeBlunderReason, detectBlunderReason } from '@/lib/tactics'
 import type { GameAnalysis, MyColor } from '@/lib/types'
 import { useBoardContext } from './Board'
-import { BlunderSeverityBadge } from './BlunderSeverityBadge'
-import { EvalHelp } from './EvalHelp'
-import { PlanBoardButton } from './PlanBoard'
 
 interface AnalysisContextValue {
   analysis: GameAnalysis | null
@@ -94,34 +84,22 @@ export function GameAnalysisProvider({
 
 export function AnalyzeButton() {
   const { analysis, progress, error, handleAnalyze } = useAnalysisContext()
-  const dialogRef = useRef<HTMLDialogElement>(null)
   const s = getStrings()
 
   return (
     <div className="flex flex-col items-end gap-1">
-      <div className="flex items-center gap-3">
-        {analysis && (
-          <button
-            onClick={() => dialogRef.current?.showModal()}
-            className="text-sm text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-          >
-            {s.analysisPanel.viewAnalysis}
-          </button>
-        )}
-        <button
-          onClick={handleAnalyze}
-          disabled={progress !== null}
-          className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium whitespace-nowrap hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:hover:bg-zinc-800"
-        >
-          {progress
-            ? `${analysis ? s.analysisPanel.reanalyzing : s.analysisPanel.analyzing}… (${progress.done}/${progress.total})`
-            : analysis
-              ? s.analysisPanel.reanalyze
-              : s.analysisPanel.analyzeWithStockfish}
-        </button>
-      </div>
+      <button
+        onClick={handleAnalyze}
+        disabled={progress !== null}
+        className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium whitespace-nowrap hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:hover:bg-zinc-800"
+      >
+        {progress
+          ? `${analysis ? s.analysisPanel.reanalyzing : s.analysisPanel.analyzing}… (${progress.done}/${progress.total})`
+          : analysis
+            ? s.analysisPanel.reanalyze
+            : s.analysisPanel.analyzeWithStockfish}
+      </button>
       {error && <p className="text-sm text-rose-600 dark:text-rose-400">{error}</p>}
-      <AnalysisDialog dialogRef={dialogRef} />
     </div>
   )
 }
@@ -176,10 +154,10 @@ export function GameSummary() {
  *  this app doesn't have) and its "Game Score" row (not a documented
  *  formula, not worth faking a number for). Renders nothing until the game
  *  has a saved analysis, same "quietly do nothing when not applicable yet"
- *  pattern as `GameSummary`/`RepertoireDiff`. A separate trigger from
- *  `AnalyzeButton`'s own dialog (the blunder-by-blunder breakdown) — this is
- *  a different, complementary summary of the same saved analysis, not a
- *  duplicate of it. Your own accuracy number sits next to the link itself
+ *  pattern as `GameSummary`/`RepertoireDiff`. A separate concern from the
+ *  move list's inline blunder markers (`components/MoveList.tsx`) — this is
+ *  an aggregate accuracy tally across every move, not a duplicate of it.
+ *  Your own accuracy number sits next to the link itself
  *  (not just inside the dialog) so it's visible at a glance without a click —
  *  as a colored pill, same "badge, not bare text" convention as
  *  `BlunderSeverityBadge`, so a good/bad accuracy reads at a glance too. */
@@ -275,99 +253,6 @@ function MoveQualityDialog({
             </tbody>
           </table>
         </div>
-      </div>
-    </dialog>
-  )
-}
-
-function AnalysisDialog({ dialogRef }: { dialogRef: React.RefObject<HTMLDialogElement | null> }) {
-  const { analysis, movesSan, myColor, positions } = useAnalysisContext()
-  const s = getStrings()
-  if (!analysis) return null
-
-  // Scoped to the account's own moves only — see `GameSummary`'s comment.
-  const blunders = findBlunders(analysis.evals, movesSan).filter(
-    (b) => whiteToMove(b.ply) === (myColor === 'white'),
-  )
-  const worst = biggestBlunder(blunders)
-
-  return (
-    <dialog
-      ref={dialogRef}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) dialogRef.current?.close()
-      }}
-      className="fixed top-1/2 left-1/2 m-0 max-h-[85vh] w-[95vw] max-w-3xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg border border-zinc-200 bg-zinc-50 p-0 text-left text-zinc-900 backdrop:bg-black/60 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
-    >
-      <div className="flex flex-col gap-4 p-6">
-        <div className="flex items-center justify-between gap-4">
-          <h2 className="text-base font-semibold">{s.analysisPanel.stockfishAnalysis}</h2>
-          <button
-            onClick={() => dialogRef.current?.close()}
-            aria-label={s.common.close}
-            className="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
-          >
-            ✕
-          </button>
-        </div>
-
-        {blunders.length === 0 ? (
-          <p className="text-sm text-emerald-600 dark:text-emerald-400">
-            {s.analysisPanel.noBlundersFoundClean}
-          </p>
-        ) : (
-          <div className="flex flex-col gap-3">
-            <p className="text-sm text-amber-600 dark:text-amber-400">
-              {s.analysisPanel.blundersFound(blunders.length)} {plyLabel(worst!.ply)}{' '}
-              {worst!.moveSan} ({formatEval(worst!.evalBefore)} → {formatEval(worst!.evalAfter)},{' '}
-              {describeEval(worst!.evalAfter).toLowerCase()}).
-            </p>
-            <ul className="flex flex-col divide-y divide-zinc-200 dark:divide-zinc-800">
-              {blunders.map((b) => {
-                const reason = detectBlunderReason(positions[b.ply - 1], positions[b.ply], myColor)
-                const betterMove = describeBetterMove(
-                  positions[b.ply - 1],
-                  b.moveSan,
-                  b.evalBefore.bestMove,
-                  myColor,
-                )
-                const bestMove = b.evalBefore.bestMove
-                return (
-                  <li key={b.ply} className="flex flex-col gap-1.5 py-4 first:pt-0 last:pb-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <BlunderSeverityBadge swingCp={b.swingCp} />
-                      <span className="text-sm text-zinc-700 dark:text-zinc-300">
-                        {plyLabel(b.ply)} {b.moveSan}: {formatEval(b.evalBefore)} →{' '}
-                        {formatEval(b.evalAfter)} ({formatSwing(b)})
-                      </span>
-                    </div>
-                    <div className="text-base text-zinc-700 dark:text-zinc-300">
-                      {describeMove(positions[b.ply - 1], b.moveSan)}
-                    </div>
-                    {reason && (
-                      <div className="text-sm text-zinc-500">{describeBlunderReason(reason)}</div>
-                    )}
-                    {betterMove && (
-                      <div className="text-sm text-zinc-500">
-                        {s.common.betterWas} {betterMove}
-                        {bestMove && bestMove.bestLine?.length > 0 && (
-                          <PlanBoardButton
-                            betterMove={betterMove}
-                            fenBefore={positions[b.ply - 1]}
-                            moves={[bestMove.san, ...bestMove.bestLine]}
-                            boardOrientation={myColor}
-                          />
-                        )}
-                      </div>
-                    )}
-                  </li>
-                )
-              })}
-            </ul>
-          </div>
-        )}
-
-        <EvalHelp />
       </div>
     </dialog>
   )

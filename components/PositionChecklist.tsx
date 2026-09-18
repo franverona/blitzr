@@ -6,14 +6,14 @@ import type { ChecklistFinding, MyColor } from '@/lib/types'
 import { useBoardContext } from './Board'
 import { EvalHelp } from './EvalHelp'
 
-// Rendered as `BoardView`'s `sidebarExtra`, stacked below the move list in
-// the same width-capped column next to the board — not a separate
-// full-width block after the whole board+movelist row, which needed
-// scrolling well past the board to reach on every ply change. Still a
-// <details> disclosure (like EvalHelp): the move list can already be tall
-// on a long game, so a quiet position collapsing to one summary line keeps
-// this column from growing past the board for no reason. `open` defaults
-// to true only when there's actually something to see.
+// Rendered inside `DetailsDialogTrigger` (`app/games/[id]/page.tsx`), next
+// to the move list's own accuracy/engine-lines/repertoire panels — moved
+// there (from directly being `BoardView`'s `sidebarExtra`) so the move list
+// itself can grow to fill the whole sidebar column instead of sharing it
+// with this stack. Still a <details> disclosure (like EvalHelp): a quiet
+// position collapsing to one summary line keeps the dialog compact when
+// there's nothing to flag. `open` defaults to true only when there's
+// actually something to see.
 export function PositionChecklist({ myColor }: { myColor: MyColor }) {
   // `displayFen`, not `positions[ply]` — the latter is only ever the
   // recorded game's position, so this would keep scanning wherever the

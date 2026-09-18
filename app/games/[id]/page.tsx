@@ -8,6 +8,7 @@ import {
   ExploreToggleButton,
   LiveAnalysisProvider,
 } from '@/components/Board'
+import { DetailsDialogTrigger } from '@/components/DetailsDialog'
 import {
   AnalyzeButton,
   GameAnalysisProvider,
@@ -76,17 +77,8 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
         <div className="flex flex-wrap items-center justify-end gap-4">
           {game.movesSan && <BoardNavControls />}
           {game.movesSan && <ExploreToggleButton />}
-          {game.movesSan && <AnalyzeButton />}
-        </div>
-      </div>
-
-      <OpeningLine game={game} />
-
-      {game.movesSan ? (
-        <BoardView
-          boardMaxWidthClassName="max-w-160 xl:max-w-172 2xl:max-w-184"
-          sidebarExtra={
-            <>
+          {game.movesSan && (
+            <DetailsDialogTrigger>
               <MoveQualityLink />
               <LiveAnalysisPanel />
               {diff && (
@@ -99,9 +91,16 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
               )}
               <GameSummary />
               <PositionChecklist myColor={game.myColor} />
-            </>
-          }
-        />
+            </DetailsDialogTrigger>
+          )}
+          {game.movesSan && <AnalyzeButton />}
+        </div>
+      </div>
+
+      <OpeningLine game={game} />
+
+      {game.movesSan ? (
+        <BoardView boardMaxWidthClassName="max-w-160 xl:max-w-172 2xl:max-w-184" />
       ) : (
         <div className="flex flex-col gap-2">
           <p className="text-sm text-amber-600 dark:text-amber-400">
