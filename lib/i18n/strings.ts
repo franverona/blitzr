@@ -353,6 +353,8 @@ const en = {
       'ECO code — a standard reference number for this opening, used to group games by opening regardless of the exact move order',
     learnMoreAboutOpening: 'Learn more about this opening',
     viewOnChessCom: 'View on Chess.com',
+    viewDetails: 'Details',
+    gameDetails: 'Game details',
     unparsedMoves: `This game's moves couldn't be parsed (likely a non-standard variant) — showing the raw PGN instead.`,
     playing: (color: string) => `playing ${color}`,
     noRepertoireYet: (color: string) => `No ${color} repertoire defined yet —`,
@@ -747,6 +749,8 @@ const es: Strings = {
       'Código ECO — un número de referencia estándar para esta apertura, usado para agrupar partidas por apertura sin importar el orden exacto de jugadas',
     learnMoreAboutOpening: 'Aprender más sobre esta apertura',
     viewOnChessCom: 'Ver en Chess.com',
+    viewDetails: 'Detalles',
+    gameDetails: 'Detalles de la partida',
     unparsedMoves:
       'No se pudieron interpretar las jugadas de esta partida (probablemente una variante no estándar) — mostrando el PGN sin procesar en su lugar.',
     playing: (color: string) => `jugando con ${color}`,

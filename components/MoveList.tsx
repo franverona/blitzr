@@ -66,7 +66,7 @@ function BlunderDetail({
     : null
 
   return (
-    <li className="flex flex-col gap-1.5 border-t border-zinc-200 bg-zinc-100/60 px-3 py-3 dark:border-zinc-800 dark:bg-zinc-800/40">
+    <li className="bg-accent/10 flex flex-col gap-1.5 border-t border-zinc-200 px-3 py-3 dark:border-zinc-800">
       <div className="flex flex-wrap items-center gap-2">
         <BlunderSeverityBadge swingCp={blunder.swingCp} />
         <span className="text-xs text-zinc-500 dark:text-zinc-400">
@@ -145,7 +145,7 @@ export function MoveList({
   }, [ply])
 
   return (
-    <div className="flex w-full flex-col overflow-hidden rounded border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900">
+    <div className="flex w-full flex-col overflow-hidden rounded border border-zinc-200 bg-zinc-50 lg:min-h-0 lg:flex-1 dark:border-zinc-800 dark:bg-zinc-900">
       <button
         ref={ply === 0 ? activeRef : undefined}
         onClick={() => onSelect(0)}
@@ -157,7 +157,7 @@ export function MoveList({
       >
         {s.board.startingPositionButton}
       </button>
-      <ol className="max-h-70 overflow-y-auto text-sm">
+      <ol className="max-h-70 overflow-y-auto text-sm lg:max-h-none lg:min-h-0 lg:flex-1">
         {pairs.map((pair, i) => {
           const activeBlunder = blunderByPly.get(ply)
           const showDetailForPair =
