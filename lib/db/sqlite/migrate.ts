@@ -103,4 +103,11 @@ async function runMigrations(db: Kysely<DbSchema>): Promise<void> {
   `.execute(db)
 
   await sql`CREATE INDEX IF NOT EXISTS drill_cards_due_at_idx ON drill_cards (due_at)`.execute(db)
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS puzzle_progress (
+      puzzle_id INTEGER PRIMARY KEY,
+      solved_at TEXT NOT NULL
+    )
+  `.execute(db)
 }

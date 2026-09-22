@@ -43,6 +43,8 @@ any way that implies endorsement or affiliation.
 - [x] Live multi-line engine analysis + free-move exploration on a game's board
       (chess.com's analysis-tab experience)
 - [x] Light/dark theme toggle and board color presets (Settings, in the sidebar)
+- [x] Mate-in-N puzzles from real games — play out the entire winning line yourself, with
+      progress tracked and a filterable list
 
 ## Stack
 
@@ -364,6 +366,20 @@ categorization — a lesson teaches a starting position, but real games almost a
 it into a more specific named variation, which is what Chess.com actually tags the game with.
 Endgame lessons skip this line entirely — a game doesn't "reach" a constructed endgame position
 the way it reaches an opening tabiya.
+
+## Puzzles
+
+On `/puzzles`, solve "mate in N" positions pulled from real tournament and match games — each one
+a moment where a real player actually found (or missed) a forced mate, not a generic filler
+puzzle. Unlike a typical trainer that plays the opponent's replies for you, here you play out the
+_entire_ line yourself, move by move, both sides — a puzzle only counts as solved once you've
+walked the whole forced sequence by hand, not just found the first move. A wrong move at any point
+just asks you to try again with no penalty; there are no hints, only an explicit "Reveal solution"
+for when you're stuck, which shows the answer but doesn't count as solving it.
+
+Solved puzzles are tracked and marked with a checkmark on the list, which is filterable by solved
+status, which side is delivering mate, and how many moves the mate takes (every puzzle today is
+mate-in-2, with room for other lengths later).
 
 ## Data hygiene
 
