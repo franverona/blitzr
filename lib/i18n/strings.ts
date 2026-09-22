@@ -348,6 +348,7 @@ const en = {
     revealedTitle: 'Solution',
     reveal: 'Reveal solution',
     solvedBadge: 'Solved',
+    choosePromotion: 'Promote to:',
   },
   puzzlesPage: {
     title: 'Puzzles',
@@ -771,6 +772,7 @@ const es: Strings = {
     revealedTitle: 'Solución',
     reveal: 'Ver solución',
     solvedBadge: 'Resuelto',
+    choosePromotion: 'Coronar a:',
   },
   puzzlesPage: {
     title: 'Problemas',
