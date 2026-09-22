@@ -4,7 +4,7 @@ import type { BestMove, EngineLine, PositionEval } from '../types'
 // The "lite single-threaded" build — no COOP/COEP headers required, unlike
 // the multi-threaded build, and fast enough for on-demand per-game analysis.
 // Copied into public/ at install time by scripts/setup-stockfish.js.
-const ENGINE_URL = '/stockfish/stockfish-18-lite-single.js'
+const ENGINE_URL = '/stockfish/stockfish-19-lite-single.js'
 
 // How many plies of the engine's expected continuation to keep beyond the
 // best move itself — enough to convey the idea (two replies each) without

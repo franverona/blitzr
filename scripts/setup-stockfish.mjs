@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-const FILES = ['stockfish-18-lite-single.js', 'stockfish-18-lite-single.wasm']
+const FILES = ['stockfish-19-lite-single.js', 'stockfish-19-lite-single.wasm']
 const srcDir = path.join(__dirname, '..', 'node_modules', 'stockfish', 'bin')
 const destDir = path.join(__dirname, '..', 'public', 'stockfish')
 
