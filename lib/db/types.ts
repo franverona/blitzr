@@ -72,12 +72,18 @@ export interface DrillCardsTable {
   created_at: string
 }
 
+export interface PuzzleProgressTable {
+  puzzle_id: number
+  solved_at: string
+}
+
 export interface DbSchema {
   games: GamesTable
   sync_state: SyncStateTable
   repertoire_moves: RepertoireMovesTable
   game_analysis: GameAnalysisTable
   drill_cards: DrillCardsTable
+  puzzle_progress: PuzzleProgressTable
 }
 
 export type DbType = 'sqlite'
@@ -139,4 +145,11 @@ export interface GameRepository {
   deleteDrillCards(
     keys: { gameId: string; sourceType: DrillSourceType; ply: number }[],
   ): Promise<void>
+
+  /** Ids of puzzles (`lib/mateProblems.ts`) solved so far — that static data
+   *  isn't itself in the DB, only which of its ids have been solved. */
+  listSolvedPuzzleIds(): Promise<number[]>
+  /** Records a puzzle as solved. A no-op if it's already recorded — keeps
+   *  the original solved_at rather than bumping it on a later re-solve. */
+  markPuzzleSolved(puzzleId: number): Promise<void>
 }

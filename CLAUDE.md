@@ -37,6 +37,8 @@ app/
   repertoire/page.tsx          # repertoire tree builder
   drill/page.tsx                # spaced-repetition drill deck
   blunders/page.tsx              # cross-game blunder aggregate
+  puzzles/page.tsx                 # mate-in-N puzzle list, filterable by status/color/length
+  puzzles/[id]/page.tsx              # one puzzle — play the whole line yourself, move by move
 components/
   GameList.tsx / GameRow.tsx  # games table
   GameSearchForm.tsx            # opponent search + result/color/rated/accuracy filters above the games list
@@ -68,6 +70,8 @@ components/
   SyncButton.tsx                                  # triggers the sync Server Action
   BulkAnalyzeButton.tsx                              # "Analyze all" across unanalyzed games
   AddPgnButton.tsx                                     # paste-PGN dialog -> addManualGame()
+  PuzzleBoard.tsx                                         # fully-manual, multi-ply mate-puzzle solving
+  PuzzleFilters.tsx                                          # status/color/mateIn tabs, URL-driven
 lib/
   config.ts                # getChesscomUsername()
   theme.ts                  # shared board/arrow color constants
@@ -90,6 +94,7 @@ lib/
   accuracyTrend.ts                       # buildAccuracyTrend()/rollingAverageAccuracy() — /blunders trend chart
   sync.ts                            # syncAllArchives()
   manualGame.ts                        # parseManualGame() — pasted PGN -> Game
+  mateProblems.ts                        # MATE_PROBLEMS + getMateProblem()/puzzleColorToMove()
   i18n/
     locale.ts                # Locale type, getLocale() — reads NEXT_PUBLIC_LOCALE
     strings.ts                 # UI string dictionary, getStrings()
@@ -230,7 +235,10 @@ file, not here — this section is only cross-cutting rules that span multiple f
 - Tables: `games`, `sync_state`, `repertoire_moves` (branching tree per color, `ON DELETE
 CASCADE` from a node to its subtree — requires the `foreign_keys` pragma), `game_analysis`
   (one row per analyzed game, keyed by `game_id`), `drill_cards` (spaced-repetition schedule
-  only, keyed by `(game_id, source_type, ply)`, `ON DELETE CASCADE` on `game_id`).
+  only, keyed by `(game_id, source_type, ply)`, `ON DELETE CASCADE` on `game_id`),
+  `puzzle_progress` (`puzzle_id` + `solved_at` — which of `lib/mateProblems.ts`'s hardcoded
+  puzzle ids have been solved; the puzzles themselves aren't in the DB at all, only progress
+  against them is).
 
 ## Chess.com ingestion
 
@@ -540,6 +548,56 @@ for its own `accValue` resync below, not a `useEffect`) — a stale index from a
 would otherwise index past the end of a shorter one once the date filter narrows the range, since
 the mouse doesn't necessarily cross the chart's own edge on the way to clicking a preset button
 elsewhere in the same row.
+
+## Puzzles
+
+`lib/mateProblems.ts`'s `MATE_PROBLEMS` — hardcoded, not a DB table, same pattern as
+`openingTheory.ts` — holds "mate in N" positions imported from real tournament/match games (a
+citation/FEN/solution list), not composed problems and not synced from the account's own games.
+Each entry's `fen` + full `moves` SAN sequence is verified at import time by replaying it through
+chess.js and confirming it ends in checkmate; mate-in-2 entries are additionally brute-force
+checked (does the key move force mate against _every_ legal reply, not just the one the real game
+happened to continue with) — see `__tests__/mateProblems.test.ts` for the standing version of
+that same check, so a future hand-edit to the data can't silently ship a broken puzzle.
+`puzzleColorToMove()` reads the side to move straight off each `fen` rather than assuming White —
+roughly a third of the set has Black delivering mate, and both `PuzzleBoard`'s board orientation
+and `/puzzles`'s color filter depend on this being right per-puzzle, not a fixed convention.
+
+`PuzzleBoard.tsx` is deliberately **fully manual, not auto-played**: unlike `LessonQuiz.tsx`'s
+"opponent's replies play themselves" pattern, here you play every ply of the recorded line
+yourself, both sides, one at a time — "solved" means walking the _whole_ forced sequence by hand,
+not just finding the first move. The board orientation is fixed at whoever starts and never flips
+mid-solve, since you're the one moving both colors' pieces as you go. A wrong move at any ply
+shows inline feedback and lets you retry that same ply immediately — no session-ending penalty
+like `DrillSession`'s one-shot grading. There's no hint system at all, only an explicit "Reveal
+solution" that shows the full text line and ends the attempt without counting as solved. A ◀/▶
+nav next to the move-progress label lets you step back through plies already played (read-only —
+dragging/clicking is disabled until you're back at the live tip) without disturbing solving
+progress; it stays available after finishing too, so you can replay the line you just solved.
+
+Unlike `RepertoireBoard`/`Board.tsx`'s explore mode, which both hardcode `promotion: 'q'` (their
+own comments note underpromotion "essentially never comes up" there), `PuzzleBoard` can't make
+that assumption — several imported puzzles are only forced mate _because_ of an underpromotion
+(e.g. #2's `cxb8=N#`; queening there isn't even mate). `attemptMove` checks
+`legalDestinations(...).some(m => m.isPromotion)` for the attempted to-square before resolving
+the move; if it's a promotion, it parks the pending `{ from, to }` and shows a piece-picker
+overlay instead of moving immediately, resolving through the same `attemptMove` (now passed an
+explicit piece) once one is chosen. `LegalDestination` gained an `isPromotion` flag for this
+(`lib/legalMoves.ts`) — chess.js reports one move per promotable piece for the same to-square, so
+`legalDestinations` now dedupes those into a single flagged destination rather than four
+near-identical entries, which is also what fixed a latent bug in every other board's
+`legalMoveMap` (harmless there, since all four entries mapped to the same `isCapture` anyway).
+
+Progress lives in its own minimal `puzzle_progress` table (`puzzle_id` + `solved_at`, `ON
+CONFLICT DO NOTHING` so re-solving an already-solved puzzle keeps the original timestamp rather
+than bumping it) — solving by play calls `markPuzzleSolved()`; revealing the solution
+deliberately doesn't, since giving up isn't solving. `/puzzles` (`getSolvedPuzzleIds()`) marks
+each card with a checkmark and border, and `PuzzleFilters.tsx` (same URL-driven
+`?status=`/`?color=`/`?mateIn=` pattern as `DrillFilters.tsx`) narrows by solved status, which
+side is mating, and mate length. The mate-in-N filter's options are read off `MATE_PROBLEMS`
+itself (`[...new Set(...)]`) rather than hardcoded — every puzzle today happens to be mate-in-2,
+so the filter is a no-op until a different-length set gets imported, but it's already correct
+for that day rather than needing to be revisited.
 
 ## Learn openings
 

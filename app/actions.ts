@@ -334,3 +334,12 @@ export async function submitDrillAnswer(
   })
   revalidatePath('/drill')
 }
+
+export async function getSolvedPuzzleIds(): Promise<number[]> {
+  return getRepository().listSolvedPuzzleIds()
+}
+
+export async function markPuzzleSolved(puzzleId: number): Promise<void> {
+  await getRepository().markPuzzleSolved(puzzleId)
+  revalidatePath('/puzzles')
+}
