@@ -8,6 +8,7 @@ import {
   DumbbellIcon,
   GraduationCapIcon,
   LibraryBigIcon,
+  PuzzleIcon,
   ShieldAlertIcon,
   SwatchBookIcon,
 } from './NavIcons'
@@ -18,6 +19,7 @@ const LINK_ROUTES = [
   { href: '/learn', key: 'learn', Icon: GraduationCapIcon },
   { href: '/repertoire', key: 'repertoire', Icon: LibraryBigIcon },
   { href: '/drill', key: 'drill', Icon: DumbbellIcon },
+  { href: '/puzzles', key: 'puzzles', Icon: PuzzleIcon },
   { href: '/blunders', key: 'blunders', Icon: ShieldAlertIcon },
 ] as const
 
