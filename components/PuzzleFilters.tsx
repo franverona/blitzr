@@ -41,6 +41,11 @@ export function PuzzleFilters({
 
   function hrefFor(next: { status?: string; color?: string; mateIn?: string }): string {
     const params = new URLSearchParams(searchParams.toString())
+    // A filter change always drops the current page — same convention
+    // GameSearchForm's own navigate() uses (it never carries `page` into its
+    // built params at all) — otherwise a page number from a wider result set
+    // could point past the end of a newly-narrowed one.
+    params.delete('page')
     for (const [key, value] of Object.entries(next)) {
       if (value) params.set(key, value)
       else params.delete(key)

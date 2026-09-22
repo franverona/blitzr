@@ -93,7 +93,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
               initialCollapsed={sidebarCollapsed}
               initialTheme={theme}
             />
-            <main className="min-w-0 flex-1 overflow-y-auto px-6 py-6">
+            <main id="main-scroll" className="min-w-0 flex-1 overflow-y-auto px-6 py-6">
               <div className="mx-auto max-w-7xl">{children}</div>
             </main>
           </BulkAnalysisProvider>
