@@ -30,8 +30,8 @@ importers:
         specifier: 19.2.8
         version: 19.2.8(react@19.3.0)
       stockfish:
-        specifier: ^18.0.8
-        version: 18.0.8
+        specifier: ^19.0.0
+        version: 19.0.0
     devDependencies:
       '@commitlint/cli':
         specifier: ^21.2.3
@@ -2470,8 +2470,8 @@ packages:
   std-env@4.2.0:
     resolution: {integrity: sha512-oCUKSupKTHX53EyjDtuZQ64pjLJ6yYCtpmEw0goYxtjG9KpbRe8KAsl2tBUGU9DyMcJ0RwJ8GqJAFzMXcXW1Rw==}
 
-  stockfish@18.0.8:
-    resolution: {integrity: sha512-z+f2UMPXLylDBGjv9e9zU8QulY7hUl8MYHesLRrdddewlOXjJrUSmtNmbtID1/F72EPhq0CCkCNxgWS5MQVWtQ==}
+  stockfish@19.0.0:
+    resolution: {integrity: sha512-jDyYLbqNpboQcMs5HodTHI2CrKL74zkQWb1+sgoNXw5HI6avTblW4G0X7afFt3BBOc6VbTSkOV64EUxm/DWSpg==}
     hasBin: true
 
   stop-iteration-iterator@1.1.0:
@@ -5205,7 +5205,7 @@ snapshots:
 
   std-env@4.2.0: {}
 
-  stockfish@18.0.8: {}
+  stockfish@19.0.0: {}
 
   stop-iteration-iterator@1.1.0:
     dependencies:
