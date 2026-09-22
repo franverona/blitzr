@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Chess } from 'chess.js'
 import { Chessboard } from 'react-chessboard'
 import { markPuzzleSolved } from '@/app/actions'
@@ -11,6 +11,7 @@ import type { SanPiece } from '@/lib/san'
 import { BOARD_ANIMATION_DURATION_MS, BOARD_NOTATION_SIZE_STYLE } from '@/lib/theme'
 import { useBoardColors } from './BoardColorsProvider'
 import { LegalMoveSquare } from './LegalMoveSquare'
+import { MoveSequence } from './MoveSequence'
 import { PieceGlyph } from './PieceGlyph'
 
 type Feedback = 'incorrect' | null
@@ -55,19 +56,24 @@ export function PuzzleBoard({ problem }: { problem: MateProblem }) {
   const solved = ply >= problem.moves.length
   const finished = solved || revealed
   const orientation = puzzleColorToMove(problem)
+  // Revealing shows the whole forced line, not just what's been solved so
+  // far — the board should be browsable through all of it, not stuck at
+  // wherever the solver gave up.
+  const maxViewPly = revealed ? problem.moves.length : ply
 
-  // One FEN per ply solved so far, positions[0] being the puzzle's start —
-  // recomputed from problem.fen + problem.moves rather than kept as state,
-  // so it can never drift out of sync with `ply`.
+  // One FEN per ply solved so far (or, once revealed, per ply of the whole
+  // solution), positions[0] being the puzzle's start — recomputed from
+  // problem.fen + problem.moves rather than kept as state, so it can never
+  // drift out of sync with `ply`.
   const positions = useMemo(() => {
     const chess = new Chess(problem.fen)
     const arr = [chess.fen()]
-    for (const san of problem.moves.slice(0, ply)) {
+    for (const san of problem.moves.slice(0, maxViewPly)) {
       chess.move(san)
       arr.push(chess.fen())
     }
     return arr
-  }, [problem.fen, problem.moves, ply])
+  }, [problem.fen, problem.moves, maxViewPly])
 
   const fen = positions[viewPly]
   const turnColor = fen.split(' ')[1] === 'b' ? 'black' : 'white'
@@ -77,9 +83,38 @@ export function PuzzleBoard({ problem }: { problem: MateProblem }) {
   const isLive = viewPly === ply
 
   function goToPly(p: number) {
+    // Navigating away mid-promotion-pick would leave the piece-picker
+    // overlay open over a position `pendingPromotion`'s from/to squares no
+    // longer refer to.
+    if (pendingPromotion) return
     setSelectedSquare(null)
-    setViewPly(Math.max(0, Math.min(ply, p)))
+    setViewPly(Math.max(0, Math.min(maxViewPly, p)))
   }
+
+  // Left/right arrow keys step through the move list the same as the ◀/▶
+  // buttons — same global (not focus-scoped) convention BoardNavControls
+  // uses on the game/lesson pages, minus Space/0 (no autoplay or "jump to
+  // start" concept here). Throttled to BOARD_ANIMATION_DURATION_MS for the
+  // same reason: rapid key taps would otherwise cut the board's own slide
+  // animation off mid-flight. Steps `viewPly`/`maxViewPly` inline (not via
+  // `goToPly`) so the effect only needs stable state setters as deps, not a
+  // plain function that's a new reference on every render.
+  const lastNavAtRef = useRef(0)
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
+      e.preventDefault()
+      if (pendingPromotion) return
+      const now = Date.now()
+      if (now - lastNavAtRef.current < BOARD_ANIMATION_DURATION_MS) return
+      lastNavAtRef.current = now
+      setSelectedSquare(null)
+      const delta = e.key === 'ArrowLeft' ? -1 : 1
+      setViewPly((vp) => Math.max(0, Math.min(maxViewPly, vp + delta)))
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [maxViewPly, pendingPromotion])
 
   const legalMoves = useMemo(
     () => (isLive && selectedSquare ? legalDestinations(fen, selectedSquare) : []),
@@ -161,113 +196,135 @@ export function PuzzleBoard({ problem }: { problem: MateProblem }) {
     attemptMove(pendingPromotion.from, pendingPromotion.to, promotion)
   }
 
+  // Only the moves actually reached so far — the full solution only once
+  // finished (matching `positions`/`maxViewPly` above), so the list doesn't
+  // spoil the rest of the line while still solving.
+  const shownMoves = problem.moves.slice(0, maxViewPly)
+
   return (
-    <div className="mx-auto flex w-full max-w-140 flex-col gap-3">
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-          {!finished && isLive ? s.puzzles.toMove(turnColor) : ' '}
-        </p>
-        <div className="flex items-center gap-1.5">
-          <button
-            onClick={() => goToPly(viewPly - 1)}
-            disabled={viewPly === 0}
-            aria-label={s.board.navLabels.previous}
-            className="rounded border border-zinc-300 px-1.5 py-0.5 text-xs hover:bg-zinc-100 disabled:opacity-40 dark:border-zinc-700 dark:hover:bg-zinc-800"
-          >
-            ◀
-          </button>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">
-            {s.puzzles.moveProgress(
-              Math.min(viewPly + 1, problem.moves.length),
-              problem.moves.length,
-            )}
+    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-center">
+      <div className="flex w-full max-w-140 shrink-0 flex-col gap-3">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+            {!finished && isLive ? s.puzzles.toMove(turnColor) : ' '}
           </p>
-          <button
-            onClick={() => goToPly(viewPly + 1)}
-            disabled={viewPly === ply}
-            aria-label={s.board.navLabels.next}
-            className="rounded border border-zinc-300 px-1.5 py-0.5 text-xs hover:bg-zinc-100 disabled:opacity-40 dark:border-zinc-700 dark:hover:bg-zinc-800"
-          >
-            ▶
-          </button>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => goToPly(viewPly - 1)}
+              disabled={viewPly === 0 || !!pendingPromotion}
+              aria-label={s.board.navLabels.previous}
+              className="rounded border border-zinc-300 px-1.5 py-0.5 text-xs hover:bg-zinc-100 disabled:opacity-40 dark:border-zinc-700 dark:hover:bg-zinc-800"
+            >
+              ◀
+            </button>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              {s.puzzles.moveProgress(viewPly, problem.moves.length)}
+            </p>
+            <button
+              onClick={() => goToPly(viewPly + 1)}
+              disabled={viewPly === maxViewPly || !!pendingPromotion}
+              aria-label={s.board.navLabels.next}
+              className="rounded border border-zinc-300 px-1.5 py-0.5 text-xs hover:bg-zinc-100 disabled:opacity-40 dark:border-zinc-700 dark:hover:bg-zinc-800"
+            >
+              ▶
+            </button>
+          </div>
         </div>
-      </div>
-      <div className="relative w-full overflow-hidden rounded shadow-lg">
-        <Chessboard
-          options={{
-            position: fen,
-            boardOrientation: orientation,
-            allowDragging: !finished && isLive && !pendingPromotion,
-            onPieceDrop: handleDrop,
-            onSquareClick: handleSquareClick,
-            animationDurationInMs: BOARD_ANIMATION_DURATION_MS,
-            squareRenderer: ({ square, children }) => (
-              <LegalMoveSquare
-                isSelected={isLive && square === selectedSquare}
-                isLegalMove={legalMoveMap.has(square)}
-                isCapture={legalMoveMap.get(square) ?? false}
-              >
-                {children}
-              </LegalMoveSquare>
-            ),
-            darkSquareStyle: { backgroundColor: boardColors.dark },
-            lightSquareStyle: { backgroundColor: boardColors.light },
-            darkSquareNotationStyle: boardColors.darkSquareNotationStyle,
-            lightSquareNotationStyle: boardColors.lightSquareNotationStyle,
-            alphaNotationStyle: BOARD_NOTATION_SIZE_STYLE,
-            numericNotationStyle: BOARD_NOTATION_SIZE_STYLE,
-          }}
-        />
-        {pendingPromotion && (
-          <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/50">
-            <div className="flex flex-col items-center gap-2 rounded-lg bg-zinc-50 p-4 shadow-xl dark:bg-zinc-900">
-              <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                {s.puzzles.choosePromotion}
-              </p>
-              <div className="flex gap-2">
-                {PROMOTION_PIECES.map(({ promotion, glyph }) => (
-                  <button
-                    key={promotion}
-                    onClick={() => choosePromotion(promotion)}
-                    className="h-12 w-12 rounded border border-zinc-300 bg-white p-1 hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700"
-                  >
-                    <PieceGlyph piece={glyph} color={turnColor} />
-                  </button>
-                ))}
+        <div className="relative w-full overflow-hidden rounded shadow-lg">
+          <Chessboard
+            options={{
+              position: fen,
+              boardOrientation: orientation,
+              allowDragging: !finished && isLive && !pendingPromotion,
+              onPieceDrop: handleDrop,
+              onSquareClick: handleSquareClick,
+              animationDurationInMs: BOARD_ANIMATION_DURATION_MS,
+              squareRenderer: ({ square, children }) => (
+                <LegalMoveSquare
+                  isSelected={isLive && square === selectedSquare}
+                  isLegalMove={legalMoveMap.has(square)}
+                  isCapture={legalMoveMap.get(square) ?? false}
+                >
+                  {children}
+                </LegalMoveSquare>
+              ),
+              darkSquareStyle: { backgroundColor: boardColors.dark },
+              lightSquareStyle: { backgroundColor: boardColors.light },
+              darkSquareNotationStyle: boardColors.darkSquareNotationStyle,
+              lightSquareNotationStyle: boardColors.lightSquareNotationStyle,
+              alphaNotationStyle: BOARD_NOTATION_SIZE_STYLE,
+              numericNotationStyle: BOARD_NOTATION_SIZE_STYLE,
+            }}
+          />
+          {pendingPromotion && (
+            <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/50">
+              <div className="flex flex-col items-center gap-2 rounded-lg bg-zinc-50 p-4 shadow-xl dark:bg-zinc-900">
+                <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                  {s.puzzles.choosePromotion}
+                </p>
+                <div className="flex gap-2">
+                  {PROMOTION_PIECES.map(({ promotion, glyph }) => (
+                    <button
+                      key={promotion}
+                      onClick={() => choosePromotion(promotion)}
+                      className="h-12 w-12 rounded border border-zinc-300 bg-white p-1 hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700"
+                    >
+                      <PieceGlyph piece={glyph} color={turnColor} />
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
+          )}
+        </div>
+
+        {feedback === 'incorrect' && !finished && isLive && (
+          <p className="text-sm text-rose-600 dark:text-rose-400">{s.puzzles.incorrect}</p>
         )}
-      </div>
 
-      {feedback === 'incorrect' && !finished && isLive && (
-        <p className="text-sm text-rose-600 dark:text-rose-400">{s.puzzles.incorrect}</p>
-      )}
-
-      {finished ? (
-        <div className="flex flex-col gap-2 rounded-md border border-zinc-200 p-3 text-sm dark:border-zinc-800">
+        {finished ? (
           <p
             className={
               solved
-                ? 'font-medium text-emerald-600 dark:text-emerald-400'
-                : 'font-medium text-zinc-600 dark:text-zinc-400'
+                ? 'text-sm font-medium text-emerald-600 dark:text-emerald-400'
+                : 'text-sm font-medium text-zinc-600 dark:text-zinc-400'
             }
           >
             {solved ? s.puzzles.solved : s.puzzles.revealedTitle}
           </p>
-          <p className="whitespace-pre-line text-zinc-700 dark:text-zinc-300">{problem.solution}</p>
+        ) : (
+          <button
+            onClick={() => {
+              setPendingPromotion(null)
+              setRevealed(true)
+              setViewPly(problem.moves.length)
+            }}
+            className="w-fit text-sm text-zinc-500 hover:underline dark:text-zinc-400"
+          >
+            {s.puzzles.reveal}
+          </button>
+        )}
+      </div>
+
+      <div className="flex w-full flex-col gap-3 lg:max-w-sm lg:flex-1 xl:max-w-md">
+        <div className="flex w-full flex-col overflow-hidden rounded border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900">
+          <p className="border-b border-zinc-200 px-3 py-1.5 text-sm font-medium text-zinc-600 dark:border-zinc-800 dark:text-zinc-400">
+            {s.puzzles.movesLabel}
+          </p>
+          <div className="px-3 py-2 text-base">
+            {shownMoves.length > 0 ? (
+              <MoveSequence
+                fen={problem.fen}
+                moves={shownMoves}
+                currentIndex={viewPly > 0 ? viewPly - 1 : undefined}
+                onSelectIndex={(i) => goToPly(i + 1)}
+              />
+            ) : (
+              <span className="text-sm text-zinc-400 dark:text-zinc-500">—</span>
+            )}
+          </div>
         </div>
-      ) : (
-        <button
-          onClick={() => {
-            setPendingPromotion(null)
-            setRevealed(true)
-          }}
-          className="w-fit text-sm text-zinc-500 hover:underline dark:text-zinc-400"
-        >
-          {s.puzzles.reveal}
-        </button>
-      )}
+      </div>
     </div>
   )
 }
