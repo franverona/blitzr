@@ -7,11 +7,25 @@ import { markPuzzleSolved } from '@/app/actions'
 import { getStrings } from '@/lib/i18n/strings'
 import { legalDestinations } from '@/lib/legalMoves'
 import { puzzleColorToMove, type MateProblem } from '@/lib/mateProblems'
+import type { SanPiece } from '@/lib/san'
 import { BOARD_ANIMATION_DURATION_MS, BOARD_NOTATION_SIZE_STYLE } from '@/lib/theme'
 import { useBoardColors } from './BoardColorsProvider'
 import { LegalMoveSquare } from './LegalMoveSquare'
+import { PieceGlyph } from './PieceGlyph'
 
 type Feedback = 'incorrect' | null
+
+// chess.js's own lowercase promotion letters, in the order offered to the
+// solver — not every mate needs a queen; several imported puzzles are only
+// mate because of an under-promotion (e.g. cxb8=N#), so unlike the other
+// boards in this app (RepertoireBoard, Board's explore mode), this can't
+// just hardcode 'q'.
+const PROMOTION_PIECES: { promotion: 'q' | 'r' | 'b' | 'n'; glyph: SanPiece }[] = [
+  { promotion: 'q', glyph: 'Q' },
+  { promotion: 'r', glyph: 'R' },
+  { promotion: 'b', glyph: 'B' },
+  { promotion: 'n', glyph: 'N' },
+]
 
 // No hints, no engine — the point is to work it out yourself. Fully manual:
 // unlike LessonQuiz's opponent-auto-plays-itself pattern, here *you* play
@@ -31,6 +45,12 @@ export function PuzzleBoard({ problem }: { problem: MateProblem }) {
   // beyond `ply` exists to browse into (those moves haven't been found yet).
   const [viewPly, setViewPly] = useState(0)
   const [revealed, setRevealed] = useState(false)
+  // Set instead of immediately resolving a move that lands a pawn on the
+  // back rank — attemptMove pauses there until choosePromotion picks a
+  // piece, rather than assuming queen like the app's other boards do.
+  const [pendingPromotion, setPendingPromotion] = useState<{ from: string; to: string } | null>(
+    null,
+  )
 
   const solved = ply >= problem.moves.length
   const finished = solved || revealed
@@ -70,17 +90,30 @@ export function PuzzleBoard({ problem }: { problem: MateProblem }) {
     [legalMoves],
   )
 
-  function attemptMove(from: string, to: string): boolean {
+  function attemptMove(from: string, to: string, promotion?: 'q' | 'r' | 'b' | 'n'): boolean {
     if (finished || !isLive) return false
+    // A fresh attempt (no explicit promotion yet) is blocked while the
+    // picker is already open — but the resolving call from choosePromotion
+    // itself, which always passes one, needs to get through.
+    if (!promotion) {
+      if (pendingPromotion) return false
+      if (legalDestinations(fen, from).some((m) => m.to === to && m.isPromotion)) {
+        setSelectedSquare(null)
+        setPendingPromotion({ from, to })
+        return true
+      }
+    }
+
     const chess = new Chess(fen)
     let move
     try {
-      move = chess.move({ from, to, promotion: 'q' })
+      move = chess.move({ from, to, promotion: promotion ?? 'q' })
     } catch {
       return false
     }
     if (!move) return false
 
+    setPendingPromotion(null)
     if (move.san === problem.moves[ply]) {
       setFeedback(null)
       const nextPly = ply + 1
@@ -110,7 +143,7 @@ export function PuzzleBoard({ problem }: { problem: MateProblem }) {
   }
 
   function handleSquareClick({ square, piece }: { square: string; piece: unknown | null }) {
-    if (finished || !isLive) return
+    if (finished || !isLive || pendingPromotion) return
     if (selectedSquare) {
       if (selectedSquare === square) {
         setSelectedSquare(null)
@@ -121,6 +154,11 @@ export function PuzzleBoard({ problem }: { problem: MateProblem }) {
       return
     }
     if (piece) setSelectedSquare(square)
+  }
+
+  function choosePromotion(promotion: 'q' | 'r' | 'b' | 'n') {
+    if (!pendingPromotion) return
+    attemptMove(pendingPromotion.from, pendingPromotion.to, promotion)
   }
 
   return (
@@ -154,12 +192,12 @@ export function PuzzleBoard({ problem }: { problem: MateProblem }) {
           </button>
         </div>
       </div>
-      <div className="w-full overflow-hidden rounded shadow-lg">
+      <div className="relative w-full overflow-hidden rounded shadow-lg">
         <Chessboard
           options={{
             position: fen,
             boardOrientation: orientation,
-            allowDragging: !finished && isLive,
+            allowDragging: !finished && isLive && !pendingPromotion,
             onPieceDrop: handleDrop,
             onSquareClick: handleSquareClick,
             animationDurationInMs: BOARD_ANIMATION_DURATION_MS,
@@ -180,6 +218,26 @@ export function PuzzleBoard({ problem }: { problem: MateProblem }) {
             numericNotationStyle: BOARD_NOTATION_SIZE_STYLE,
           }}
         />
+        {pendingPromotion && (
+          <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/50">
+            <div className="flex flex-col items-center gap-2 rounded-lg bg-zinc-50 p-4 shadow-xl dark:bg-zinc-900">
+              <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                {s.puzzles.choosePromotion}
+              </p>
+              <div className="flex gap-2">
+                {PROMOTION_PIECES.map(({ promotion, glyph }) => (
+                  <button
+                    key={promotion}
+                    onClick={() => choosePromotion(promotion)}
+                    className="h-12 w-12 rounded border border-zinc-300 bg-white p-1 hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700"
+                  >
+                    <PieceGlyph piece={glyph} color={turnColor} />
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {feedback === 'incorrect' && !finished && isLive && (
@@ -201,7 +259,10 @@ export function PuzzleBoard({ problem }: { problem: MateProblem }) {
         </div>
       ) : (
         <button
-          onClick={() => setRevealed(true)}
+          onClick={() => {
+            setPendingPromotion(null)
+            setRevealed(true)
+          }}
           className="w-fit text-sm text-zinc-500 hover:underline dark:text-zinc-400"
         >
           {s.puzzles.reveal}

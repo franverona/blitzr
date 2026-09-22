@@ -570,7 +570,23 @@ not just finding the first move. The board orientation is fixed at whoever start
 mid-solve, since you're the one moving both colors' pieces as you go. A wrong move at any ply
 shows inline feedback and lets you retry that same ply immediately — no session-ending penalty
 like `DrillSession`'s one-shot grading. There's no hint system at all, only an explicit "Reveal
-solution" that shows the full text line and ends the attempt without counting as solved.
+solution" that shows the full text line and ends the attempt without counting as solved. A ◀/▶
+nav next to the move-progress label lets you step back through plies already played (read-only —
+dragging/clicking is disabled until you're back at the live tip) without disturbing solving
+progress; it stays available after finishing too, so you can replay the line you just solved.
+
+Unlike `RepertoireBoard`/`Board.tsx`'s explore mode, which both hardcode `promotion: 'q'` (their
+own comments note underpromotion "essentially never comes up" there), `PuzzleBoard` can't make
+that assumption — several imported puzzles are only forced mate _because_ of an underpromotion
+(e.g. #2's `cxb8=N#`; queening there isn't even mate). `attemptMove` checks
+`legalDestinations(...).some(m => m.isPromotion)` for the attempted to-square before resolving
+the move; if it's a promotion, it parks the pending `{ from, to }` and shows a piece-picker
+overlay instead of moving immediately, resolving through the same `attemptMove` (now passed an
+explicit piece) once one is chosen. `LegalDestination` gained an `isPromotion` flag for this
+(`lib/legalMoves.ts`) — chess.js reports one move per promotable piece for the same to-square, so
+`legalDestinations` now dedupes those into a single flagged destination rather than four
+near-identical entries, which is also what fixed a latent bug in every other board's
+`legalMoveMap` (harmless there, since all four entries mapped to the same `isCapture` anyway).
 
 Progress lives in its own minimal `puzzle_progress` table (`puzzle_id` + `solved_at`, `ON
 CONFLICT DO NOTHING` so re-solving an already-solved puzzle keeps the original timestamp rather
