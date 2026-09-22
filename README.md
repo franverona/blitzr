@@ -375,7 +375,10 @@ puzzle. Unlike a typical trainer that plays the opponent's replies for you, here
 _entire_ line yourself, move by move, both sides — a puzzle only counts as solved once you've
 walked the whole forced sequence by hand, not just found the first move. A wrong move at any point
 just asks you to try again with no penalty; there are no hints, only an explicit "Reveal solution"
-for when you're stuck, which shows the answer but doesn't count as solving it.
+for when you're stuck, which shows the answer but doesn't count as solving it. A ◀/▶ control lets
+you step back through moves you've already played to review them, and a promotion move (some
+puzzles are only mate because of an underpromotion) prompts you to pick which piece rather than
+assuming a queen.
 
 Solved puzzles are tracked and marked with a checkmark on the list, which is filterable by solved
 status, which side is delivering mate, and how many moves the mate takes (every puzzle today is
