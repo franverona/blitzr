@@ -25,24 +25,45 @@ export function PuzzleBoard({ problem }: { problem: MateProblem }) {
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null)
   const [feedback, setFeedback] = useState<Feedback>(null)
   const [ply, setPly] = useState(0)
+  // Which already-played ply the board is showing — normally kept in sync
+  // with `ply` (the live tip), but the ◀/▶ nav below can pull it back to
+  // review an earlier move without disturbing solving progress. Nothing
+  // beyond `ply` exists to browse into (those moves haven't been found yet).
+  const [viewPly, setViewPly] = useState(0)
   const [revealed, setRevealed] = useState(false)
 
   const solved = ply >= problem.moves.length
   const finished = solved || revealed
   const orientation = puzzleColorToMove(problem)
 
-  // Position after replaying the plies solved so far, and whose turn it is
-  // from there — recomputed from problem.fen + problem.moves rather than
-  // kept as separate state, so it can never drift out of sync with `ply`.
-  const { fen, turnColor } = useMemo(() => {
+  // One FEN per ply solved so far, positions[0] being the puzzle's start —
+  // recomputed from problem.fen + problem.moves rather than kept as state,
+  // so it can never drift out of sync with `ply`.
+  const positions = useMemo(() => {
     const chess = new Chess(problem.fen)
-    for (let i = 0; i < ply; i++) chess.move(problem.moves[i])
-    return { fen: chess.fen(), turnColor: chess.turn() === 'b' ? 'black' : 'white' } as const
+    const arr = [chess.fen()]
+    for (const san of problem.moves.slice(0, ply)) {
+      chess.move(san)
+      arr.push(chess.fen())
+    }
+    return arr
   }, [problem.fen, problem.moves, ply])
 
+  const fen = positions[viewPly]
+  const turnColor = fen.split(' ')[1] === 'b' ? 'black' : 'white'
+  // Only the live tip is interactive — an earlier ply is read-only review,
+  // same idea as Board.tsx's own ply nav, just scoped to what's actually
+  // been solved so far.
+  const isLive = viewPly === ply
+
+  function goToPly(p: number) {
+    setSelectedSquare(null)
+    setViewPly(Math.max(0, Math.min(ply, p)))
+  }
+
   const legalMoves = useMemo(
-    () => (selectedSquare ? legalDestinations(fen, selectedSquare) : []),
-    [selectedSquare, fen],
+    () => (isLive && selectedSquare ? legalDestinations(fen, selectedSquare) : []),
+    [isLive, selectedSquare, fen],
   )
   const legalMoveMap = useMemo(
     () => new Map(legalMoves.map((m) => [m.to, m.isCapture])),
@@ -50,7 +71,7 @@ export function PuzzleBoard({ problem }: { problem: MateProblem }) {
   )
 
   function attemptMove(from: string, to: string): boolean {
-    if (finished) return false
+    if (finished || !isLive) return false
     const chess = new Chess(fen)
     let move
     try {
@@ -64,6 +85,7 @@ export function PuzzleBoard({ problem }: { problem: MateProblem }) {
       setFeedback(null)
       const nextPly = ply + 1
       setPly(nextPly)
+      setViewPly(nextPly)
       // Fire-and-forget, same convention as DrillSession's submitDrillAnswer
       // — the UI already reflects "solved" from local state, this just
       // persists it.
@@ -88,7 +110,7 @@ export function PuzzleBoard({ problem }: { problem: MateProblem }) {
   }
 
   function handleSquareClick({ square, piece }: { square: string; piece: unknown | null }) {
-    if (finished) return
+    if (finished || !isLive) return
     if (selectedSquare) {
       if (selectedSquare === square) {
         setSelectedSquare(null)
@@ -103,28 +125,47 @@ export function PuzzleBoard({ problem }: { problem: MateProblem }) {
 
   return (
     <div className="mx-auto flex w-full max-w-140 flex-col gap-3">
-      {!finished && (
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-            {s.puzzles.toMove(turnColor)}
-          </p>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+          {!finished && isLive ? s.puzzles.toMove(turnColor) : ' '}
+        </p>
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => goToPly(viewPly - 1)}
+            disabled={viewPly === 0}
+            aria-label={s.board.navLabels.previous}
+            className="rounded border border-zinc-300 px-1.5 py-0.5 text-xs hover:bg-zinc-100 disabled:opacity-40 dark:border-zinc-700 dark:hover:bg-zinc-800"
+          >
+            ◀
+          </button>
           <p className="text-xs text-zinc-500 dark:text-zinc-400">
-            {s.puzzles.moveProgress(ply + 1, problem.moves.length)}
+            {s.puzzles.moveProgress(
+              Math.min(viewPly + 1, problem.moves.length),
+              problem.moves.length,
+            )}
           </p>
+          <button
+            onClick={() => goToPly(viewPly + 1)}
+            disabled={viewPly === ply}
+            aria-label={s.board.navLabels.next}
+            className="rounded border border-zinc-300 px-1.5 py-0.5 text-xs hover:bg-zinc-100 disabled:opacity-40 dark:border-zinc-700 dark:hover:bg-zinc-800"
+          >
+            ▶
+          </button>
         </div>
-      )}
+      </div>
       <div className="w-full overflow-hidden rounded shadow-lg">
         <Chessboard
           options={{
             position: fen,
             boardOrientation: orientation,
-            allowDragging: !finished,
+            allowDragging: !finished && isLive,
             onPieceDrop: handleDrop,
             onSquareClick: handleSquareClick,
             animationDurationInMs: BOARD_ANIMATION_DURATION_MS,
             squareRenderer: ({ square, children }) => (
               <LegalMoveSquare
-                isSelected={square === selectedSquare}
+                isSelected={isLive && square === selectedSquare}
                 isLegalMove={legalMoveMap.has(square)}
                 isCapture={legalMoveMap.get(square) ?? false}
               >
@@ -141,7 +182,7 @@ export function PuzzleBoard({ problem }: { problem: MateProblem }) {
         />
       </div>
 
-      {feedback === 'incorrect' && !finished && (
+      {feedback === 'incorrect' && !finished && isLive && (
         <p className="text-sm text-rose-600 dark:text-rose-400">{s.puzzles.incorrect}</p>
       )}
 
