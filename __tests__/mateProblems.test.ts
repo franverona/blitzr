@@ -1,6 +1,6 @@
 import { Chess } from 'chess.js'
 import { describe, expect, it } from 'vitest'
-import { getMateProblem, MATE_PROBLEMS, puzzleColorToMove } from '@/lib/mateProblems'
+import { getMateProblem, isForcedMate, MATE_PROBLEMS, puzzleColorToMove } from '@/lib/mateProblems'
 
 describe('getMateProblem', () => {
   it('finds a problem by id', () => {
@@ -55,4 +55,24 @@ describe('MATE_PROBLEMS content', () => {
     const ids = MATE_PROBLEMS.map((p) => p.id)
     expect(ids).toEqual(MATE_PROBLEMS.map((_, i) => i + 1))
   })
+
+  // Exhaustively re-checking every mate-in-2/3 entry's forced-mate property
+  // (isForcedMate) on every test run doesn't scale at this data set's size —
+  // measured at over 2,000 entries, some individually taking multiple
+  // seconds, an exhaustive pass runs into hours serially. A random sample
+  // keeps this fast enough for a normal `pnpm test`/CI run while still
+  // covering the whole set probabilistically across repeated runs.
+  const FORCED_MATE_SAMPLE_SIZE = 8
+
+  it(`a random sample of ${FORCED_MATE_SAMPLE_SIZE} mate-in-2/3 problems are forced against every legal reply`, () => {
+    const candidates = MATE_PROBLEMS.filter((p) => p.mateIn > 1)
+    const sample = [...candidates].sort(() => Math.random() - 0.5).slice(0, FORCED_MATE_SAMPLE_SIZE)
+
+    for (const problem of sample) {
+      expect(problem.mateIn, `#${problem.id}: mateIn too deep to brute-force`).toBeLessThanOrEqual(
+        3,
+      )
+      expect(isForcedMate(problem.fen, problem.mateIn), `#${problem.id}`).toBe(true)
+    }
+  }, 60_000)
 })

@@ -552,13 +552,17 @@ elsewhere in the same row.
 ## Puzzles
 
 `lib/mateProblems.ts`'s `MATE_PROBLEMS` — hardcoded, not a DB table, same pattern as
-`openingTheory.ts` — holds "mate in N" positions imported from real tournament/match games (a
-citation/FEN/solution list), not composed problems and not synced from the account's own games.
-Each entry's `fen` + full `moves` SAN sequence is verified at import time by replaying it through
-chess.js and confirming it ends in checkmate; mate-in-2 entries are additionally brute-force
-checked (does the key move force mate against _every_ legal reply, not just the one the real game
-happened to continue with) — see `__tests__/mateProblems.test.ts` for the standing version of
-that same check, so a future hand-edit to the data can't silently ship a broken puzzle.
+`openingTheory.ts` — holds "mate in N" positions from two provenances: real tournament/match
+games (`title` "White vs Black", `composer` `''`) and composed puzzles from László Polgár's own
+_5334 Problems, Combinations, and Games_ (`title` "Polgár puzzle #N", `composer` "László Polgár"),
+bulk-imported via `scripts/import-polgar-mates.mjs`. Each entry's `fen` + full `moves` SAN
+sequence is verified at import time by replaying it through chess.js and confirming it ends in
+checkmate; mate-in-2 and mate-in-3 entries are additionally brute-force checked with
+`isForcedMate()` (`lib/mateProblems.ts`) — does the key move force mate against _every_ legal
+reply, not just the one line a recorded game/book solution happens to show. Re-verifying that
+property for the whole ~2,400-entry set on every test run doesn't scale (measured: hours,
+serially) — `__tests__/mateProblems.test.ts` instead re-checks a small random sample each run, so
+a future hand-edit has good-but-not-total odds of being caught, without slowing down `pnpm test`.
 `puzzleColorToMove()` reads the side to move straight off each `fen` rather than assuming White —
 roughly a third of the set has Black delivering mate, and both `PuzzleBoard`'s board orientation
 and `/puzzles`'s color filter depend on this being right per-puzzle, not a fixed convention.
@@ -595,9 +599,8 @@ deliberately doesn't, since giving up isn't solving. `/puzzles` (`getSolvedPuzzl
 each card with a checkmark and border, and `PuzzleFilters.tsx` (same URL-driven
 `?status=`/`?color=`/`?mateIn=` pattern as `DrillFilters.tsx`) narrows by solved status, which
 side is mating, and mate length. The mate-in-N filter's options are read off `MATE_PROBLEMS`
-itself (`[...new Set(...)]`) rather than hardcoded — every puzzle today happens to be mate-in-2,
-so the filter is a no-op until a different-length set gets imported, but it's already correct
-for that day rather than needing to be revisited.
+itself (`[...new Set(...)]`) rather than hardcoded — spans mate-in-1/2/3 since the Polgár import,
+so the filter is live/meaningful rather than the no-op it was when every puzzle was mate-in-2.
 
 ## Learn openings
 
