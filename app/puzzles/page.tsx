@@ -55,6 +55,15 @@ export default async function PuzzlesPage({
     if (mateIn !== undefined && problem.mateIn !== mateIn) return false
     return true
   })
+  // Ignores the status filter itself (there's nothing to jump to from a
+  // "solved" view) but still honors color/mateIn, so the shortcut respects
+  // what the user is actually practicing right now.
+  const nextUnsolved = MATE_PROBLEMS.find((problem) => {
+    if (solvedIds.has(problem.id)) return false
+    if (color !== 'all' && puzzleColorToMove(problem) !== color) return false
+    if (mateIn !== undefined && problem.mateIn !== mateIn) return false
+    return true
+  })
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
   const pageFilters = { status: statusParam, color: colorParam, mateIn: mateInParam }
@@ -65,16 +74,26 @@ export default async function PuzzlesPage({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 className="text-xl font-semibold">{s.puzzlesPage.title}</h1>
           {MATE_PROBLEMS.length > 0 && (
-            <div className="flex items-center gap-2">
-              <div className="h-1.5 w-24 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800">
-                <div
-                  className="h-full rounded-full bg-emerald-500 transition-[width]"
-                  style={{ width: `${(solvedIds.size / MATE_PROBLEMS.length) * 100}%` }}
-                />
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <div className="h-1.5 w-24 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800">
+                  <div
+                    className="h-full rounded-full bg-emerald-500 transition-[width]"
+                    style={{ width: `${(solvedIds.size / MATE_PROBLEMS.length) * 100}%` }}
+                  />
+                </div>
+                <span className="text-sm text-zinc-500 dark:text-zinc-400">
+                  {s.puzzlesPage.solvedCount(solvedIds.size, MATE_PROBLEMS.length)}
+                </span>
               </div>
-              <span className="text-sm text-zinc-500 dark:text-zinc-400">
-                {s.puzzlesPage.solvedCount(solvedIds.size, MATE_PROBLEMS.length)}
-              </span>
+              {nextUnsolved && (
+                <Link
+                  href={`/puzzles/${nextUnsolved.id}`}
+                  className="rounded-md border border-zinc-300 px-2.5 py-1 text-sm font-medium text-zinc-900 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-100 dark:hover:bg-zinc-800"
+                >
+                  {s.puzzlesPage.nextUnsolved}
+                </Link>
+              )}
             </div>
           )}
         </div>
