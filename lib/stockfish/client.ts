@@ -109,10 +109,31 @@ export function parseMultiPvOutput(fen: string, uciLines: string[]): EngineLine[
 export class StockfishEngine {
   private worker: Worker
   private readyPromise: Promise<void>
+  // Rejects if the Worker errors: a missing/404 engine script (postinstall
+  // skipped, so public/stockfish/ is empty) or a crash inside the WASM.
+  // Every wait below races against it — otherwise a dead Worker never sends
+  // `readyok`/`bestmove`, and callers sit on "Analyzing…"/"Thinking…"
+  // forever instead of getting an error they can show.
+  private failure: Promise<never>
 
   constructor() {
     this.worker = new Worker(ENGINE_URL)
-    this.readyPromise = this.handshake()
+    this.failure = new Promise((_, reject) => {
+      this.worker.addEventListener(
+        'error',
+        (event) =>
+          reject(
+            new Error(
+              `Stockfish engine failed${event instanceof ErrorEvent && event.message ? `: ${event.message}` : ` to load (${ENGINE_URL})`}`,
+            ),
+          ),
+        { once: true },
+      )
+    })
+    // Not every engine is mid-wait when it fails — don't let that surface
+    // as an unhandled rejection; whoever waits next still gets it.
+    this.failure.catch(() => {})
+    this.readyPromise = Promise.race([this.handshake(), this.failure])
   }
 
   private handshake(): Promise<void> {
@@ -134,7 +155,7 @@ export class StockfishEngine {
     await this.readyPromise
     const whiteToMove = isWhiteToMove(fen)
 
-    return new Promise((resolve) => {
+    const result = new Promise<PositionEval>((resolve) => {
       let latest: Omit<PositionEval, 'bestMove'> = { cp: 0, mate: null }
       // Each deeper "info" line's `pv` replaces the last — by the time
       // "bestmove" arrives, this is the final (deepest-searched) line.
@@ -178,6 +199,7 @@ export class StockfishEngine {
       this.worker.postMessage(`position fen ${fen}`)
       this.worker.postMessage(`go movetime ${movetimeMs}`)
     })
+    return Promise.race([result, this.failure])
   }
 
   /**
@@ -194,7 +216,7 @@ export class StockfishEngine {
   async evaluateLines(fen: string, multiPv: number, movetimeMs = 500): Promise<EngineLine[]> {
     await this.readyPromise
 
-    return new Promise((resolve) => {
+    const result = new Promise<EngineLine[]>((resolve) => {
       const transcript: string[] = []
 
       const onMessage = (event: MessageEvent<string>) => {
@@ -210,6 +232,7 @@ export class StockfishEngine {
       this.worker.postMessage(`position fen ${fen}`)
       this.worker.postMessage(`go movetime ${movetimeMs}`)
     })
+    return Promise.race([result, this.failure])
   }
 
   terminate(): void {
