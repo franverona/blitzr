@@ -417,16 +417,24 @@ export function LiveAnalysisProvider({ children }: { children: React.ReactNode }
 
     async function drain() {
       busy = true
-      while (pendingFen && !cancelled) {
-        const fen = pendingFen
+      try {
+        while (pendingFen && !cancelled) {
+          const fen = pendingFen
+          pendingFen = null
+          const lines = await engine.evaluateLines(fen, LIVE_MULTI_PV, LIVE_MOVETIME_MS)
+          // Still thinking if a newer request already came in while this
+          // search ran — the loop picks it up next iteration instead of
+          // applying this now-stale result.
+          if (!cancelled && !pendingFen) setState({ lines, fen, thinking: false })
+        }
+      } catch {
+        // The engine's Worker died (see StockfishEngine's `failure`) — drop
+        // the spinner rather than leave it on forever; there's no line to show.
         pendingFen = null
-        const lines = await engine.evaluateLines(fen, LIVE_MULTI_PV, LIVE_MOVETIME_MS)
-        // Still thinking if a newer request already came in while this
-        // search ran — the loop picks it up next iteration instead of
-        // applying this now-stale result.
-        if (!cancelled && !pendingFen) setState({ lines, fen, thinking: false })
+        if (!cancelled) setState((prev) => ({ ...prev, thinking: false }))
+      } finally {
+        busy = false
       }
-      busy = false
     }
 
     requestRef.current = (fen) => {
