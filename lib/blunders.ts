@@ -98,8 +98,8 @@ export function buildBlunderStats(
     const opponent = game.myColor === 'white' ? game.blackUsername : game.whiteUsername
     const gameLabel = `vs ${opponent} · ${formatDate(game.endTime)}`
 
-    for (const blunder of findBlunders(analysis.evals, game.movesSan)) {
-      const isMine = whiteToMove(blunder.ply) === (game.myColor === 'white')
+    for (const blunder of findBlunders(analysis.evals, game.movesSan, game.initialFen)) {
+      const isMine = whiteToMove(blunder.ply, game.initialFen) === (game.myColor === 'white')
       if (!isMine) continue
       totalBlunders++
 

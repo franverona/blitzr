@@ -7,6 +7,7 @@ import {
   findBlunders,
   formatEval,
   formatSwing,
+  whiteToMove,
 } from '@/lib/analysis'
 import type { Blunder, PositionEval } from '@/lib/types'
 
@@ -27,6 +28,19 @@ describe('findBlunders', () => {
     const blunders = findBlunders(evals, movesSan)
     expect(blunders).toHaveLength(1)
     expect(blunders[0]).toMatchObject({ ply: 3, moveSan: 'Qh5??', swingCp: 300 })
+  })
+
+  it("treats ply 1 as Black's move when the game starts with Black to move", () => {
+    // A custom-position start (pasted PGN [FEN], Chess.com "from position")
+    // with Black to move: ply 1 is Black's, so +10 -> +250 is Black's blunder.
+    const blackToMoveFen = '4k3/8/8/8/8/8/8/4K3 b - - 0 1'
+    const evals = [cp(10), cp(250), cp(250)]
+    const movesSan = ['Kd7??', 'Kd2']
+    const blunders = findBlunders(evals, movesSan, blackToMoveFen)
+    expect(blunders).toHaveLength(1)
+    expect(blunders[0]).toMatchObject({ ply: 1, swingCp: 240 })
+    expect(whiteToMove(1, blackToMoveFen)).toBe(false)
+    expect(whiteToMove(2, blackToMoveFen)).toBe(true)
   })
 
   it('flags a black move using the mirrored perspective', () => {
