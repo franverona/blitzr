@@ -161,10 +161,12 @@ export class SqliteGameRepository implements GameRepository {
     const limit = params.limit ?? 50
     const offset = params.offset ?? 0
     const opponent = params.opponent?.trim()
+    // Only the opponent's side — matching either username also matched the
+    // account's own name, so any query overlapping it returned every game.
     const opponentFilter = (eb: ExpressionBuilder<DbSchema, 'games'>) =>
       eb.or([
-        eb('white_username', 'like', `%${opponent}%`),
-        eb('black_username', 'like', `%${opponent}%`),
+        eb.and([eb('my_color', '=', 'black'), eb('white_username', 'like', `%${opponent}%`)]),
+        eb.and([eb('my_color', '=', 'white'), eb('black_username', 'like', `%${opponent}%`)]),
       ])
 
     let rowsQuery = db.selectFrom('games').selectAll()
