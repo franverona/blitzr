@@ -247,7 +247,9 @@ CASCADE` from a node to its subtree — requires the `foreign_keys` pragma), `ga
 - Archives are fetched **serially**, never `Promise.all` — `lib/sync.ts`'s `syncAllArchives()`.
   429s are retried with backoff honoring `Retry-After`.
 - **Incremental sync**: `sync_state` tracks each archive month as `complete` or `partial`. The
-  current month is always re-fetched since it can still gain new games.
+  current month is always re-fetched since it can still gain new games — and so is the previous
+  one until it's been over for a full day in UTC (`oldestOpenArchiveYm()`), so a sync right after
+  local midnight on the 1st can't mark a month complete while Chess.com is still adding to it.
 - Ingestion is deliberately unfiltered — variants, daily games, everything syncs. Filtering what
   counts toward the repertoire is a UI/analysis-layer decision, not an ingestion-time one.
   That filtering lives in `app/actions.ts` via `isStandardChess()`/`startsFromStandardPosition()`
