@@ -22,6 +22,7 @@ import { fetchBotAvatar, fetchPlayerAvatar } from '@/lib/chesscom/client'
 import { isBareBotNameEvent, parsePgnHeaders } from '@/lib/chesscom/normalize'
 import { formatDateTime } from '@/lib/dates'
 import { getStrings } from '@/lib/i18n/strings'
+import { isStandardChess, startsFromStandardPosition } from '@/lib/positions'
 import { diffGameAgainstRepertoire } from '@/lib/repertoire'
 import { plyLabel } from '@/lib/san'
 import type { Game, MyColor, MyResult, RepertoireDiffResult } from '@/lib/types'
@@ -52,9 +53,10 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
       : 'white'
     : null
   const repertoireNodes = await listRepertoire(game.myColor)
-  const diff = game.movesSan
-    ? diffGameAgainstRepertoire(game.movesSan, game.myColor, repertoireNodes)
-    : null
+  const diff =
+    game.movesSan && startsFromStandardPosition(game)
+      ? diffGameAgainstRepertoire(game.movesSan, game.myColor, repertoireNodes)
+      : null
   const analysis = (await getGameAnalysis(id)) ?? null
   const [whiteAvatar, blackAvatar] = await Promise.all([
     botColor === 'white'
@@ -93,7 +95,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
               <PositionChecklist myColor={game.myColor} />
             </DetailsDialogTrigger>
           )}
-          {game.movesSan && <AnalyzeButton />}
+          {game.movesSan && isStandardChess(game) && <AnalyzeButton />}
         </div>
       </div>
 
