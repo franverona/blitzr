@@ -1,4 +1,4 @@
-import { Kysely, type ExpressionBuilder } from 'kysely'
+import { Kysely, sql, type ExpressionBuilder } from 'kysely'
 import type {
   DbSchema,
   DrillCardsTable,
@@ -161,12 +161,18 @@ export class SqliteGameRepository implements GameRepository {
     const limit = params.limit ?? 50
     const offset = params.offset ?? 0
     const opponent = params.opponent?.trim()
+    // A literal, case-insensitive substring match. `LIKE '%q%'` treated `%`
+    // and `_` typed into the search box as wildcards (a lone `_` matched
+    // every game); instr() has no wildcards to escape.
+    const needle = opponent?.toLowerCase()
+    const contains = (column: 'white_username' | 'black_username') =>
+      sql<boolean>`instr(lower(${sql.ref(column)}), ${needle}) > 0`
     // Only the opponent's side — matching either username also matched the
     // account's own name, so any query overlapping it returned every game.
     const opponentFilter = (eb: ExpressionBuilder<DbSchema, 'games'>) =>
       eb.or([
-        eb.and([eb('my_color', '=', 'black'), eb('white_username', 'like', `%${opponent}%`)]),
-        eb.and([eb('my_color', '=', 'white'), eb('black_username', 'like', `%${opponent}%`)]),
+        eb.and([eb('my_color', '=', 'black'), contains('white_username')]),
+        eb.and([eb('my_color', '=', 'white'), contains('black_username')]),
       ])
 
     let rowsQuery = db.selectFrom('games').selectAll()

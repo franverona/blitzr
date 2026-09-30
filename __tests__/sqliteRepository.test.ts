@@ -44,6 +44,7 @@ beforeAll(async () => {
     game('1', 'fverona', 'alice', 'white'),
     game('2', 'bob', 'fverona', 'black'),
     game('3', 'fverona', 'veronica', 'white'),
+    game('4', 'fverona', 'Under_Score', 'white'),
   ])
 })
 
@@ -57,5 +58,18 @@ describe('SqliteGameRepository.listGames opponent search', () => {
     const { games, total } = await repo.listGames({ opponent: 'veron' })
     expect(games.map((g) => g.id)).toEqual(['3'])
     expect(total).toBe(1)
+  })
+
+  it('treats % and _ literally, not as LIKE wildcards', async () => {
+    expect((await repo.listGames({ opponent: '_' })).games.map((g) => g.id)).toEqual(['4'])
+    expect((await repo.listGames({ opponent: '%' })).total).toBe(0)
+    // LIKE would read `_` as "any one character" and match alice.
+    expect((await repo.listGames({ opponent: 'ali_e' })).total).toBe(0)
+  })
+
+  it('stays case-insensitive', async () => {
+    expect((await repo.listGames({ opponent: 'under_score' })).games.map((g) => g.id)).toEqual([
+      '4',
+    ])
   })
 })
