@@ -125,11 +125,23 @@ export async function syncGames(): Promise<SyncResult> {
  *  personality games) still get a fresh, never-synced-again `id`, so a
  *  future `syncGames()` can never overwrite or lose this row — see
  *  `upsertGames()`'s `ON CONFLICT (id) DO NOTHING`. */
-export async function addManualGame(pgn: string): Promise<Game> {
-  const game = parseManualGame(pgn, getChesscomUsername())
+export async function addManualGame(
+  pgn: string,
+): Promise<{ ok: true; gameId: string } | { ok: false; error: string }> {
+  // A bad paste is an expected, user-fixable error, so it's returned rather
+  // than thrown: Next replaces a thrown Server Action error's message with a
+  // generic one in production builds, which hid parseManualGame()'s specific
+  // reason ("missing White/Black headers", "no moves", …) from the dialog.
+  // Anything past parsing (a DB failure) is unexpected and still throws.
+  let game: Game
+  try {
+    game = parseManualGame(pgn, getChesscomUsername())
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : '' }
+  }
   await getRepository().upsertGames([game])
   revalidatePath('/')
-  return game
+  return { ok: true, gameId: game.id }
 }
 
 export async function listRepertoire(color: RepertoireColor): Promise<RepertoireNode[]> {
