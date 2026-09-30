@@ -28,6 +28,10 @@ export function BulkAnalysisProvider({ children }: { children: React.ReactNode }
   // closure can see immediately rather than one frozen at the render where
   // start() was called.
   const shouldContinueRef = useRef(true)
+  // Guards start() itself — `progress` isn't set until getUnanalyzedGames()
+  // resolves, so checking it alone let a quick double click start two runs
+  // (two engine pools analyzing the same games) in that window.
+  const runningRef = useRef(false)
   const s = getStrings()
 
   useEffect(() => {
@@ -37,7 +41,8 @@ export function BulkAnalysisProvider({ children }: { children: React.ReactNode }
   }, [toast])
 
   async function start() {
-    if (progress !== null) return
+    if (runningRef.current) return
+    runningRef.current = true
     setToast(null)
     shouldContinueRef.current = true
 
@@ -67,6 +72,7 @@ export function BulkAnalysisProvider({ children }: { children: React.ReactNode }
         isError: true,
       })
     } finally {
+      runningRef.current = false
       setProgress(null)
     }
   }
