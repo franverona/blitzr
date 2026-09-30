@@ -250,6 +250,10 @@ CASCADE` from a node to its subtree — requires the `foreign_keys` pragma), `ga
   current month is always re-fetched since it can still gain new games.
 - Ingestion is deliberately unfiltered — variants, daily games, everything syncs. Filtering what
   counts toward the repertoire is a UI/analysis-layer decision, not an ingestion-time one.
+  That filtering lives in `app/actions.ts` via `isStandardChess()`/`startsFromStandardPosition()`
+  (`lib/positions.ts`): engine features (analysis, blunders, accuracy, blunder drill cards) need
+  standard rules; opening features (openings, lesson counts, repertoire deviations) also need the
+  normal starting position, since they match SAN from move 1.
 - **Player avatars aren't synced/stored** — `fetchPlayerAvatar()` hits the Chess.com API live on
   every game page view, swallows any failure, and returns `null` (`PlayerAvatar.tsx` falls back
   to an initial-letter badge).

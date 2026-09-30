@@ -22,6 +22,7 @@ import { parseManualGame } from '@/lib/manualGame'
 import { summarizeMoveQuality } from '@/lib/moveQuality'
 import { buildOpeningFamilies, ecoFamilyLabel } from '@/lib/openings'
 import { countGamesReachingLine } from '@/lib/openingTheory'
+import { isStandardChess, startsFromStandardPosition } from '@/lib/positions'
 import { syncAllArchives } from '@/lib/sync'
 import type {
   ArchiveSyncStatus,
@@ -48,6 +49,14 @@ import type {
 // two queries run once no matter how many callers ask for them.
 const cachedListAllGames = cache(() => getRepository().listAllGames())
 const cachedListAllGameAnalyses = cache(() => getRepository().listAllGameAnalyses())
+
+// Sync keeps every variant (see lib/sync.ts); engine-based features only
+// make sense for standard rules, and opening/repertoire features also need
+// the normal starting position. See isStandardChess()/startsFromStandardPosition().
+const cachedStandardGames = cache(async () => (await cachedListAllGames()).filter(isStandardChess))
+const cachedStandardStartGames = cache(async () =>
+  (await cachedListAllGames()).filter(startsFromStandardPosition),
+)
 
 /** Narrows to games whose endTime falls within an inclusive from/to range —
  *  both undefined (the common case, no filter applied) returns `games`
@@ -76,12 +85,12 @@ export async function getGame(id: string): Promise<Game | undefined> {
 }
 
 export async function listOpenings(): Promise<OpeningFamily[]> {
-  const games = await cachedListAllGames()
+  const games = await cachedStandardStartGames()
   return buildOpeningFamilies(games)
 }
 
 export async function getLessonGameStats(moves: string[]): Promise<LessonGameStats> {
-  const games = await cachedListAllGames()
+  const games = await cachedStandardStartGames()
   return countGamesReachingLine(games, moves)
 }
 
@@ -90,7 +99,7 @@ export async function getBlunderStats(filters?: {
   to?: string
 }): Promise<BlunderStats> {
   const [allGames, analyses] = await Promise.all([
-    cachedListAllGames(),
+    cachedStandardGames(),
     cachedListAllGameAnalyses(),
   ])
   const games = filterByDateRange(allGames, filters)
@@ -153,7 +162,7 @@ export async function saveGameAnalysis(gameId: string, evals: PositionEval[]): P
  *  positions to analyze and are skipped, same as the per-game Analyze
  *  button's visibility. */
 export async function getUnanalyzedGames(): Promise<UnanalyzedGame[]> {
-  const [games, analyses] = await Promise.all([cachedListAllGames(), cachedListAllGameAnalyses()])
+  const [games, analyses] = await Promise.all([cachedStandardGames(), cachedListAllGameAnalyses()])
   const analyzedIds = new Set(analyses.map((a) => a.gameId))
 
   return games
@@ -176,7 +185,7 @@ export async function getUnanalyzedGames(): Promise<UnanalyzedGame[]> {
  *  `getUnanalyzedGames()`), so there's no separate id-only variant. Same
  *  `listAllGames()` + `listAllGameAnalyses()` join `getBlunderStats()` uses. */
 export async function getGameAccuracyById(): Promise<Record<string, GameAccuracy>> {
-  const [games, analyses] = await Promise.all([cachedListAllGames(), cachedListAllGameAnalyses()])
+  const [games, analyses] = await Promise.all([cachedStandardGames(), cachedListAllGameAnalyses()])
   const analysesByGameId = new Map(analyses.map((a) => [a.gameId, a]))
 
   const result: Record<string, GameAccuracy> = {}
@@ -222,13 +231,15 @@ export async function getDrillDeck(filters?: {
   availableOpenings: string[]
 }> {
   const repo = getRepository()
-  const [games, whiteNodes, blackNodes, analyses, existingCards] = await Promise.all([
-    cachedListAllGames(),
-    repo.listRepertoireNodes('white'),
-    repo.listRepertoireNodes('black'),
-    cachedListAllGameAnalyses(),
-    repo.listDrillCards(),
-  ])
+  const [games, standardStartGames, whiteNodes, blackNodes, analyses, existingCards] =
+    await Promise.all([
+      cachedStandardGames(),
+      cachedStandardStartGames(),
+      repo.listRepertoireNodes('white'),
+      repo.listRepertoireNodes('black'),
+      cachedListAllGameAnalyses(),
+      repo.listDrillCards(),
+    ])
 
   const gamesById = new Map(games.map((g) => [g.id, g]))
   const repertoireByColor = new Map<RepertoireColor, RepertoireNode[]>([
@@ -238,7 +249,7 @@ export async function getDrillDeck(filters?: {
   const analysesByGameId = new Map(analyses.map((a) => [a.gameId, a]))
 
   const candidates: DrillCandidate[] = [
-    ...findDeviationCandidates(games, repertoireByColor),
+    ...findDeviationCandidates(standardStartGames, repertoireByColor),
     ...findBlunderCandidates(games, analysesByGameId),
   ]
   const candidateKeys = new Set(candidates.map(cardKey))
