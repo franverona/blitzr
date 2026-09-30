@@ -134,11 +134,11 @@ export function MoveList({
   // actionable for training).
   const blunderByPly = useMemo(() => {
     if (!evals) return new Map<number, Blunder>()
-    const own = findBlunders(evals, movesSan).filter(
-      (b) => whiteToMove(b.ply) === (myColor === 'white'),
+    const own = findBlunders(evals, movesSan, positions[0]).filter(
+      (b) => whiteToMove(b.ply, positions[0]) === (myColor === 'white'),
     )
     return new Map(own.map((b) => [b.ply, b]))
-  }, [evals, movesSan, myColor])
+  }, [evals, movesSan, positions, myColor])
 
   useEffect(() => {
     activeRef.current?.scrollIntoView({ block: 'nearest' })

@@ -1,4 +1,7 @@
-import { findBlunders } from './analysis'
+import { findBlunders, whiteToMove } from './analysis'
+// Re-exported for existing importers — defined next to findBlunders() since
+// both need the same initialFen-aware parity.
+export { whiteToMove }
 import { formatDate } from './dates'
 import { buildPositions } from './positions'
 import { diffGameAgainstRepertoire } from './repertoire'
@@ -16,12 +19,6 @@ export interface DrillCandidate {
   gameId: string
   sourceType: DrillSourceType
   ply: number
-}
-
-/** Whether the given 1-indexed ply was White's move — shared with
- *  `lib/blunders.ts`, which needs the same "own moves only" filter. */
-export function whiteToMove(ply: number): boolean {
-  return ply % 2 === 1
 }
 
 /** Every game currently deviating from the repertoire, at the ply it first
@@ -57,8 +54,8 @@ export function findBlunderCandidates(
     if (!game.movesSan) continue
     const analysis = analysesByGameId.get(game.id)
     if (!analysis) continue
-    for (const blunder of findBlunders(analysis.evals, game.movesSan)) {
-      const isMine = whiteToMove(blunder.ply) === (game.myColor === 'white')
+    for (const blunder of findBlunders(analysis.evals, game.movesSan, game.initialFen)) {
+      const isMine = whiteToMove(blunder.ply, game.initialFen) === (game.myColor === 'white')
       if (isMine) candidates.push({ gameId: game.id, sourceType: 'blunder', ply: blunder.ply })
     }
   }
@@ -106,8 +103,8 @@ export function buildDrillPrompt(
 
   const analysis = analysesByGameId.get(game.id)
   const bestMove = analysis
-    ? findBlunders(analysis.evals, game.movesSan).find((b) => b.ply === card.ply)?.evalBefore
-        .bestMove
+    ? findBlunders(analysis.evals, game.movesSan, game.initialFen).find((b) => b.ply === card.ply)
+        ?.evalBefore.bestMove
     : undefined
   if (!bestMove) return null
   return {

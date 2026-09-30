@@ -20,6 +20,13 @@ describe('classifyMoveQuality', () => {
 })
 
 describe('summarizeMoveQuality', () => {
+  it('attributes ply 1 to Black when the game starts with Black to move', () => {
+    const evals = [cp(0), cp(500), cp(500)]
+    const summary = summarizeMoveQuality(evals, ['Kd7', 'Kd2'], '4k3/8/8/8/8/8/8/4K3 b - - 0 1')
+    expect(summary.black.counts.blunder).toBe(1)
+    expect(summary.white.counts.blunder).toBe(0)
+  })
+
   it('scores a perfect game at 100 accuracy with every move "best"', () => {
     const evals = [cp(20), cp(20), cp(20)]
     const movesSan = ['e4', 'e5']
