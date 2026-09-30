@@ -26,6 +26,9 @@ export function DetailsDialogTrigger({ children }: { children: React.ReactNode }
       </button>
       <dialog
         ref={dialogRef}
+        // Keeps BoardNavControls' ←/→/Space/0 working while open — see its
+        // keydown handler (Board.tsx).
+        data-board-shortcuts
         onClick={(e) => {
           if (e.target === e.currentTarget) dialogRef.current?.close()
         }}
