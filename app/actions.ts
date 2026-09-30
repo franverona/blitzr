@@ -183,7 +183,7 @@ export async function getGameAccuracyById(): Promise<Record<string, GameAccuracy
   for (const game of games) {
     const analysis = analysesByGameId.get(game.id)
     if (!analysis || !game.movesSan) continue
-    const summary = summarizeMoveQuality(analysis.evals, game.movesSan)
+    const summary = summarizeMoveQuality(analysis.evals, game.movesSan, game.initialFen)
     const mine = game.myColor === 'white' ? summary.white : summary.black
     result[game.id] = {
       accuracy: mine.accuracy,

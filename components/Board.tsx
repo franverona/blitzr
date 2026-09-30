@@ -475,6 +475,7 @@ export function BoardNavControls() {
     setPly,
     lastPly,
     movesSan,
+    positions,
     evals,
     boardOrientation,
     exploring,
@@ -598,12 +599,12 @@ export function BoardNavControls() {
     () =>
       evals
         ? new Set(
-            findBlunders(evals, movesSan)
-              .filter((b) => whiteToMove(b.ply) === (boardOrientation === 'white'))
+            findBlunders(evals, movesSan, positions[0])
+              .filter((b) => whiteToMove(b.ply, positions[0]) === (boardOrientation === 'white'))
               .map((b) => b.ply),
           )
         : null,
-    [evals, movesSan, boardOrientation],
+    [evals, movesSan, positions, boardOrientation],
   )
 
   useEffect(() => {
@@ -831,7 +832,7 @@ export function BoardView({
   // the *recorded* ply's saved analysis, which no longer matches whatever
   // free-explored position the board is actually showing.
   const bestMove =
-    !exploring && whiteToMove(ply + 1) === (boardOrientation === 'white')
+    !exploring && whiteToMove(ply + 1, positions[0]) === (boardOrientation === 'white')
       ? evals?.[ply]?.bestMove
       : undefined
 
@@ -995,7 +996,7 @@ export function BoardView({
         positions[ply],
         movesSan[ply] ?? '',
         bestMove,
-        whiteToMove(ply + 1) ? 'white' : 'black',
+        whiteToMove(ply + 1, positions[0]) ? 'white' : 'black',
       )
     : null
 

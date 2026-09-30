@@ -20,7 +20,7 @@ export function buildAccuracyTrend(
     const analysis = analysesByGameId.get(game.id)
     if (!analysis) continue
 
-    const summary = summarizeMoveQuality(analysis.evals, game.movesSan)
+    const summary = summarizeMoveQuality(analysis.evals, game.movesSan, game.initialFen)
     const mine = game.myColor === 'white' ? summary.white : summary.black
     const opponent = game.myColor === 'white' ? game.blackUsername : game.whiteUsername
 

@@ -1,4 +1,4 @@
-import { BLUNDER_THRESHOLD_CP, evalBarPercent, moveSwingCp } from './analysis'
+import { BLUNDER_THRESHOLD_CP, evalBarPercent, moveSwingCp, whiteToMove } from './analysis'
 import type { PositionEval } from './types'
 
 export type MoveQualityTier = 'best' | 'excellent' | 'good' | 'inaccuracy' | 'mistake' | 'blunder'
@@ -76,6 +76,7 @@ function average(nums: number[]): number {
 export function summarizeMoveQuality(
   evals: PositionEval[],
   movesSan: string[],
+  initialFen?: string,
 ): GameAccuracySummary {
   const counts = { white: emptyCounts(), black: emptyCounts() }
   const perMoveAccuracy: { white: number[]; black: number[] } = { white: [], black: [] }
@@ -85,13 +86,13 @@ export function summarizeMoveQuality(
     const after = evals[i + 1]
     if (!before || !after) continue
 
-    const whiteToMove = i % 2 === 0
-    const side = whiteToMove ? 'white' : 'black'
-    const winBefore = whiteToMove ? evalBarPercent(before) : 100 - evalBarPercent(before)
-    const winAfter = whiteToMove ? evalBarPercent(after) : 100 - evalBarPercent(after)
+    const whiteMoved = whiteToMove(i + 1, initialFen)
+    const side = whiteMoved ? 'white' : 'black'
+    const winBefore = whiteMoved ? evalBarPercent(before) : 100 - evalBarPercent(before)
+    const winAfter = whiteMoved ? evalBarPercent(after) : 100 - evalBarPercent(after)
 
     perMoveAccuracy[side].push(moveAccuracy(winBefore, winAfter))
-    counts[side][classifyMoveQuality(moveSwingCp(before, after, whiteToMove))]++
+    counts[side][classifyMoveQuality(moveSwingCp(before, after, whiteMoved))]++
   }
 
   return {

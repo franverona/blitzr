@@ -46,12 +46,28 @@ export function moveSwingCp(
 }
 
 /**
+ * Whether the given 1-indexed ply was White's move. Ply 1 is whoever the
+ * starting FEN says is to move — usually White, but a game set up from a
+ * custom position (a pasted PGN's `[FEN]` header, a Chess.com "from
+ * position" game) can start with Black to move, flipping every ply after it.
+ * `initialFen` omitted means the standard start.
+ */
+export function whiteToMove(ply: number, initialFen?: string): boolean {
+  const whiteMovesFirst = initialFen?.split(' ')[1] !== 'b'
+  return (ply % 2 === 1) === whiteMovesFirst
+}
+
+/**
  * Walks a game's per-position evals (White's perspective, same indexing as
  * the positions array — evals[i] is before movesSan[i], evals[i+1] after)
  * and flags every move where the player who just moved made their own
  * position significantly worse.
  */
-export function findBlunders(evals: PositionEval[], movesSan: string[]): Blunder[] {
+export function findBlunders(
+  evals: PositionEval[],
+  movesSan: string[],
+  initialFen?: string,
+): Blunder[] {
   const blunders: Blunder[] = []
 
   for (let i = 0; i < movesSan.length; i++) {
@@ -59,7 +75,7 @@ export function findBlunders(evals: PositionEval[], movesSan: string[]): Blunder
     const after = evals[i + 1]
     if (!before || !after) continue
 
-    const swingCp = moveSwingCp(before, after, i % 2 === 0)
+    const swingCp = moveSwingCp(before, after, whiteToMove(i + 1, initialFen))
 
     if (swingCp >= BLUNDER_THRESHOLD_CP) {
       blunders.push({

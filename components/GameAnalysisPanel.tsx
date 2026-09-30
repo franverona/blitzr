@@ -117,8 +117,8 @@ export function GameSummary() {
   const s = getStrings()
   if (!analysis) return null
 
-  const myBlunders = findBlunders(analysis.evals, movesSan).filter(
-    (b) => whiteToMove(b.ply) === (myColor === 'white'),
+  const myBlunders = findBlunders(analysis.evals, movesSan, positions[0]).filter(
+    (b) => whiteToMove(b.ply, positions[0]) === (myColor === 'white'),
   )
   const worst = biggestBlunder(myBlunders)
   if (!worst) {
@@ -169,12 +169,12 @@ export function accuracyPillClass(accuracy: number): string {
 }
 
 export function MoveQualityLink() {
-  const { analysis, movesSan, myColor } = useAnalysisContext()
+  const { analysis, movesSan, myColor, positions } = useAnalysisContext()
   const dialogRef = useRef<HTMLDialogElement>(null)
   const s = getStrings()
   if (!analysis) return null
 
-  const summary = summarizeMoveQuality(analysis.evals, movesSan)
+  const summary = summarizeMoveQuality(analysis.evals, movesSan, positions[0])
   const mine = myColor === 'white' ? summary.white : summary.black
 
   return (
@@ -201,11 +201,11 @@ function MoveQualityDialog({
 }: {
   dialogRef: React.RefObject<HTMLDialogElement | null>
 }) {
-  const { analysis, movesSan, myColor } = useAnalysisContext()
+  const { analysis, movesSan, myColor, positions } = useAnalysisContext()
   const s = getStrings()
   if (!analysis) return null
 
-  const summary = summarizeMoveQuality(analysis.evals, movesSan)
+  const summary = summarizeMoveQuality(analysis.evals, movesSan, positions[0])
   const mine = myColor === 'white' ? summary.white : summary.black
   const theirs = myColor === 'white' ? summary.black : summary.white
 
