@@ -671,7 +671,9 @@ centralized in `pieceWithArticle()` (`lib/san.ts`). `Lesson.name`/`.summary`/
 
 - **Vitest** — run with `pnpm test` (or `pnpm test:watch`)
 - Tests live in `__tests__/`, one file per `lib/` module they cover. Pure functions are tested
-  directly against fixtures — no DB, network, or browser needed for any of them.
+  directly against fixtures — no DB, network, or browser needed for any of them. The one
+  exception, `sqliteRepository.test.ts`, runs the real repository SQL against an in-memory
+  SQLite (`:memory:`), never `data/blitzr.db`.
 - `evaluate()`/`analyzeGame()`/`analyzeGames()` need a real browser Worker and aren't
   unit-tested; only their pure helpers (`terminalEval()`, `parseBestMove()`) are.
 
