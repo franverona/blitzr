@@ -4,9 +4,21 @@ import { getChesscomUsername } from './config'
 import { getRepository } from './db'
 import type { SyncResult } from './types'
 
-function currentArchiveYm(): string {
-  const now = new Date()
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+const DAY_MS = 24 * 60 * 60 * 1000
+
+/**
+ * The oldest archive month that may still gain games, as "YYYY-MM". Months
+ * from this one on are always re-fetched and never marked complete. Using
+ * the local calendar month was wrong: ahead of UTC (e.g. Spain, UTC+2), a
+ * sync just after local midnight on the 1st marked the previous month
+ * complete while it was still that month for Chess.com, and games finished
+ * in the gap were never fetched. Looking one day back in UTC keeps a month
+ * open until it has ended everywhere, whichever timezone Chess.com uses to
+ * group its archives.
+ */
+export function oldestOpenArchiveYm(now: Date = new Date()): string {
+  const dayAgo = new Date(now.getTime() - DAY_MS)
+  return `${dayAgo.getUTCFullYear()}-${String(dayAgo.getUTCMonth() + 1).padStart(2, '0')}`
 }
 
 function archiveYmFromUrl(url: string): string | null {
@@ -15,8 +27,8 @@ function archiveYmFromUrl(url: string): string | null {
 }
 
 /**
- * Fetches every monthly archive not already marked complete, plus the
- * current month (always re-fetched, since it may still gain new games).
+ * Fetches every monthly archive not already marked complete, plus any month
+ * that may still gain new games (always re-fetched — see oldestOpenArchiveYm).
  * Archives are fetched serially — Chess.com throttles parallel requests.
  */
 export async function syncAllArchives(): Promise<SyncResult> {
@@ -27,7 +39,7 @@ export async function syncAllArchives(): Promise<SyncResult> {
   const syncedStatus = new Map(
     (await repo.getArchiveSyncStatus()).map((s) => [s.archiveYm, s.status]),
   )
-  const thisMonth = currentArchiveYm()
+  const oldestOpen = oldestOpenArchiveYm()
 
   let archivesSynced = 0
   let gamesUpserted = 0
@@ -36,15 +48,16 @@ export async function syncAllArchives(): Promise<SyncResult> {
     const archiveYm = archiveYmFromUrl(url)
     if (!archiveYm) continue
 
-    const isCurrentMonth = archiveYm === thisMonth
-    if (syncedStatus.get(archiveYm) === 'complete' && !isCurrentMonth) continue
+    // "YYYY-MM" strings sort chronologically.
+    const isOpen = archiveYm >= oldestOpen
+    if (syncedStatus.get(archiveYm) === 'complete' && !isOpen) continue
 
     const [year, month] = archiveYm.split('-')
     const rawGames = await fetchArchiveMonth(username, year, month)
     const games = rawGames.map((raw) => normalizeGame(raw, username, archiveYm))
 
     const upserted = await repo.upsertGames(games)
-    await repo.markArchiveSynced(archiveYm, isCurrentMonth ? 'partial' : 'complete', games.length)
+    await repo.markArchiveSynced(archiveYm, isOpen ? 'partial' : 'complete', games.length)
 
     archivesSynced++
     gamesUpserted += upserted

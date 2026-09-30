@@ -141,7 +141,8 @@ pnpm format:check    # Prettier (check)
 - Every request sends a descriptive `User-Agent` (Chess.com throttles requests without one).
 - Archives are fetched **serially**, never in parallel, and 429s are retried with backoff.
 - Games are synced incrementally: months already fully synced are skipped on future runs; the
-  current month is always re-fetched since it can still gain new games.
+  current month (and the previous one, for its first day) is always re-fetched since it can
+  still gain new games.
 
 ## Add a game by PGN
 
