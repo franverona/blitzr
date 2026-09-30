@@ -85,4 +85,23 @@ describe('parseManualGame', () => {
     expect(game.endTime).toBeLessThan(headerMidnightUtcSec + 86_400)
     expect(game.endTime).toBeLessThanOrEqual(nowSec)
   })
+
+  it('reads the result off the final position when the Result header is "*"', () => {
+    const mated = '[White "A"]\n[Black "B"]\n[Result "*"]\n\n1. f3 e5 2. g4 Qh4# *'
+    const game = parseManualGame(mated, 'A')
+    expect(game.myResult).toBe('loss')
+    expect(game.blackResult).toBe('win')
+  })
+
+  it('rejects an unfinished game with no result instead of scoring it a White loss', () => {
+    const pgn = '[White "A"]\n[Black "B"]\n[Result "*"]\n\n1. e4 e5 *'
+    expect(() => parseManualGame(pgn, 'A')).toThrow(/no final result/)
+    const noHeader = '[White "A"]\n[Black "B"]\n\n1. e4 e5'
+    expect(() => parseManualGame(noHeader, 'A')).toThrow(/no final result/)
+  })
+
+  it('rejects a PGN with headers but no moves', () => {
+    const pgn = '[White "A"]\n[Black "B"]\n[Result "1-0"]\n\n1-0'
+    expect(() => parseManualGame(pgn, 'A')).toThrow(/no moves/)
+  })
 })

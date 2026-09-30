@@ -14,10 +14,24 @@ import type { Game, MyColor, MyResult } from './types'
 // silently saving one with no moves isn't useful; better to reject at input
 // time and let the UI surface the error.
 
-function myResultFromPgnResult(pgnResult: string | undefined, color: MyColor): MyResult {
-  if (pgnResult === '1/2-1/2') return 'draw'
-  const whiteWon = pgnResult === '1-0'
-  return whiteWon === (color === 'white') ? 'win' : 'loss'
+type PgnResult = '1-0' | '0-1' | '1/2-1/2'
+
+// A missing or unfinished (`*`) Result used to fall through to "White
+// lost". Read the outcome off the final position when it's decisive;
+// otherwise there's no honest win/draw/loss to store, so reject.
+function pgnResult(headers: Record<string, string>, finalPosition: Chess): PgnResult {
+  const result = headers.Result
+  if (result === '1-0' || result === '0-1' || result === '1/2-1/2') return result
+  if (finalPosition.isCheckmate()) return finalPosition.turn() === 'w' ? '0-1' : '1-0'
+  if (finalPosition.isDraw()) return '1/2-1/2'
+  throw new Error(
+    'PGN has no final result — add a [Result "1-0"], [Result "0-1"] or [Result "1/2-1/2"] header.',
+  )
+}
+
+function myResultFromPgnResult(result: PgnResult, color: MyColor): MyResult {
+  if (result === '1/2-1/2') return 'draw'
+  return (result === '1-0') === (color === 'white') ? 'win' : 'loss'
 }
 
 // Chess.com's Date/EndDate headers are "YYYY.MM.DD", which Date.parse()
@@ -55,7 +69,11 @@ export function parseManualGame(pgn: string, username: string): Game {
     throw new Error('Could not parse this PGN — check the move text is valid.')
   }
   const movesSan = chess.history()
+  if (movesSan.length === 0) {
+    throw new Error('PGN has no moves — paste the full game, not just its headers.')
+  }
   const finalFen = chess.fen()
+  const result = pgnResult(headers, chess)
 
   const isBlack = headers.Black.toLowerCase() === username.toLowerCase()
   // ponytail: a pasted PGN isn't guaranteed to feature the account owner at
@@ -63,7 +81,7 @@ export function parseManualGame(pgn: string, username: string): Game {
   // "best-effort, never fail the whole add over it" spirit as the rest of
   // this function's fallbacks.
   const myColor: MyColor = isBlack ? 'black' : 'white'
-  const myResult = myResultFromPgnResult(headers.Result, myColor)
+  const myResult = myResultFromPgnResult(result, myColor)
 
   const ecoUrl = headers.ECOUrl ?? null
 
@@ -81,10 +99,10 @@ export function parseManualGame(pgn: string, username: string): Game {
     endTime: endTimeFromPgnDate(headers),
     whiteUsername: headers.White,
     whiteRating: ratingFromHeader(headers.WhiteElo),
-    whiteResult: myResultFromPgnResult(headers.Result, 'white'),
+    whiteResult: myResultFromPgnResult(result, 'white'),
     blackUsername: headers.Black,
     blackRating: ratingFromHeader(headers.BlackElo),
-    blackResult: myResultFromPgnResult(headers.Result, 'black'),
+    blackResult: myResultFromPgnResult(result, 'black'),
     myColor,
     myResult,
     ecoCode: headers.ECO ?? null,
