@@ -30,12 +30,17 @@ export function AddPgnButton() {
     setError(null)
     startTransition(async () => {
       try {
-        const game = await addManualGame(pgn)
+        const result = await addManualGame(pgn)
+        if (!result.ok) {
+          setError(result.error || s.addPgn.genericError)
+          return
+        }
         dialogRef.current?.close()
         startRouteProgress()
-        router.push(`/games/${game.id}`)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : s.addPgn.genericError)
+        router.push(`/games/${result.gameId}`)
+      } catch {
+        // Unexpected (DB/network) — its message is redacted in production anyway.
+        setError(s.addPgn.genericError)
       }
     })
   }
