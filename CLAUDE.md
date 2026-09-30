@@ -199,7 +199,9 @@ file, not here — this section is only cross-cutting rules that span multiple f
   `RepertoireBoard.tsx`) shares it.
 - **`BoardNavControls`** binds arrow keys to prev/next, Space to Play/Pause, and `0` to Start —
   globally, throttled to `BOARD_ANIMATION_DURATION_MS` so rapid input can't cut an animation
-  short. Mounted only on `games/[id]` and `/learn`'s Study mode (not Quiz mode).
+  short. Mounted only on `games/[id]` and `/learn`'s Study mode (not Quiz mode). Ignored with a
+  Cmd/Ctrl/Alt modifier, inside form fields, and inside any `<dialog>` that doesn't opt in with
+  `data-board-shortcuts` (only `DetailsDialog` does, since its live-lines panel relies on ◀/▶).
 - **Play auto-advances one ply every `PLAY_INTERVAL_MS`, stopping on a blunder ply**
   (`findBlunders()`) or at the end of the game. `ply`/`isPlaying` are mirrored into refs so the
   interval/keydown callbacks read fresh values without becoming effect dependencies, and so

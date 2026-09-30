@@ -560,6 +560,18 @@ export function BoardNavControls() {
   const lastNavAtRef = useRef(0)
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
+      // Browser/OS shortcuts win: Cmd+0 resets zoom, Cmd/Alt+← is Back.
+      if (e.metaKey || e.ctrlKey || e.altKey) return
+      if (e.target instanceof HTMLElement) {
+        // A form control keeps its own keys (Space on the Settings theme
+        // checkbox would otherwise also toggle Play).
+        if (e.target.isContentEditable || e.target.closest('input, select, textarea')) return
+        // An unrelated modal (Settings, About, Add PGN) shouldn't step the
+        // board hidden behind it. The game page's details dialog opts back
+        // in: its live-lines panel queues a line for ◀/▶ to step through.
+        const dialog = e.target.closest('dialog')
+        if (dialog && !dialog.hasAttribute('data-board-shortcuts')) return
+      }
       // Space is a native activation key for a focused <button> (e.g. the
       // Play/Pause button itself, right after clicking it) — without this
       // guard, pressing it would toggle play twice: once from the button's
