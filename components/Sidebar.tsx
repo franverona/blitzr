@@ -233,6 +233,11 @@ function SettingsButton({
               checked={boardColors.showCoordinates}
               onChange={() => boardColors.setShowCoordinates(!boardColors.showCoordinates)}
             />
+            <Toggle
+              label={s.settings.moveSounds}
+              checked={boardColors.moveSounds}
+              onChange={() => boardColors.setMoveSounds(!boardColors.moveSounds)}
+            />
           </div>
         </div>
       </dialog>

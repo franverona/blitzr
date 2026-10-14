@@ -49,6 +49,7 @@ const en = {
     hideEngineHints: 'Hide eval bar and best-move arrow',
     hideEngineHintsHint: 'Review a game without engine spoilers',
     showCoordinates: 'Show board coordinates',
+    moveSounds: 'Move sounds',
   },
   gameRow: {
     timeClassTooltips: {
@@ -480,6 +481,7 @@ const es: Strings = {
     hideEngineHints: 'Ocultar barra de evaluación y flecha de mejor jugada',
     hideEngineHintsHint: 'Revisa una partida sin spoilers del motor',
     showCoordinates: 'Mostrar coordenadas del tablero',
+    moveSounds: 'Sonido de jugadas',
   },
   gameRow: {
     timeClassTooltips: {

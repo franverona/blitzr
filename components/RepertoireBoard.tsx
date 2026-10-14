@@ -12,7 +12,7 @@ import { buildRepertoireIndex } from '@/lib/repertoire'
 import { describeBlunderReason, detectBlunderReason } from '@/lib/tactics'
 import { BOARD_ANIMATION_DURATION_MS, BOARD_NOTATION_SIZE_STYLE } from '@/lib/theme'
 import type { RepertoireColor, RepertoireNode } from '@/lib/types'
-import { useBoardColors } from './BoardColorsProvider'
+import { useBoardColors, useMoveSound } from './BoardColorsProvider'
 import { LegalMoveSquare } from './LegalMoveSquare'
 import { RepertoireTree } from './RepertoireTree'
 
@@ -54,6 +54,7 @@ export function RepertoireBoard({
   const index = useMemo(() => buildRepertoireIndex(nodes), [nodes])
   const currentNode = path[path.length - 1] ?? null
   const currentFen = currentNode?.fen ?? START_FEN
+  useMoveSound(currentFen)
   const parentId = path.length >= 2 ? path[path.length - 2].id : null
   const parentFen = path.length >= 2 ? path[path.length - 2].fen : START_FEN
   const siblings = path.length === 0 ? (index.get(null) ?? []) : (index.get(parentId) ?? [])
