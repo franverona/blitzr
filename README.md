@@ -43,7 +43,7 @@ any way that implies endorsement or affiliation.
 - [x] Live multi-line engine analysis + free-move exploration on a game's board
       (chess.com's analysis-tab experience)
 - [x] Settings (in the sidebar): light/dark theme, board color presets, analysis strength,
-      spoiler-free review (hide eval bar + best-move arrow)
+      spoiler-free review (hide eval bar + best-move arrow), board coordinates
 - [x] Mate-in-N puzzles from real games — play out the entire winning line yourself, with
       progress tracked and a filterable list
 
