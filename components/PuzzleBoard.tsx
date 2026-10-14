@@ -9,7 +9,7 @@ import { legalDestinations } from '@/lib/legalMoves'
 import { puzzleColorToMove, type MateProblem } from '@/lib/mateProblems'
 import type { SanPiece } from '@/lib/san'
 import { BOARD_ANIMATION_DURATION_MS, BOARD_NOTATION_SIZE_STYLE } from '@/lib/theme'
-import { useBoardColors } from './BoardColorsProvider'
+import { useBoardColors, useMoveSound } from './BoardColorsProvider'
 import { LegalMoveSquare } from './LegalMoveSquare'
 import { MoveSequence } from './MoveSequence'
 import { PieceGlyph } from './PieceGlyph'
@@ -76,6 +76,7 @@ export function PuzzleBoard({ problem }: { problem: MateProblem }) {
   }, [problem.fen, problem.moves, maxViewPly])
 
   const fen = positions[viewPly]
+  useMoveSound(fen)
   const turnColor = fen.split(' ')[1] === 'b' ? 'black' : 'white'
   // Only the live tip is interactive — an earlier ply is read-only review,
   // same idea as Board.tsx's own ply nav, just scoped to what's actually

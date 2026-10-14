@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import {
   ANALYSIS_STRENGTHS,
   type AnalysisStrength,
@@ -18,6 +18,7 @@ const BOARD_COLOR_COOKIE = 'blitzr-board-color'
 const ANALYSIS_STRENGTH_COOKIE = 'blitzr-analysis-strength'
 const HIDE_ENGINE_HINTS_COOKIE = 'blitzr-hide-engine-hints'
 const SHOW_COORDINATES_COOKIE = 'blitzr-show-coordinates'
+const MOVE_SOUNDS_COOKIE = 'blitzr-move-sounds'
 
 function setCookie(name: string, value: string) {
   document.cookie = `${name}=${value}; path=/; max-age=31536000; samesite=lax`
@@ -37,6 +38,8 @@ interface BoardColorsContextValue {
   setHideEngineHints: (hide: boolean) => void
   showCoordinates: boolean
   setShowCoordinates: (show: boolean) => void
+  moveSounds: boolean
+  setMoveSounds: (on: boolean) => void
 }
 
 const BoardColorsContext = createContext<BoardColorsContextValue | null>(null)
@@ -64,14 +67,17 @@ export function BoardColorsProvider({
   initialAnalysisStrength,
   initialHideEngineHints,
   initialShowCoordinates,
+  initialMoveSounds,
   children,
 }: {
   initialPresetId: string
   initialAnalysisStrength: string | undefined
   initialHideEngineHints: boolean
   initialShowCoordinates: boolean
+  initialMoveSounds: boolean
   children: React.ReactNode
 }) {
+  const [moveSounds, setMoveSoundsState] = useState(initialMoveSounds)
   const [showCoordinates, setShowCoordinatesState] = useState(initialShowCoordinates)
   const [hideEngineHints, setHideEngineHintsState] = useState(initialHideEngineHints)
   const [presetId, setPresetId] = useState(initialPresetId)
@@ -106,6 +112,11 @@ export function BoardColorsProvider({
     setCookie(SHOW_COORDINATES_COOKIE, show ? '1' : '0')
   }
 
+  function setMoveSounds(on: boolean) {
+    setMoveSoundsState(on)
+    setCookie(MOVE_SOUNDS_COOKIE, on ? '1' : '0')
+  }
+
   return (
     <BoardColorsContext.Provider
       value={{
@@ -120,9 +131,47 @@ export function BoardColorsProvider({
         setHideEngineHints,
         showCoordinates,
         setShowCoordinates,
+        moveSounds,
+        setMoveSounds,
       }}
     >
       {children}
     </BoardColorsContext.Provider>
   )
+}
+
+let audioContext: AudioContext | null = null
+
+// ponytail: a synthesized blip via Web Audio rather than shipping sound
+// files — swap in recorded samples if this ever needs to sound like
+// chess.com's. Lower pitch for a capture.
+function playMoveSound(capture: boolean) {
+  audioContext ??= new AudioContext()
+  const t = audioContext.currentTime
+  const osc = audioContext.createOscillator()
+  const gain = audioContext.createGain()
+  osc.frequency.value = capture ? 220 : 440
+  gain.gain.setValueAtTime(0.2, t)
+  gain.gain.exponentialRampToValueAtTime(0.001, t + 0.08)
+  osc.connect(gain).connect(audioContext.destination)
+  osc.start(t)
+  osc.stop(t + 0.08)
+}
+
+function pieceCount(fen: string): number {
+  return fen.split(' ')[0].replace(/[^a-z]/gi, '').length
+}
+
+/** Plays a move sound whenever `fen` changes (not on mount), if enabled in
+ *  Settings — a capture when the new position has fewer pieces. Any position
+ *  change counts, so a multi-ply jump plays one sound, not one per ply. */
+export function useMoveSound(fen: string) {
+  const { moveSounds } = useBoardColors()
+  const prevFenRef = useRef(fen)
+  useEffect(() => {
+    const prevFen = prevFenRef.current
+    prevFenRef.current = fen
+    if (!moveSounds || !fen || !prevFen || prevFen === fen) return
+    playMoveSound(pieceCount(fen) < pieceCount(prevFen))
+  }, [fen, moveSounds])
 }
