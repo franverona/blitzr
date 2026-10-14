@@ -28,6 +28,13 @@ export function terminalEval(fen: string): PositionEval | null {
 // free thread.
 const MAX_ENGINE_POOL_SIZE = 4
 
+/** Per-position think time for batch analysis, picked in Settings
+ *  (`BoardColorsProvider`'s `analysisStrength`). `normal` is the 300ms this
+ *  used before it was configurable. */
+export const ANALYSIS_STRENGTHS = { fast: 150, normal: 300, deep: 1000 } as const
+export type AnalysisStrength = keyof typeof ANALYSIS_STRENGTHS
+export const DEFAULT_ANALYSIS_STRENGTH: AnalysisStrength = 'normal'
+
 function createEnginePool(wanted: number): StockfishEngine[] {
   const size = Math.max(
     1,
@@ -47,6 +54,7 @@ function createEnginePool(wanted: number): StockfishEngine[] {
 async function analyzePositions(
   engines: StockfishEngine[],
   positions: string[],
+  movetimeMs: number,
   onProgress?: (done: number, total: number) => void,
 ): Promise<PositionEval[]> {
   const evals: PositionEval[] = new Array(positions.length)
@@ -56,7 +64,7 @@ async function analyzePositions(
   async function runOnEngine(engine: StockfishEngine): Promise<void> {
     while (nextIndex < positions.length) {
       const i = nextIndex++
-      evals[i] = terminalEval(positions[i]) ?? (await engine.evaluate(positions[i]))
+      evals[i] = terminalEval(positions[i]) ?? (await engine.evaluate(positions[i], movetimeMs))
       doneCount++
       onProgress?.(doneCount, positions.length)
     }
@@ -70,11 +78,12 @@ export async function analyzeGame(
   initialFen: string,
   movesSan: string[],
   onProgress?: (done: number, total: number) => void,
+  movetimeMs: number = ANALYSIS_STRENGTHS[DEFAULT_ANALYSIS_STRENGTH],
 ): Promise<PositionEval[]> {
   const positions = buildPositions(initialFen, movesSan)
   const engines = createEnginePool(positions.length)
   try {
-    return await analyzePositions(engines, positions, onProgress)
+    return await analyzePositions(engines, positions, movetimeMs, onProgress)
   } finally {
     engines.forEach((engine) => engine.terminate())
   }
@@ -104,6 +113,7 @@ export async function analyzeGames(
   onGameDone: (gameId: string, evals: PositionEval[]) => void | Promise<void>,
   onProgress?: (progress: BulkAnalysisProgress) => void,
   shouldContinue?: () => boolean,
+  movetimeMs: number = ANALYSIS_STRENGTHS[DEFAULT_ANALYSIS_STRENGTH],
 ): Promise<void> {
   const engines = createEnginePool(MAX_ENGINE_POOL_SIZE)
   try {
@@ -111,7 +121,7 @@ export async function analyzeGames(
       if (shouldContinue && !shouldContinue()) break
       const game = games[g]
       const positions = buildPositions(game.initialFen, game.movesSan)
-      const evals = await analyzePositions(engines, positions, (done, total) => {
+      const evals = await analyzePositions(engines, positions, movetimeMs, (done, total) => {
         onProgress?.({
           gamesDone: g,
           gamesTotal: games.length,

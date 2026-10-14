@@ -43,6 +43,9 @@ const en = {
       blue: 'Blue',
       purple: 'Purple',
     } as Record<string, string>,
+    analysisStrength: 'Analysis strength',
+    analysisStrengthHint: 'Engine think time per move — deeper is slower but more accurate',
+    analysisStrengths: { fast: 'Fast', normal: 'Normal', deep: 'Deep' },
   },
   gameRow: {
     timeClassTooltips: {
@@ -467,6 +470,10 @@ const es: Strings = {
       blue: 'Azul',
       purple: 'Morado',
     },
+    analysisStrength: 'Fuerza del análisis',
+    analysisStrengthHint:
+      'Tiempo de cálculo del motor por jugada — más profundo es más lento pero más preciso',
+    analysisStrengths: { fast: 'Rápido', normal: 'Normal', deep: 'Profundo' },
   },
   gameRow: {
     timeClassTooltips: {
