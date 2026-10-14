@@ -10,7 +10,7 @@ import { hintPieceName } from '@/lib/san'
 import { describeBlunderReason, detectBlunderReason } from '@/lib/tactics'
 import { BOARD_NOTATION_SIZE_STYLE, REVEAL_ARROW_COLOR } from '@/lib/theme'
 import type { BlunderReason, DrillPrompt } from '@/lib/types'
-import { useBoardColors } from './BoardColorsProvider'
+import { useBoardColors, useMoveSound } from './BoardColorsProvider'
 import { LegalMoveSquare } from './LegalMoveSquare'
 import { PlayerAvatar } from './PlayerAvatar'
 
@@ -112,6 +112,7 @@ export function DrillSession({
     () => new Map(legalMoves.map((m) => [m.to, m.isCapture])),
     [legalMoves],
   )
+  useMoveSound(committedFen ?? prompt?.fen ?? '')
 
   // No server round-trip — reshuffles the cards already loaded for this
   // session and starts back at card 1. Answering during the replay still

@@ -30,7 +30,7 @@ import {
   REVEAL_ARROW_COLOR,
 } from '@/lib/theme'
 import type { EngineLine, PositionEval } from '@/lib/types'
-import { useBoardColors } from './BoardColorsProvider'
+import { useBoardColors, useMoveSound } from './BoardColorsProvider'
 import { EvalBar } from './EvalBar'
 import { LegalMoveSquare } from './LegalMoveSquare'
 import { MoveList } from './MoveList'
@@ -819,6 +819,7 @@ export function BoardView({
   const s = getStrings()
   const boardColors = useBoardColors()
   const { lines: liveLines, fen: liveFen } = useLiveAnalysisContext()
+  useMoveSound(displayFen)
   // Eval bar: always the latest completed search's top line, even if a newer
   // search (for wherever the board has since moved to) hasn't finished yet —
   // briefly showing the *previous* position's number beats the bar blinking
