@@ -12,7 +12,7 @@ import { ANALYSIS_STRENGTHS, analyzeGame } from '@/lib/stockfish/analyze'
 import { describeBlunderReason, detectBlunderReason } from '@/lib/tactics'
 import type { GameAnalysis, MyColor } from '@/lib/types'
 import { useBoardContext } from './Board'
-import { useBoardColors } from './BoardColorsProvider'
+import { useSettings } from './SettingsProvider'
 
 interface AnalysisContextValue {
   analysis: GameAnalysis | null
@@ -57,7 +57,7 @@ export function GameAnalysisProvider({
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null)
   const [error, setError] = useState<string | null>(null)
   const positions = useMemo(() => buildPositions(initialFen, movesSan), [initialFen, movesSan])
-  const { analysisStrength } = useBoardColors()
+  const { analysisStrength } = useSettings()
 
   async function handleAnalyze() {
     setError(null)

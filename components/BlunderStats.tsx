@@ -8,7 +8,7 @@ import type { SanPiece } from '@/lib/san'
 import { describeBlunderReason } from '@/lib/tactics'
 import type { BlunderStats as BlunderStatsData } from '@/lib/types'
 import { BlunderSeverityBadge } from './BlunderSeverityBadge'
-import { useBoardColors } from './BoardColorsProvider'
+import { useSettings } from './SettingsProvider'
 import { EvalHelp } from './EvalHelp'
 import { PieceGlyph } from './PieceGlyph'
 
@@ -16,7 +16,7 @@ const PIECE_KEYS: ReadonlySet<string> = new Set(['K', 'Q', 'R', 'B', 'N'])
 
 export function BlunderStats({ stats }: { stats: BlunderStatsData }) {
   const s = getStrings()
-  const boardColors = useBoardColors()
+  const boardColors = useSettings()
   if (stats.analyzedGames === 0) {
     return (
       <p className="text-sm text-zinc-500 dark:text-zinc-400">{s.blunderStats.emptyNoAnalyzed}</p>
