@@ -203,7 +203,9 @@ file, not here — this section is only cross-cutting rules that span multiple f
   Board coordinates (`blitzr-show-coordinates`, default on) is every board's `showNotation`
   except `MiniBoard`, which never shows them.
   Move sounds (`blitzr-move-sounds`, default on) are `useMoveSound(fen)` in each board — a
-  synthesized Web Audio blip on any position change, lower-pitched for a capture; no sound files.
+  sound per position change, picked by `moveSoundFor()` (`lib/moveSound.ts`: game end > check >
+  promote/castle/capture > plain move), hotlinked from chess.com's CDN rather than bundled
+  (they're chess.com's files, so the repo doesn't redistribute them).
 - **Board animation timing has one source of truth**: `BOARD_ANIMATION_DURATION_MS`
   (`lib/theme.ts`), 150ms vs. react-chessboard's 300ms default, minimizes how long a captured
   piece visibly overlaps its capturer; every board in the app (`Board.tsx`, `PlanBoard.tsx`,

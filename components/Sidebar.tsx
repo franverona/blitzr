@@ -233,11 +233,14 @@ function SettingsButton({
               checked={boardColors.showCoordinates}
               onChange={() => boardColors.setShowCoordinates(!boardColors.showCoordinates)}
             />
-            <Toggle
-              label={s.settings.moveSounds}
-              checked={boardColors.moveSounds}
-              onChange={() => boardColors.setMoveSounds(!boardColors.moveSounds)}
-            />
+            <div className="flex flex-col gap-1">
+              <Toggle
+                label={s.settings.moveSounds}
+                checked={boardColors.moveSounds}
+                onChange={() => boardColors.setMoveSounds(!boardColors.moveSounds)}
+              />
+              <p className="text-xs text-zinc-500">{s.settings.moveSoundsCredit}</p>
+            </div>
           </div>
         </div>
       </dialog>
