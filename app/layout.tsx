@@ -86,6 +86,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           <RouteProgressBar />
         </Suspense>
         <SettingsProvider
+          initialTheme={theme}
           initialPresetId={boardColorPreset.id}
           initialAnalysisStrength={(await cookies()).get('blitzr-analysis-strength')?.value}
           initialHideEngineHints={(await cookies()).get('blitzr-hide-engine-hints')?.value === '1'}
@@ -97,7 +98,6 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
               username={username}
               avatarUrl={avatarUrl}
               initialCollapsed={sidebarCollapsed}
-              initialTheme={theme}
             />
             <main id="main-scroll" className="min-w-0 flex-1 overflow-y-auto px-6 py-6">
               <div className="mx-auto max-w-7xl">{children}</div>

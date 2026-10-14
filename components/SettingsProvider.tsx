@@ -13,8 +13,9 @@ import { boardNotationStyles, getBoardColorPreset } from '@/lib/theme'
 // constant exported from a 'use client' module doesn't reliably cross back
 // into a Server Component (Next.js treats the whole module as a client
 // reference boundary), so the literal is duplicated instead, same as
-// Sidebar.tsx's THEME_COOKIE/COLLAPSED_COOKIE already are relative to
+// Sidebar.tsx's COLLAPSED_COOKIE already is relative to
 // layout.tsx's own inline cookie names.
+const THEME_COOKIE = 'blitzr-theme'
 const BOARD_COLOR_COOKIE = 'blitzr-board-color'
 const ANALYSIS_STRENGTH_COOKIE = 'blitzr-analysis-strength'
 const HIDE_ENGINE_HINTS_COOKIE = 'blitzr-hide-engine-hints'
@@ -26,6 +27,8 @@ function setCookie(name: string, value: string) {
 }
 
 interface SettingsContextValue {
+  theme: 'light' | 'dark'
+  setTheme: (theme: 'light' | 'dark') => void
   presetId: string
   dark: string
   light: string
@@ -51,7 +54,7 @@ export function useSettings(): SettingsContextValue {
   return ctx
 }
 
-// Every per-viewer preference in the Settings dialog, in one provider rather
+// Every per-viewer preference on the /settings page, in one provider rather
 // than one per setting. Mounted once in the root layout, seeded from the blitzr-board-color cookie
 // read server-side there — same zero-flash reasoning as the theme toggle's
 // own cookie (app/layout.tsx also bakes the resolved accent color straight
@@ -63,6 +66,7 @@ export function useSettings(): SettingsContextValue {
 // already-rendered DOM afterward), which only a server-resolved value can
 // guarantee — localStorage can't be read until the client mounts.
 export function SettingsProvider({
+  initialTheme,
   initialPresetId,
   initialAnalysisStrength,
   initialHideEngineHints,
@@ -70,6 +74,7 @@ export function SettingsProvider({
   initialMoveSounds,
   children,
 }: {
+  initialTheme: 'light' | 'dark'
   initialPresetId: string
   initialAnalysisStrength: string | undefined
   initialHideEngineHints: boolean
@@ -77,6 +82,7 @@ export function SettingsProvider({
   initialMoveSounds: boolean
   children: React.ReactNode
 }) {
+  const [theme, setThemeState] = useState(initialTheme)
   const [moveSounds, setMoveSoundsState] = useState(initialMoveSounds)
   const [showCoordinates, setShowCoordinatesState] = useState(initialShowCoordinates)
   const [hideEngineHints, setHideEngineHintsState] = useState(initialHideEngineHints)
@@ -87,6 +93,14 @@ export function SettingsProvider({
       : DEFAULT_ANALYSIS_STRENGTH,
   )
   const preset = getBoardColorPreset(presetId)
+
+  // The `dark` class lives on <html> (app/layout.tsx), outside anything this
+  // provider renders, so it needs a direct DOM write.
+  function setTheme(next: 'light' | 'dark') {
+    setThemeState(next)
+    document.documentElement.classList.toggle('dark', next === 'dark')
+    setCookie(THEME_COOKIE, next)
+  }
 
   function setBoardColorPreset(id: string) {
     setPresetId(id)
@@ -120,6 +134,8 @@ export function SettingsProvider({
   return (
     <SettingsContext.Provider
       value={{
+        theme,
+        setTheme,
         presetId: preset.id,
         dark: preset.dark,
         light: preset.light,
@@ -148,7 +164,7 @@ export function SettingsProvider({
 // first fetch.
 const SOUND_BASE_URL = 'https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default'
 
-function playMoveSound(sound: MoveSound) {
+export function playMoveSound(sound: MoveSound) {
   const audio = new Audio(`${SOUND_BASE_URL}/${sound}.mp3`)
   audio.volume = 0.6
   // Autoplay can be blocked before the first user gesture — a missed sound

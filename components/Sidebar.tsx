@@ -2,18 +2,15 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useRef, useState } from 'react'
+import { usePathname } from 'next/navigation'
+import { useState } from 'react'
 import { BulkAnalysisIndicator } from '@/components/BulkAnalysisIndicator'
 import { NavLinks } from '@/components/NavLinks'
 import { PlayerAvatar } from '@/components/PlayerAvatar'
 import { getStrings } from '@/lib/i18n/strings'
-import { ANALYSIS_STRENGTHS, type AnalysisStrength } from '@/lib/stockfish/analyze'
-import { BOARD_COLOR_PRESETS } from '@/lib/theme'
-import { useSettings } from './SettingsProvider'
 import { ChevronLeftIcon, SettingsIcon } from './NavIcons'
 
 const COLLAPSED_COOKIE = 'blitzr-sidebar-collapsed'
-const THEME_COOKIE = 'blitzr-theme'
 
 // Below `md` the sidebar is always icon-only — width and label visibility
 // both fall back to plain Tailwind breakpoints for that, no JS media query
@@ -25,33 +22,19 @@ export function Sidebar({
   username,
   avatarUrl,
   initialCollapsed,
-  initialTheme,
 }: {
   username: string | null
   avatarUrl: string | null
   initialCollapsed: boolean
-  initialTheme: 'light' | 'dark'
 }) {
   const [collapsed, setCollapsed] = useState(initialCollapsed)
-  const [theme, setTheme] = useState(initialTheme)
+  const settingsActive = usePathname() === '/settings'
   const s = getStrings()
 
   function toggle() {
     setCollapsed((prev) => {
       const next = !prev
       document.cookie = `${COLLAPSED_COOKIE}=${next ? '1' : '0'}; path=/; max-age=31536000; samesite=lax`
-      return next
-    })
-  }
-
-  // The `dark` class lives on <html> (app/layout.tsx), not anything Sidebar
-  // itself renders, so toggling it needs a direct DOM write rather than
-  // relying on this component's own re-render.
-  function toggleTheme() {
-    setTheme((prev) => {
-      const next = prev === 'dark' ? 'light' : 'dark'
-      document.documentElement.classList.toggle('dark', next === 'dark')
-      document.cookie = `${THEME_COOKIE}=${next}; path=/; max-age=31536000; samesite=lax`
       return next
     })
   }
@@ -93,13 +76,22 @@ export function Sidebar({
             pushed Settings only partway down instead of flush against the
             username row above it. */}
         <div className="mt-auto flex flex-col">
-          <SettingsButton
-            theme={theme}
-            toggleTheme={toggleTheme}
-            iconRowClassName={iconRowClassName}
-            labelClassName={labelClassName}
-            className="mb-2"
-          />
+          {/* Its own page, not a dialog — most settings change how a board
+              looks, and a dialog opened from /blunders or the games list has
+              no board behind it to preview against (app/settings/page.tsx). */}
+          <Link
+            href="/settings"
+            aria-current={settingsActive ? 'page' : undefined}
+            title={s.settings.trigger}
+            className={`mb-2 flex items-center gap-2 rounded-md py-2 text-sm transition-colors ${iconRowClassName} ${
+              settingsActive
+                ? 'bg-accent/20 font-medium text-zinc-900 dark:text-white'
+                : 'text-zinc-500 hover:bg-zinc-200 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100'
+            }`}
+          >
+            <SettingsIcon className={`size-5 shrink-0 ${settingsActive ? 'text-accent' : ''}`} />
+            <span className={labelClassName}>{s.settings.trigger}</span>
+          </Link>
           {username && (
             <div className="flex items-center gap-2 border-t border-zinc-200 px-1 pt-3 dark:border-zinc-800">
               <PlayerAvatar username={username} avatarUrl={avatarUrl} />
@@ -123,150 +115,5 @@ export function Sidebar({
         />
       </button>
     </div>
-  )
-}
-
-// A dialog trigger rather than the theme toggle sitting directly in the nav
-// column — same native <dialog> convention as AboutOpeningButton/
-// RepertoireBoard's HelpButton. Room for other per-viewer preferences later
-// without adding more top-level sidebar rows.
-function SettingsButton({
-  theme,
-  toggleTheme,
-  iconRowClassName,
-  labelClassName,
-  className = '',
-}: {
-  theme: 'light' | 'dark'
-  toggleTheme: () => void
-  iconRowClassName: string
-  labelClassName: string
-  className?: string
-}) {
-  const dialogRef = useRef<HTMLDialogElement>(null)
-  const s = getStrings()
-  const boardColors = useSettings()
-
-  return (
-    <>
-      <button
-        type="button"
-        onClick={() => dialogRef.current?.showModal()}
-        className={`flex items-center gap-2 rounded-md py-2 text-sm text-zinc-500 transition-colors hover:bg-zinc-200 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100 ${iconRowClassName} ${className}`}
-      >
-        <SettingsIcon className="size-5 shrink-0" />
-        <span className={labelClassName}>{s.settings.trigger}</span>
-      </button>
-      <dialog
-        ref={dialogRef}
-        onClick={(e) => {
-          if (e.target === e.currentTarget) dialogRef.current?.close()
-        }}
-        className="fixed top-1/2 left-1/2 m-0 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-lg border border-zinc-200 bg-zinc-50 p-0 text-left text-zinc-900 backdrop:bg-black/60 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
-      >
-        <div className="flex flex-col gap-4 p-5">
-          <div className="flex items-center justify-between gap-4">
-            <h2 className="text-sm font-semibold">{s.settings.title}</h2>
-            <button
-              onClick={() => dialogRef.current?.close()}
-              aria-label={s.common.close}
-              className="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
-            >
-              ✕
-            </button>
-          </div>
-          <Toggle label={s.settings.darkTheme} checked={theme === 'dark'} onChange={toggleTheme} />
-          <div className="flex flex-col gap-2 border-t border-zinc-200 pt-4 text-sm dark:border-zinc-800">
-            <span>{s.settings.boardColors}</span>
-            <div className="flex flex-wrap gap-2">
-              {BOARD_COLOR_PRESETS.map((preset) => (
-                <button
-                  key={preset.id}
-                  type="button"
-                  onClick={() => boardColors.setBoardColorPreset(preset.id)}
-                  aria-label={s.settings.presets[preset.id]}
-                  title={s.settings.presets[preset.id]}
-                  className={`size-8 shrink-0 overflow-hidden rounded-full border-2 ${
-                    boardColors.presetId === preset.id ? 'border-accent' : 'border-transparent'
-                  }`}
-                >
-                  <span
-                    className="block h-full w-full"
-                    style={{
-                      background: `linear-gradient(135deg, ${preset.light} 50%, ${preset.dark} 50%)`,
-                    }}
-                  />
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="flex flex-col gap-2 border-t border-zinc-200 pt-4 text-sm dark:border-zinc-800">
-            <span title={s.settings.analysisStrengthHint}>{s.settings.analysisStrength}</span>
-            <div className="flex overflow-hidden rounded-md border border-zinc-300 dark:border-zinc-700">
-              {(Object.keys(ANALYSIS_STRENGTHS) as AnalysisStrength[]).map((strength) => (
-                <button
-                  key={strength}
-                  type="button"
-                  onClick={() => boardColors.setAnalysisStrength(strength)}
-                  aria-pressed={boardColors.analysisStrength === strength}
-                  title={`${ANALYSIS_STRENGTHS[strength]}ms`}
-                  className={`flex-1 px-2 py-1 ${
-                    boardColors.analysisStrength === strength
-                      ? 'bg-accent text-white'
-                      : 'hover:bg-zinc-200 dark:hover:bg-zinc-800'
-                  }`}
-                >
-                  {s.settings.analysisStrengths[strength]}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="flex flex-col gap-3 border-t border-zinc-200 pt-4 dark:border-zinc-800">
-            <Toggle
-              label={s.settings.hideEngineHints}
-              title={s.settings.hideEngineHintsHint}
-              checked={boardColors.hideEngineHints}
-              onChange={() => boardColors.setHideEngineHints(!boardColors.hideEngineHints)}
-            />
-            <Toggle
-              label={s.settings.showCoordinates}
-              checked={boardColors.showCoordinates}
-              onChange={() => boardColors.setShowCoordinates(!boardColors.showCoordinates)}
-            />
-            <div className="flex flex-col gap-1">
-              <Toggle
-                label={s.settings.moveSounds}
-                checked={boardColors.moveSounds}
-                onChange={() => boardColors.setMoveSounds(!boardColors.moveSounds)}
-              />
-              <p className="text-xs text-zinc-500">{s.settings.moveSoundsCredit}</p>
-            </div>
-          </div>
-        </div>
-      </dialog>
-    </>
-  )
-}
-
-function Toggle({
-  label,
-  title,
-  checked,
-  onChange,
-}: {
-  label: string
-  title?: string
-  checked: boolean
-  onChange: () => void
-}) {
-  return (
-    <label title={title} className="flex items-center justify-between gap-4 text-sm">
-      {label}
-      <span className="relative inline-flex shrink-0 items-center">
-        <input type="checkbox" checked={checked} onChange={onChange} className="peer sr-only" />
-        <span className="peer-checked:bg-accent h-6 w-11 rounded-full bg-zinc-300 transition-colors dark:bg-zinc-700" />
-        <span className="absolute left-1 h-4 w-4 rounded-full bg-white transition-transform peer-checked:translate-x-5" />
-      </span>
-    </label>
   )
 }
