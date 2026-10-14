@@ -16,6 +16,7 @@ import { boardNotationStyles, getBoardColorPreset } from '@/lib/theme'
 // layout.tsx's own inline cookie names.
 const BOARD_COLOR_COOKIE = 'blitzr-board-color'
 const ANALYSIS_STRENGTH_COOKIE = 'blitzr-analysis-strength'
+const HIDE_ENGINE_HINTS_COOKIE = 'blitzr-hide-engine-hints'
 
 function setCookie(name: string, value: string) {
   document.cookie = `${name}=${value}; path=/; max-age=31536000; samesite=lax`
@@ -30,6 +31,9 @@ interface BoardColorsContextValue {
   setBoardColorPreset: (id: string) => void
   analysisStrength: AnalysisStrength
   setAnalysisStrength: (strength: AnalysisStrength) => void
+  /** Spoiler-free review: hides the eval bar and engine best-move arrows. */
+  hideEngineHints: boolean
+  setHideEngineHints: (hide: boolean) => void
 }
 
 const BoardColorsContext = createContext<BoardColorsContextValue | null>(null)
@@ -55,12 +59,15 @@ export function useBoardColors(): BoardColorsContextValue {
 export function BoardColorsProvider({
   initialPresetId,
   initialAnalysisStrength,
+  initialHideEngineHints,
   children,
 }: {
   initialPresetId: string
   initialAnalysisStrength: string | undefined
+  initialHideEngineHints: boolean
   children: React.ReactNode
 }) {
+  const [hideEngineHints, setHideEngineHintsState] = useState(initialHideEngineHints)
   const [presetId, setPresetId] = useState(initialPresetId)
   const [analysisStrength, setAnalysisStrengthState] = useState<AnalysisStrength>(
     initialAnalysisStrength && initialAnalysisStrength in ANALYSIS_STRENGTHS
@@ -83,6 +90,11 @@ export function BoardColorsProvider({
     setCookie(ANALYSIS_STRENGTH_COOKIE, strength)
   }
 
+  function setHideEngineHints(hide: boolean) {
+    setHideEngineHintsState(hide)
+    setCookie(HIDE_ENGINE_HINTS_COOKIE, hide ? '1' : '0')
+  }
+
   return (
     <BoardColorsContext.Provider
       value={{
@@ -93,6 +105,8 @@ export function BoardColorsProvider({
         setBoardColorPreset,
         analysisStrength,
         setAnalysisStrength,
+        hideEngineHints,
+        setHideEngineHints,
       }}
     >
       {children}

@@ -837,7 +837,10 @@ export function BoardView({
   // *wrong squares* on the position now on screen, not just show a slightly
   // outdated number — worth the (much shorter, same-tick) gap where no live
   // arrow shows rather than a momentarily wrong one.
-  const liveLine = liveFen === displayFen ? (liveLines?.[0] ?? undefined) : undefined
+  const liveLine =
+    !boardColors.hideEngineHints && liveFen === displayFen
+      ? (liveLines?.[0] ?? undefined)
+      : undefined
   // react-chessboard needs a unique `id` per instance — without one, two
   // simultaneous boards on the same page (this one plus a PlanBoard showing
   // the suggested move's plan) collide on shared DOM ids internally and
@@ -943,7 +946,7 @@ export function BoardView({
       for (const arrow of checklistSquareStyles.arrows) {
         arrows.set(`${arrow.startSquare}-${arrow.endSquare}`, arrow)
       }
-      if (bestMove) {
+      if (bestMove && !boardColors.hideEngineHints) {
         arrows.set(`${bestMove.from}-${bestMove.to}`, {
           startSquare: bestMove.from,
           endSquare: bestMove.to,
@@ -959,7 +962,7 @@ export function BoardView({
       })
     }
     return [...arrows.values()]
-  }, [checklistSquareStyles.arrows, bestMove, exploring, liveLine])
+  }, [checklistSquareStyles.arrows, bestMove, exploring, liveLine, boardColors.hideEngineHints])
 
   // chess.com-style "Checkmate"/"Winner"/"Draw" badges pinned over the king
   // squares, purely a function of whatever position is actually on screen
@@ -1084,7 +1087,9 @@ export function BoardView({
         className={`flex w-full shrink-0 flex-col gap-3 ${boardMaxWidthClassName}`}
       >
         <div className="flex items-stretch gap-2">
-          {barEval && <EvalBar evaluation={barEval} boardOrientation={boardOrientation} />}
+          {barEval && !boardColors.hideEngineHints && (
+            <EvalBar evaluation={barEval} boardOrientation={boardOrientation} />
+          )}
           {/* The `overflow-hidden` that clips the board image to its rounded
               corners has to live on an *inner* div — the game-end badges
               below are positioned relative to this outer one instead so a

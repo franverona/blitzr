@@ -198,6 +198,8 @@ file, not here — this section is only cross-cutting rules that span multiple f
   strength (`blitzr-analysis-strength`: `ANALYSIS_STRENGTHS` in `lib/stockfish/analyze.ts`,
   fast/normal/deep = 150/300/1000ms per position) feeds `analyzeGame()`/`analyzeGames()`'s
   `movetimeMs`; it only affects batch analysis, not the live MultiPV panel.
+  Hide-engine-hints (`blitzr-hide-engine-hints`) suppresses `BoardView`'s eval bar and both
+  best-move arrows (saved and live) — the live lines panel and "better was" text still show.
 - **Board animation timing has one source of truth**: `BOARD_ANIMATION_DURATION_MS`
   (`lib/theme.ts`), 150ms vs. react-chessboard's 300ms default, minimizes how long a captured
   piece visibly overlaps its capturer; every board in the app (`Board.tsx`, `PlanBoard.tsx`,

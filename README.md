@@ -42,7 +42,8 @@ any way that implies endorsement or affiliation.
 - [x] Add a game by pasting its PGN — for games Chess.com's public API doesn't expose at all
 - [x] Live multi-line engine analysis + free-move exploration on a game's board
       (chess.com's analysis-tab experience)
-- [x] Settings (in the sidebar): light/dark theme, board color presets, analysis strength
+- [x] Settings (in the sidebar): light/dark theme, board color presets, analysis strength,
+      spoiler-free review (hide eval bar + best-move arrow)
 - [x] Mate-in-N puzzles from real games — play out the entire winning line yourself, with
       progress tracked and a filterable list
 

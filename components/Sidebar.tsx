@@ -175,19 +175,7 @@ function SettingsButton({
               ✕
             </button>
           </div>
-          <label className="flex items-center justify-between gap-4 text-sm">
-            {s.settings.darkTheme}
-            <span className="relative inline-flex shrink-0 items-center">
-              <input
-                type="checkbox"
-                checked={theme === 'dark'}
-                onChange={toggleTheme}
-                className="peer sr-only"
-              />
-              <span className="peer-checked:bg-accent h-6 w-11 rounded-full bg-zinc-300 transition-colors dark:bg-zinc-700" />
-              <span className="absolute left-1 h-4 w-4 rounded-full bg-white transition-transform peer-checked:translate-x-5" />
-            </span>
-          </label>
+          <Toggle label={s.settings.darkTheme} checked={theme === 'dark'} onChange={toggleTheme} />
           <div className="flex flex-col gap-2 border-t border-zinc-200 pt-4 text-sm dark:border-zinc-800">
             <span>{s.settings.boardColors}</span>
             <div className="flex flex-wrap gap-2">
@@ -233,8 +221,39 @@ function SettingsButton({
               ))}
             </div>
           </div>
+          <div className="border-t border-zinc-200 pt-4 dark:border-zinc-800">
+            <Toggle
+              label={s.settings.hideEngineHints}
+              title={s.settings.hideEngineHintsHint}
+              checked={boardColors.hideEngineHints}
+              onChange={() => boardColors.setHideEngineHints(!boardColors.hideEngineHints)}
+            />
+          </div>
         </div>
       </dialog>
     </>
+  )
+}
+
+function Toggle({
+  label,
+  title,
+  checked,
+  onChange,
+}: {
+  label: string
+  title?: string
+  checked: boolean
+  onChange: () => void
+}) {
+  return (
+    <label title={title} className="flex items-center justify-between gap-4 text-sm">
+      {label}
+      <span className="relative inline-flex shrink-0 items-center">
+        <input type="checkbox" checked={checked} onChange={onChange} className="peer sr-only" />
+        <span className="peer-checked:bg-accent h-6 w-11 rounded-full bg-zinc-300 transition-colors dark:bg-zinc-700" />
+        <span className="absolute left-1 h-4 w-4 rounded-full bg-white transition-transform peer-checked:translate-x-5" />
+      </span>
+    </label>
   )
 }
