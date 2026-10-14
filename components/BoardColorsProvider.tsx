@@ -16,6 +16,8 @@ import { boardNotationStyles, getBoardColorPreset } from '@/lib/theme'
 // layout.tsx's own inline cookie names.
 const BOARD_COLOR_COOKIE = 'blitzr-board-color'
 const ANALYSIS_STRENGTH_COOKIE = 'blitzr-analysis-strength'
+const HIDE_ENGINE_HINTS_COOKIE = 'blitzr-hide-engine-hints'
+const SHOW_COORDINATES_COOKIE = 'blitzr-show-coordinates'
 
 function setCookie(name: string, value: string) {
   document.cookie = `${name}=${value}; path=/; max-age=31536000; samesite=lax`
@@ -30,6 +32,11 @@ interface BoardColorsContextValue {
   setBoardColorPreset: (id: string) => void
   analysisStrength: AnalysisStrength
   setAnalysisStrength: (strength: AnalysisStrength) => void
+  /** Spoiler-free review: hides the eval bar and engine best-move arrows. */
+  hideEngineHints: boolean
+  setHideEngineHints: (hide: boolean) => void
+  showCoordinates: boolean
+  setShowCoordinates: (show: boolean) => void
 }
 
 const BoardColorsContext = createContext<BoardColorsContextValue | null>(null)
@@ -55,12 +62,18 @@ export function useBoardColors(): BoardColorsContextValue {
 export function BoardColorsProvider({
   initialPresetId,
   initialAnalysisStrength,
+  initialHideEngineHints,
+  initialShowCoordinates,
   children,
 }: {
   initialPresetId: string
   initialAnalysisStrength: string | undefined
+  initialHideEngineHints: boolean
+  initialShowCoordinates: boolean
   children: React.ReactNode
 }) {
+  const [showCoordinates, setShowCoordinatesState] = useState(initialShowCoordinates)
+  const [hideEngineHints, setHideEngineHintsState] = useState(initialHideEngineHints)
   const [presetId, setPresetId] = useState(initialPresetId)
   const [analysisStrength, setAnalysisStrengthState] = useState<AnalysisStrength>(
     initialAnalysisStrength && initialAnalysisStrength in ANALYSIS_STRENGTHS
@@ -83,6 +96,16 @@ export function BoardColorsProvider({
     setCookie(ANALYSIS_STRENGTH_COOKIE, strength)
   }
 
+  function setHideEngineHints(hide: boolean) {
+    setHideEngineHintsState(hide)
+    setCookie(HIDE_ENGINE_HINTS_COOKIE, hide ? '1' : '0')
+  }
+
+  function setShowCoordinates(show: boolean) {
+    setShowCoordinatesState(show)
+    setCookie(SHOW_COORDINATES_COOKIE, show ? '1' : '0')
+  }
+
   return (
     <BoardColorsContext.Provider
       value={{
@@ -93,6 +116,10 @@ export function BoardColorsProvider({
         setBoardColorPreset,
         analysisStrength,
         setAnalysisStrength,
+        hideEngineHints,
+        setHideEngineHints,
+        showCoordinates,
+        setShowCoordinates,
       }}
     >
       {children}

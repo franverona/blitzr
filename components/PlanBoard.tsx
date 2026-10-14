@@ -52,7 +52,7 @@ export function PlanBoard({
             position: positions[ply],
             boardOrientation,
             allowDragging: false,
-            showNotation: true,
+            showNotation: boardColors.showCoordinates,
             animationDurationInMs: BOARD_ANIMATION_DURATION_MS,
             darkSquareStyle: { backgroundColor: boardColors.dark },
             lightSquareStyle: { backgroundColor: boardColors.light },
