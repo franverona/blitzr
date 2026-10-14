@@ -8,10 +8,11 @@ import { getStrings } from '@/lib/i18n/strings'
 import { MOVE_QUALITY_TIERS, summarizeMoveQuality } from '@/lib/moveQuality'
 import { buildPositions } from '@/lib/positions'
 import { describeMove, plyLabel } from '@/lib/san'
-import { analyzeGame } from '@/lib/stockfish/analyze'
+import { ANALYSIS_STRENGTHS, analyzeGame } from '@/lib/stockfish/analyze'
 import { describeBlunderReason, detectBlunderReason } from '@/lib/tactics'
 import type { GameAnalysis, MyColor } from '@/lib/types'
 import { useBoardContext } from './Board'
+import { useBoardColors } from './BoardColorsProvider'
 
 interface AnalysisContextValue {
   analysis: GameAnalysis | null
@@ -56,13 +57,17 @@ export function GameAnalysisProvider({
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null)
   const [error, setError] = useState<string | null>(null)
   const positions = useMemo(() => buildPositions(initialFen, movesSan), [initialFen, movesSan])
+  const { analysisStrength } = useBoardColors()
 
   async function handleAnalyze() {
     setError(null)
     setProgress({ done: 0, total: movesSan.length + 1 })
     try {
-      const evals = await analyzeGame(initialFen, movesSan, (done, total) =>
-        setProgress({ done, total }),
+      const evals = await analyzeGame(
+        initialFen,
+        movesSan,
+        (done, total) => setProgress({ done, total }),
+        ANALYSIS_STRENGTHS[analysisStrength],
       )
       setAnalysis({ gameId, evals, analyzedAt: new Date().toISOString() })
       await saveGameAnalysis(gameId, evals)

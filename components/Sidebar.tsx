@@ -7,6 +7,7 @@ import { BulkAnalysisIndicator } from '@/components/BulkAnalysisIndicator'
 import { NavLinks } from '@/components/NavLinks'
 import { PlayerAvatar } from '@/components/PlayerAvatar'
 import { getStrings } from '@/lib/i18n/strings'
+import { ANALYSIS_STRENGTHS, type AnalysisStrength } from '@/lib/stockfish/analyze'
 import { BOARD_COLOR_PRESETS } from '@/lib/theme'
 import { useBoardColors } from './BoardColorsProvider'
 import { ChevronLeftIcon, SettingsIcon } from './NavIcons'
@@ -207,6 +208,27 @@ function SettingsButton({
                       background: `linear-gradient(135deg, ${preset.light} 50%, ${preset.dark} 50%)`,
                     }}
                   />
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="flex flex-col gap-2 border-t border-zinc-200 pt-4 text-sm dark:border-zinc-800">
+            <span title={s.settings.analysisStrengthHint}>{s.settings.analysisStrength}</span>
+            <div className="flex overflow-hidden rounded-md border border-zinc-300 dark:border-zinc-700">
+              {(Object.keys(ANALYSIS_STRENGTHS) as AnalysisStrength[]).map((strength) => (
+                <button
+                  key={strength}
+                  type="button"
+                  onClick={() => boardColors.setAnalysisStrength(strength)}
+                  aria-pressed={boardColors.analysisStrength === strength}
+                  title={`${ANALYSIS_STRENGTHS[strength]}ms`}
+                  className={`flex-1 px-2 py-1 ${
+                    boardColors.analysisStrength === strength
+                      ? 'bg-accent text-white'
+                      : 'hover:bg-zinc-200 dark:hover:bg-zinc-800'
+                  }`}
+                >
+                  {s.settings.analysisStrengths[strength]}
                 </button>
               ))}
             </div>
