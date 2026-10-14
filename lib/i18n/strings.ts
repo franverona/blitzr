@@ -51,6 +51,8 @@ const en = {
     showCoordinates: 'Show board coordinates',
     moveSounds: 'Move sounds',
     moveSoundsCredit: 'Sounds © Chess.com, loaded from their site',
+    preview: 'Preview',
+    sections: { appearance: 'Appearance', board: 'Board', analysis: 'Analysis' },
   },
   gameRow: {
     timeClassTooltips: {
@@ -484,6 +486,8 @@ const es: Strings = {
     showCoordinates: 'Mostrar coordenadas del tablero',
     moveSounds: 'Sonido de jugadas',
     moveSoundsCredit: 'Sonidos © Chess.com, cargados desde su web',
+    preview: 'Vista previa',
+    sections: { appearance: 'Apariencia', board: 'Tablero', analysis: 'Análisis' },
   },
   gameRow: {
     timeClassTooltips: {

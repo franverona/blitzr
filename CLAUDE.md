@@ -34,6 +34,7 @@ app/
   openings/page.tsx           # ECO family aggregation
   learn/page.tsx                # opening-lesson index
   learn/[slug]/page.tsx           # one lesson
+  settings/page.tsx               # per-viewer preferences + a static board preview
   repertoire/page.tsx          # repertoire tree builder
   drill/page.tsx                # spaced-repetition drill deck
   blunders/page.tsx              # cross-game blunder aggregate
@@ -49,6 +50,8 @@ components/
   GameAnalysisPanel.tsx              # Stockfish trigger + results dialog
   PositionChecklist.tsx                # live hanging-piece/fork/pin/skewer scan of the current ply
   DrillSession.tsx                     # one drill card at a time
+  SettingsProvider.tsx                   # per-viewer settings context (cookie-seeded)
+  SettingsForm.tsx                         # /settings controls + preview board
   DrillFilters.tsx                       # sourceType tabs + opening select
   LessonPractice.tsx                     # Study/Quiz toggle for a /learn lesson
   LessonQuiz.tsx                           # active-recall quiz on a lesson's line
@@ -154,13 +157,15 @@ file, not here — this section is only cross-cutting rules that span multiple f
 - **Light/dark theme is a manual toggle, not system-preference-driven** — a `blitzr-theme`
   cookie (`light`/`dark`, default `dark`), read server-side in `app/layout.tsx` to pick the
   `.dark` class on `<html>` before first paint (same "avoid a flash on refresh" pattern the
-  sidebar's own `blitzr-sidebar-collapsed` cookie already used). The trigger is a gear-icon
-  "Settings" row in `Sidebar.tsx`, pinned directly above the username row (both inside one
-  `mt-auto` wrapper, not two separate `mt-auto`s — flexbox splits free space across every auto
-  margin on the shared axis, so two would push them apart instead of flush together) — opens a
-  small dialog with a single light/dark switch (`SettingsButton`, same native `<dialog>`
-  convention as `AboutOpeningButton`/`RepertoireBoard`'s `HelpButton`), deliberately tucked away
-  rather than a top-level sidebar button. Every component needs an explicit light-mode class
+  sidebar's own `blitzr-sidebar-collapsed` cookie already used). The toggle lives on the `/settings` page
+  (`app/settings/page.tsx` + `components/SettingsForm.tsx`), linked from a gear-icon "Settings"
+  row in `Sidebar.tsx`, pinned directly above the username row (both inside one `mt-auto`
+  wrapper, not two separate `mt-auto`s — flexbox splits free space across every auto margin on
+  the shared axis, so two would push them apart instead of flush together). It was a dialog
+  originally, but most settings change how a board looks, and a dialog opened from `/blunders`
+  or the games list had no board behind it to judge the change against — the page has its own
+  static preview board (colors, coordinates, eval bar + best-move arrow) instead. Theme state
+  lives in `SettingsProvider` alongside every other setting. Every component needs an explicit light-mode class
   alongside its `dark:` one — Tailwind's `dark:` variant is an _override_ of the unprefixed
   (light) value, not a toggle between two prefixed ones, so a color picked only for a
   permanently-dark app (e.g. `bg-zinc-900`, `text-zinc-100`) needs a light counterpart added, not
@@ -176,8 +181,7 @@ file, not here — this section is only cross-cutting rules that span multiple f
   (`components/SettingsProvider.tsx`) is the per-viewer resolved value every board consumes
   (`Board.tsx`, `RepertoireBoard.tsx`, `DrillSession.tsx`, `LessonQuiz.tsx`, `PlanBoard.tsx`,
   `MiniBoard.tsx`, plus the decorative move-list swatches in `PieceMoveLabel.tsx`/
-  `BlunderStats.tsx`). Picked from the same Settings dialog as the theme switch
-  (`Sidebar.tsx`), stored in a `blitzr-board-color` cookie (the preset id only) and read
+  `BlunderStats.tsx`). Picked on the same `/settings` page as the theme switch, stored in a `blitzr-board-color` cookie (the preset id only) and read
   server-side in `app/layout.tsx` — a plain localStorage preference read only after mount was
   tried first and produces a real, visible flash-then-swap on every load: unlike `--color-accent`
   (a CSS custom property, patchable by a pre-paint script), react-chessboard's square colors are
