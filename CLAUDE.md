@@ -172,8 +172,8 @@ file, not here — this section is only cross-cutting rules that span multiple f
   The board's own square colors are a _separate_ user preference (below), not tied to this
   toggle at all.
 - **Board colors are one of four presets (green/brown/blue/purple), not a free-form picker** —
-  `BOARD_COLOR_PRESETS`/`getBoardColorPreset()` (`lib/theme.ts`) are the data; `useBoardColors()`
-  (`components/BoardColorsProvider.tsx`) is the per-viewer resolved value every board consumes
+  `BOARD_COLOR_PRESETS`/`getBoardColorPreset()` (`lib/theme.ts`) are the data; `useSettings()`
+  (`components/SettingsProvider.tsx`) is the per-viewer resolved value every board consumes
   (`Board.tsx`, `RepertoireBoard.tsx`, `DrillSession.tsx`, `LessonQuiz.tsx`, `PlanBoard.tsx`,
   `MiniBoard.tsx`, plus the decorative move-list swatches in `PieceMoveLabel.tsx`/
   `BlunderStats.tsx`). Picked from the same Settings dialog as the theme switch
@@ -183,17 +183,17 @@ file, not here — this section is only cross-cutting rules that span multiple f
   (a CSS custom property, patchable by a pre-paint script), react-chessboard's square colors are
   plain inline-style _props_, which only a value already known at server-render time can get
   right the first time. `app/layout.tsx` bakes the resolved preset straight into `<html>`'s own
-  inline `style` (for `--color-accent`) and into `BoardColorsProvider`'s initial state (for the
+  inline `style` (for `--color-accent`) and into `SettingsProvider`'s initial state (for the
   squares) from that one cookie read, rather than a client script mutating `<html>` after the
   fact — the earlier script-based version of this actually broke hydration (React diffs
   `<html>`'s attributes against what it rendered; an out-of-band script write shows up as a
   mismatch). **The cookie name itself has to stay a literal string duplicated in both
-  `app/layout.tsx` and `BoardColorsProvider.tsx`, not a shared exported constant** — a Server
+  `app/layout.tsx` and `SettingsProvider.tsx`, not a shared exported constant** — a Server
   Component importing a plain value from a `'use client'` module doesn't reliably get the real
   value across that boundary (it silently read as `undefined` here, which made every cookie look
   absent); `THEME_COOKIE`/`COLLAPSED_COOKIE` in `Sidebar.tsx` already duplicate their own literals
   against `layout.tsx` for the same reason.
-- **Other per-viewer Settings live in `BoardColorsProvider` too**, not one provider each — same
+- **Other per-viewer Settings live in `SettingsProvider` too**, not one provider each — same
   cookie-read-in-`app/layout.tsx`-then-seed-initial-state pattern as board colors. Analysis
   strength (`blitzr-analysis-strength`: `ANALYSIS_STRENGTHS` in `lib/stockfish/analyze.ts`,
   fast/normal/deep = 150/300/1000ms per position) feeds `analyzeGame()`/`analyzeGames()`'s

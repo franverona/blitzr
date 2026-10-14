@@ -8,7 +8,7 @@ import { getStrings } from '@/lib/i18n/strings'
 import { legalDestinations } from '@/lib/legalMoves'
 import { BOARD_NOTATION_SIZE_STYLE, REVEAL_ARROW_COLOR } from '@/lib/theme'
 import { useBoardContext } from './Board'
-import { useBoardColors, useMoveSound } from './BoardColorsProvider'
+import { useSettings, useMoveSound } from './SettingsProvider'
 import { LegalMoveSquare } from './LegalMoveSquare'
 
 // How long an auto-played opponent move sits highlighted before the next
@@ -54,7 +54,7 @@ export function LessonQuiz({
 }) {
   const { ply, setPly, positions, lastPly, boardOrientation, movesSan } = useBoardContext()
   const s = getStrings()
-  const boardColors = useBoardColors()
+  const boardColors = useSettings()
   const [feedback, setFeedback] = useState<'incorrect' | null>(null)
   const [mistakes, setMistakes] = useState(0)
   const [hintsUsed, setHintsUsed] = useState(0)

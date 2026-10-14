@@ -1,12 +1,12 @@
 'use client'
 
 import { splitSanPiece } from '@/lib/san'
-import { useBoardColors } from './BoardColorsProvider'
+import { useSettings } from './SettingsProvider'
 import { PieceGlyph } from './PieceGlyph'
 
 export function PieceMoveLabel({ san, color }: { san: string; color: 'white' | 'black' }) {
   const { piece, rest } = splitSanPiece(san)
-  const boardColors = useBoardColors()
+  const boardColors = useSettings()
   if (!piece) return san
 
   return (
