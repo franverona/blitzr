@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { cookies } from 'next/headers'
 import { Suspense } from 'react'
-import { BoardColorsProvider } from '@/components/BoardColorsProvider'
+import { SettingsProvider } from '@/components/SettingsProvider'
 import { BulkAnalysisProvider } from '@/components/BulkAnalysisProvider'
 import { RouteProgressBar } from '@/components/RouteProgressBar'
 import { Sidebar } from '@/components/Sidebar'
@@ -64,7 +64,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   // something a pre-paint script can patch onto already-rendered DOM (that
   // approach also fought React's own hydration diffing on <html>'s style
   // attribute). Resolving the preset server-side and baking it into both
-  // <html>'s inline style and BoardColorsProvider's initial state means
+  // <html>'s inline style and SettingsProvider's initial state means
   // there's nothing left to visibly correct once the client mounts.
   const boardColorPreset = getBoardColorPreset((await cookies()).get('blitzr-board-color')?.value)
 
@@ -85,7 +85,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <Suspense fallback={null}>
           <RouteProgressBar />
         </Suspense>
-        <BoardColorsProvider
+        <SettingsProvider
           initialPresetId={boardColorPreset.id}
           initialAnalysisStrength={(await cookies()).get('blitzr-analysis-strength')?.value}
           initialHideEngineHints={(await cookies()).get('blitzr-hide-engine-hints')?.value === '1'}
@@ -103,7 +103,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
               <div className="mx-auto max-w-7xl">{children}</div>
             </main>
           </BulkAnalysisProvider>
-        </BoardColorsProvider>
+        </SettingsProvider>
       </body>
     </html>
   )

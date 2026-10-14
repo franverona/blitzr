@@ -26,7 +26,7 @@ export const BOARD_COLOR_PRESETS: BoardColorPreset[] = [
 
 /** Looks up a preset by id, falling back to the default (green) for a
  *  missing/stale/tampered cookie value — shared by `app/layout.tsx` (server,
- *  resolving the cookie before first paint) and `BoardColorsProvider`
+ *  resolving the cookie before first paint) and `SettingsProvider`
  *  (client, resolving the same cookie value passed down as its initial
  *  prop), so the two can never disagree about what an id means. */
 export function getBoardColorPreset(id: string | undefined): BoardColorPreset {
@@ -40,7 +40,7 @@ export function getBoardColorPreset(id: string | undefined): BoardColorPreset {
  *  keeps them legible, and bold keeps them readable at a glance. Every board
  *  with `showNotation: true` (`Board.tsx`, `DrillSession.tsx`,
  *  `LessonQuiz.tsx`, `RepertoireBoard.tsx`, `PlanBoard.tsx`) shares these,
- *  via `useBoardColors()` (`components/BoardColorsProvider.tsx`). */
+ *  via `useSettings()` (`components/SettingsProvider.tsx`). */
 export function boardNotationStyles(dark: string, light: string) {
   return {
     darkSquareNotationStyle: { color: light, fontWeight: 'bold' as const },

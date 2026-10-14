@@ -9,7 +9,7 @@ import { PlayerAvatar } from '@/components/PlayerAvatar'
 import { getStrings } from '@/lib/i18n/strings'
 import { ANALYSIS_STRENGTHS, type AnalysisStrength } from '@/lib/stockfish/analyze'
 import { BOARD_COLOR_PRESETS } from '@/lib/theme'
-import { useBoardColors } from './BoardColorsProvider'
+import { useSettings } from './SettingsProvider'
 import { ChevronLeftIcon, SettingsIcon } from './NavIcons'
 
 const COLLAPSED_COOKIE = 'blitzr-sidebar-collapsed'
@@ -145,7 +145,7 @@ function SettingsButton({
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const s = getStrings()
-  const boardColors = useBoardColors()
+  const boardColors = useSettings()
 
   return (
     <>

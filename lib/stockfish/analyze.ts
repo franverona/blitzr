@@ -29,7 +29,7 @@ export function terminalEval(fen: string): PositionEval | null {
 const MAX_ENGINE_POOL_SIZE = 4
 
 /** Per-position think time for batch analysis, picked in Settings
- *  (`BoardColorsProvider`'s `analysisStrength`). `normal` is the 300ms this
+ *  (`SettingsProvider`'s `analysisStrength`). `normal` is the 300ms this
  *  used before it was configurable. */
 export const ANALYSIS_STRENGTHS = { fast: 150, normal: 300, deep: 1000 } as const
 export type AnalysisStrength = keyof typeof ANALYSIS_STRENGTHS

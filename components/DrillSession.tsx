@@ -10,7 +10,7 @@ import { hintPieceName } from '@/lib/san'
 import { describeBlunderReason, detectBlunderReason } from '@/lib/tactics'
 import { BOARD_NOTATION_SIZE_STYLE, REVEAL_ARROW_COLOR } from '@/lib/theme'
 import type { BlunderReason, DrillPrompt } from '@/lib/types'
-import { useBoardColors, useMoveSound } from './BoardColorsProvider'
+import { useSettings, useMoveSound } from './SettingsProvider'
 import { LegalMoveSquare } from './LegalMoveSquare'
 import { PlayerAvatar } from './PlayerAvatar'
 
@@ -74,7 +74,7 @@ export function DrillSession({
   // to accept fresh server data, which would reintroduce the exact
   // revalidation-reshuffle problem this snapshot exists to prevent.
   const s = getStrings()
-  const boardColors = useBoardColors()
+  const boardColors = useSettings()
   const [sessionPrompts, setSessionPrompts] = useState(prompts)
   const [sessionTotalCards] = useState(totalCards)
   const [sessionDueCount] = useState(dueCount)

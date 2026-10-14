@@ -5,7 +5,7 @@ import { Chessboard } from 'react-chessboard'
 import { getStrings } from '@/lib/i18n/strings'
 import { buildPositions } from '@/lib/positions'
 import { BOARD_ANIMATION_DURATION_MS, BOARD_NOTATION_SIZE_STYLE } from '@/lib/theme'
-import { useBoardColors } from './BoardColorsProvider'
+import { useSettings } from './SettingsProvider'
 
 /** A small interactive stepper through the engine's suggested move and its
  *  follow-up plan — SAN text alone doesn't let a beginner "see" where a
@@ -41,7 +41,7 @@ export function PlanBoard({
   // internally and crashes with "Square width not found".
   const boardId = useId()
   const s = getStrings()
-  const boardColors = useBoardColors()
+  const boardColors = useSettings()
 
   return (
     <div className="flex w-full shrink-0 flex-col gap-3">

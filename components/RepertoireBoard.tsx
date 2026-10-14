@@ -12,7 +12,7 @@ import { buildRepertoireIndex } from '@/lib/repertoire'
 import { describeBlunderReason, detectBlunderReason } from '@/lib/tactics'
 import { BOARD_ANIMATION_DURATION_MS, BOARD_NOTATION_SIZE_STYLE } from '@/lib/theme'
 import type { RepertoireColor, RepertoireNode } from '@/lib/types'
-import { useBoardColors, useMoveSound } from './BoardColorsProvider'
+import { useSettings, useMoveSound } from './SettingsProvider'
 import { LegalMoveSquare } from './LegalMoveSquare'
 import { RepertoireTree } from './RepertoireTree'
 
@@ -26,7 +26,7 @@ export function RepertoireBoard({
   initialNodes: RepertoireNode[]
 }) {
   const s = getStrings()
-  const boardColors = useBoardColors()
+  const boardColors = useSettings()
   const [nodes, setNodesState] = useState(initialNodes)
   const [path, setPathState] = useState<RepertoireNode[]>([])
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null)

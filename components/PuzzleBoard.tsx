@@ -9,7 +9,7 @@ import { legalDestinations } from '@/lib/legalMoves'
 import { puzzleColorToMove, type MateProblem } from '@/lib/mateProblems'
 import type { SanPiece } from '@/lib/san'
 import { BOARD_ANIMATION_DURATION_MS, BOARD_NOTATION_SIZE_STYLE } from '@/lib/theme'
-import { useBoardColors, useMoveSound } from './BoardColorsProvider'
+import { useSettings, useMoveSound } from './SettingsProvider'
 import { LegalMoveSquare } from './LegalMoveSquare'
 import { MoveSequence } from './MoveSequence'
 import { PieceGlyph } from './PieceGlyph'
@@ -36,7 +36,7 @@ const PROMOTION_PIECES: { promotion: 'q' | 'r' | 'b' | 'n'; glyph: SanPiece }[] 
 // mid-solve), since you're moving both colors' pieces as you go.
 export function PuzzleBoard({ problem }: { problem: MateProblem }) {
   const s = getStrings()
-  const boardColors = useBoardColors()
+  const boardColors = useSettings()
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null)
   const [feedback, setFeedback] = useState<Feedback>(null)
   const [ply, setPly] = useState(0)
