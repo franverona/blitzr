@@ -3,8 +3,9 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { getUnanalyzedGames, saveGameAnalysis } from '@/app/actions'
 import { getStrings } from '@/lib/i18n/strings'
-import { analyzeGames } from '@/lib/stockfish/analyze'
+import { ANALYSIS_STRENGTHS, analyzeGames } from '@/lib/stockfish/analyze'
 import type { BulkAnalysisProgress } from '@/lib/stockfish/analyze'
+import { useBoardColors } from './BoardColorsProvider'
 
 const TOAST_DURATION_MS = 4000
 
@@ -23,6 +24,7 @@ const BulkAnalysisContext = createContext<BulkAnalysisContextValue | null>(null)
 export function BulkAnalysisProvider({ children }: { children: React.ReactNode }) {
   const [progress, setProgress] = useState<BulkAnalysisProgress | null>(null)
   const [toast, setToast] = useState<{ text: string; isError: boolean } | null>(null)
+  const { analysisStrength } = useBoardColors()
   // A ref, not state — analyzeGames() reads this via a closure held for the
   // whole (potentially long) run, so cancel() needs to mutate a value that
   // closure can see immediately rather than one frozen at the render where
@@ -63,6 +65,7 @@ export function BulkAnalysisProvider({ children }: { children: React.ReactNode }
         },
         setProgress,
         () => shouldContinueRef.current,
+        ANALYSIS_STRENGTHS[analysisStrength],
       )
 
       setToast({ text: s.bulkAnalyze.analyzed(analyzed, games.length), isError: false })

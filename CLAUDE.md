@@ -193,6 +193,11 @@ file, not here — this section is only cross-cutting rules that span multiple f
   value across that boundary (it silently read as `undefined` here, which made every cookie look
   absent); `THEME_COOKIE`/`COLLAPSED_COOKIE` in `Sidebar.tsx` already duplicate their own literals
   against `layout.tsx` for the same reason.
+- **Other per-viewer Settings live in `BoardColorsProvider` too**, not one provider each — same
+  cookie-read-in-`app/layout.tsx`-then-seed-initial-state pattern as board colors. Analysis
+  strength (`blitzr-analysis-strength`: `ANALYSIS_STRENGTHS` in `lib/stockfish/analyze.ts`,
+  fast/normal/deep = 150/300/1000ms per position) feeds `analyzeGame()`/`analyzeGames()`'s
+  `movetimeMs`; it only affects batch analysis, not the live MultiPV panel.
 - **Board animation timing has one source of truth**: `BOARD_ANIMATION_DURATION_MS`
   (`lib/theme.ts`), 150ms vs. react-chessboard's 300ms default, minimizes how long a captured
   piece visibly overlaps its capturer; every board in the app (`Board.tsx`, `PlanBoard.tsx`,

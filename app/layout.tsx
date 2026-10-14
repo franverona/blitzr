@@ -85,7 +85,10 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <Suspense fallback={null}>
           <RouteProgressBar />
         </Suspense>
-        <BoardColorsProvider initialPresetId={boardColorPreset.id}>
+        <BoardColorsProvider
+          initialPresetId={boardColorPreset.id}
+          initialAnalysisStrength={(await cookies()).get('blitzr-analysis-strength')?.value}
+        >
           <BulkAnalysisProvider>
             <Sidebar
               username={username}
