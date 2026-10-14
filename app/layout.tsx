@@ -88,6 +88,8 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <BoardColorsProvider
           initialPresetId={boardColorPreset.id}
           initialAnalysisStrength={(await cookies()).get('blitzr-analysis-strength')?.value}
+          initialHideEngineHints={(await cookies()).get('blitzr-hide-engine-hints')?.value === '1'}
+          initialShowCoordinates={(await cookies()).get('blitzr-show-coordinates')?.value !== '0'}
         >
           <BulkAnalysisProvider>
             <Sidebar

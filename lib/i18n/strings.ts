@@ -46,6 +46,9 @@ const en = {
     analysisStrength: 'Analysis strength',
     analysisStrengthHint: 'Engine think time per move — deeper is slower but more accurate',
     analysisStrengths: { fast: 'Fast', normal: 'Normal', deep: 'Deep' },
+    hideEngineHints: 'Hide eval bar and best-move arrow',
+    hideEngineHintsHint: 'Review a game without engine spoilers',
+    showCoordinates: 'Show board coordinates',
   },
   gameRow: {
     timeClassTooltips: {
@@ -474,6 +477,9 @@ const es: Strings = {
     analysisStrengthHint:
       'Tiempo de cálculo del motor por jugada — más profundo es más lento pero más preciso',
     analysisStrengths: { fast: 'Rápido', normal: 'Normal', deep: 'Profundo' },
+    hideEngineHints: 'Ocultar barra de evaluación y flecha de mejor jugada',
+    hideEngineHintsHint: 'Revisa una partida sin spoilers del motor',
+    showCoordinates: 'Mostrar coordenadas del tablero',
   },
   gameRow: {
     timeClassTooltips: {
