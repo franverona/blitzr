@@ -6,6 +6,7 @@ import {
   type AnalysisStrength,
   DEFAULT_ANALYSIS_STRENGTH,
 } from '@/lib/stockfish/analyze'
+import { type MoveSound, moveSoundFor } from '@/lib/moveSound'
 import { boardNotationStyles, getBoardColorPreset } from '@/lib/theme'
 
 // Not shared with app/layout.tsx's own read of this same cookie — a plain
@@ -139,31 +140,25 @@ export function SettingsProvider({
   )
 }
 
-let audioContext: AudioContext | null = null
+// ponytail: hotlinked from chess.com's own CDN rather than bundled — the files
+// are chess.com's, so this repo doesn't redistribute them. Needs internet, and
+// goes silent if chess.com ever moves them; swap in local files under
+// public/sounds/ if that happens. A fresh Audio per move so rapid moves overlap
+// instead of cutting each other off; the browser caches each file after its
+// first fetch.
+const SOUND_BASE_URL = 'https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default'
 
-// ponytail: a synthesized blip via Web Audio rather than shipping sound
-// files — swap in recorded samples if this ever needs to sound like
-// chess.com's. Lower pitch for a capture.
-function playMoveSound(capture: boolean) {
-  audioContext ??= new AudioContext()
-  const t = audioContext.currentTime
-  const osc = audioContext.createOscillator()
-  const gain = audioContext.createGain()
-  osc.frequency.value = capture ? 220 : 440
-  gain.gain.setValueAtTime(0.2, t)
-  gain.gain.exponentialRampToValueAtTime(0.001, t + 0.08)
-  osc.connect(gain).connect(audioContext.destination)
-  osc.start(t)
-  osc.stop(t + 0.08)
-}
-
-function pieceCount(fen: string): number {
-  return fen.split(' ')[0].replace(/[^a-z]/gi, '').length
+function playMoveSound(sound: MoveSound) {
+  const audio = new Audio(`${SOUND_BASE_URL}/${sound}.mp3`)
+  audio.volume = 0.6
+  // Autoplay can be blocked before the first user gesture — a missed sound
+  // isn't worth surfacing.
+  audio.play().catch(() => {})
 }
 
 /** Plays a move sound whenever `fen` changes (not on mount), if enabled in
- *  Settings — a capture when the new position has fewer pieces. Any position
- *  change counts, so a multi-ply jump plays one sound, not one per ply. */
+ *  Settings — which one is picked by moveSoundFor(). Any position change
+ *  counts, so a multi-ply jump plays one sound, not one per ply. */
 export function useMoveSound(fen: string) {
   const { moveSounds } = useSettings()
   const prevFenRef = useRef(fen)
@@ -171,6 +166,6 @@ export function useMoveSound(fen: string) {
     const prevFen = prevFenRef.current
     prevFenRef.current = fen
     if (!moveSounds || !fen || !prevFen || prevFen === fen) return
-    playMoveSound(pieceCount(fen) < pieceCount(prevFen))
+    playMoveSound(moveSoundFor(prevFen, fen))
   }, [fen, moveSounds])
 }

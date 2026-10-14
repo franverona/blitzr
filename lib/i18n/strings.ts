@@ -50,6 +50,7 @@ const en = {
     hideEngineHintsHint: 'Review a game without engine spoilers',
     showCoordinates: 'Show board coordinates',
     moveSounds: 'Move sounds',
+    moveSoundsCredit: 'Sounds © Chess.com, loaded from their site',
   },
   gameRow: {
     timeClassTooltips: {
@@ -482,6 +483,7 @@ const es: Strings = {
     hideEngineHintsHint: 'Revisa una partida sin spoilers del motor',
     showCoordinates: 'Mostrar coordenadas del tablero',
     moveSounds: 'Sonido de jugadas',
+    moveSoundsCredit: 'Sonidos © Chess.com, cargados desde su web',
   },
   gameRow: {
     timeClassTooltips: {
