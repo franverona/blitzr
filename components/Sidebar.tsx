@@ -221,12 +221,17 @@ function SettingsButton({
               ))}
             </div>
           </div>
-          <div className="border-t border-zinc-200 pt-4 dark:border-zinc-800">
+          <div className="flex flex-col gap-3 border-t border-zinc-200 pt-4 dark:border-zinc-800">
             <Toggle
               label={s.settings.hideEngineHints}
               title={s.settings.hideEngineHintsHint}
               checked={boardColors.hideEngineHints}
               onChange={() => boardColors.setHideEngineHints(!boardColors.hideEngineHints)}
+            />
+            <Toggle
+              label={s.settings.showCoordinates}
+              checked={boardColors.showCoordinates}
+              onChange={() => boardColors.setShowCoordinates(!boardColors.showCoordinates)}
             />
           </div>
         </div>

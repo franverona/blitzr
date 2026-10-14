@@ -215,6 +215,7 @@ export function RepertoireBoard({
                 ),
                 darkSquareStyle: { backgroundColor: boardColors.dark },
                 lightSquareStyle: { backgroundColor: boardColors.light },
+                showNotation: boardColors.showCoordinates,
                 darkSquareNotationStyle: boardColors.darkSquareNotationStyle,
                 lightSquareNotationStyle: boardColors.lightSquareNotationStyle,
                 alphaNotationStyle: BOARD_NOTATION_SIZE_STYLE,
