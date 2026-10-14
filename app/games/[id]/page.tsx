@@ -102,7 +102,10 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
       <OpeningLine game={game} />
 
       {game.movesSan ? (
-        <BoardView boardMaxWidthClassName="max-w-160 xl:max-w-172 2xl:max-w-184" />
+        // Side-by-side (lg+), the board is also capped by viewport height so
+        // the header + board + material/"better was" lines fit a 13" laptop
+        // screen without a page scroll; 16rem ≈ everything above/below it.
+        <BoardView boardMaxWidthClassName="max-w-160 lg:max-w-[min(40rem,calc(100dvh-16rem))] xl:max-w-[min(43rem,calc(100dvh-16rem))] 2xl:max-w-[min(46rem,calc(100dvh-16rem))]" />
       ) : (
         <div className="flex flex-col gap-2">
           <p className="text-sm text-amber-600 dark:text-amber-400">
