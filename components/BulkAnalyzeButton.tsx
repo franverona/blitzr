@@ -7,12 +7,7 @@ import { CpuIcon } from './NavIcons'
 export function BulkAnalyzeButton({ hasUnanalyzedGames }: { hasUnanalyzedGames: boolean }) {
   const { progress, start, cancel } = useBulkAnalysis()
   const s = getStrings()
-  // hasUnanalyzedGames is a snapshot from page load, not live — it still
-  // goes stale the moment another tab (or the per-game Analyze button)
-  // finishes the last one, same as it would without this prop at all. The
-  // point isn't to be authoritative, just to skip the click-then-toast round
-  // trip for the common case where it's obviously nothing to do; start()
-  // still re-checks and falls back to that toast regardless.
+  // hasUnanalyzedGames is a page-load snapshot; start() still re-checks.
   const disabled = progress !== null || !hasUnanalyzedGames
 
   return (

@@ -1,7 +1,6 @@
 const BASE_URL = 'https://api.chess.com/pub'
 
-// Chess.com throttles requests with no (or a generic) User-Agent — identify
-// the app and give them a way to reach us per their Published-Data API terms.
+// Chess.com throttles requests without a descriptive User-Agent.
 const USER_AGENT =
   'Blitzr/0.1 (personal chess repertoire trainer; https://github.com/franverona/blitzr)'
 
@@ -51,7 +50,6 @@ async function getJson<T>(url: string, attempt = 1): Promise<T> {
   return res.json() as Promise<T>
 }
 
-/** Returns the list of monthly archive URLs for a player, oldest first. */
 export async function fetchArchives(username: string): Promise<string[]> {
   const data = await getJson<{ archives: string[] }>(
     `${BASE_URL}/player/${encodeURIComponent(username)}/games/archives`,
@@ -70,8 +68,7 @@ export async function fetchArchiveMonth(
   return data.games
 }
 
-/** Purely decorative, so any failure (unknown user, bot with no public
- *  profile, rate limit) just means no avatar rather than a broken page. */
+/** Decorative, so any failure returns null. */
 export async function fetchPlayerAvatar(username: string): Promise<string | null> {
   try {
     const data = await getJson<{ avatar?: string }>(
@@ -83,16 +80,8 @@ export async function fetchPlayerAvatar(username: string): Promise<string | null
   }
 }
 
-/** A bot-mode game's PGN White/Black header (e.g. "Hans") is a bot
- *  personality's display name, not a real account — looking it up directly
- *  via `fetchPlayerAvatar()` risks matching an unrelated real account that
- *  happens to share the name (confirmed: chess.com has a real registered
- *  user literally named "hans"). Chess.com does appear to back its official
- *  bot personalities with a dedicated "<Name>-BOT" account (observed by
- *  spot-checking a few known personalities — not documented anywhere), so
- *  try that first. Still just a best-effort lookup: falls back to no avatar
- *  the same way `fetchPlayerAvatar()` does if it doesn't exist for this
- *  particular personality, rather than risk showing the wrong photo again. */
+/** Bot display names (e.g. "Hans") can match unrelated real users, so try
+ *  Chess.com's observed, undocumented "<Name>-BOT" account instead. */
 export async function fetchBotAvatar(displayName: string): Promise<string | null> {
   return fetchPlayerAvatar(`${displayName}-bot`)
 }

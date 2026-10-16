@@ -1,27 +1,10 @@
-// One-shot import of the composed "mate in one/two/three" puzzles from
-// László Polgár's "5334 Problems, Combinations, and Games" PGN compilation
-// (polgar.pgn, repo root, Latin-1) into lib/mateProblems.ts's MATE_PROBLEMS
-// array. Not meant to be re-run — running it twice would duplicate entries;
-// it was run once to produce the appended data and can be deleted or kept
-// only for reference/reproducibility.
+// One-shot import of mate-in-1/2/3 puzzles from Polgár's "5334 Problems,
+// Combinations, and Games" (polgar.pgn, Latin-1) into lib/mateProblems.ts.
+// Not idempotent: re-running duplicates entries.
 //
-// Every candidate is replayed through chess.js and only kept if it (a)
-// actually ends in checkmate — a large fraction of this file's "Mate in two"
-// records are transcription-truncated (e.g. the entire "solution" is just
-// "1.Bc5+ *", cut off after one ply) — and (b), for mate-in-2/3, the mate is
-// *forced* against every legal opponent reply, verified with the same
-// isForcedMate() brute-force search lib/mateProblems.ts exports (copied
-// here rather than imported, since this is a plain Node script and that
-// module is TypeScript — keep the two in sync by hand if either changes).
-//
-// The forced-mate check is the expensive step (~2,000 positions, each a
-// bounded but non-trivial move-tree search) — measured to take over an hour
-// running serially. Positions are independent, so this file doubles as its
-// own worker_threads pool: run normally, it's the main script; spawned as a
-// Worker (see the isMainThread branch at the bottom), it validates whatever
-// chunk of candidates it's handed and reports back. ponytail: this is a
-// one-off script, so the pool is the simplest thing that works — no queue,
-// no retry, just an even split across `os.cpus().length - 1` workers.
+// Candidates are kept only if they replay to checkmate (many records are
+// truncated) and, for mate-in-2/3, the mate is forced against every reply.
+// That check is slow, so this file doubles as its own worker_threads pool.
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
@@ -39,9 +22,7 @@ const TARGET_CATEGORIES = {
   'Mate in three': 3,
 }
 
-// Copy of lib/mateProblems.ts's isForcedMate (including its node-visit
-// budget — a dense position can otherwise explode combinatorially; see that
-// file's comment) — keep the two in sync by hand if either changes.
+// Copy of lib/mateProblems.ts's isForcedMate — keep in sync by hand.
 const FORCED_MATE_NODE_BUDGET = 3_000
 
 function isForcedMate(fen, mateIn) {
@@ -96,7 +77,7 @@ if (!isMainThread) {
 }
 
 function runForcedMateCheckInParallel(items) {
-  // items: [{ fen, mateIn }]; returns Promise<boolean[]> in the same order.
+  // Returns results in the same order as `items`.
   if (items.length === 0) return Promise.resolve([])
   const workerCount = Math.max(1, os.cpus().length - 1)
   const chunkSize = Math.ceil(items.length / workerCount)
@@ -174,7 +155,7 @@ for (const [category, declaredMateIn] of Object.entries(TARGET_CATEGORIES)) {
   let mismatches = 0
 
   for (const { bookNumber, fen, record } of candidates) {
-    if (new Chess(fen).isCheck()) continue // matches __tests__/mateProblems.test.ts's own invariant
+    if (new Chess(fen).isCheck()) continue
 
     const chess = new Chess()
     try {

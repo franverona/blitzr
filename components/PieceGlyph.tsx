@@ -1,14 +1,8 @@
 import type { SanPiece } from '@/lib/san'
 
-// Chess piece SVGs from Wikimedia Commons' "SVG chess pieces" set
-// (Chess_{k,q,r,b,n}{l,d}t45.svg — light/dark pieces, transparent
-// background), originally by en:User:Cburnett, dual-licensed CC BY-SA 3.0 /
-// GFDL / BSD / GPL: https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces
-//
-// The "dark" pieces are recolored from their original solid black to a mid
-// gray — literal black-on-black would be invisible against this app's dark
-// background, the same issue the white/black side badge (KnightIcon) hit
-// earlier. White highlight details are left as-is either way.
+// Chess piece SVGs from Wikimedia Commons' "SVG chess pieces" set by
+// en:User:Cburnett (CC BY-SA 3.0 / GFDL / BSD / GPL):
+// https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces
 const DARK_GRAY = '#000'
 
 export function PieceGlyph({

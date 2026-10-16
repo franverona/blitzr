@@ -175,10 +175,8 @@ describe('describePinReason (Spanish)', () => {
 
 describe('detectSkewer', () => {
   it('flags a sliding piece newly attacking two enemy pieces in a line, front then back', () => {
-    // Black's own Rg8 walks the rook onto the c4-g8 diagonal behind the
-    // queen on d5 — the bishop on c4 now skewers queen (front) then rook
-    // (back); the queen isn't directly hanging since the rook blocks the
-    // ray beyond it, so this is a skewer, not a hanging-piece case.
+    // Black's Rg8 lands behind the queen on the c4-g8 diagonal: a skewer, not
+    // a hanging piece, since the rook blocks the ray beyond the queen.
     const before = 'r7/7k/8/3q4/2B4K/8/8/8 b - - 0 1'
     const after = '6r1/7k/8/3q4/2B4K/8/8/8 w - - 1 2'
     expect(detectSkewer(before, after, 'black')).toEqual({
@@ -208,9 +206,7 @@ describe('detectSkewer', () => {
   })
 
   it('does not flag a skewer where the back piece is the king (that is a pin instead)', () => {
-    // Regression test: a king can never legitimately be the *back* piece of
-    // a skewer — a lesser piece in front of the king with a slider behind
-    // it is detectPin's territory, not detectSkewer's.
+    // A king can't be the back piece of a skewer; that's a pin.
     const before = '5nk1/8/8/8/2B5/8/8/K7 b - - 0 1'
     const after = '6k1/8/4n3/8/2B5/8/8/K7 w - - 0 1'
     expect(detectSkewer(before, after, 'black')).toBeNull()
@@ -270,17 +266,14 @@ describe('detectBlunderReason', () => {
   })
 
   it('falls back to a skewer reason when no piece is hanging or forked', () => {
-    // Same bishop/queen/rook skewer as detectSkewer's own test — the queen
-    // isn't hanging (blocked ray beyond it) and nothing is forked (only one
-    // square is directly attacked).
+    // detectSkewer's fixture: not hanging, not a fork.
     const before = 'r7/7k/8/3q4/2B4K/8/8/8 b - - 0 1'
     const after = '6r1/7k/8/3q4/2B4K/8/8/8 w - - 1 2'
     expect(detectBlunderReason(before, after, 'black')).toMatchObject({ kind: 'skewer' })
   })
 
   it('falls back to a pin reason when no piece is hanging or forked', () => {
-    // Same defended-knight pin as detectPin's own test — attacked but
-    // defended (not hanging), and only one target (not a fork).
+    // detectPin's fixture: defended, single target.
     const before = '5nk1/3p4/8/8/2B5/8/8/K7 b - - 0 1'
     const after = '6k1/3p4/4n3/8/2B5/8/8/K7 w - - 0 1'
     expect(detectBlunderReason(before, after, 'black')).toMatchObject({ kind: 'pin' })
@@ -348,10 +341,8 @@ describe('explainBestMove', () => {
   })
 
   it('explains that the suggested move escapes an existing fork', () => {
-    // White's knight on d5 already forks the queen (c7) and rook (b4) — a
-    // bishop on d6 individually defends both, so neither is independently
-    // "hanging" (isolating this from the saves-a-hanging-piece branch above).
-    // Qc8 pulls the queen out of the fork's range.
+    // White's Nd5 forks the queen (c7) and rook (b4); the d6 bishop defends
+    // both so neither is hanging. Qc8 leaves the fork.
     const fen = '6k1/2q5/3b4/3N4/1r6/8/8/6K1 b - - 0 1'
     const explanation = explainBestMove(fen, 'Qc8', 'black')
     expect(explanation).toMatch(/^Gets .+ out of the fork\.$/)
@@ -367,11 +358,8 @@ describe('explainBestMove', () => {
   })
 
   it('explains that the suggested move creates a new fork', () => {
-    // The knight on d4 (safe from both the queen and rook, unlike c3 which
-    // sits on the queen's file) doesn't yet fork anything; Nb5 newly
-    // attacks both the queen (c7) and the rook (a7) at once. The queen and
-    // rook mutually defend each other along the 7th rank, so neither is
-    // independently hanging — isolating this from the wins-material branch.
+    // Nb5 newly forks the queen (c7) and rook (a7), which defend each other
+    // so neither is hanging.
     const fen = '6k1/r1q5/8/8/3N4/8/8/6K1 w - - 0 1'
     const explanation = explainBestMove(fen, 'Nb5', 'white')
     expect(explanation).toMatch(/^Forks .+ at once\.$/)
@@ -380,19 +368,15 @@ describe('explainBestMove', () => {
   })
 
   it('explains that the suggested move escapes an existing skewer', () => {
-    // Black's queen on d5 and rook on g8 are already skewered by the bishop
-    // on c4 — a pawn on c6 defends the queen (isolating this from the
-    // saves-a-hanging-piece branch above) — Qa5 moves the queen off the
-    // diagonal, resolving the skewer.
+    // The c4 bishop skewers the queen (d5) and rook (g8); the c6 pawn defends
+    // the queen. Qa5 leaves the diagonal.
     const fen = '6r1/7k/2p5/3q4/2B4K/8/8/8 b - - 0 1'
     expect(explainBestMove(fen, 'Qa5', 'black')).toBe('Gets the queen on d5 out of the skewer.')
   })
 
   it('explains that the suggested move creates a new skewer on the opponent', () => {
-    // The bishop on f1 (safe from the queen, unlike d3 which sits on its
-    // file) doesn't yet attack anything; Bc4 newly skewers the queen on d5
-    // (front) and the rook on g8 (back) — a pawn on c6 defends the queen,
-    // isolating this from the wins-material (hanging piece) branch above.
+    // Bc4 newly skewers the queen (d5) and rook (g8); the c6 pawn defends the
+    // queen so it isn't hanging.
     const fen = '6r1/7k/2p5/3q4/7K/8/8/5B2 w - - 0 1'
     expect(explainBestMove(fen, 'Bc4', 'white')).toBe(
       "Skewers the opponent's queen on d5, with the rook behind it on g8.",
@@ -407,9 +391,7 @@ describe('explainBestMove', () => {
   })
 
   it('explains that the suggested move pins an opponent piece to their king', () => {
-    // Moving the bishop from d3 to c4 newly pins the knight on e6 to the
-    // black king on g8 — the knight is defended, so this isn't also a
-    // hanging-piece or fork explanation.
+    // Bd3-c4 newly pins the defended knight on e6 to the king on g8.
     const fen = '6k1/3p4/4n3/8/8/3B4/8/K7 w - - 0 1'
     expect(explainBestMove(fen, 'Bc4', 'white')).toBe(
       "Pins the opponent's knight on e6 to their king.",
@@ -497,11 +479,7 @@ describe('describeBetterMove', () => {
   })
 
   it('omits the plan clause for a game_analysis row saved before bestLine existed', () => {
-    // Real old data: `bestLine` is entirely absent from the stored JSON, not
-    // an empty array — `as BestMove` simulates that shape past the type
-    // system, which (correctly) no longer allows constructing this literal
-    // directly. Regression test for a crash this exact shape caused in
-    // Board.tsx/GameAnalysisPanel.tsx (`bestLine.length` with no `?.`).
+    // Old analyses have no `bestLine` key at all; this once crashed callers.
     const before = '7k/8/8/8/8/8/8/R6K w - - 0 1'
     const oldBestMove = { from: 'a1', to: 'a5', san: 'Ra5' } as BestMove
     expect(describeBetterMove(before, 'Kg2', oldBestMove, 'white')).toBe('Ra5 (Rook to a5)')

@@ -1,6 +1,4 @@
-// Lucide's outline SVGs inlined directly — sidebar nav icons plus a few
-// header action-button icons (this handful of fixed glyphs doesn't justify a
-// lucide-react dependency).
+// Inlined Lucide outline icons.
 type IconProps = { className?: string }
 
 const svgProps = {

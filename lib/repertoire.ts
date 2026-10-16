@@ -1,7 +1,6 @@
 import type { MyColor, RepertoireDiffResult, RepertoireNode } from './types'
 
-/** Groups nodes by parent, so children of a given node (or the roots, keyed
- *  by null) can be looked up in O(1) while walking a path down the tree. */
+/** Children by parent id (roots under null). */
 export function buildRepertoireIndex(
   nodes: RepertoireNode[],
 ): Map<string | null, RepertoireNode[]> {
@@ -15,14 +14,8 @@ export function buildRepertoireIndex(
 }
 
 /**
- * Walks a game's moves against the user's repertoire tree for the color
- * they played, ply by ply, following whichever child matches the move
- * actually played. Stops at the first ply with no matching child.
- *
- * That stopping point only counts as a "deviation" if it was the user's own
- * ply and they had prepared move(s) there — an opponent playing something
- * unprepared, or the user's prep simply running out, isn't the user leaving
- * their own repertoire.
+ * Follows the game's moves down the repertoire tree until no child matches.
+ * That's a deviation only on the user's own ply with prepared moves there.
  */
 export function diffGameAgainstRepertoire(
   movesSan: string[],

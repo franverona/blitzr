@@ -1,6 +1,4 @@
 import { findBlunders, whiteToMove } from './analysis'
-// Re-exported for existing importers — defined next to findBlunders() since
-// both need the same initialFen-aware parity.
 export { whiteToMove }
 import { formatDate } from './dates'
 import { buildPositions } from './positions'
@@ -21,9 +19,7 @@ export interface DrillCandidate {
   ply: number
 }
 
-/** Every game currently deviating from the repertoire, at the ply it first
- *  left book — same definition `diffGameAgainstRepertoire` already uses for
- *  "deviation" (the user's own ply, with prepared moves it didn't play). */
+/** Each game's first deviation from the repertoire. */
 export function findDeviationCandidates(
   games: Game[],
   repertoireByColor: Map<RepertoireColor, RepertoireNode[]>,
@@ -41,10 +37,7 @@ export function findDeviationCandidates(
   return candidates
 }
 
-/** Every analyzed game's blunders, restricted to plies the user actually
- *  played — `findBlunders` walks the whole game including the opponent's
- *  mistakes, which aren't useful to drill ("what should you have played"
- *  only makes sense for your own moves). */
+/** Blunders on the user's own plies only. */
 export function findBlunderCandidates(
   games: Game[],
   analysesByGameId: Map<string, GameAnalysis>,
@@ -63,12 +56,8 @@ export function findBlunderCandidates(
 }
 
 /**
- * Hydrates a stored card (identified only by game/source/ply) into what a
- * drill session actually needs to show — the FEN and the accepted move(s)
- * are re-derived from the source data rather than duplicated in storage.
- * Returns null if the card no longer matches its source (e.g. the
- * repertoire changed) — callers should treat that as "prune this card",
- * which is exactly what the deck sync step does.
+ * Re-derives a stored card's FEN and accepted moves from source data.
+ * Returns null if the card no longer matches its source, so it gets pruned.
  */
 export function buildDrillPrompt(
   card: Pick<DrillCard, 'gameId' | 'sourceType' | 'ply'>,
@@ -125,14 +114,11 @@ const MIN_EASE_FACTOR = 1.3
 
 export const MAX_SESSION_CARDS = 15
 
-/** The most-overdue `max` cards, so one session is a manageable batch rather
- *  than every currently-due card at once. `dueAt` is an ISO string, so a
- *  lexicographic sort is already a chronological one. */
+/** The `max` most-overdue cards. ISO `dueAt` strings sort chronologically. */
 export function selectSessionCards(dueCards: DrillCard[], max = MAX_SESSION_CARDS): DrillCard[] {
   return [...dueCards].sort((a, b) => a.dueAt.localeCompare(b.dueAt)).slice(0, max)
 }
 
-/** Default schedule for a card that's never been reviewed — due immediately. */
 export function newCardSchedule(
   now: Date,
 ): Pick<DrillCard, 'dueAt' | 'intervalDays' | 'easeFactor' | 'repetitions' | 'lastReviewedAt'> {
@@ -145,11 +131,7 @@ export function newCardSchedule(
   }
 }
 
-/**
- * SM-2 (the algorithm behind Anki/SuperMemo), simplified to binary grading
- * — "correct"/"incorrect" rather than a 0-5 recall quality — since a drill
- * card here is "did you find the move," not free recall.
- */
+/** SM-2 with binary (correct/incorrect) grading. */
 export function scheduleReview(
   current: { intervalDays: number; easeFactor: number; repetitions: number },
   correct: boolean,

@@ -7,10 +7,7 @@ import { getStrings } from '@/lib/i18n/strings'
 import { CirclePlusIcon } from './NavIcons'
 import { startRouteProgress } from './RouteProgressBar'
 
-// Same native <dialog> convention as AboutOpeningButton.tsx. Errors are
-// shown inline in the dialog (not a toast like SyncButton's) — the user
-// needs to see them next to the textarea to fix and retry, not have them
-// vanish off in a corner while the dialog with their pasted text is still up.
+// Errors show inline so they sit next to the pasted text.
 export function AddPgnButton() {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const [pgn, setPgn] = useState('')
@@ -39,7 +36,7 @@ export function AddPgnButton() {
         startRouteProgress()
         router.push(`/games/${result.gameId}`)
       } catch {
-        // Unexpected (DB/network) — its message is redacted in production anyway.
+        // Unexpected error; its message is redacted in production.
         setError(s.addPgn.genericError)
       }
     })

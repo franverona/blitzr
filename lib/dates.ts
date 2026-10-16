@@ -1,5 +1,4 @@
-// Hand-formatted (not Intl/toLocaleString) so output is deterministic across
-// server and client regardless of locale — DD/MM/YYYY, 24h clock.
+// Hand-formatted (not Intl) so server and client output match. DD/MM/YYYY, 24h.
 export function formatDate(unixSeconds: number): string {
   const d = new Date(unixSeconds * 1000)
   const day = String(d.getDate()).padStart(2, '0')
@@ -14,11 +13,8 @@ export function formatDateTime(unixSeconds: number): string {
   return `${formatDate(unixSeconds)}, ${hours}:${minutes}`
 }
 
-// Inclusive day-boundary conversions for a `<input type="date">` value
-// ("YYYY-MM-DD") to unix seconds, in local time — the same local-calendar-day
-// convention formatDate() already displays games in, so a from/to filter
-// lines up with the dates a user actually sees rather than a UTC day that
-// can be off by one near midnight.
+// `<input type="date">` value -> inclusive day bounds in local time, matching
+// formatDate().
 export function startOfDaySeconds(dateStr: string): number {
   return Math.floor(new Date(`${dateStr}T00:00:00`).getTime() / 1000)
 }

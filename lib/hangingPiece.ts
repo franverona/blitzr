@@ -10,13 +10,8 @@ function toColor(color: MyColor): Color {
   return color === 'white' ? 'w' : 'b'
 }
 
-/** Every `color` piece (excl. king) on `fen` that's attacked by the opponent
- *  and has no defender of its own color — capturable for free. No static
- *  exchange evaluation (an attacker outvalued by the piece it'd capture
- *  still counts) and no pin awareness (a pinned "attacker" still counts) —
- *  both out of scope for this v1 heuristic. Exported for `lib/checklist.ts`,
- *  which scans a single static position directly rather than diffing a
- *  move's before/after FEN the way `detectHangingPiece()` below does. */
+/** Every `color` piece (excluding the king) attacked and undefended. No
+ *  exchange evaluation or pin awareness. */
 export function hangingSquares(fen: string, color: Color): Map<Square, PieceSymbol> {
   const chess = new Chess(fen)
   const opponent: Color = color === 'w' ? 'b' : 'w'
@@ -34,13 +29,9 @@ export function hangingSquares(fen: string, color: Color): Map<Square, PieceSymb
 }
 
 /**
- * The single most valuable of the mover's own pieces that became hanging as
- * a result of this move — either the piece that just moved onto an
- * undefended, attacked square, or a different piece it stopped defending
- * (a discovered hang). Comparing before/after (rather than just scanning
- * `fenAfter`) is what catches both cases while filtering out anything that
- * was already hanging before this move — a pre-existing weakness elsewhere
- * in the position, not something this move caused.
+ * The most valuable of the mover's pieces newly hanging after the move —
+ * the moved piece itself, or one it stopped defending. Pieces already
+ * hanging before the move don't count.
  */
 export function detectHangingPiece(
   fenBefore: string,

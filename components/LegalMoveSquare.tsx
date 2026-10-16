@@ -1,7 +1,4 @@
-// react-chessboard's squareRenderer takes over a square's background
-// entirely (the library only auto-applies squareStyles when squareRenderer
-// is absent) — so the selected-square highlight lives here too, not in a
-// separate squareStyles prop.
+// squareRenderer replaces squareStyles entirely, so selection is drawn here too.
 export function LegalMoveSquare({
   children,
   isSelected,
@@ -13,9 +10,7 @@ export function LegalMoveSquare({
   isSelected: boolean
   isLegalMove: boolean
   isCapture: boolean
-  /** Highlights the square of a hinted piece to move (Drill's hint level 2)
-   *  — a distinct hue from `isSelected` so the two read as different kinds
-   *  of signal. Optional: only `DrillSession.tsx` uses this. */
+  /** Drill hint level 2: the piece to move. */
   isHintOrigin?: boolean
 }) {
   return (

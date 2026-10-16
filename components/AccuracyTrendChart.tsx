@@ -11,18 +11,14 @@ const HEIGHT = 200
 const PAD_LEFT = 32
 const PAD_RIGHT = 8
 const PAD_TOP = 10
-// Extra room below the plot for the x-axis reference labels — see
-// X_TICK_COUNT below.
+// Room for the x-axis date labels.
 const PAD_BOTTOM = 26
 const PLOT_WIDTH = WIDTH - PAD_LEFT - PAD_RIGHT
 const PLOT_HEIGHT = HEIGHT - PAD_TOP - PAD_BOTTOM
 const GRID_VALUES = [0, 50, 100]
 const BASELINE_Y = HEIGHT - PAD_BOTTOM
 
-// The x-axis is game index, not a continuous date scale (see the module
-// comment below), so it gets no per-point labels — just a handful of
-// reference points so the reader can tell roughly where in time they're
-// looking, not every date.
+// Only a few reference dates, since the x-axis is game index.
 const X_TICK_COUNT = 4
 
 function xFor(index: number, count: number): number {
@@ -34,9 +30,7 @@ function yFor(accuracy: number): number {
   return PAD_TOP + (1 - accuracy / 100) * PLOT_HEIGHT
 }
 
-/** `X_TICK_COUNT` evenly spaced point indices, always including the first
- *  and last — deduped (a short series can't actually space out that many
- *  distinct ticks) and sorted ascending. */
+/** `X_TICK_COUNT` evenly spaced indices including first and last. */
 function xTickIndices(count: number): number[] {
   if (count <= X_TICK_COUNT) return Array.from({ length: count }, (_, i) => i)
   const indices = new Set<number>()
@@ -47,18 +41,9 @@ function xTickIndices(count: number): number[] {
 }
 
 /**
- * Hand-rolled SVG line chart — no charting library for one line. Two marks,
- * one series: muted per-game dots as context (toggleable off), a single
- * accent-colored rolling-average line as the point (the "emphasis" form —
- * see the dataviz skill's choosing-a-form guide), so it needs no legend.
- *
- * The x-axis is game index, not calendar date, deliberately — real play
- * sessions are bursty (a dozen bot games in one sitting), so spacing by date
- * would pile points on top of each other on a busy day and waste width on
- * the gaps between sessions. Spacing by index keeps every game equally
- * legible regardless of when it was played; a handful of x-axis reference
- * dates (xTickIndices) plus each dot's own hover tooltip still ground the
- * reader in real time without spacing by it.
+ * Hand-rolled SVG chart: muted per-game dots plus a rolling-average line.
+ * The x-axis is game index, not date — sessions are bursty, so date spacing
+ * would pile points up on busy days.
  */
 export function AccuracyTrendChart({ points }: { points: AccuracyTrendPoint[] }) {
   const s = getStrings()
@@ -69,15 +54,8 @@ export function AccuracyTrendChart({ points }: { points: AccuracyTrendPoint[] })
   const averages = useMemo(() => rollingAverageAccuracy(points), [points])
   const xTicks = useMemo(() => xTickIndices(points.length), [points.length])
 
-  // A stale hoverIndex from a longer series would otherwise index past the
-  // end of a shorter one after a date-range filter narrows `points` — the
-  // mouse doesn't necessarily cross the svg's edge (and so never fires its
-  // own onMouseLeave) on the way to clicking a preset button elsewhere in
-  // the same row. Adjusted during render rather than a useEffect — same
-  // "set state while rendering, guarded by a prev-value comparison" pattern
-  // GameSearchForm uses for its own accValue resync (see its own comment):
-  // an effect here would cost an extra render and trip the
-  // react-hooks/set-state-in-effect lint rule.
+  // Reset hover when the date filter changes `points`, or a stale index could
+  // overrun a shorter series. Done during render rather than in an effect.
   const [prevPoints, setPrevPoints] = useState(points)
   if (points !== prevPoints) {
     setPrevPoints(points)
@@ -105,12 +83,8 @@ export function AccuracyTrendChart({ points }: { points: AccuracyTrendPoint[] })
 
   const hovered = hoverIndex !== null ? points[hoverIndex] : null
   const hoveredAverage = hoverIndex !== null ? averages[hoverIndex] : null
-  // Clamped rather than centered exactly under the edge points — a tooltip
-  // centered on the very first/last dot would hang half off the chart.
-  // ponytail: a fixed 8/92 clamp, not real collision math against the
-  // tooltip's own rendered width — good enough at this chart's fixed size,
-  // revisit if the chart ever becomes narrow enough for the tooltip itself
-  // to overflow.
+  // ponytail: fixed 8–92% clamp keeps the tooltip on-chart; no real collision
+  // math against its rendered width.
   const hoverXPercent =
     hoverIndex !== null
       ? Math.min(92, Math.max(8, (xFor(hoverIndex, points.length) / WIDTH) * 100))
@@ -189,9 +163,7 @@ export function AccuracyTrendChart({ points }: { points: AccuracyTrendPoint[] })
                   textAnchor={anchor}
                   className="fill-zinc-500 text-[7px]"
                 >
-                  {/* formatDate() returns "DD/MM/YYYY" — the year is dropped
-                   *  here for brevity (only ~4 short labels fit); the full
-                   *  date is still in each point's own hover tooltip. */}
+                  {/* DD/MM only; the full date is in the tooltip. */}
                   {formatDate(points[i].endTime).slice(0, 5)}
                 </text>
               </g>

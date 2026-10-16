@@ -1,32 +1,18 @@
-// Hand-authored/imported, not a DB table — same "hardcoded array" pattern as
-// lib/openingTheory.ts. Two provenances mixed together: real tournament/match
-// games (title "White vs Black") and composed puzzles from László Polgár's
-// own "5334 Problems, Combinations, and Games" book (title "Polgár puzzle
-// #N", imported in bulk via scripts/import-polgar-mates.mjs). The full move
-// list (not just the key) is replayed through chess.js and confirmed to end
-// in checkmate before being included; mate-in-2 and mate-in-3 entries are
-// additionally verified with isForcedMate (below) — does the key move force
-// mate within the stated count against every legal reply, not just the one
-// line a recorded game/book solution happens to show.
+// Real-game puzzles plus László Polgár's composed ones (imported via
+// scripts/import-polgar-mates.mjs). Every line was replayed to mate at import;
+// mate-in-2/3 entries were also checked with isForcedMate().
 import { Chess } from 'chess.js'
 
 export interface MateProblem {
   id: number
   /** Position with the side to move about to force mate. */
   fen: string
-  /** The full solution line in SAN, alternating solver/opponent/solver/...
-   *  starting with the solver's own key move. PuzzleBoard has you play every
-   *  ply by hand (both sides) — solved means you walked the whole recorded
-   *  line yourself, not just found the first move. */
+  /** Full solution in SAN, starting with the solver's key move. */
   moves: string[]
-  /** How many of the side-to-move's own moves the mate takes — read off the
-   *  solution's own move numbers, not assumed. */
+  /** Counted in the solver's own moves. */
   mateIn: number
-  /** "White player vs Black player" for a real game, or "Polgár puzzle #N"
-   *  (N = the book's own catalog number) for a composed puzzle. */
   title: string
-  /** '' for a real game; 'László Polgár' for a composed book puzzle — the
-   *  one field the UI uses to tell the two provenances apart. */
+  /** '' for real games, 'László Polgár' for composed puzzles. */
   composer: string
   source: string
   year: string
@@ -26738,35 +26724,19 @@ export function getMateProblem(id: number): MateProblem | undefined {
   return MATE_PROBLEMS.find((p) => p.id === id)
 }
 
-/** Which side is about to force mate — read off the FEN's own active-color
- *  field rather than assumed, since roughly a third of this data set has
- *  Black to move. Shared by PuzzleBoard (board orientation) and the list
- *  page (the color filter). */
+/** Roughly a third of the set has Black to move. */
 export function puzzleColorToMove(problem: MateProblem): 'white' | 'black' {
   return problem.fen.split(' ')[1] === 'b' ? 'black' : 'white'
 }
 
-// ponytail: a dense, piece-heavy position can make the brute-force search
-// below explode combinatorially (measured: one busy "mate in three" position
-// ran over 50 minutes of CPU without finishing, at plain branching^5-ish
-// worst case with no pruning). A node-visit budget bounds worst-case runtime
-// at the cost of false negatives on legitimately-forced but very branchy
-// positions — acceptable here since it only gates which candidates the
-// importer keeps, not correctness of what's already in MATE_PROBLEMS. 3000
-// was picked empirically: a 17-position sample of real "mate in three"
-// puzzles all resolved well under this (worst case ~9s wall-clock), so it's
-// unlikely to reject a genuine puzzle while keeping worst-case runtime
-// bounded. If a real puzzle starts getting rejected, raise the budget or add
-// proper alpha-beta pruning; don't do either preemptively.
+// ponytail: node budget caps the brute-force search (one busy mate-in-3 ran
+// 50+ minutes unbounded) at the cost of false negatives on very branchy
+// positions. 3000 was picked empirically; raise it or add alpha-beta pruning
+// if a real puzzle gets rejected.
 const FORCED_MATE_NODE_BUDGET = 3_000
 
-/** True iff the side to move in `fen` can force checkmate within `mateIn` of
- *  their own moves against *every* legal reply — not just the one line a
- *  recorded game/book solution happens to show. Used both to filter
- *  candidates in scripts/import-polgar-mates.mjs and, in
- *  __tests__/mateProblems.test.ts, as a standing re-check on every entry in
- *  MATE_PROBLEMS. Reuses a single Chess instance via move()/undo() rather
- *  than re-parsing a fresh FEN per branch. */
+/** Whether the side to move forces mate within `mateIn` moves against every
+ *  legal reply. */
 export function isForcedMate(fen: string, mateIn: number): boolean {
   return canForceMate(new Chess(fen), mateIn, { remaining: FORCED_MATE_NODE_BUDGET })
 }

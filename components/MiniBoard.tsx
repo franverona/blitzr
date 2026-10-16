@@ -3,11 +3,7 @@
 import { Chessboard } from 'react-chessboard'
 import { useSettings } from './SettingsProvider'
 
-/** A small, non-interactive board snapshot of a single position — used as a
- *  visual preview on the /learn index cards (the lesson's resulting
- *  position) and for a suggested move's follow-up plan, not for stepping
- *  through moves. `boardOrientation` defaults to White so the /learn index
- *  cards (which never pass it) keep their existing look. */
+/** Small non-interactive board for a single position. */
 export function MiniBoard({
   fen,
   boardOrientation = 'white',

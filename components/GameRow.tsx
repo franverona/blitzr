@@ -14,8 +14,6 @@ const RESULT_BADGE_STYLES: Record<Game['myResult'], string> = {
   loss: 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-400',
 }
 
-// ponytail: plain unicode glyphs, not an icon component/library — three
-// static characters don't earn an SVG asset.
 const RESULT_BADGE_GLYPHS: Record<Game['myResult'], string> = {
   win: '▲',
   draw: '●',
@@ -61,9 +59,7 @@ export function GameRow({ game, accuracy }: { game: Game; accuracy: GameAccuracy
         </span>
       </td>
       <td className="px-3 py-2 text-right text-zinc-400 tabular-nums">
-        {/* Unrated games (bot/coach practice, manually-added PGNs) don't
-         *  carry a meaningful rating number — the account's snapshot rating
-         *  shows up regardless, but it isn't *this game's* rating. */}
+        {/* An unrated game's rating isn't meaningful. */}
         {game.rated && myRating != null ? myRating : '—'}
       </td>
       <td className="px-3 py-2 text-center">

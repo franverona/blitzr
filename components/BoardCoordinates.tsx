@@ -1,14 +1,9 @@
 const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
 const RANKS = ['8', '7', '6', '5', '4', '3', '2', '1']
 
-/** Rank/file labels drawn in a gutter *outside* the board (left and below)
- *  rather than react-chessboard's own `showNotation`, which paints them
- *  inside the corner squares. The labels are absolutely positioned into
- *  `pl-7`/`pb-7` padding reserved on the wrapper, so `children` (the board's
- *  own sizing div) keeps its exact width/aspect logic — callers only need to
- *  pass every board `showNotation: false`. A sibling stretched alongside
- *  this wrapper (e.g. `EvalBar`) needs its own `mb-7` when `show` is on, or
- *  it runs down past the board's bottom edge into the file-label gutter. */
+/** Rank/file labels in a gutter outside the board (instead of
+ *  react-chessboard's `showNotation`). A sibling stretched alongside, like
+ *  `EvalBar`, needs `mb-7` when `show` is on. */
 export function BoardCoordinates({
   show,
   orientation = 'white',

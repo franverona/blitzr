@@ -7,10 +7,8 @@ import { PIECE_VALUES } from './material'
 import { describeMove, pieceName, pieceWithArticle } from './san'
 import type { BestMove, BlunderReason, ForkReason, MyColor, PinReason, SkewerReason } from './types'
 
-// "a"/"al" is a genuine preposition here (expose the king TO the bishop),
-// not the optional personal-a for a direct object, so it can't just be
-// dropped like the direct-object "a" is everywhere else in this file —
-// contracts "a" + "el X" -> "al X", leaves "a" + "la X" as-is.
+// Spanish "a" here is a real preposition (expose the king TO the bishop):
+// "a" + "el X" contracts to "al X".
 function withPreposition(articled: string): string {
   return articled.startsWith('el ') ? `al ${articled.slice(3)}` : `a ${articled}`
 }
@@ -19,12 +17,8 @@ function toColor(color: MyColor): Color {
   return color === 'white' ? 'w' : 'b'
 }
 
-// chess.js only generates moves for the side whose turn the FEN says it is.
-// Forcing the turn field lets us ask "what does this color's pieces attack
-// right now" regardless of whose move it actually is — same "isAttacked is
-// turn-independent" trick hangingSquares() already relies on, just applied
-// per-piece instead of per-square. En passant is cleared since it's only
-// ever valid for whichever side the FEN actually says is to move.
+// chess.js only generates moves for the side to move, so force the turn to
+// ask what `color` attacks. En passant is cleared since it'd be invalid.
 function withTurn(fen: string, color: Color): string {
   const [board, , castling, , halfmove, fullmove] = fen.split(' ')
   return [board, color, castling, '-', halfmove, fullmove].join(' ')
@@ -36,12 +30,7 @@ export interface Forker {
   targets: { square: Square; piece: PieceSymbol }[]
 }
 
-/** Every `color` piece currently attacking 2+ enemy pieces at once —
- *  filtered to forks with at least one non-pawn target, since two attacked
- *  pawns alone (e.g. a rook on an open file) is common and rarely the
- *  actual tactical point. Exported for `lib/checklist.ts`, which scans a
- *  single static position directly rather than diffing a move's
- *  before/after FEN the way `detectFork()` below does. */
+/** Every `color` piece attacking 2+ enemy pieces, ignoring pawn-only forks. */
 export function forkers(fen: string, color: Color): Forker[] {
   const chess = new Chess(withTurn(fen, color))
   const found: Forker[] = []
@@ -61,13 +50,7 @@ export function forkers(fen: string, color: Color): Forker[] {
   return found
 }
 
-/**
- * Whether the mover's move newly allowed the opponent to fork them — a
- * single opponent piece now attacking 2+ of the mover's pieces at once that
- * wasn't already doing so before this move. One-ply lookback only, same
- * scope `detectHangingPiece` uses — not "could the opponent maneuver into a
- * fork over the next few moves."
- */
+/** Whether the move newly let the opponent fork the mover. One-ply lookback. */
 export function detectFork(
   fenBefore: string,
   fenAfter: string,
@@ -91,9 +74,6 @@ export function detectFork(
   }
 }
 
-/** Joins fork targets into "the queen on c7 and the rook on a7" — exported
- *  for `lib/checklist.ts`'s own fork/skewer descriptions, which need the
- *  same list phrasing outside a `ForkReason`. */
 export function targetList(targets: ForkReason['targets'], locale: Locale): string {
   const preposition = locale === 'es' ? 'en' : 'on'
   const joiner = locale === 'es' ? ' y ' : ' and '
@@ -137,18 +117,9 @@ export interface Pin {
   pinnerPiece: PieceSymbol
 }
 
-/** Every `color` piece currently pinned to its own king by an enemy sliding
- *  piece — **absolute pins only** (relative pins, e.g. a knight pinned to a
- *  queen rather than the king, are out of scope for this v1 heuristic, same
- *  "narrow on purpose" precedent as hanging-piece/fork detection). Rays out
- *  from the king in all 8 directions; the first own-color piece found on a
- *  ray is pinned only if the *next* piece past it is an enemy slider whose
- *  movement matches that ray's direction (rook/queen on a straight ray,
- *  bishop/queen on a diagonal one) — a second piece of either color in
- *  between (or no further piece at all) means nothing on that ray is
- *  pinned. Exported for `lib/checklist.ts`, which scans a single static
- *  position directly rather than diffing a move's before/after FEN the way
- *  `detectPin()` below does. */
+/** Every `color` piece absolutely pinned to its king (relative pins are out
+ *  of scope). Rays out from the king: the first own piece is pinned if the
+ *  next piece on the ray is an enemy slider moving along that ray. */
 export function pinnedPieces(fen: string, color: Color): Pin[] {
   const chess = new Chess(fen)
   const king = chess
@@ -175,7 +146,7 @@ export function pinnedPieces(fen: string, color: Color): Pin[] {
         const piece = chess.get(square)
         if (piece) {
           if (!blocker) {
-            if (piece.color !== color) break // enemy piece blocks the ray directly — no pin
+            if (piece.color !== color) break
             blocker = { square, piece: piece.type }
           } else {
             if (
@@ -200,12 +171,7 @@ export function pinnedPieces(fen: string, color: Color): Pin[] {
   return found
 }
 
-/**
- * Whether the mover's move newly pinned one of their own pieces to their
- * king (an absolute pin by an enemy bishop/rook/queen) that wasn't already
- * pinned before this move — same one-ply-lookback, before/after-diff shape
- * as `detectHangingPiece`/`detectFork`.
- */
+/** Whether the move newly pinned one of the mover's pieces to their king. */
 export function detectPin(
   fenBefore: string,
   fenAfter: string,
@@ -247,20 +213,9 @@ export interface Skewer {
   backPiece: PieceSymbol
 }
 
-/** Every `color` sliding piece (rook/bishop/queen) currently attacking two
- *  enemy pieces in a straight line, front then back, with nothing between
- *  either of them — a skewer, **only counted when the front piece is at
- *  least as valuable as the back one (or is the king) AND the back piece is
- *  worth more than a pawn**: the value check is what actually forces the
- *  front piece to move rather than just sitting there, and the back-piece
- *  filter rules out a line that just happens to hit two pawns (or a piece
- *  then a pawn) — real, not a tactical point, same "at least one non-pawn
- *  target" precedent `forkers()` already applies. Reuses the same
- *  ray-casting shape as `pinnedPieces()`, just rayed outward from the
- *  attacker instead of from the king, and without requiring the back piece
- *  to be the king. Exported for `lib/checklist.ts`, which scans a single
- *  static position directly rather than diffing a move's before/after FEN
- *  the way `detectSkewer()` below does. */
+/** Every `color` slider attacking two enemy pieces in line. Counted only when
+ *  the front piece is the king or worth at least the back one, and the back
+ *  piece is worth more than a pawn. */
 export function skewers(fen: string, color: Color): Skewer[] {
   const chess = new Chess(fen)
   const opponent: Color = color === 'w' ? 'b' : 'w'
@@ -288,13 +243,11 @@ export function skewers(fen: string, color: Color): Skewer[] {
           const piece = chess.get(square)
           if (piece) {
             if (!front) {
-              if (piece.color !== opponent) break // own piece, or nothing to skewer — ray dead
+              if (piece.color !== opponent) break
               front = { square, piece: piece.type }
             } else {
-              if (piece.color !== opponent) break // attacker's own piece blocks further — no skewer
-              // A king can never be the *back* piece — a lesser piece in
-              // front of the king with a slider behind it is a pin
-              // (detectPin's territory), not a skewer, regardless of value.
+              if (piece.color !== opponent) break
+              // A king behind is a pin, not a skewer.
               if (piece.type === 'k') break
               const frontValue = PIECE_VALUES[front.piece] ?? 0
               const backValue = PIECE_VALUES[piece.type] ?? 0
@@ -320,12 +273,7 @@ export function skewers(fen: string, color: Color): Skewer[] {
   return found
 }
 
-/**
- * Whether the mover's move newly allowed the opponent to skewer them — a
- * single opponent sliding piece now lining up two of the mover's pieces,
- * front then back, that wasn't already doing so before this move. Same
- * one-ply-lookback, before/after-diff shape as `detectFork`/`detectPin`.
- */
+/** Whether the move newly let the opponent skewer the mover. */
 export function detectSkewer(
   fenBefore: string,
   fenAfter: string,
@@ -369,12 +317,7 @@ export function describeSkewerReason(reason: SkewerReason, locale: Locale = getL
     : `This skewers ${front} on ${reason.frontSquare} — if it moves, ${attacker} on ${reason.attackerSquare} captures ${back} on ${reason.backSquare}.`
 }
 
-/** Tries `detectHangingPiece` first, then `detectFork`, then `detectSkewer`,
- *  then `detectPin` — the one function every call site uses instead of
- *  running the four detectors individually and merging the results itself.
- *  Skewer sits with fork (a material threat) rather than down by pin (a
- *  constraint, not a threat of its own) — same "concreteness" ordering
- *  logic the rest of this list already follows. */
+/** Ordered by concreteness: hanging piece, fork, skewer, then pin. */
 export function detectBlunderReason(
   fenBefore: string,
   fenAfter: string,
@@ -396,18 +339,9 @@ export function describeBlunderReason(reason: BlunderReason, locale: Locale = ge
 }
 
 /**
- * Why the engine's suggested move is better, if a simple tactical pattern
- * explains it — reuses `detectHangingPiece`/`detectFork`/`detectPin` on the
- * *candidate* move rather than the one actually played. Checking with the
- * FEN order swapped turns "newly hanging/forked/pinned after" into "no
- * longer hanging/forked/pinned after" — `detectHangingPiece(fenAfter,
- * fenBefore, moverColor)` diffs hanging squares in `fenBefore` against
- * `fenAfter` in the reverse of its normal direction, so what it reports as
- * "new" is really "resolved" (same trick for the other two detectors).
- * Checked defensive-first (saving/escaping explains a forced move) then
- * offensive (winning/forking/pinning is a bonus); returns null for a quiet
- * improvement none of the detectors explain, same as they don't explain
- * every blunder either.
+ * Why the engine's move is better, if a simple pattern explains it. Calling a
+ * detector with the FENs swapped turns "newly hanging/forked/..." into
+ * "no longer ...". Defensive reasons are checked before offensive ones.
  */
 export function explainBestMove(
   fenBefore: string,
@@ -485,28 +419,13 @@ export function explainBestMove(
   return null
 }
 
-/**
- * Renders the engine's own expected continuation (`BestMove.bestLine`), if
- * any — this is what makes a quiet positional move legible: a hanging-piece
- * or fork explanation only exists for one-ply tactics, but a move whose
- * payoff is a few moves out has no such one-line "why". Seeing the plan
- * itself is the next best thing. `undefined`-safe: analyses saved before
- * this field existed simply have no plan to show.
- */
 function formatPlan(bestLine: string[] | undefined): string | null {
   if (!bestLine || bestLine.length === 0) return null
-  // "Plan" reads naturally in Spanish too (a common cognate in Spanish chess
-  // commentary) — no separate translation needed for the lead-in word.
   return `Plan: ${bestLine.join(' ')}.`
 }
 
-/**
- * The full "better was ..." line — the mechanical description via the
- * existing `describeMove()`, the tactical "why" above when there is one,
- * and the engine's short follow-up plan when it has one. Null when there's
- * no engine suggestion or it matches what was actually played, so callers
- * can render conditionally without repeating that check themselves.
- */
+/** The full "better was ..." text; null if there's no suggestion or it
+ *  matches the move played. */
 export function describeBetterMove(
   fenBefore: string,
   moveSan: string,

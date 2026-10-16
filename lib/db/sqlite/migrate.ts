@@ -1,12 +1,8 @@
 import { Kysely, sql } from 'kysely'
 import type { DbSchema } from '../types'
 
-// Module-level cache — reset on every hot-reload (module re-evaluation), so
-// migrations re-run idempotently against the cached globalThis connection.
-// Caching the in-flight promise (not just a boolean) means concurrent first
-// calls await the same run instead of racing each other through the DDL
-// below; clearing it on failure lets the next call retry instead of getting
-// stuck.
+// Caches the in-flight promise so concurrent first calls share one run;
+// cleared on failure so the next call retries.
 let _migration: Promise<void> | null = null
 
 export function ensureSchema(db: Kysely<DbSchema>): Promise<void> {

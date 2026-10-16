@@ -92,9 +92,8 @@ describe('buildPositionChecklist', () => {
   })
 
   it('suppresses a hanging-piece finding for a square already covered by a fork', () => {
-    // The knight on d4 forks the rook on b5 and the bishop on c2 — both are
-    // independently undefended too, so without the dedup they'd each also
-    // show up as a separate hanging-piece finding on top of the fork.
+    // Nd4 forks the undefended rook (b5) and bishop (c2); they shouldn't also
+    // appear as hanging pieces.
     const fen = 'k7/8/8/1r6/3N4/8/2b5/7K w - - 0 1'
     const findings = buildPositionChecklist(fen).filter((f) => f.side === 'black')
     expect(findings).toHaveLength(1)
@@ -102,9 +101,7 @@ describe('buildPositionChecklist', () => {
   })
 
   it('caps findings per side to the most valuable, dropping the rest', () => {
-    // Black has four independently hanging pieces (queen 9, rook 5, bishop
-    // 3, pawn 1) on unrelated squares/files — only the three most valuable
-    // should survive the cap.
+    // Black has four hanging pieces (Q, R, B, P); only the top three survive the cap.
     const fen = 'q7/2k5/7r/8/8/3b4/5p2/R1KR1R1R w - - 0 1'
     const findings = buildPositionChecklist(fen).filter((f) => f.side === 'black')
     expect(findings).toHaveLength(3)

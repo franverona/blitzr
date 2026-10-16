@@ -1,14 +1,7 @@
 import { getLocale, Locale } from './locale'
 
-// UI string dictionary — plain data, no templating engine. Parameterized/
-// pluralized text is a function value instead of a placeholder syntax; `es`
-// is typed against `typeof en` (via `Strings` below) so a missing or
-// mismatched translation is a compile error, not a silent gap.
-//
-// This only covers static UI text. The tactical-description generators in
-// lib/ (describeMove, describeBetterMove, describeBlunderReason, etc.) and
-// the /learn lesson content (lib/openingTheory.ts) are translated
-// separately — see each file's own locale handling.
+// `es` is typed against `typeof en`, so a missing translation is a compile
+// error. Parameterized text is a function value.
 
 const en = {
   common: {

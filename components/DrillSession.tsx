@@ -28,8 +28,7 @@ function revealArrows(
       chess.undo()
       arrows.push({ startSquare: move.from, endSquare: move.to, color: REVEAL_ARROW_COLOR })
     } catch {
-      // Shouldn't happen for a move that was accepted as correct, but skip
-      // rather than crash if a card's data is ever out of sync.
+      // Skip rather than crash if a card's data is out of sync.
     }
   }
   return arrows
@@ -52,28 +51,13 @@ export function DrillSession({
 }: {
   prompts: DrillPrompt[]
   totalCards: number
-  /** Cards matching the current filter that are due right now, before the
-   *  session cap (`MAX_SESSION_CARDS`, `lib/drill.ts`) trimmed it down to
-   *  `prompts` — lets the session-complete screen say how many more are
-   *  waiting. */
+  /** Due cards matching the filter, before the session cap. */
   dueCount: number
-  /** Whether a sourceType/opening filter is active, so the empty-state
-   *  message can say "no matching cards" instead of the generic one. */
   filtered: boolean
 }) {
-  // Captured once, from the initial load this session started with.
-  // submitDrillAnswer revalidates /drill after every answer, which re-runs
-  // the deck sync server-side and hands this component fresh props — a
-  // just-answered card drops off, due counts change, and once the last due
-  // card is answered `prompts` drops to []. Reading those props directly on
-  // every render would let a background revalidation reshuffle the active
-  // session's cards out from under `index`, or (worse) flip the component
-  // straight to the "nothing due" empty state instead of the session-summary
-  // screen the moment the last card is answered. A session works through the
-  // fixed batch it started with, full stop.
-  // Gains a setter only for "Shuffle and restart" (below) to reorder — never
-  // to accept fresh server data, which would reintroduce the exact
-  // revalidation-reshuffle problem this snapshot exists to prevent.
+  // Snapshotted from the first render: submitDrillAnswer revalidates /drill,
+  // and fresh props would reshuffle the active session (or jump to the empty
+  // state after the last card). The setter is only for "Shuffle and restart".
   const s = getStrings()
   const boardColors = useSettings()
   const [sessionPrompts, setSessionPrompts] = useState(prompts)
@@ -85,25 +69,14 @@ export function DrillSession({
   const [tally, setTally] = useState({ correct: 0, incorrect: 0 })
   const [hangingReason, setHangingReason] = useState<BlunderReason | null>(null)
   const [hintLevel, setHintLevel] = useState(0)
-  // The board otherwise always shows `prompt.fen` (the position *before* the
-  // move) — set only on a correct answer, so the board actually shows your
-  // move landing rather than snapping back to the pre-move position. Left
-  // null on an incorrect answer: the reveal arrow is computed from
-  // `prompt.fen`, so showing the (wrong) move played would put the board and
-  // the arrow out of sync.
+  // Set only on a correct answer so the move visibly lands. On a wrong answer
+  // the reveal arrow is drawn from `prompt.fen`, so the board stays there.
   const [committedFen, setCommittedFen] = useState<string | null>(null)
 
-  // `feedback` state can't be trusted to guard against a double-fire within
-  // the same tick (React state updates aren't visible to a second call in
-  // the same synchronous handler pass) — a ref flips synchronously, so a
-  // prompt can only ever be graded once no matter how many times the
-  // underlying board library's click/drop handlers end up firing for one
-  // logical move.
+  // A ref, not state, so a move can't be graded twice within the same tick.
   const answeredRef = useRef(false)
 
-  // Indexed even when `index` is out of range (session-complete screen) —
-  // array indexing out of bounds is `undefined`, not a throw, so these hooks
-  // can stay unconditional above the early returns below.
+  // Undefined on the session-complete screen; keeps the hooks unconditional.
   const prompt = sessionPrompts[index] as DrillPrompt | undefined
   const legalMoves = useMemo(
     () => (selectedSquare && prompt ? legalDestinations(prompt.fen, selectedSquare) : []),
@@ -115,11 +88,7 @@ export function DrillSession({
   )
   useMoveSound(committedFen ?? prompt?.fen ?? '')
 
-  // No server round-trip — reshuffles the cards already loaded for this
-  // session and starts back at card 1. Answering during the replay still
-  // calls submitDrillAnswer normally (below), which re-grades each card for
-  // real (submitDrillAnswer never checks whether a card is "due"), so this
-  // is a legitimate retry today rather than ungraded practice.
+  // Answers during a replay still re-grade the cards for real.
   function handleRestart() {
     setSessionPrompts((prev) => shuffle(prev))
     setIndex(0)
@@ -146,13 +115,7 @@ export function DrillSession({
     setHintLevel((level) => Math.min(3, level + 1))
   }, [])
 
-  // Neither handler above reads `prompt`, so both — and this listener — can
-  // sit here, before the early returns, keeping the effect unconditional
-  // (rules of hooks) rather than after a conditional return. Ignores the
-  // event when a real <button> already has focus: pressing Enter/Space on a
-  // focused button (e.g. right after clicking it) also triggers the
-  // button's own native activation, and without this guard that would fire
-  // handleNext twice — once from the button, once from this listener.
+  // A focused button already handles Enter/Space natively; avoid firing twice.
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.target instanceof HTMLElement && e.target.tagName === 'BUTTON') return
@@ -193,10 +156,7 @@ export function DrillSession({
             {s.drill.shuffleAndRestart}
           </button>
           {moreDue > 0 && (
-            // Plain <a>, not next/link — this needs a full reload so
-            // getDrillDeck() actually re-runs; DrillSession's sessionPrompts
-            // wouldn't pick up a soft-navigation's fresh props anyway (same
-            // reason a filter change needs a new `key`, see app/drill/page.tsx).
+            // Plain <a>: a full reload is needed so the snapshotted session resets.
             <a href="/drill" className="text-sm text-blue-600 hover:underline dark:text-blue-400">
               {s.drill.moreDue(moreDue)}
             </a>
@@ -206,10 +166,7 @@ export function DrillSession({
     )
   }
 
-  // Reassigned to a variable TS narrows to non-optional at the closures
-  // below — `prompt` itself stays a union type inside nested function
-  // declarations since TS doesn't carry the `if (!prompt)` narrowing across
-  // them.
+  // Narrowed copy for the closures below.
   const activePrompt = prompt
 
   function attemptMove(from: string, to: string): boolean {
@@ -217,8 +174,7 @@ export function DrillSession({
     const chess = new Chess(activePrompt.fen)
     let move
     try {
-      // ponytail: always promote to queen, same call as RepertoireBoard —
-      // underpromotion doesn't come up in prepared-move/best-move drills.
+      // ponytail: always promote to queen; underpromotion doesn't come up here.
       move = chess.move({ from, to, promotion: 'q' })
     } catch {
       return false
@@ -269,15 +225,12 @@ export function DrillSession({
     if (piece) setSelectedSquare(square)
   }
 
-  // Level 2 (origin square) and level 3 (full arrow) both need the same
-  // replayed moves, so compute once and slice what each level shows from it.
   const revealed = feedback === 'incorrect' || hintLevel >= 2 ? revealArrows(prompt) : []
   const arrows = feedback === 'incorrect' || hintLevel >= 3 ? revealed : []
   const hintOriginSquares = new Set(hintLevel >= 2 ? revealed.map((a) => a.startSquare) : [])
 
   return (
-    // lg+: capped by viewport height so the whole card fits a 13" laptop
-    // screen without a page scroll; 18rem ≈ everything above/below the board.
+    // lg+: 18rem ≈ chrome above/below the board.
     <div className="mx-auto flex w-full max-w-140 flex-col gap-3 lg:max-w-[min(35rem,calc(100dvh-18rem))]">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
@@ -288,10 +241,7 @@ export function DrillSession({
             {s.drill.cardOf(index + 1, sessionPrompts.length)}
           </p>
         </div>
-        {/* `invisible` rather than unmounting on `feedback` — keeps the
-            button's box in the layout so this row's height doesn't change
-            between states, which was shifting the board a couple pixels
-            every time a card got answered. */}
+        {/* `invisible`, not unmounted, so the row height doesn't shift. */}
         <button
           onClick={handleHint}
           disabled={hintLevel >= 3 || !!feedback}

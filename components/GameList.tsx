@@ -7,8 +7,7 @@ export function GameList({
   accuracyByGameId,
 }: {
   games: Game[]
-  /** Every game id with saved analysis, across the whole account — not just
-   *  this page — keyed to its own-side accuracy/error counts. */
+  /** Own-side accuracy per analyzed game. */
   accuracyByGameId: Record<string, GameAccuracy>
 }) {
   const s = getStrings()

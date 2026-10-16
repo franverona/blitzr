@@ -3,10 +3,7 @@
 import { getStrings } from '@/lib/i18n/strings'
 import { useBulkAnalysis } from './BulkAnalysisProvider'
 
-// Mounted in the sidebar (every page, not just the games list) so a bulk
-// analysis run started from the games page is still visible — and
-// cancellable — after navigating elsewhere, now that BulkAnalysisProvider
-// keeps the run itself going across route changes.
+// In the sidebar so a running bulk analysis stays visible on every page.
 export function BulkAnalysisIndicator() {
   const { progress, cancel } = useBulkAnalysis()
   const s = getStrings()

@@ -22,15 +22,10 @@ interface AnalysisContextValue {
   handleAnalyze: (strength: AnalysisStrength) => void
   movesSan: string[]
   myColor: MyColor
-  /** FEN before each ply, same indexing as `movesSan`/`analysis.evals` — computed
-   *  once here rather than by every consumer that needs to describe a move. */
+  /** FEN before each ply. */
   positions: string[]
 }
 
-// The button and its results dialog both live in the same corner of the
-// page but are still two separate components (button + <dialog>) — a
-// Context keeps them both talking to the one piece of client state without
-// prop-drilling between them.
 const AnalysisContext = createContext<AnalysisContextValue | null>(null)
 
 function useAnalysisContext(): AnalysisContextValue {
@@ -88,14 +83,8 @@ export function GameAnalysisProvider({
   )
 }
 
-/** The strength picker opens on the saved analysis's strength (so the ✓
- *  marking it is visible without opening the list), falling back to the
- *  Settings value for an unanalyzed game or an older analysis with no
- *  recorded `movetimeMs`. It's local to this button, so re-running one game
- *  deeper doesn't change the default for every other analysis. The saved
- *  strength is shown in the picker (and the button's tooltip) rather than a
- *  caption below it — an extra line here makes this column taller than its
- *  row siblings and throws off the header row's vertical alignment. */
+/** The strength picker defaults to the saved analysis's strength, else the
+ *  Settings value; changing it here doesn't change the setting. */
 export function AnalyzeButton() {
   const { analysis, progress, error, handleAnalyze } = useAnalysisContext()
   const { analysisStrength } = useSettings()
@@ -107,8 +96,6 @@ export function AnalyzeButton() {
 
   return (
     <div className="flex flex-col items-end gap-1">
-      {/* One split control (shared border, divider between) so the strength
-          reads as a setting of this button, not a separate control. */}
       <div className="flex items-stretch divide-x divide-zinc-300 rounded-md border border-zinc-300 text-sm dark:divide-zinc-700 dark:border-zinc-700">
         <Select
           value={strength}
@@ -146,13 +133,8 @@ export function AnalyzeButton() {
   )
 }
 
-/** A one-line plain-language recap of the game — the single biggest blunder,
- *  and what it was in plain English via `describeMove()`. Scoped to the
- *  account's own moves only (same convention as `buildBlunderStats()`,
- *  `lib/blunders.ts`) — an opponent's, coach's, or bot's blunder isn't a
- *  useful thing to review. Renders nothing until the game has a saved
- *  analysis, same "quietly do nothing when not applicable yet" pattern as
- *  `RepertoireDiff`. */
+/** One-line recap of the user's own biggest blunder. Renders nothing until
+ *  the game is analyzed. */
 export function GameSummary() {
   const { analysis, movesSan, myColor, positions } = useAnalysisContext()
   const { setPly } = useBoardContext()
@@ -188,21 +170,6 @@ export function GameSummary() {
   )
 }
 
-/** A link below the move list opening a small dialog with a Chess.com-style
- *  accuracy + move-quality tally, "You" vs "Opponent" (this app only ever
- *  has one user, so naming the columns by side rather than by username
- *  keeps it simple — see CLAUDE.md's "single-user" scope). Skips Chess.com's
- *  Brilliant/Great/Book/Miss tiers (need sacrifice/opening-book detection
- *  this app doesn't have) and its "Game Score" row (not a documented
- *  formula, not worth faking a number for). Renders nothing until the game
- *  has a saved analysis, same "quietly do nothing when not applicable yet"
- *  pattern as `GameSummary`/`RepertoireDiff`. A separate concern from the
- *  move list's inline blunder markers (`components/MoveList.tsx`) — this is
- *  an aggregate accuracy tally across every move, not a duplicate of it.
- *  Your own accuracy number sits next to the link itself
- *  (not just inside the dialog) so it's visible at a glance without a click —
- *  as a colored pill, same "badge, not bare text" convention as
- *  `BlunderSeverityBadge`, so a good/bad accuracy reads at a glance too. */
 export function accuracyPillClass(accuracy: number): string {
   if (accuracy >= 90)
     return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400'

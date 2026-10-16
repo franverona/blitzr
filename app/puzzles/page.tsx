@@ -9,13 +9,8 @@ import {
 import { getStrings } from '@/lib/i18n/strings'
 import { MATE_PROBLEMS, puzzleColorToMove } from '@/lib/mateProblems'
 
-// Each card mounts a live MiniBoard (react-chessboard instance, not a static
-// image) — with 200+ puzzles, rendering all of them unpaginated triggered a
-// real "Maximum update depth exceeded" React error (reproduced: gone once
-// the visible count drops to a handful, e.g. the "solved" filter with just
-// one match). Paginated, same convention as the games list (app/page.tsx),
-// keeps the live count per page in the range that's actually worked fine
-// elsewhere (the /learn grid, ~15-19 MiniBoards at once).
+// Each card is a live react-chessboard; rendering 200+ at once hit
+// "Maximum update depth exceeded".
 const PAGE_SIZE = 20
 
 type PuzzlesSearchParams = {
@@ -55,9 +50,7 @@ export default async function PuzzlesPage({
     if (mateIn !== undefined && problem.mateIn !== mateIn) return false
     return true
   })
-  // Ignores the status filter itself (there's nothing to jump to from a
-  // "solved" view) but still honors color/mateIn, so the shortcut respects
-  // what the user is actually practicing right now.
+  // Ignores the status filter but honors color/mateIn.
   const nextUnsolved = MATE_PROBLEMS.find((problem) => {
     if (solvedIds.has(problem.id)) return false
     if (color !== 'all' && puzzleColorToMove(problem) !== color) return false

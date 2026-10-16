@@ -1,24 +1,18 @@
 import { Chess } from 'chess.js'
 import type { BestMove, EngineLine, PositionEval } from '../types'
 
-// The "lite single-threaded" build — no COOP/COEP headers required, unlike
-// the multi-threaded build, and fast enough for on-demand per-game analysis.
-// Copied into public/ at install time by scripts/setup-stockfish.js.
+// "Lite single-threaded" build: no COOP/COEP headers needed. Copied into
+// public/ by scripts/setup-stockfish.mjs.
 const ENGINE_URL = '/stockfish/stockfish-19-lite-single.js'
 
-// How many plies of the engine's expected continuation to keep beyond the
-// best move itself — enough to convey the idea (two replies each) without
-// turning a short callout into a full analysis line.
+// Plies of the PV kept after the best move itself.
 const BEST_LINE_PLIES = 4
 
 function isWhiteToMove(fen: string): boolean {
   return fen.split(' ')[1] === 'w'
 }
 
-// UCI moves are long algebraic ("e2e4", "e7e8q" for promotion) — keep the
-// from/to squares for drawing a board arrow, and also convert to SAN ("e4",
-// "e8=Q") for display in text (blunder lists, etc). Doesn't attach a
-// `bestLine` itself (see parseBestLine below) — callers combine both.
+// UCI long algebraic ("e7e8q") -> from/to squares + SAN.
 export function parseBestMove(fen: string, uciMove: string): Omit<BestMove, 'bestLine'> | null {
   if (uciMove === '(none)') return null
   const chess = new Chess(fen)
@@ -32,10 +26,7 @@ export function parseBestMove(fen: string, uciMove: string): Omit<BestMove, 'bes
   }
 }
 
-// The engine's principal variation (its expected continuation for both
-// sides) — replayed from `fen` into SAN, stopping at the first move that
-// doesn't apply cleanly (a PV can occasionally include a move that's only
-// valid deeper in the search, not the position actually reached here).
+// Stops at the first PV move that doesn't apply to this position.
 export function parseBestLine(fen: string, pvUci: string[]): string[] {
   const chess = new Chess(fen)
   const sanMoves: string[] = []
@@ -52,13 +43,8 @@ export function parseBestLine(fen: string, pvUci: string[]): string[] {
   return sanMoves
 }
 
-/** Parses a full transcript of `info`/`bestmove` lines from a MultiPV search
- *  into one `EngineLine` per requested PV slot, sorted 1..N — each `info`
- *  line for a given `multipv N` updates that slot, last one before
- *  `bestmove` wins, same rule `evaluate()` applies to its single line. Pure
- *  and Worker-free, unlike `evaluateLines()` itself, so this (not the
- *  Worker-driving method) is what's actually unit-tested — same split as
- *  `parseBestMove`/`parseBestLine` above. */
+/** Parses a MultiPV transcript into one line per slot, sorted; the last
+ *  `info` per slot wins. Split out from `evaluateLines()` for unit testing. */
 export function parseMultiPvOutput(fen: string, uciLines: string[]): EngineLine[] {
   const whiteToMove = isWhiteToMove(fen)
   const slots = new Map<number, { cp: number | null; mate: number | null; pv: string[] }>()
@@ -101,19 +87,14 @@ export function parseMultiPvOutput(fen: string, uciLines: string[]): EngineLine[
 }
 
 /**
- * Thin wrapper around the Stockfish Web Worker's UCI text protocol. Always
- * returns evals from White's perspective — UCI itself reports "score cp/mate"
- * relative to whoever is to move in the given position, which callers would
- * otherwise have to un-flip themselves.
+ * UCI wrapper around the Stockfish Worker. Evals are normalized to White's
+ * perspective (UCI reports them for the side to move).
  */
 export class StockfishEngine {
   private worker: Worker
   private readyPromise: Promise<void>
-  // Rejects if the Worker errors: a missing/404 engine script (postinstall
-  // skipped, so public/stockfish/ is empty) or a crash inside the WASM.
-  // Every wait below races against it — otherwise a dead Worker never sends
-  // `readyok`/`bestmove`, and callers sit on "Analyzing…"/"Thinking…"
-  // forever instead of getting an error they can show.
+  // Rejects if the Worker errors (missing engine script, WASM crash). Every
+  // wait races against it so a dead Worker can't hang callers forever.
   private failure: Promise<never>
 
   constructor() {
@@ -130,8 +111,7 @@ export class StockfishEngine {
         { once: true },
       )
     })
-    // Not every engine is mid-wait when it fails — don't let that surface
-    // as an unhandled rejection; whoever waits next still gets it.
+    // Avoid an unhandled rejection when nobody is waiting.
     this.failure.catch(() => {})
     this.readyPromise = Promise.race([this.handshake(), this.failure])
   }
@@ -157,8 +137,6 @@ export class StockfishEngine {
 
     const result = new Promise<PositionEval>((resolve) => {
       let latest: Omit<PositionEval, 'bestMove'> = { cp: 0, mate: null }
-      // Each deeper "info" line's `pv` replaces the last — by the time
-      // "bestmove" arrives, this is the final (deepest-searched) line.
       let latestPv: string[] = []
 
       const onMessage = (event: MessageEvent<string>) => {
@@ -174,8 +152,7 @@ export class StockfishEngine {
           latest = { cp: whiteToMove ? cp : -cp, mate: null }
         }
 
-        // UCI always puts "pv" last on an info line, so the rest of the
-        // line is the space-separated move list — `\bpv\b` (not `multipv`).
+        // `pv` is always last on an info line; `\b` avoids matching `multipv`.
         const pvMatch = line.match(/\bpv\b (.+)$/)
         if (pvMatch) latestPv = pvMatch[1].trim().split(/\s+/)
 
@@ -203,15 +180,8 @@ export class StockfishEngine {
   }
 
   /**
-   * Like `evaluate()`, but asks for the top `multiPv` candidate lines
-   * instead of just one — the "here are 3 winning variants" view a live
-   * analysis panel needs (`LiveAnalysisPanel.tsx`), vs. `evaluate()`'s
-   * single line, which is all bulk per-game blunder-finding needs. Sets the
-   * engine's MultiPV option before every search rather than tracking
-   * whether it's already at the right value — cheap to resend, and this
-   * method is never interleaved with `evaluate()` calls on the same engine
-   * instance (each caller owns its own `StockfishEngine`), so there's
-   * nothing to leave in a stale state for another caller to trip over.
+   * Top `multiPv` lines for the live panel. MultiPV is set before every
+   * search; each caller owns its own engine, so there's no state to clash.
    */
   async evaluateLines(fen: string, multiPv: number, movetimeMs = 500): Promise<EngineLine[]> {
     await this.readyPromise

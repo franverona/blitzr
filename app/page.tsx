@@ -29,13 +29,7 @@ export default async function GamesPage({
   const page = Math.max(1, Number(pageParam) || 1)
   const opponent = q?.trim() || undefined
 
-  // Accuracy isn't a DB column — it's computed per game from saved analysis
-  // (see getGameAccuracyById()) — so an active accuracy filter has to fetch
-  // that map first, narrow it to a matching id set, then hand those ids to
-  // listGames() rather than becoming a SQL predicate of its own.
-  // getUnanalyzedGames() rides along here too, just to know whether "Analyze
-  // all" has anything left to do — BulkAnalyzeButton disables itself instead
-  // of the click-then-toast round trip when there's nothing to analyze.
+  // Accuracy isn't a column, so the filter narrows to an id set first.
   const [accuracyByGameId, unanalyzedGames] = await Promise.all([
     getGameAccuracyById(),
     getUnanalyzedGames(),
@@ -75,11 +69,7 @@ export default async function GamesPage({
       </div>
 
       <GameSearchForm
-        // accOp/accValue deliberately excluded — the accuracy popover's own
-        // navigation (pick a direction, drag the slider) needs to keep this
-        // component's instance alive so its `open` state survives; see
-        // GameSearchForm's own effect for how it re-syncs from accValue
-        // instead.
+        // accOp/accValue excluded so the accuracy popover survives its own navigations.
         key={`${q ?? ''}-${result ?? ''}-${color ?? ''}-${rated ?? ''}`}
         defaultValue={q ?? ''}
         result={result}
