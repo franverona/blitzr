@@ -162,8 +162,17 @@ export async function getGameAnalysis(gameId: string): Promise<GameAnalysis | un
   return getRepository().getGameAnalysis(gameId)
 }
 
-export async function saveGameAnalysis(gameId: string, evals: PositionEval[]): Promise<void> {
-  await getRepository().saveGameAnalysis({ gameId, evals, analyzedAt: new Date().toISOString() })
+export async function saveGameAnalysis(
+  gameId: string,
+  evals: PositionEval[],
+  movetimeMs: number,
+): Promise<void> {
+  await getRepository().saveGameAnalysis({
+    gameId,
+    evals,
+    analyzedAt: new Date().toISOString(),
+    movetimeMs,
+  })
   revalidatePath(`/games/${gameId}`)
   revalidatePath('/blunders')
   revalidatePath('/')

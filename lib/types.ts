@@ -189,6 +189,10 @@ export interface GameAnalysis {
    *  array (movesSan.length + 1: index 0 is the starting position). */
   evals: PositionEval[]
   analyzedAt: string
+  /** Per-position engine think time this analysis was run at
+   *  (`ANALYSIS_STRENGTHS`). Undefined for analyses saved before it was
+   *  recorded. */
+  movetimeMs?: number
 }
 
 /** A synced game with no saved analysis yet — the minimal shape the bulk

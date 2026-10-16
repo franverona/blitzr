@@ -87,6 +87,13 @@ async function runMigrations(db: Kysely<DbSchema>): Promise<void> {
     )
   `.execute(db)
 
+  // Added after the table shipped — SQLite has no ADD COLUMN IF NOT EXISTS,
+  // so check table_info first to stay idempotent.
+  const analysisColumns = await sql<{ name: string }>`PRAGMA table_info(game_analysis)`.execute(db)
+  if (!analysisColumns.rows.some((c) => c.name === 'movetime_ms')) {
+    await sql`ALTER TABLE game_analysis ADD COLUMN movetime_ms INTEGER`.execute(db)
+  }
+
   await sql`
     CREATE TABLE IF NOT EXISTS drill_cards (
       game_id TEXT NOT NULL REFERENCES games(id) ON DELETE CASCADE,

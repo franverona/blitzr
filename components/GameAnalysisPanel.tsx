@@ -8,7 +8,7 @@ import { getStrings } from '@/lib/i18n/strings'
 import { MOVE_QUALITY_TIERS, summarizeMoveQuality } from '@/lib/moveQuality'
 import { buildPositions } from '@/lib/positions'
 import { describeMove, plyLabel } from '@/lib/san'
-import { ANALYSIS_STRENGTHS, analyzeGame } from '@/lib/stockfish/analyze'
+import { ANALYSIS_STRENGTHS, type AnalysisStrength, analyzeGame } from '@/lib/stockfish/analyze'
 import { describeBlunderReason, detectBlunderReason } from '@/lib/tactics'
 import type { GameAnalysis, MyColor } from '@/lib/types'
 import { useBoardContext } from './Board'
@@ -18,7 +18,7 @@ interface AnalysisContextValue {
   analysis: GameAnalysis | null
   progress: { done: number; total: number } | null
   error: string | null
-  handleAnalyze: () => void
+  handleAnalyze: (strength: AnalysisStrength) => void
   movesSan: string[]
   myColor: MyColor
   /** FEN before each ply, same indexing as `movesSan`/`analysis.evals` — computed
@@ -57,20 +57,20 @@ export function GameAnalysisProvider({
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null)
   const [error, setError] = useState<string | null>(null)
   const positions = useMemo(() => buildPositions(initialFen, movesSan), [initialFen, movesSan])
-  const { analysisStrength } = useSettings()
 
-  async function handleAnalyze() {
+  async function handleAnalyze(strength: AnalysisStrength) {
     setError(null)
     setProgress({ done: 0, total: movesSan.length + 1 })
     try {
+      const movetimeMs = ANALYSIS_STRENGTHS[strength]
       const evals = await analyzeGame(
         initialFen,
         movesSan,
         (done, total) => setProgress({ done, total }),
-        ANALYSIS_STRENGTHS[analysisStrength],
+        movetimeMs,
       )
-      setAnalysis({ gameId, evals, analyzedAt: new Date().toISOString() })
-      await saveGameAnalysis(gameId, evals)
+      setAnalysis({ gameId, evals, analyzedAt: new Date().toISOString(), movetimeMs })
+      await saveGameAnalysis(gameId, evals, movetimeMs)
     } catch (err) {
       setError(err instanceof Error ? err.message : getStrings().analysisPanel.analysisFailed)
     } finally {
@@ -87,23 +87,75 @@ export function GameAnalysisProvider({
   )
 }
 
+/** The strength picker opens on the saved analysis's strength (so the ✓
+ *  marking it is visible without opening the list), falling back to the
+ *  Settings value for an unanalyzed game or an older analysis with no
+ *  recorded `movetimeMs`. It's local to this button, so re-running one game
+ *  deeper doesn't change the default for every other analysis. The saved
+ *  strength is shown in the picker (and the button's tooltip) rather than a
+ *  caption below it — an extra line here makes this column taller than its
+ *  row siblings and throws off the header row's vertical alignment. */
 export function AnalyzeButton() {
   const { analysis, progress, error, handleAnalyze } = useAnalysisContext()
+  const { analysisStrength } = useSettings()
   const s = getStrings()
+  const savedStrength = (Object.keys(ANALYSIS_STRENGTHS) as AnalysisStrength[]).find(
+    (k) => ANALYSIS_STRENGTHS[k] === analysis?.movetimeMs,
+  )
+  const [strength, setStrength] = useState<AnalysisStrength>(savedStrength ?? analysisStrength)
 
   return (
     <div className="flex flex-col items-end gap-1">
-      <button
-        onClick={handleAnalyze}
-        disabled={progress !== null}
-        className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium whitespace-nowrap hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:hover:bg-zinc-800"
-      >
-        {progress
-          ? `${analysis ? s.analysisPanel.reanalyzing : s.analysisPanel.analyzing}… (${progress.done}/${progress.total})`
-          : analysis
-            ? s.analysisPanel.reanalyze
-            : s.analysisPanel.analyzeWithStockfish}
-      </button>
+      {/* One split control (shared border, divider between) so the strength
+          reads as a setting of this button, not a separate control. */}
+      <div className="flex items-stretch divide-x divide-zinc-300 rounded-md border border-zinc-300 text-sm dark:divide-zinc-700 dark:border-zinc-700">
+        <div className="relative">
+          <select
+            value={strength}
+            onChange={(e) => setStrength(e.target.value as AnalysisStrength)}
+            disabled={progress !== null}
+            aria-label={s.settings.analysisStrength}
+            title={s.settings.analysisStrengthHint}
+            className="h-full cursor-pointer appearance-none rounded-l-md bg-transparent py-1.5 pr-7 pl-3 text-zinc-600 hover:bg-zinc-100 disabled:cursor-default disabled:opacity-50 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          >
+            {(Object.keys(ANALYSIS_STRENGTHS) as AnalysisStrength[]).map((k) => (
+              <option key={k} value={k} className="bg-zinc-50 dark:bg-zinc-900">
+                {s.settings.analysisStrengths[k]}
+                {k === savedStrength && ' ✓'}
+              </option>
+            ))}
+          </select>
+          <svg
+            aria-hidden
+            viewBox="0 0 12 12"
+            className="pointer-events-none absolute top-1/2 right-2.5 h-3 w-3 -translate-y-1/2 text-zinc-500"
+          >
+            <path
+              d="M3 4.5 6 7.5 9 4.5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </div>
+        <button
+          onClick={() => handleAnalyze(strength)}
+          disabled={progress !== null}
+          title={
+            savedStrength &&
+            s.analysisPanel.savedAtStrength(s.settings.analysisStrengths[savedStrength])
+          }
+          className="rounded-r-md px-3 py-1.5 font-medium whitespace-nowrap hover:bg-zinc-100 disabled:opacity-50 dark:hover:bg-zinc-800"
+        >
+          {progress
+            ? `${analysis ? s.analysisPanel.reanalyzing : s.analysisPanel.analyzing}… (${progress.done}/${progress.total})`
+            : analysis
+              ? s.analysisPanel.reanalyze
+              : s.analysisPanel.analyzeWithStockfish}
+        </button>
+      </div>
       {error && <p className="text-sm text-rose-600 dark:text-rose-400">{error}</p>}
     </div>
   )

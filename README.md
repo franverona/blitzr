@@ -33,7 +33,7 @@ any way that implies endorsement or affiliation.
 - [x] Browse UI — game list, board replay, openings aggregated by ECO
 - [x] User-defined repertoire + deviation detection
 - [x] Stockfish (WASM) analysis — blunder detection, plus tactical explanations (hanging pieces,
-      forks, pins, skewers)
+      forks, pins, skewers); re-analyze any game at a higher strength
 - [x] Spaced-repetition drilling
 - [x] Cross-game recurring-blunders aggregate, with an accuracy-over-time trend and a
       date-range filter
