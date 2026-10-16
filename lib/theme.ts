@@ -1,16 +1,6 @@
-// Single source of truth for color values that can't be expressed as a
-// Tailwind class — react-chessboard's `darkSquareStyle`/`lightSquareStyle`/
-// notation-color options and its `arrows` list all take plain CSS color
-// strings, not classNames. The board green/light-square pair and the
-// reveal-arrow amber were previously copy-pasted as raw literals across
-// every board-rendering component; `--color-accent` in app/globals.css is
-// the Tailwind-class equivalent of the board's dark-square color for
-// everywhere a className can reach instead (e.g. `bg-accent/20` for the
-// active-tab tint).
+// Colors react-chessboard needs as plain CSS strings rather than Tailwind
+// classes. `--color-accent` in app/globals.css is the class-side equivalent.
 
-/** A handful of chess.com-style presets — no free-form picker, so there's
- *  always a small, known set of colors to resolve server-side (see
- *  `getBoardColorPreset()` below) rather than an arbitrary stored string. */
 export interface BoardColorPreset {
   id: 'green' | 'brown' | 'blue' | 'purple'
   dark: string
@@ -24,44 +14,21 @@ export const BOARD_COLOR_PRESETS: BoardColorPreset[] = [
   { id: 'purple', dark: '#8877b3', light: '#e6e1f5' },
 ]
 
-/** Looks up a preset by id, falling back to the default (green) for a
- *  missing/stale/tampered cookie value — shared by `app/layout.tsx` (server,
- *  resolving the cookie before first paint) and `SettingsProvider`
- *  (client, resolving the same cookie value passed down as its initial
- *  prop), so the two can never disagree about what an id means. */
+/** Falls back to green for a missing or invalid cookie value. */
 export function getBoardColorPreset(id: string | undefined): BoardColorPreset {
   return BOARD_COLOR_PRESETS.find((preset) => preset.id === id) ?? BOARD_COLOR_PRESETS[0]
 }
 
-/** Used for every "here's the move" reveal arrow in the app — the engine's
- *  suggested move, Drill's hint, the Learn quiz's "Show move" hint. */
 export const REVEAL_ARROW_COLOR = 'rgba(234, 179, 8, 0.9)'
 
-/** react-chessboard's `animationDurationInMs`, shorter than its own 300ms
- *  default — react-chessboard doesn't remove a captured piece from its
- *  render until the slide animation finishes, so for the full duration the
- *  captured piece and the piece capturing it are both visibly rendered on
- *  the same square. No other prop removes that overlap; this just shrinks
- *  how long it's visible. Every board in the app shares this value so
- *  captures read consistently everywhere, and `Board.tsx`'s arrow-key
- *  throttle matches it so a new step never cuts an in-flight slide short. */
+/** Shorter than react-chessboard's 300ms default: a captured piece stays
+ *  visible under its capturer until the slide finishes. */
 export const BOARD_ANIMATION_DURATION_MS = 150
 
-/** Board markers for `PositionChecklist` findings (hanging piece/fork/pin/
- *  skewer squares and arrows) — rose, matching `BlunderSeverityBadge`'s
- *  existing "danger" rose already used for the Blunder severity pill, so the
- *  color reads consistently as "something's at risk" everywhere in the app.
- *  Deliberately not the same hue as `REVEAL_ARROW_COLOR` (the engine's
- *  suggested-move arrow) — both can be on screen at once, and reusing one
- *  color for two different meanings would make them hard to tell apart. */
+/** Rose ("at risk"), distinct from the reveal-arrow amber since both can show. */
 export const CHECKLIST_ARROW_COLOR = 'rgba(244, 63, 94, 0.9)'
 export const CHECKLIST_SQUARE_COLOR = 'rgba(244, 63, 94, 0.35)'
 
-/** Tints the mated/winning/drawn king's own square, chess.com-style, behind
- *  its "Checkmate"/"Winner"/"Draw" badge (`GameEndBadge`, `Board.tsx`) — the
- *  same rose as `CHECKLIST_SQUARE_COLOR` for the losing king (still "danger",
- *  just a different source), a parallel emerald/zinc pair for the other two
- *  outcomes. */
 export const GAME_END_SQUARE_COLORS = {
   loss: CHECKLIST_SQUARE_COLOR,
   win: 'rgba(16, 185, 129, 0.35)',

@@ -13,7 +13,7 @@ const eslintConfig = defineConfig([
     'out/**',
     'build/**',
     'next-env.d.ts',
-    // Vendored engine assets copied by scripts/setup-stockfish.js, not our code.
+    // Vendored engine assets copied by scripts/setup-stockfish.mjs.
     'public/stockfish/**',
   ]),
 ])

@@ -34,11 +34,8 @@ export function RepertoireBoard({
   const [error, setError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
 
-  // React state updates aren't applied synchronously, so two clicks fired
-  // back-to-back (faster than a render) can both read the *same* pre-update
-  // path/nodes — the second move then gets recorded with the wrong parent/ply,
-  // or against an already-stale board position. Refs give attemptMove an
-  // always-current value to read from regardless of render timing.
+  // Refs so two moves fired faster than a render don't both read the same
+  // stale path/nodes.
   const nodesRef = useRef(nodes)
   const pathRef = useRef(path)
 
@@ -59,10 +56,6 @@ export function RepertoireBoard({
   const parentId = path.length >= 2 ? path[path.length - 2].id : null
   const parentFen = path.length >= 2 ? path[path.length - 2].fen : START_FEN
   const siblings = path.length === 0 ? (index.get(null) ?? []) : (index.get(parentId) ?? [])
-  // Derived, not stored — recomputes for whatever position is current, so it
-  // stays correct across every kind of navigation (new move, Back/Start, a
-  // sibling branch, a click in the tree) without a separate "clear it" call
-  // at each of those sites.
   const hangingReason = useMemo(
     () =>
       currentNode
@@ -92,9 +85,7 @@ export function RepertoireBoard({
     const chess = new Chess(fen)
     let move
     try {
-      // ponytail: always promote to queen — underpromotion essentially never
-      // comes up while recording opening prep, and a promotion-piece picker
-      // isn't worth the UI for that.
+      // ponytail: always promote to queen; underpromotion doesn't come up in opening prep.
       move = chess.move({ from, to, promotion: 'q' })
     } catch {
       return false
@@ -202,8 +193,7 @@ export function RepertoireBoard({
             orientation={color}
             className="w-full"
           >
-            {/* lg+: capped by viewport height so the page fits a 13" laptop
-                screen without a scroll; 14rem ≈ everything above/below it. */}
+            {/* lg+: 14rem ≈ chrome above/below the board. */}
             <div className="w-full max-w-160 overflow-hidden rounded shadow-lg lg:max-w-[min(40rem,calc(100dvh-14rem))]">
               <Chessboard
                 options={{

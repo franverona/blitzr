@@ -7,10 +7,8 @@ import type { DrillSourceType } from '@/lib/types'
 import { startRouteProgress } from './RouteProgressBar'
 import { Select } from './Select'
 
-/** URL-driven deck filters (`?type=`/`?opening=`), same pattern as
- *  `RepertoireBoard.tsx`'s `ColorTab` — a real navigation, not client state,
- *  so `DrillSession` (keyed on these values in `app/drill/page.tsx`) remounts
- *  with a fresh session instead of keeping the previous filter's frozen one. */
+/** URL-driven so `DrillSession` (keyed on these values) remounts with a
+ *  fresh session. */
 export function DrillFilters({
   sourceType,
   opening,

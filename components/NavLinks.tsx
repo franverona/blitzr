@@ -23,10 +23,7 @@ const LINK_ROUTES = [
   { href: '/blunders', key: 'blunders', Icon: ShieldAlertIcon },
 ] as const
 
-// Nested detail routes don't share their section's own path prefix in one
-// case: game pages live under /games/:id, not under the Games link's own
-// href ("/"). Every other section's detail routes (e.g. /learn/:slug) do
-// nest under their own link, so a plain prefix check is enough for those.
+// Game pages live under /games/:id, not under the Games link's "/".
 function isLinkActive(pathname: string, href: string): boolean {
   if (href === '/') return pathname === '/' || pathname.startsWith('/games/')
   return pathname === href || pathname.startsWith(`${href}/`)
@@ -35,11 +32,7 @@ function isLinkActive(pathname: string, href: string): boolean {
 export function NavLinks({ collapsed }: { collapsed: boolean }) {
   const pathname = usePathname()
   const s = getStrings()
-  // Icon-only rows (mobile always, or md+ while collapsed) need a smaller,
-  // symmetric horizontal padding — the expanded px-3 leaves only 16px of a
-  // 40px-wide collapsed row, so a 20px icon overflows the padding box and
-  // gets clipped on one side by the aside's scroll clipping (overflow-y
-  // implicitly makes overflow-x non-visible too), reading as "off-center".
+  // Icon-only rows need tighter padding or the icon gets clipped off-center.
   const iconRowClassName = collapsed
     ? 'justify-center px-1.5'
     : 'justify-center px-1.5 md:justify-start md:px-3'

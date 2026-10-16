@@ -42,94 +42,44 @@ interface BoardContextValue {
   positions: string[]
   lastPly: number
   boardOrientation: 'white' | 'black'
-  /** Most callers never flip — game replay pages fix orientation to the
-   *  synced player's color for the whole session. Exposed so a consumer
-   *  that *does* want a flip control (the /learn lesson board) can add one
-   *  without Board.tsx needing to know anything about that use case. */
   setBoardOrientation: (
     updater: 'white' | 'black' | ((o: 'white' | 'black') => 'white' | 'black'),
   ) => void
   result?: string
   movesSan: string[]
   evals?: PositionEval[]
-  /** Keys (`findingKey()`, `lib/checklist.ts`) of checklist findings the user
-   *  has dismissed from the board — `PositionChecklist`'s per-finding "Hide"
-   *  toggle writes here, `BoardView` reads it to skip drawing that finding's
-   *  arrow/highlight, so showing every finding on the board by default
-   *  doesn't turn into unremovable clutter on a busy position. */
+  /** Checklist findings the user has hidden from the board (`findingKey()`). */
   hiddenFindingKeys: Set<string>
   toggleFindingVisibility: (key: string) => void
-  /** Free-move exploration off the currently-displayed recorded ply, chess.com
-   *  analysis-tab style — see `ExploreToggleButton`/`LiveAnalysisPanel`. Kept
-   *  entirely separate from `ply`/`positions` (the recorded game) rather than
-   *  extending that ply concept: exploration is a branch that doesn't belong
-   *  to the game, never persists, and can be discarded by exiting. */
+  /** Free-move exploration branch, kept separate from the recorded game's
+   *  `ply`/`positions` — it never persists and is discarded on exit. */
   exploring: boolean
-  /** SAN moves played since `startExploring()`, from whatever ply was current
-   *  at that moment. */
+  /** SAN moves played since `startExploring()`. */
   explorePath: string[]
-  /** How far into `explorePath` the board is currently showing (0 =
-   *  exploration's own starting position). */
   explorePly: number
-  /** FEN per explore step, same indexing convention as `positions` —
-   *  `explorePositions[0]` is the branch point, before `explorePath[0]`. */
+  /** `explorePositions[0]` is the branch point, before `explorePath[0]`. */
   explorePositions: string[]
-  /** Whatever FEN the board should actually render right now — the recorded
-   *  `positions[ply]` normally, or the current explore step while exploring.
-   *  The one thing every consumer that draws *a* position (not the move
-   *  list) should read instead of `positions[ply]` directly. */
+  /** The FEN the board renders: `positions[ply]`, or the explore step while
+   *  exploring. Read this instead of `positions[ply]` to draw a position. */
   displayFen: string
   startExploring: () => void
   exitExploring: () => void
   setExplorePly: (updater: number | ((ply: number) => number)) => void
-  /** Attempts `from`->`to` on the current explore position, always promoting
-   *  to queen (same simplification `RepertoireBoard` makes — underpromotion
-   *  essentially never comes up here either). Returns whether it was legal;
-   *  playing it truncates any explored moves past the current explore ply,
-   *  same "new move overwrites the future" rule a normal board edit implies. */
+  /** Always promotes to queen. Truncates any explored moves past the current
+   *  explore ply. Returns whether the move was legal. */
   attemptExploreMove: (from: string, to: string) => boolean
-  /** Queues a whole SAN sequence (e.g. an engine line's suggested moves)
-   *  onto the explore branch at once, starting exploring first if not
-   *  already — so clicking "play this line" works equally from a normal
-   *  replay ply or mid-exploration. Leaves `explorePly` where it was rather
-   *  than jumping to the line's end: the point is to let the ◀/▶ nav step
-   *  through it one move at a time afterward, watching each move land
-   *  individually, not to just present the final position. Lets a user
-   *  follow a multi-move suggestion this way without manually dragging each
-   *  piece — which, before this existed, lost its own reference partway
-   *  through: each manual move re-searches and replaces the very line being
-   *  copied. Stops at the first move that doesn't apply (e.g. a stale line
-   *  for a position the board has since moved on from) rather than applying
-   *  a partial line from the wrong position. Returns whether *anything* was
-   *  applied — false (a no-op) only when even the first move didn't apply,
-   *  so a caller offering its own success feedback (`LiveAnalysisPanel`'s
-   *  queued checkmark) doesn't show it for a line that silently did
-   *  nothing. */
+  /** Appends a SAN line to the explore branch (entering explore mode if
+   *  needed) without moving `explorePly`, so ◀/▶ can step through it. Stops at
+   *  the first move that no longer applies. Returns false if nothing applied. */
   playExploreLine: (sanMoves: string[]) => boolean
-  /** Discards the whole explored branch's moves and jumps back to its start
-   *  (ply 0) without leaving exploring mode — the "actually get rid of this
-   *  line" companion to the ◀/⏮ nav, which only moves the *pointer* back
-   *  and leaves the moves themselves in place, ready to walk forward into
-   *  again. Lets a user who played (or dragged out) a line they don't want
-   *  get back to a clean branch to try something else, without needing to
-   *  exit exploring and re-enter it. */
+  /** Clears the explored moves and returns to ply 0 without leaving explore mode. */
   resetExploreLine: () => void
 }
 
-// The nav controls (⏮◀▶⏭) live in the page header, next to the analysis
-// button, while the board + move list live further down — same
-// Context-sharing shape as GameAnalysisPanel's button/dialog split, for the
-// same reason: the two positions in the tree aren't adjacent.
 const BoardContext = createContext<BoardContextValue | null>(null)
 
-// How long the Play toggle in BoardNavControls waits between auto-advancing
-// one ply — long enough to actually read the position, short enough that
-// watching a full game doesn't feel sluggish.
 const PLAY_INTERVAL_MS = 500
 
-// Exported so consumers outside this file (e.g. the /learn lesson page, which
-// needs the current ply to show a per-move explanation) can read the same
-// context without Board.tsx needing to know anything about their use case.
 export function useBoardContext(): BoardContextValue {
   const ctx = useContext(BoardContext)
   if (!ctx) throw new Error('Must be used within <BoardProvider>')
@@ -150,18 +100,13 @@ export function BoardProvider({
   boardOrientation: 'white' | 'black'
   result?: string
   evals?: PositionEval[]
-  /** Which ply to show first — defaults to the last ply if omitted, but
-   *  every current caller passes its own value instead: the game replay
-   *  page opens on ply 1 (the first move already played, not the empty
-   *  starting position) so the board shows something happened; /learn's
-   *  Study mode does the same, Quiz mode opens on 0 instead. */
+  /** Defaults to the last ply. */
   initialPly?: number
   children: React.ReactNode
 }) {
   const positions = useMemo(() => buildPositions(initialFen, movesSan), [initialFen, movesSan])
   const lastPly = positions.length - 1
-  // Clamped in case a caller's fixed initialPly (e.g. the game page's 1)
-  // exceeds a real lastPly of 0 — a synced game can have zero parsed moves.
+  // Clamped: a synced game can have zero parsed moves.
   const [ply, setPly] = useState(Math.min(initialPly ?? lastPly, lastPly))
   const [boardOrientation, setBoardOrientation] = useState(initialBoardOrientation)
   const [hiddenFindingKeys, setHiddenFindingKeys] = useState<Set<string>>(new Set())
@@ -178,15 +123,8 @@ export function BoardProvider({
   const [exploreBaseFen, setExploreBaseFen] = useState<string | null>(null)
   const [explorePath, setExplorePathState] = useState<string[]>([])
   const [explorePly, setExplorePlyState] = useState(0)
-  // Refs mirror the two states above, updated synchronously by the wrapper
-  // setters below — `attemptExploreMove`/`playExploreLine` read *these*,
-  // not the state values, when computing "where the branch currently is."
-  // Same reasoning (and pattern) as `RepertoireBoard`'s `nodesRef`/`pathRef`:
-  // two explore moves fired back-to-back, faster than a render, would
-  // otherwise both compute their "current position" from the same
-  // pre-update closure — the second move then gets evaluated against (and
-  // spliced into the path at) the position from *before* the first move,
-  // not after it.
+  // Refs mirror the state above so two explore moves fired faster than a render
+  // don't both compute "the current position" from the same stale closure.
   const explorePathRef = useRef(explorePath)
   const explorePlyRef = useRef(explorePly)
 
@@ -251,13 +189,7 @@ export function BoardProvider({
         : positions[ply]
       if (!fromFen) return false
 
-      // Validated as a real replay from the current position rather than
-      // trusted as-is — the line's moves were computed for whatever
-      // position the engine had last finished searching, which callers
-      // guard against being stale (see the field's own comment), but
-      // replaying here is what actually stops a line at the first move
-      // that doesn't apply instead of corrupting the explore path with an
-      // illegal one.
+      // Replayed rather than trusted: the line may be stale for this position.
       const chess = new Chess(fromFen)
       const validSan: string[] = []
       for (const san of sanMoves) {
@@ -272,10 +204,6 @@ export function BoardProvider({
       }
       if (validSan.length === 0) return false
 
-      // Queues the line onto the branch without jumping to its end — the
-      // point is to step through it one move at a time via the ◀/▶ nav
-      // (already explore-path-aware, see `BoardNavControls`), watching each
-      // move land individually, not to land straight on the final position.
       if (currentlyExploring) {
         setExplorePath((prev) => [...prev.slice(0, currentPly), ...validSan])
       } else {
@@ -327,91 +255,51 @@ export function BoardProvider({
 }
 
 interface LiveAnalysisContextValue {
-  /** The engine's top `MULTI_PV` candidate lines for `fen` below — null until
-   *  the first search completes. */
+  /** null until the first search completes. */
   lines: EngineLine[] | null
-  /** Which position `lines` was actually computed for. A search in flight
-   *  lags `displayFen` by up to `MOVETIME_MS` plus WASM search time, so a
-   *  consumer that draws something *on the board* (the live best-move arrow,
-   *  the eval bar) needs to check this against `displayFen` itself before
-   *  using `lines` — otherwise a fast navigation could show an arrow for
-   *  wherever the engine was last asked about, not where the board actually
-   *  is now. `LiveAnalysisPanel`'s own line list doesn't need this check: it
-   *  renders `lines` relative to this same `fen`, so the two always agree
-   *  with each other even when both lag the board. */
+  /** The position `lines` was computed for. Searches lag `displayFen`, so
+   *  anything drawn on the board must check this against `displayFen`. */
   fen: string | null
-  /** True whenever `lines`/`fen` don't yet reflect the latest position asked
-   *  for — a search is either running or queued up behind one. Drives
-   *  `LiveAnalysisPanel`'s corner spinner: the panel keeps showing the last
-   *  completed lines while a new search catches up, rather than blanking
-   *  out on every navigation, so this is the only signal that something is
-   *  actually happening in the meantime. */
+  /** A search is running or queued. */
   thinking: boolean
 }
 
 const LiveAnalysisContext = createContext<LiveAnalysisContextValue | null>(null)
 
-// No lines, nothing in flight — what BoardView already treats as "no live
-// line to show" while a real search is still catching up, so handing this
-// back to a caller with no <LiveAnalysisProvider> is indistinguishable from
-// one that has the provider but hasn't gotten a result yet.
+// Same value a provider exposes before its first result.
 const NO_LIVE_ANALYSIS: LiveAnalysisContextValue = { lines: null, fen: null, thinking: false }
 
-/** Optional, not required — `/learn` lessons render `BoardView` without ever
- *  wrapping it in `LiveAnalysisProvider` (no saved analysis to prefer either,
- *  so there'd be nothing to fall back to but a live search, and lesson pages
- *  are deliberately lightweight: no engine Worker spun up just to view a
- *  hand-authored line). Falling back to "no live line" here instead of
- *  throwing lets `BoardView` work either way, rather than forcing every
- *  caller to opt into a continuously-searching Stockfish instance. */
+/** Doesn't throw without a provider: `/learn` renders `BoardView` without one
+ *  to avoid spinning up an engine Worker for a hand-authored line. */
 export function useLiveAnalysisContext(): LiveAnalysisContextValue {
   return useContext(LiveAnalysisContext) ?? NO_LIVE_ANALYSIS
 }
 
-// Fewer lines and a shorter search than the batch "Analyze" pass
-// (`GameAnalysisPanel`) — this re-searches on every ply/explore step instead
-// of once per game, so it needs to feel responsive rather than exhaustive.
+// Re-searches on every step, so it trades depth for responsiveness.
 const LIVE_MULTI_PV = 3
 const LIVE_MOVETIME_MS = 600
 
 /**
- * Owns the continuous MultiPV engine search behind both `LiveAnalysisPanel`
- * (the line list) and `BoardView`'s live eval bar / best-move arrow — one
- * engine instance and search queue shared by both consumers, kept live for
- * `displayFen` (recorded ply or explored branch) alike. Defined here rather
- * than in LiveAnalysisPanel.tsx because it needs `useBoardContext()`, and
- * `BoardView` needs its `lines` — either direction of a cross-file import
- * between the two would be circular.
+ * Owns the live MultiPV search shared by `LiveAnalysisPanel` and `BoardView`.
+ * Lives here rather than in LiveAnalysisPanel.tsx to avoid a circular import.
  */
 export function LiveAnalysisProvider({ children }: { children: React.ReactNode }) {
   const { displayFen } = useBoardContext()
-  // `thinking: true` from the start — the effect below fires its first
-  // search essentially immediately on mount, so defaulting to `false` here
-  // would just be a one-frame flash before it flips.
   const [state, setState] = useState<LiveAnalysisContextValue>({
     lines: null,
     fen: null,
     thinking: true,
   })
 
-  // Bridges the fen-change effect below into the engine-owning effect's own
-  // request queue, rather than two effects independently reading/writing a
-  // shared ref — a dev-only Strict Mode remount then can't leave a drain
-  // loop `await`-ing a promise from an already-terminated engine instance
-  // (that Worker never emits another message, so the loop would hang
-  // forever instead of picking up the fresh instance). Each mount of the
-  // effect below gets its own engine *and* its own closed-over queue state,
-  // so there's nothing for an old and a new instance to share.
+  // Engine and request queue are created in the same effect so a Strict Mode
+  // remount can't leave a drain loop awaiting a terminated Worker.
   const requestRef = useRef<(fen: string) => void>(() => {})
 
   useEffect(() => {
     const engine = new StockfishEngine()
     let cancelled = false
-    // ponytail: never more than one search in flight — if the position
-    // moves on again before the current search resolves, only the latest
-    // requested FEN gets re-run once the engine is free, rather than
-    // queuing every intermediate position or teaching StockfishEngine a
-    // `stop` command just for this.
+    // ponytail: at most one search in flight; only the latest requested FEN
+    // runs next, intermediate positions are dropped.
     let pendingFen: string | null = null
     let busy = false
 
@@ -422,14 +310,11 @@ export function LiveAnalysisProvider({ children }: { children: React.ReactNode }
           const fen = pendingFen
           pendingFen = null
           const lines = await engine.evaluateLines(fen, LIVE_MULTI_PV, LIVE_MOVETIME_MS)
-          // Still thinking if a newer request already came in while this
-          // search ran — the loop picks it up next iteration instead of
-          // applying this now-stale result.
+          // Skip a result that a newer request has already superseded.
           if (!cancelled && !pendingFen) setState({ lines, fen, thinking: false })
         }
       } catch {
-        // The engine's Worker died (see StockfishEngine's `failure`) — drop
-        // the spinner rather than leave it on forever; there's no line to show.
+        // Worker died — clear the spinner.
         pendingFen = null
         if (!cancelled) setState((prev) => ({ ...prev, thinking: false }))
       } finally {
@@ -456,10 +341,6 @@ export function LiveAnalysisProvider({ children }: { children: React.ReactNode }
   return <LiveAnalysisContext.Provider value={state}>{children}</LiveAnalysisContext.Provider>
 }
 
-/** Toggles free-move exploration on and off — see `BoardContextValue`'s
- *  `exploring` comment. Sits next to `AnalyzeButton` in the game page header,
- *  same "button up top, results live wherever they're relevant" split as
- *  that button's own dialog. */
 export function ExploreToggleButton() {
   const { exploring, startExploring, exitExploring } = useBoardContext()
   const s = getStrings()
@@ -494,15 +375,9 @@ export function BoardNavControls() {
   const s = getStrings()
   const [isPlaying, setIsPlaying] = useState(false)
 
-  // Mirror `ply`/`isPlaying` in refs so the setInterval/keydown callbacks
-  // below can read the latest value without being dependencies of the
-  // effects that create them (which would tear down and recreate the
-  // interval/listener on every single step) — and, for `togglePlaying`, so
-  // it never nests a `setPly` call inside `setIsPlaying`'s own updater
-  // function, which React flags as updating one component's state while
-  // rendering another's (`setPly` belongs to `BoardProvider`, not here).
-  // Synced via an effect (not assigned directly during render) since refs
-  // are only safe to read/write outside of render.
+  // Refs let the interval/keydown callbacks read fresh values without
+  // re-subscribing, and keep setPly out of setIsPlaying's updater (React warns
+  // about updating another component's state during render).
   const plyRef = useRef(ply)
   const isPlayingRef = useRef(isPlaying)
   useEffect(() => {
@@ -510,10 +385,7 @@ export function BoardNavControls() {
     isPlayingRef.current = isPlaying
   })
 
-  // While exploring, these step through the *explore* path instead of the
-  // recorded game — same buttons/keyboard shortcuts, just repointed at
-  // whichever sequence the board is currently showing, rather than adding a
-  // second row of nav controls just for exploration.
+  // While exploring, nav steps through the explore path instead.
   const displayPly = exploring ? explorePly : ply
   const displayLastPly = exploring ? explorePath.length : lastPly
 
@@ -537,45 +409,30 @@ export function BoardNavControls() {
     if (exploring) setExplorePly(explorePath.length)
     else setPly(lastPly)
   }, [setPly, lastPly, exploring, setExplorePly, explorePath.length])
-  // Auto-play (with its blunder-stopping logic below) is a recorded-game
-  // feature only — there's no engine-flagged "blunder" to stop on for a
-  // free-explored line, so this is simply a no-op while exploring; the
-  // button itself is also disabled in that state (see the JSX below).
+  // Auto-play stops on blunders, so it only applies to the recorded game.
   const togglePlaying = useCallback(() => {
     if (exploring) return
     if (isPlayingRef.current) {
       setIsPlaying(false)
       return
     }
-    if (plyRef.current >= lastPly) setPly(0) // restart from the beginning if already at the end
+    if (plyRef.current >= lastPly) setPly(0)
     setIsPlaying(true)
   }, [lastPly, setPly, exploring])
 
-  // Left/right arrow keys step through the game the same as the ◀/▶
-  // buttons, Space toggles Play/Pause, and 0 jumps to the start — global,
-  // not scoped to a focused element, matching the chess.com/lichess
-  // convention this page's audience already knows. Only mounted where the
-  // buttons themselves are (games/[id], and /learn's Study mode but not
-  // Quiz mode), so this never fights with Quiz mode's own input handling.
+  // Arrow keys step, Space plays/pauses, 0 jumps to start.
   const lastNavAtRef = useRef(0)
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       // Browser/OS shortcuts win: Cmd+0 resets zoom, Cmd/Alt+← is Back.
       if (e.metaKey || e.ctrlKey || e.altKey) return
       if (e.target instanceof HTMLElement) {
-        // A form control keeps its own keys (Space on the Settings theme
-        // checkbox would otherwise also toggle Play).
         if (e.target.isContentEditable || e.target.closest('input, select, textarea')) return
-        // An unrelated modal (Settings, About, Add PGN) shouldn't step the
-        // board hidden behind it. The game page's details dialog opts back
-        // in: its live-lines panel queues a line for ◀/▶ to step through.
+        // Dialogs block shortcuts unless they opt in with data-board-shortcuts.
         const dialog = e.target.closest('dialog')
         if (dialog && !dialog.hasAttribute('data-board-shortcuts')) return
       }
-      // Space is a native activation key for a focused <button> (e.g. the
-      // Play/Pause button itself, right after clicking it) — without this
-      // guard, pressing it would toggle play twice: once from the button's
-      // own native click, once from this listener.
+      // A focused button already handles Space natively; avoid toggling twice.
       if (e.key === ' ' && e.target instanceof HTMLElement && e.target.tagName === 'BUTTON') {
         return
       }
@@ -590,12 +447,8 @@ export function BoardNavControls() {
       }
       if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
       e.preventDefault()
-      // Holding the key down (or just tapping it fast) fires keydown much
-      // quicker than the board's own slide animation can finish — each new
-      // position prop cuts the previous slide off mid-flight, which reads
-      // as flickering pieces rather than a clean step. Throttling to the
-      // same duration as the animation keeps one step finished before the
-      // next one starts.
+      // Throttle to the animation duration so a held key doesn't cut slides
+      // off mid-flight.
       const now = Date.now()
       if (now - lastNavAtRef.current < BOARD_ANIMATION_DURATION_MS) return
       lastNavAtRef.current = now
@@ -606,15 +459,8 @@ export function BoardNavControls() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [goToPrevious, goToNext, goToStart, togglePlaying])
 
-  // Every ply that's a blunder (200cp+ swing) on the account's own move —
-  // same definition (and same "own moves only" scoping) findBlunders() plus
-  // GameAnalysisPanel's filter already use for the analysis dialog/blunders
-  // page, reused here as "auto-play's stopping points" instead of a
-  // separate notion of what counts as relevant. `boardOrientation` stands in
-  // for "my color" — game replay pages (the only callers with `evals`) fix
-  // it to the synced player's color for the whole session and never offer a
-  // flip control. `undefined` (unanalyzed game) just means autoplay has
-  // nothing to stop for except the end.
+  // Auto-play stops on the user's own blunders. `boardOrientation` stands in
+  // for "my color" — game pages fix it to the synced player's side.
   const blunderPlies = useMemo(
     () =>
       evals
@@ -698,10 +544,8 @@ function NavIcon({ d }: { d: string }) {
   )
 }
 
-// Percent offset of a square's top-left corner within the board, flipping
-// for orientation — used to absolutely-position the game-end badges over
-// the actual king square rather than react-chessboard's own square styling
-// (which can't center arbitrary text over a square's rank/file).
+// Percent offset of a square's top-left corner, used to position the
+// game-end badges.
 function squarePercent(square: string, orientation: 'white' | 'black') {
   const file = square.charCodeAt(0) - 'a'.charCodeAt(0) // 0-7, a-h
   const rank = Number(square[1]) // 1-8
@@ -710,20 +554,13 @@ function squarePercent(square: string, orientation: 'white' | 'black') {
   return { left: col * 12.5, top: row * 12.5 }
 }
 
-// Matches chess.com's own three badge colors: red for the mated king, green
-// for the winner, gray for a draw.
 const GAME_END_BADGE_COLORS = {
   loss: 'bg-rose-600',
   win: 'bg-emerald-600',
   draw: 'bg-zinc-500',
 }
 
-// Chess.com's own three corner-badge glyphs (trophy/mate-shield/½), traced
-// from their site rather than approximated — a tiny 24px circle has no room
-// for a real word, and these are exactly what a chess.com game-review corner
-// badge shows. `label` (the full "Checkmate"/"Winner"/"Draw" string) still
-// carries the actual meaning via `aria-label` below, since an icon alone
-// means nothing to a screen reader.
+// Glyphs traced from chess.com's game-end badges.
 function WinnerIcon() {
   return (
     <svg viewBox="0 0 18 19" width="85%" height="85%">
@@ -751,9 +588,7 @@ function DrawIcon() {
   return (
     <svg viewBox="0 0 18 19" width="85%" height="85%">
       <path d="M2.92,7V5.84c.81,0,1.75-.28,1.8-1.22H6.14v5.5H4.34V7Zm8.87-2.39L7,13.88H5l4.8-9.26ZM9.85,13.88c-.08-1.54,1.38-2.19,2.57-2.89.33-.17.78-.4.78-.78a.66.66,0,0,0-.68-.7c-.69,0-.94.58-.92,1.16H10a2.17,2.17,0,0,1,.64-1.79,2.74,2.74,0,0,1,1.91-.62C14.1,8.26,15,8.78,15,10c0,1.82-2.66,2.18-2.66,2.5h2.73v1.38Z" />
-      {/* A near-duplicate path shifted up ~0.5px, painted over the one above
-          in white — the sliver it leaves visible along each stroke's top
-          edge is what gives the numeral its subtle embossed look. */}
+      {/* White copy shifted up ~0.5px for an embossed look. */}
       <path
         fill="#fff"
         d="M2.92,6.51V5.34c.81,0,1.75-.28,1.8-1.22H6.14v5.5H4.34V6.51Zm8.87-2.39L7,13.38H5l4.8-9.26ZM9.85,13.38c-.08-1.54,1.38-2.19,2.57-2.89.33-.17.78-.4.78-.78a.66.66,0,0,0-.68-.7c-.69,0-.94.58-.92,1.16H10a2.17,2.17,0,0,1,.64-1.79,2.74,2.74,0,0,1,1.91-.62C14.1,7.76,15,8.28,15,9.5c0,1.82-2.66,2.18-2.66,2.5h2.73v1.38Z"
@@ -783,12 +618,8 @@ function GameEndBadge({
       aria-label={label}
       className={`pointer-events-none absolute z-10 flex h-8 w-8 items-center justify-center rounded-full shadow-sm ${GAME_END_BADGE_COLORS[variant]}`}
       style={{
-        // Centered on the square's top-right corner, straddling it — a small
-        // badge pinned to the corner, not a callout stamped over the whole
-        // square. The outer wrapper (`BoardView`, not the inner
-        // `overflow-hidden` board image div) is deliberately what this is
-        // positioned relative to, so a badge on a top-rank square isn't cut
-        // off by the board's own clipped edge.
+        // Straddles the square's top-right corner. Positioned against the
+        // outer wrapper, not the clipped board, so back-rank badges aren't cut off.
         left: `${left + 12.5}%`,
         top: `${top}%`,
         transform: 'translate(-50%, -50%)',
@@ -804,21 +635,11 @@ export function BoardView({
   sidebarMaxWidthClassName = 'lg:max-w-sm xl:max-w-md',
   sidebarExtra,
 }: {
-  /** Lets a caller give the board more visual presence than the default
-   *  game-replay sizing without changing that page's layout — e.g. the
-   *  `/learn` lesson page, which has no move-list-heavy sidebar competing
-   *  for width. */
   boardMaxWidthClassName?: string
-  /** Width cap for the move-list sidebar column at lg+ — the game page
-   *  narrows it so its nav controls span the whole row. */
+  /** The game page narrows it so its nav controls span the whole row. */
   sidebarMaxWidthClassName?: string
-  /** Extra content stacked below the move list, in the same width-capped
-   *  sidebar column — e.g. `/learn`'s `MoveExplanation`. The move list
-   *  itself grows to fill any leftover height in the column (`MoveList`'s
-   *  `lg:flex-1`), so this should stay short; a tall stack belongs behind
-   *  its own trigger instead (see the game page's `DetailsDialogTrigger`,
-   *  which moved its own accuracy/engine-lines/checklist panels there for
-   *  exactly that reason). Undefined for a caller with nothing to add here. */
+  /** Content below the move list. Keep it short — the move list fills the
+   *  remaining height. */
   sidebarExtra?: React.ReactNode
 } = {}) {
   const {
@@ -840,49 +661,28 @@ export function BoardView({
   const boardColors = useSettings()
   const { lines: liveLines, fen: liveFen } = useLiveAnalysisContext()
   useMoveSound(displayFen)
-  // Eval bar: always the latest completed search's top line, even if a newer
-  // search (for wherever the board has since moved to) hasn't finished yet —
-  // briefly showing the *previous* position's number beats the bar blinking
-  // out and back in on every single move/step, which is what gating this on
-  // `liveFen === displayFen` (like the arrow below) used to do.
+  // The eval bar uses the latest completed search even if it's for the
+  // previous position, so it doesn't blink on every step.
   const liveEval: PositionEval | undefined = liveLines?.[0]
     ? { cp: liveLines[0].cp, mate: liveLines[0].mate, bestMove: null }
     : undefined
-  // Saved batch analysis wins when it exists and the board is showing the
-  // recorded game (instant on load, no waiting on a fresh search) — the live
-  // line is the fallback for an unanalyzed game, and the *only* source while
-  // exploring, since a saved eval only ever covers the recorded ply, never a
-  // free-explored position.
+  // Saved analysis wins on the recorded game; live is the fallback and the
+  // only source while exploring.
   const barEval = exploring ? liveEval : (evals?.[ply] ?? liveEval)
-  // Best-move arrow: unlike the bar above, a stale arrow would point at the
-  // *wrong squares* on the position now on screen, not just show a slightly
-  // outdated number — worth the (much shorter, same-tick) gap where no live
-  // arrow shows rather than a momentarily wrong one.
+  // Unlike the bar, a stale arrow would point at the wrong squares.
   const liveLine =
     !boardColors.hideEngineHints && liveFen === displayFen
       ? (liveLines?.[0] ?? undefined)
       : undefined
-  // react-chessboard needs a unique `id` per instance — without one, two
-  // simultaneous boards on the same page (this one plus a PlanBoard showing
-  // the suggested move's plan) collide on shared DOM ids internally and
-  // crash with "Square width not found".
+  // Unique id required: two boards on one page (this + PlanBoard) crash otherwise.
   const boardId = useId()
-  // Only surface the engine's suggestion (reveal arrow, "better was" text,
-  // and its "Show" plan dialog) when it's a move for the user's
-  // own color to play next — same "own moves only" scoping GameAnalysisPanel
-  // already applies to the blunder list. `boardOrientation` stands in for
-  // "my color" (see blunderPlies below); an opponent's/bot's best move isn't
-  // useful to review. Also suppressed entirely while exploring — it's tied to
-  // the *recorded* ply's saved analysis, which no longer matches whatever
-  // free-explored position the board is actually showing.
+  // Saved suggestion only for the user's own moves, and not while exploring
+  // (it belongs to the recorded ply).
   const bestMove =
     !exploring && whiteToMove(ply + 1, positions[0]) === (boardOrientation === 'white')
       ? evals?.[ply]?.bestMove
       : undefined
 
-  // Click/drag-to-move while exploring — same selected-square + legal-move-dot
-  // pattern `RepertoireBoard` uses, minus the persistence: a move here only
-  // ever updates in-memory explore state (`attemptExploreMove`).
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null)
   const legalMoves = useMemo(
     () => (exploring && selectedSquare ? legalDestinations(displayFen, selectedSquare) : []),
@@ -917,22 +717,12 @@ export function BoardView({
     if (piece) setSelectedSquare(square)
   }
 
-  // Checklist findings shown directly on the board (arrows + highlighted
-  // squares), not just as sidebar text — recomputed from the same pure
-  // `buildPositionChecklist()` `PositionChecklist` already calls on this
-  // ply's FEN, so this needed no new detection logic, only a mapping to
-  // board marks. Filtered by `hiddenFindingKeys` so a finding the user
-  // dismissed there stops being drawn here too.
   const checklistSquareStyles = useMemo(() => {
     const findings = buildPositionChecklist(positions[ply]).filter(
       (f) => !hiddenFindingKeys.has(findingKey(f)),
     )
     const styles: Record<string, React.CSSProperties> = {}
-    // Keyed by "from-to" so two findings that happen to draw the same arrow
-    // (e.g. both an attacker's fork and skewer landing on the same square
-    // pair) don't hand react-chessboard two arrows with an identical key —
-    // it renders each arrow keyed by its own start/end squares and warns on
-    // the duplicate.
+    // react-chessboard keys arrows by start/end square, so dedupe.
     const arrowsByKey = new Map<string, { startSquare: string; endSquare: string; color: string }>()
     for (const f of findings) {
       const marks = findingMarks(f.reason)
@@ -949,18 +739,7 @@ export function BoardView({
     }
     return { styles, arrows: [...arrowsByKey.values()] }
   }, [positions, ply, hiddenFindingKeys])
-  // Merge with the engine's own suggested-move arrows, deduped the same way —
-  // react-chessboard keys each arrow by its start/end squares alone (not by
-  // color), so a checklist arrow landing on the exact same two squares as a
-  // reveal arrow would otherwise hand it two arrows sharing one key. Two
-  // different reveal arrows can be in play at once here: `bestMove` (the
-  // *saved* batch analysis's suggestion, own-color-only, tied to the
-  // blunder-coaching "better was" text below) and `liveLine` (the live
-  // engine's current top line, shown for either color, in both replay and
-  // exploring — see `barEval`'s comment above for why the two arrows can
-  // point at different moves when the live search hasn't caught up yet).
-  // The live arrow wins when they collide: it's the freshest read of the
-  // position actually on screen.
+  // Same dedupe as above. The live arrow wins over the saved one on collision.
   const boardArrows = useMemo(() => {
     const arrows = new Map<string, { startSquare: string; endSquare: string; color: string }>()
     if (!exploring) {
@@ -985,14 +764,8 @@ export function BoardView({
     return [...arrows.values()]
   }, [checklistSquareStyles.arrows, bestMove, exploring, liveLine, boardColors.hideEngineHints])
 
-  // chess.com-style "Checkmate"/"Winner"/"Draw" badges pinned over the king
-  // squares, purely a function of whatever position is actually on screen
-  // (`displayFen`) — so it works unmodified for the recorded game's real
-  // final ply *and* a free-explored branch that happens to reach mate,
-  // without needing to know which mode produced the position. Deliberately
-  // not derived from `result` (the PGN result string): most games end by
-  // resignation or timeout, not an actual mated/drawn position on the board,
-  // and `result` doesn't distinguish those from a real checkmate.
+  // Derived from the board, not the PGN `result` — most games end by
+  // resignation or timeout, not on-board mate.
   const gameEndBadges = useMemo(() => {
     const chess = new Chess(displayFen)
     const kingSquare = (color: 'w' | 'b') =>
@@ -1020,11 +793,6 @@ export function BoardView({
     }
     return [] as Badge[]
   }, [displayFen, s])
-  // Tints the king square(s) `gameEndBadges` labels, chess.com-style, layered
-  // over the checklist's own square highlights — the two can't collide in
-  // practice (a terminal position has nothing left to hang a piece against),
-  // and game-end wins if they ever did, since it's the rarer, more important
-  // fact about the square.
   const boardSquareStyles = useMemo(() => {
     const styles = { ...checklistSquareStyles.styles }
     for (const badge of gameEndBadges) {
@@ -1032,9 +800,6 @@ export function BoardView({
     }
     return styles
   }, [checklistSquareStyles.styles, gameEndBadges])
-  // positions[ply] is 0-indexed (ply plies already played), while
-  // whiteToMove() takes the 1-indexed "which move number is this" — ply+1
-  // converts between the two conventions.
   const betterMove = bestMove
     ? describeBetterMove(
         positions[ply],
@@ -1044,21 +809,8 @@ export function BoardView({
       )
     : null
 
-  // react-chessboard's slide animation looks great for a single adjacent-ply
-  // step (the ◀/▶ buttons, or clicking the very next move in the list) but
-  // tries to animate every piece that differs at once for a multi-ply jump
-  // (Start/End, clicking a move further down the list, playing a whole
-  // engine line onto the explore branch then jumping into it, or clicking a
-  // move in the "your line" strip), which reads as a flicker/blink rather
-  // than a clean cut. Only animate the adjacent case; swap instantly for
-  // everything else — `navPly` is `explorePly` while exploring, `ply`
-  // otherwise, so this covers both nav systems the same way; switching
-  // between the two modes is treated as non-adjacent too, since the two
-  // numbering spaces don't mean anything compared against each other.
-  // `prevNavPly`/`prevExploring` are updated during render (React's
-  // documented "adjust state when a prop changes" pattern) rather than a
-  // ref, so the comparison stays render-safe instead of reading
-  // ref.current mid-render.
+  // Only animate single-step moves; multi-ply jumps flicker. Switching between
+  // recorded and explore modes counts as a jump.
   const navPly = exploring ? explorePly : ply
   const [prevNavPly, setPrevNavPly] = useState(navPly)
   const [prevExploring, setPrevExploring] = useState(exploring)
@@ -1069,20 +821,8 @@ export function BoardView({
     setPrevExploring(exploring)
   }
 
-  // Makes the move list as tall as the board column next to it (board +
-  // material line + the occasional "better was" line), so it fills the
-  // sidebar instead of stopping a few rows in. Plain CSS (`align-items:
-  // stretch`, a `flex-1` move list) can't do this: a flex/grid row's own
-  // "auto" height is computed from each item's own natural content size,
-  // and the move list's *own* content (every move, unclamped) is what
-  // that resolves to before stretch ever applies — the two are circular.
-  // An explicit measured height breaks that circularity. Only applied at
-  // the `lg:` breakpoint (1024px, Tailwind's default), where the columns
-  // actually sit side by side — below that they stack, and the move list
-  // should just size to its own content. `ResizeObserver` (not just a
-  // resize listener) so a ply change that adds/removes the "better was"
-  // line, changing the board column's height without changing the
-  // viewport, still re-measures.
+  // At lg+, pin the sidebar to the board column's measured height so the move
+  // list fills it. CSS stretch can't: the list's own content would drive the row.
   const boardColumnRef = useRef<HTMLDivElement>(null)
   const [sidebarHeight, setSidebarHeight] = useState<number | undefined>(undefined)
   useEffect(() => {
@@ -1115,12 +855,6 @@ export function BoardView({
               className={boardColors.showCoordinates ? 'mb-7' : ''}
             />
           )}
-          {/* The `overflow-hidden` that clips the board image to its rounded
-              corners has to live on an *inner* div — the game-end badges
-              below are positioned relative to this outer one instead so a
-              badge over a back-rank king (see `GameEndBadge`'s comment) can
-              float past the board's own top/bottom edge instead of getting
-              clipped by it. */}
           <BoardCoordinates
             show={boardColors.showCoordinates}
             orientation={boardOrientation}
@@ -1136,11 +870,7 @@ export function BoardView({
                     allowDragging: exploring,
                     onPieceDrop: exploring ? handleExploreDrop : undefined,
                     onSquareClick: exploring ? handleExploreSquareClick : undefined,
-                    // squareRenderer takes over a square's background entirely
-                    // (react-chessboard only auto-applies squareStyles when it's
-                    // absent) — used only while exploring, for the legal-move
-                    // dots; the checklist's squareStyles below is what draws
-                    // outside exploration instead.
+                    // squareRenderer overrides squareStyles, so only use it while exploring.
                     squareRenderer: exploring
                       ? ({ square, children }) => (
                           <LegalMoveSquare
@@ -1184,9 +914,7 @@ export function BoardView({
           )}
         </p>
         {betterMove && (
-          // A <div>, not <p> — <dialog> (PlanBoardButton's, opened from
-          // here) is block-level and HTML forbids block content inside <p>,
-          // which React's hydration check enforces.
+          // <div>, not <p>: PlanBoardButton renders a <dialog>, invalid inside <p>.
           <div className="text-xs text-amber-600 dark:text-amber-400">
             {s.common.betterWas} {betterMove}
             {bestMove && bestMove.bestLine?.length > 0 && (
@@ -1210,10 +938,7 @@ export function BoardView({
           movesSan={movesSan}
           ply={ply}
           onSelect={(p) => {
-            // Clicking a recorded move while exploring reads as "go back to
-            // the actual game here" — exit exploration rather than leaving
-            // the board showing an explored position next to a move-list
-            // selection that no longer matches it.
+            // Clicking a recorded move leaves explore mode.
             if (exploring) exitExploring()
             setPly(p)
           }}

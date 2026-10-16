@@ -8,10 +8,7 @@ import { BOARD_COLOR_PRESETS, REVEAL_ARROW_COLOR } from '@/lib/theme'
 import { EvalBar } from './EvalBar'
 import { playMoveSound, useSettings } from './SettingsProvider'
 
-// Two Knights Defense after 3...Nf6 — a familiar position with Ng5 as an
-// obvious "engine suggestion" to draw, so the hide-engine-hints toggle has
-// something visible to hide. Static: the preview only has to show colors,
-// coordinates, and the eval bar/arrow, never be played on.
+// Static preview with an obvious engine move (Ng5) for the hide-hints toggle.
 const PREVIEW_FEN = 'r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4'
 const PREVIEW_EVAL = { cp: 30, mate: null, bestMove: null }
 
@@ -65,8 +62,7 @@ export function SettingsForm() {
               label={s.settings.moveSounds}
               checked={settings.moveSounds}
               onChange={() => {
-                // Turning sounds on plays one, standing in for a preview —
-                // the static board below never actually moves.
+                // The preview board never moves, so play a sample sound.
                 if (!settings.moveSounds) playMoveSound('move-self')
                 settings.setMoveSounds(!settings.moveSounds)
               }}

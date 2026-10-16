@@ -1,8 +1,5 @@
 import { getStrings } from '@/lib/i18n/strings'
 
-// Shared "how to read this" glossary for eval/blunder notation — used by
-// GameAnalysisPanel's analysis dialog and the /blunders page, so the
-// explanation only needs to be written (and kept accurate) once.
 export function EvalHelp() {
   const s = getStrings()
   return (

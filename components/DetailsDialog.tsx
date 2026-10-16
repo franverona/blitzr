@@ -3,15 +3,8 @@
 import { useRef } from 'react'
 import { getStrings } from '@/lib/i18n/strings'
 
-/** The accuracy/engine-lines/repertoire/checklist stack that used to sit
- *  below the move list (`app/games/[id]/page.tsx`'s old `sidebarExtra`) —
- *  moved behind a single trigger + dialog so the move list itself can grow
- *  to fill the whole sidebar column (`MoveList.tsx`'s `lg:flex-1`) instead
- *  of sharing it with a tall stack of secondary panels. A generic
- *  trigger+dialog shell rather than a game-page-specific one since its
- *  content is passed in as `children` — the composition itself (which
- *  panels, in what order) still lives in `app/games/[id]/page.tsx`, same as
- *  before. */
+/** Trigger + dialog for the game page's secondary panels, so the move list
+ *  can fill the sidebar. */
 export function DetailsDialogTrigger({ children }: { children: React.ReactNode }) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const s = getStrings()
@@ -26,8 +19,7 @@ export function DetailsDialogTrigger({ children }: { children: React.ReactNode }
       </button>
       <dialog
         ref={dialogRef}
-        // Keeps BoardNavControls' ←/→/Space/0 working while open — see its
-        // keydown handler (Board.tsx).
+        // Opts in to BoardNavControls' keyboard shortcuts.
         data-board-shortcuts
         onClick={(e) => {
           if (e.target === e.currentTarget) dialogRef.current?.close()

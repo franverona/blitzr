@@ -1,15 +1,8 @@
 import type { Lesson } from './types'
 
-// Same "original paraphrase, not reproduced text" approach as
-// lib/openingTheory.ts — see that file's own comment for why. Unlike an
-// opening line, every move sequence here is a complete, concrete
-// demonstration of the technique from a constructed starting position all
-// the way to an actual checkmate (or, for the pawn-ending lesson, to the
-// pawn queening) — each verified for legality and the correct final
-// position with a chess.js scratch script before being treated as correct,
-// not eyeballed. The defending king's replies are one illustrative defense,
-// not a claim that it's the only one — same limitation the opening lessons'
-// quiz mode already has.
+// Paraphrased like lib/openingTheory.ts. Each line runs from a constructed
+// position to mate (or promotion); the defender's replies are one
+// illustrative defense, not the only one.
 export const ENDGAME_LESSONS: Lesson[] = [
   {
     slug: 'king-and-queen-vs-king',

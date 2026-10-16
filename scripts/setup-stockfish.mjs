@@ -1,9 +1,5 @@
-// Copies the Stockfish WASM engine files into public/ so the browser can load
-// them directly as a Worker script (new Worker('/stockfish/...')) — Workers
-// need a real URL, not something bundled through webpack/Turbopack. Not
-// committed to git (public/stockfish/ is gitignored, like data/*.db) since
-// the .wasm binary is ~7MB; this script re-copies it from node_modules on
-// every install instead.
+// Copies the Stockfish files into public/ (gitignored, ~7MB): Workers need a
+// real URL, not a bundled module.
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'

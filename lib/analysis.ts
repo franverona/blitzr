@@ -2,39 +2,26 @@ import { getLocale } from './i18n/locale'
 import type { Locale } from './i18n/locale'
 import type { Blunder, PositionEval } from './types'
 
-// A swing at or above this size (in centipawns, from the mover's own
-// perspective) counts as a blunder. Mate-losing swings always qualify — see
-// evalToCp below.
+// Mover-perspective swing (centipawns) that counts as a blunder.
 export const BLUNDER_THRESHOLD_CP = 200
 
 export type BlunderSeverity = 'mistake' | 'blunder'
 
-// Blunders are already 200cp+ swings (BLUNDER_THRESHOLD_CP) — this only
-// subdivides that same set into two severities for display; it doesn't
-// change what counts as a blunder anywhere else (drilling, /blunders totals).
+// Display-only split of blunders into mistake/blunder.
 const SEVERE_BLUNDER_THRESHOLD_CP = 400
 
 export function blunderSeverity(swingCp: number): BlunderSeverity {
   return swingCp >= SEVERE_BLUNDER_THRESHOLD_CP ? 'blunder' : 'mistake'
 }
 
-// Mate scores aren't directly comparable to centipawns, so they're mapped to
-// a value large enough that any swing into or out of a mate always crosses
-// the blunder threshold, while still preserving which side is winning.
+// Mate is mapped to a large value so any swing into/out of mate crosses the
+// blunder threshold while keeping the winning side.
 function evalToCp(evaluation: PositionEval): number {
   if (evaluation.mate !== null) return evaluation.mate > 0 ? 100_000 : -100_000
   return evaluation.cp ?? 0
 }
 
-/**
- * How much worse the position got for the side that just moved, in
- * centipawns, comparing the position before and after their move (mate
- * scores folded in via evalToCp). Positive means the move cost them;
- * negative or zero means it held or improved their position. Shared by
- * findBlunders() (which only cares once this crosses BLUNDER_THRESHOLD_CP)
- * and lib/moveQuality.ts's finer-grained per-move tiering (which needs the
- * exact number for every move, not just the ones that cross that line).
- */
+/** Centipawns the mover lost with this move (positive = worse for them). */
 export function moveSwingCp(
   before: PositionEval,
   after: PositionEval,
@@ -46,23 +33,15 @@ export function moveSwingCp(
 }
 
 /**
- * Whether the given 1-indexed ply was White's move. Ply 1 is whoever the
- * starting FEN says is to move — usually White, but a game set up from a
- * custom position (a pasted PGN's `[FEN]` header, a Chess.com "from
- * position" game) can start with Black to move, flipping every ply after it.
- * `initialFen` omitted means the standard start.
+ * Whether the 1-indexed ply was White's move. A custom starting FEN can have
+ * Black move first.
  */
 export function whiteToMove(ply: number, initialFen?: string): boolean {
   const whiteMovesFirst = initialFen?.split(' ')[1] !== 'b'
   return (ply % 2 === 1) === whiteMovesFirst
 }
 
-/**
- * Walks a game's per-position evals (White's perspective, same indexing as
- * the positions array — evals[i] is before movesSan[i], evals[i+1] after)
- * and flags every move where the player who just moved made their own
- * position significantly worse.
- */
+/** evals[i] is before movesSan[i], evals[i+1] after (White's perspective). */
 export function findBlunders(
   evals: PositionEval[],
   movesSan: string[],
@@ -91,7 +70,6 @@ export function findBlunders(
   return blunders
 }
 
-/** The single worst blunder in a game, if any. */
 export function biggestBlunder(blunders: Blunder[]): Blunder | null {
   if (blunders.length === 0) return null
   return blunders.reduce((worst, b) => (b.swingCp > worst.swingCp ? b : worst))
@@ -107,23 +85,14 @@ export function formatEval(evaluation: PositionEval): string {
   return `${sign}${pawns.toFixed(1)}`
 }
 
-/**
- * How much of an eval bar White's fill should cover, 0-100. Uses the same
- * logistic curve Lichess uses to turn centipawns into win chances, so the
- * bar reads intuitively — a +1 pawn edge looks like a real but modest edge,
- * +8 looks all but decided — instead of a raw linear centipawn scale where
- * +30 and +10 would look nearly identical.
- */
+/** White's share of the eval bar, 0-100, using Lichess's win-chance curve. */
 export function evalBarPercent(evaluation: PositionEval): number {
   if (evaluation.mate !== null) return evaluation.mate > 0 ? 99 : 1
   const winChances = 2 / (1 + Math.exp(-0.00368208 * (evaluation.cp ?? 0))) - 1
   return ((winChances + 1) / 2) * 100
 }
 
-/** A plain-language read of an eval, e.g. "White is winning", for anyone who doesn't
- *  think in centipawns yet. The Spanish templates all use a "X para {side}"
- *  shape rather than mirroring English's subject-first "{side} is X" one —
- *  keeps every tier grammatical without a per-tier verb conjugation. */
+/** Plain-language eval, e.g. "White is winning". */
 export function describeEval(evaluation: PositionEval, locale: Locale = getLocale()): string {
   const es = locale === 'es'
   if (evaluation.mate !== null) {
@@ -142,13 +111,8 @@ export function describeEval(evaluation: PositionEval, locale: Locale = getLocal
   return es ? `Posición completamente ganadora para ${side}` : `${side} is completely winning`
 }
 
-/**
- * Describes how bad a blunder's swing was, for display next to a blunder
- * list entry. `swingCp` isn't real pawns when a mate score is involved —
- * it's measured against the ±100,000 sentinel `evalToCp` uses internally
- * just to make sure mate swings always cross the blunder threshold — so a
- * mate transition is described in words instead of a bogus "988.1 pawns".
- */
+/** Mate swings are measured against `evalToCp`'s sentinel, so they're
+ *  described in words instead of a bogus pawn count. */
 export function formatSwing(blunder: Blunder, locale: Locale = getLocale()): string {
   if (blunder.evalBefore.mate !== null || blunder.evalAfter.mate !== null) {
     return describeEval(blunder.evalAfter, locale).toLowerCase()

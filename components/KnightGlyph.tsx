@@ -1,7 +1,3 @@
-// Solid-silhouette layer extracted from a supplied illustrated knight icon
-// (originally a 3-layer black-outline/white-fill/black-detail design) — using
-// just the outline layer gives a single shape colorable via `currentColor`,
-// instead of the multi-color original or a font-rendered ♞ character.
 export function KnightGlyph({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 504 504" fill="currentColor" className={className} aria-hidden="true">

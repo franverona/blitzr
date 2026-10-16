@@ -17,22 +17,14 @@ interface BulkAnalysisContextValue {
 
 const BulkAnalysisContext = createContext<BulkAnalysisContextValue | null>(null)
 
-// Mounted once in the root layout — not on the games page itself — so a run
-// started from "Analyze all" keeps going, and stays visible via the nav
-// indicator, across route changes instead of being cancelled the moment the
-// user navigates away from the games list.
+// Mounted in the root layout so a run survives navigation.
 export function BulkAnalysisProvider({ children }: { children: React.ReactNode }) {
   const [progress, setProgress] = useState<BulkAnalysisProgress | null>(null)
   const [toast, setToast] = useState<{ text: string; isError: boolean } | null>(null)
   const { analysisStrength } = useSettings()
-  // A ref, not state — analyzeGames() reads this via a closure held for the
-  // whole (potentially long) run, so cancel() needs to mutate a value that
-  // closure can see immediately rather than one frozen at the render where
-  // start() was called.
+  // A ref so cancel() is visible to the long-running analyzeGames() closure.
   const shouldContinueRef = useRef(true)
-  // Guards start() itself — `progress` isn't set until getUnanalyzedGames()
-  // resolves, so checking it alone let a quick double click start two runs
-  // (two engine pools analyzing the same games) in that window.
+  // Guards against a double click starting two runs before `progress` is set.
   const runningRef = useRef(false)
   const s = getStrings()
 

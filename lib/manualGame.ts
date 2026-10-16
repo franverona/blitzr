@@ -2,23 +2,12 @@ import { Chess } from 'chess.js'
 import { ecoNameFromUrl, parsePgnHeaders } from './chesscom/normalize'
 import type { Game, MyColor, MyResult } from './types'
 
-// Games that never reach the synced `games` table (Chess.com's public API
-// doesn't expose "Play Bots" personality games at all — see CLAUDE.md's
-// "Known Chess.com API quirks") can still be analyzed by pasting their PGN
-// directly. Unlike `normalizeGame()` (lib/chesscom/normalize.ts), there's no
-// `ChesscomGame` API object to read structured fields from — everything
-// comes from the PGN's own headers, with plain fallbacks where a header is
-// missing. And unlike the sync path, which tolerates unparseable movetext
-// (a synced archive shouldn't fail wholesale over one bad game), this throws
-// on it — a manually-added game exists specifically to be analyzed, so
-// silently saving one with no moves isn't useful; better to reject at input
-// time and let the UI surface the error.
+// Builds a Game from a pasted PGN's headers. Unlike normalizeGame(), invalid
+// movetext throws: a manual game exists to be analyzed.
 
 type PgnResult = '1-0' | '0-1' | '1/2-1/2'
 
-// A missing or unfinished (`*`) Result used to fall through to "White
-// lost". Read the outcome off the final position when it's decisive;
-// otherwise there's no honest win/draw/loss to store, so reject.
+// Missing or `*` Result: infer from a decisive final position, else reject.
 function pgnResult(headers: Record<string, string>, finalPosition: Chess): PgnResult {
   const result = headers.Result
   if (result === '1-0' || result === '0-1' || result === '1/2-1/2') return result
@@ -34,15 +23,8 @@ function myResultFromPgnResult(result: PgnResult, color: MyColor): MyResult {
   return (result === '1-0') === (color === 'white') ? 'win' : 'loss'
 }
 
-// Chess.com's Date/EndDate headers are "YYYY.MM.DD", which Date.parse()
-// doesn't accept directly, and — unlike a synced game's real endTime — never
-// carry a time-of-day, so Date.parse() lands on midnight UTC. Left as-is,
-// that always sorts *below* any already-synced game from later the same day
-// (games list is `ORDER BY end_time desc`), making a same-day manual add look
-// like it never happened. Stamping the header's calendar date with the
-// current time-of-day keeps the date accurate (still needed for an older
-// pasted PGN, e.g. a friend's game) while making a same-day add sort where it
-// belongs — at/near the top, alongside "now".
+// PGN dates are "YYYY.MM.DD" with no time, which would land at midnight UTC
+// and sort below same-day synced games. Use the current time of day instead.
 function endTimeFromPgnDate(headers: Record<string, string>): number {
   const raw = headers.EndDate ?? headers.Date
   const parsedDateOnly = raw ? Date.parse(raw.replace(/\./g, '-')) : NaN
@@ -76,10 +58,7 @@ export function parseManualGame(pgn: string, username: string): Game {
   const result = pgnResult(headers, chess)
 
   const isBlack = headers.Black.toLowerCase() === username.toLowerCase()
-  // ponytail: a pasted PGN isn't guaranteed to feature the account owner at
-  // all (e.g. a friend's game); default to White rather than throw, same
-  // "best-effort, never fail the whole add over it" spirit as the rest of
-  // this function's fallbacks.
+  // ponytail: a pasted game may not involve the user at all; default to White.
   const myColor: MyColor = isBlack ? 'black' : 'white'
   const myResult = myResultFromPgnResult(result, myColor)
 

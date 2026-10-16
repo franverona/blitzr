@@ -10,11 +10,7 @@ export default async function LearnLessonPage({ params }: { params: Promise<{ sl
   const lesson = openingLesson ?? getEndgameLesson(slug)
   if (!lesson) notFound()
 
-  // Cross-links the lesson to the account's own data: how many synced games
-  // actually reached this exact move sequence (see LessonGameStats, lib/types.ts,
-  // for why this matches on moves played rather than Chess.com's ECO code/name).
-  // Opening-specific — an endgame lesson has no equivalent, so gameStats stays
-  // null and LessonPractice skips that section entirely.
+  // Opening lessons only; null hides the section.
   const gameStats = openingLesson
     ? await getLessonGameStats(openingLesson.moves.map((move) => move.san))
     : null

@@ -2,9 +2,7 @@ import { Chess } from 'chess.js'
 import type { ChesscomGame } from './client'
 import type { Game, MyColor, MyResult } from '../types'
 
-// Chess.com's per-player "result" string is one of ~15 values. Anything that
-// isn't an outright win and isn't one of these known draw outcomes counts as
-// a loss for that side (checkmated, resigned, timeout, abandoned, etc).
+// Anything that isn't a win or a known draw is a loss.
 const DRAW_RESULTS = new Set([
   'agreed',
   'repetition',
@@ -20,11 +18,8 @@ export function normalizeResult(raw: string): MyResult {
   return 'loss'
 }
 
-// Chess.com's eco URL slug is already space-separated-with-dashes and reads
-// fine decoded as-is (e.g. "Closed-Sicilian-Defense-Grand-Prix-Attack-3...g6"
-// -> "Closed Sicilian Defense Grand Prix Attack 3...g6"). We additionally
-// split it into "family name: move list" at the first move-number token,
-// purely as a display nicety.
+// "Closed-Sicilian-Defense-Grand-Prix-Attack-3...g6" ->
+// "Closed Sicilian Defense Grand Prix Attack: 3...g6"
 export function ecoNameFromUrl(url: string): string {
   const slug = url.split('/').filter(Boolean).pop() ?? url
   const decoded = decodeURIComponent(slug).replace(/-/g, ' ')
@@ -34,8 +29,7 @@ export function ecoNameFromUrl(url: string): string {
   return `${words.slice(0, moveIndex).join(' ')}: ${words.slice(moveIndex).join(' ')}`
 }
 
-// Extracted independently of chess.js's PGN parser so headers (incl. ECO) are
-// still available even for games whose movetext chess.js can't validate.
+// Parsed separately so headers survive movetext chess.js can't validate.
 export function parsePgnHeaders(pgn: string): Record<string, string> {
   const headers: Record<string, string> = {}
   for (const match of pgn.matchAll(/^\[(\w+)\s+"(.*)"\]$/gm)) {
@@ -44,26 +38,11 @@ export function parsePgnHeaders(pgn: string): Record<string, string> {
   return headers
 }
 
-// "Play vs Bot" is the one Chess.com bot-opponent mode whose PGN
-// White/Black header holds a bot personality's bare *display* name (e.g.
-// "Hans") rather than its real backing account — a name that can
-// coincidentally collide with an unrelated real user's own username
-// (confirmed: chess.com has a real registered user literally named
-// "hans"). "Play vs Coach" is a bot-opponent mode too (see CLAUDE.md's
-// "Known Chess.com API quirks" for its other, unrelated Link-header quirk),
-// but is deliberately excluded here: its header already *is* the coach's
-// real dedicated account name (e.g. "Coach-DrWolf" resolves directly and
-// correctly via the normal player-lookup path), so it needs no special
-// handling. "Play Bots" personality games aren't included either: they
-// never reach the public API at all, so there's no real PGN sample to
-// confirm their Event string against.
+// "Play vs Bot" PGNs carry the bot's bare display name (e.g. "Hans"), which
+// can collide with a real user. "Play vs Coach" headers are real accounts.
 const BARE_BOT_NAME_EVENTS = new Set(['Play vs Bot'])
 
-/** True when a game's PGN Event means one side's "username" is a bare bot
- *  personality display name rather than a real, directly-resolvable
- *  account — see `fetchBotAvatar()` (lib/chesscom/client.ts) for how
- *  callers should look up that side's avatar instead of trusting a direct
- *  match. */
+/** See `fetchBotAvatar()`. */
 export function isBareBotNameEvent(event: string | undefined): boolean {
   return event !== undefined && BARE_BOT_NAME_EVENTS.has(event)
 }
@@ -82,9 +61,7 @@ export function normalizeGame(raw: ChesscomGame, username: string, archiveYm: st
     movesSan = chess.history()
     finalFen = chess.fen()
   } catch {
-    // Some variants (e.g. bughouse's piece-drop notation) aren't valid
-    // standard PGN — keep the raw PGN for reference and skip the derived
-    // fields rather than failing the whole sync over one game.
+    // Some variants (e.g. bughouse drops) aren't valid standard PGN.
   }
 
   const ecoUrl = raw.eco ?? headers.ECOUrl ?? null

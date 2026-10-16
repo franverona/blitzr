@@ -2,9 +2,7 @@ import { getLocale } from './i18n/locale'
 import type { Locale } from './i18n/locale'
 import type { Game, MyResult, OpeningFamily, OpeningLine } from './types'
 
-/** Display label for the "no ECO code" bucket — shared with `lib/blunders.ts`,
- *  which groups by the same fallback. Not to be confused with the internal
- *  `'Unknown'` map key below, which is data, not display text. */
+/** Display label for games with no ECO code. */
 export function unknownOpeningLabel(locale: Locale = getLocale()): string {
   return locale === 'es' ? 'Apertura desconocida' : 'Unknown opening'
 }
@@ -36,11 +34,7 @@ export function ecoFamilyLabel(ecoName: string): string {
   return ecoName.split(':')[0].trim()
 }
 
-/**
- * Groups games by 3-char ECO code (family), with each family's distinct
- * named lines nested underneath. Games with no ECO code (very short games)
- * are bucketed under a null-coded "Unknown" family.
- */
+/** Groups games by 3-char ECO family, with named lines nested underneath. */
 export function buildOpeningFamilies(games: Game[], locale: Locale = getLocale()): OpeningFamily[] {
   const families = new Map<
     string,

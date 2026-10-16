@@ -2,13 +2,8 @@ import type { Game, Lesson, LessonGameStats } from './types'
 
 const START_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 
-// Summaries here are paraphrased in original wording, not reproduced from the
-// source — the source is CC BY-SA (share-alike) and this repo is MIT, so
-// verbatim text would be a licensing mismatch. Ideas aren't copyrightable,
-// only specific expression, so a short original summary plus a visible link
-// back for attribution and further reading sidesteps that entirely. The
-// Spanish text is my own translation of that same original wording, not a
-// separate paraphrase of the source — no additional licensing concern there.
+// Summaries are paraphrased, never copied: the source is CC BY-SA and this
+// repo is MIT.
 export const OPENING_LESSONS: Lesson[] = [
   {
     slug: 'kings-pawn-opening',
@@ -784,11 +779,7 @@ export function getOpeningLesson(slug: string): Lesson | undefined {
   return OPENING_LESSONS.find((lesson) => lesson.slug === slug)
 }
 
-/** Counts the account's own synced games that reached at least as far as
- *  `moves` (an exact SAN prefix match against `Game.movesSan`) — see
- *  `LessonGameStats` (`lib/types.ts`) for why this matches on moves played
- *  rather than Chess.com's ECO code/name. Games with no parsed `movesSan`
- *  (unparseable PGN movetext) can't be checked and are simply skipped. */
+/** Own games that reached `moves` as an exact SAN prefix. */
 export function countGamesReachingLine(games: Game[], moves: string[]): LessonGameStats {
   let wins = 0
   let draws = 0

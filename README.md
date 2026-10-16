@@ -10,90 +10,58 @@ Train on your own blunders, not generic puzzles — a local chess trainer built 
 
 ## What this is
 
-Blitzr is a **personal side project**, not a product. It's built to run on one machine for
-one person, against that person's own Chess.com game history. There is no hosted version, no
-accounts, and no multi-user support — if you run it, it's your own local instance against
-your own Chess.com username.
+Blitzr is a **personal side project**, not a product: it runs on one machine, for one person,
+against that person's Chess.com history. No hosted version, no accounts, no multi-user support.
 
-It ingests your Chess.com games via their public [Published-Data
-API](https://www.chess.com/news/view/published-data-api), figures out which openings you
-actually play, flags the moment you deviate from a repertoire you define yourself, runs
-Stockfish in your browser to find your blunders, drills you on those exact positions —
-deviations and blunders alike — with spaced repetition, and rolls your blunders up across
-every analyzed game so you can see what actually keeps going wrong.
+It syncs your games via Chess.com's public [Published-Data
+API](https://www.chess.com/news/view/published-data-api), shows which openings you play, flags
+where you leave a repertoire you define, runs Stockfish in your browser to find your blunders,
+drills you on those positions with spaced repetition, and aggregates what keeps going wrong.
 
-**Blitzr is unaffiliated with Chess.com.** It uses Chess.com's public, unauthenticated
-Published-Data API under their terms. It does not use Chess.com's name, logos, or marks in
-any way that implies endorsement or affiliation.
+**Blitzr is unaffiliated with Chess.com** and doesn't use its name, logos or marks in any way that
+implies endorsement.
 
-## What's built
+## Features
 
-- [x] Config for your Chess.com username
-- [x] Incremental sync of your games into SQLite
-- [x] Browse UI — game list, board replay, openings aggregated by ECO
-- [x] User-defined repertoire + deviation detection
-- [x] Stockfish (WASM) analysis — blunder detection, plus tactical explanations (hanging pieces,
-      forks, pins, skewers); re-analyze any game at a higher strength
-- [x] Spaced-repetition drilling
-- [x] Cross-game recurring-blunders aggregate, with an accuracy-over-time trend and a
-      date-range filter
-- [x] Hand-authored opening and endgame lessons with an interactive board
-- [x] Position checklist — a live tactical scan of whatever position you're viewing
-- [x] Add a game by pasting its PGN — for games Chess.com's public API doesn't expose at all
-- [x] Live multi-line engine analysis + free-move exploration on a game's board
-      (chess.com's analysis-tab experience)
-- [x] Settings page with a live board preview: light/dark theme, board color presets, analysis strength,
-      spoiler-free review (hide eval bar + best-move arrow), board coordinates, move sounds
-- [x] Mate-in-N puzzles from real games — play out the entire winning line yourself, with
-      progress tracked and a filterable list
+- Incremental sync of your games into SQLite, plus adding any game by pasted PGN
+- Game list with opponent search and result/color/rated/accuracy filters
+- Board replay, openings aggregated by ECO, and a user-defined repertoire with deviation detection
+- In-browser Stockfish analysis: blunders, plain-English tactical explanations, move-quality and
+  accuracy, live multi-line analysis and free-move exploration
+- Spaced-repetition drilling of your deviations and blunders
+- Cross-game blunder stats with an accuracy-over-time chart and date filter
+- Opening and endgame lessons with study and quiz modes
+- Mate-in-N puzzles you solve move by move
+- Settings: light/dark theme, board colors, analysis strength, hide engine hints, coordinates,
+  move sounds
+- English and Spanish UI
 
 ## Stack
 
-- **Next.js** (App Router, Server Actions), **TypeScript**
-- **SQLite** by default, pluggable via `DB_TYPE` (only `sqlite` is implemented today)
-- **Tailwind CSS v4**
-- **chess.js** for PGN parsing/move validation, **react-chessboard** for the board UI
-- **Stockfish** (WASM), run client-side in a Web Worker for per-game blunder analysis
-- **pnpm**, **Vitest**, ESLint + Prettier, Husky pre-commit hooks
+- **Next.js** (App Router, Server Actions), **TypeScript**, **Tailwind CSS v4**
+- **SQLite** by default, pluggable via `DB_TYPE` (only `sqlite` is implemented)
+- **chess.js** and **react-chessboard**
+- **Stockfish** (WASM) in a Web Worker
+- **pnpm**, **Vitest**, ESLint + Prettier, Husky
 
 ## Getting started
 
 ```bash
 pnpm install
-cp .env.example .env.local   # fill in CHESSCOM_USERNAME
+cp .env.example .env.local   # set CHESSCOM_USERNAME
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000), then click **Sync games** to fetch your
-Chess.com history. Re-running sync only fetches months that aren't fully synced yet, plus the
-current month.
+Open [http://localhost:3000](http://localhost:3000) and click **Sync games**. Later syncs only
+fetch months that aren't complete yet.
 
-The games list explains chess jargon as you hover it — the time class column (bullet/blitz/rapid/
-daily) tells you what each one means in minutes-per-player, the same way ECO codes and repertoire
-terms are explained elsewhere in the app. Each row also shows your accuracy and mistake/blunder
-counts once that game's been analyzed (blank until then), plus your rating at the time for rated
-games. A search box above the list filters by opponent name as you type (no button to click), and
-dropdowns next to it narrow by result, color, and rated/unrated — all combinable, and shareable as
-a link since they live in the URL. An accuracy filter (≥ or ≤ a threshold, dragged on a slider)
-sits in its own small popover next to the rest. **Analyze all** disables itself once every synced
-game already has a saved analysis, rather than requiring a click to find out there's nothing left
-to do.
+The database is created at `./data/blitzr.db` on first run. To reset, delete it and re-sync.
 
-SQLite is created automatically at `./data/blitzr.db` on first run — no config needed beyond
-your username. To reset, delete the file and re-sync.
-
-## Language
-
-The UI is available in English (default) and Spanish — set `NEXT_PUBLIC_LOCALE=es` in
-`.env.local` and restart. It's a single-user app with no accounts, so there's no in-app
-switcher: one instance runs in one language, chosen once.
+For a Spanish UI, set `NEXT_PUBLIC_LOCALE=es` in `.env.local` and rebuild.
 
 ## Running as a background service (pm2)
 
-Blitzr runs on port **9877** in production mode, so it doesn't collide with other local dev
-projects on 3000.
-
-**First-time setup:**
+Production runs on port **9877** to avoid clashing with other projects on 3000.
 
 ```bash
 npm install -g pm2
@@ -103,301 +71,100 @@ pm2 save
 pm2 startup   # follow the printed command to register with launchd
 ```
 
-Open [http://localhost:9877](http://localhost:9877).
-
-**Day-to-day commands:**
+Open [http://localhost:9877](http://localhost:9877). To update:
 
 ```bash
-pm2 status           # check if blitzr is running
-pm2 logs blitzr      # tail logs
-pm2 restart blitzr   # restart after a rebuild
-pm2 stop blitzr      # stop
-pm2 delete blitzr    # remove from pm2 entirely
+git pull && pnpm install && pnpm build && pm2 restart blitzr
 ```
 
-**Updating the app:**
-
-```bash
-git pull
-pnpm install
-pnpm build
-pm2 restart blitzr
-```
+Other useful commands: `pm2 status`, `pm2 logs blitzr`, `pm2 stop blitzr`, `pm2 delete blitzr`.
 
 ## Scripts
 
 ```bash
-pnpm dev             # Start dev server
-pnpm build           # Production build
-pnpm test            # Run unit tests (Vitest)
-pnpm test:watch      # Run tests in watch mode
+pnpm dev             # dev server
+pnpm build           # production build
+pnpm test            # unit tests (Vitest); pnpm test:watch for watch mode
 pnpm lint            # ESLint
-pnpm format          # Prettier (write)
-pnpm format:check    # Prettier (check)
+pnpm format          # Prettier (write); pnpm format:check to check
 ```
 
-## Chess.com API notes
+## How it works
 
-- Base URL: `https://api.chess.com/pub`, no API key required.
-- Every request sends a descriptive `User-Agent` (Chess.com throttles requests without one).
-- Archives are fetched **serially**, never in parallel, and 429s are retried with backoff.
-- Games are synced incrementally: months already fully synced are skipped on future runs; the
-  current month (and the previous one, for its first day) is always re-fetched since it can
-  still gain new games.
+### Sync
 
-## Add a game by PGN
+Requests send a descriptive `User-Agent`, archives are fetched serially, and 429s are retried
+with backoff. Games Chess.com's API never exposes (e.g. "Play Bots" games) can be added with
+**Add game by PGN**; they get their own id, so a later sync never touches them.
 
-Not every game reaches your synced history — Chess.com's "Play Bots" personality games don't
-appear in the public API at all. **Add game by PGN** on the Games page takes any pasted PGN and
-analyzes it exactly like a synced game: board replay, opening detection, repertoire diff, and
-Stockfish analysis all work the same. It's saved under its own freshly generated ID, so
-re-running **Sync games** afterward can never overwrite or remove it.
+### Repertoire
 
-## Repertoire
+On `/repertoire`, build an opening tree per color by playing moves on the board, branching as
+needed. Each game page then flags the first move where _you_ left your prepared line — an
+opponent's unprepared move doesn't count.
 
-On `/repertoire`, build an opening tree per color by playing moves on an editable board — each
-move you play is added as a node, and you can branch to prepare more than one reply to an
-opponent's try. Every synced game is then diffed against your tree: the game page flags the
-first move where you left your own prepared line (an opponent playing something you haven't
-prepped for isn't a deviation — only _your own_ moves count). While you're building it, playing
-a move that leaves a piece hanging shows the same plain-English warning as the analysis pages,
-right there on the board.
+### Engine analysis
 
-## Engine analysis (Stockfish)
+**Analyze with Stockfish** on a game page evaluates every position in your browser and saves the
+result. **Analyze all** on the games page does this for every unanalyzed game, saving as it goes,
+and keeps running while you browse other pages.
 
-On a game's page, **Analyze with Stockfish** runs the engine — entirely in your browser, in a
-Web Worker — over every position in that game and reports each blunder (a swing of 200+
-centipawns) plus the biggest one. See "Reading the evaluation" below for how to interpret the
-numbers. Nothing is sent to a server; analysis runs client-side and only the result is saved,
-so re-opening the game later shows it without re-running the engine.
+A blunder is a 200+ centipawn swing against the player who moved, tagged **Mistake** (200–399)
+or **Blunder** (400+). Where a simple pattern explains it — a hanging piece, a fork, a skewer, or
+a pin to the king — you get a plain-English explanation, along with the engine's better move and
+its follow-up plan on a small step-through board. These checks are intentionally simple, so many
+blunders show only the eval swing.
 
-To analyze more than one game at a time, **Analyze all** on the Games page runs the engine over
-every synced game that doesn't have a saved analysis yet, one after another, showing progress
-as it goes. Each game's result is saved as soon as that game finishes, so closing the tab
-partway through (or clicking Cancel) doesn't lose what's already done — running it again later
-just picks up wherever it left off.
+Evals are in pawns from White's point of view (`+1.4` favors White); `M3` / `-M2` are forced
+mates. See [chessprogramming.org](https://www.chessprogramming.org/Evaluation) for more.
 
-Every game's page also links out to the opening's Chess.com page ("Learn more about this
-opening"), and once a game's analyzed, a one-line "Biggest moment" summary and a running
-material count (a plain piece-value tally — no engine needed, works even before you've
-analyzed) show up alongside the board. Blunder lists spell moves out in plain English too
-("Queen captures pawn on f6, check"), not just algebraic notation — and where a blunder simply
-hangs a piece (left attacked and undefended, capturable for free), lets the opponent fork two
-pieces at once, skewers a piece into exposing a less valuable one behind it, or pins a piece to
-your king, a line explains that too ("This leaves the queen on f6 hanging — it can be captured for
-free" / "This allows a fork — the knight on b5 now attacks the queen on c7 and the rook on a7 at
-once" / "This skewers the queen on d5 — if it moves, the bishop on c4 captures the rook on g8" /
-"This pins the knight on c6 to the king — it can't move without exposing the king to the bishop on
-b5"). A "How to read this" glossary alongside the blunder list spells out each of these terms in
-plain language too. All four checks are intentionally simple (no evaluation of unequal trades, no
-relative pins to anything other than the king, no simulation of a future opponent move creating a
-fork or skewer) — they won't catch every kind of mistake, so plenty of blunders show no reason at
-all, just the eval swing.
+A game page also has:
 
-Each blunder also names the engine's suggested move instead, with a plain-English description and
-— when the same simple checks explain it — why it's actually better ("better was Nd7 (Knight to
-d7) — saves the rook on h6, which was hanging"). Stepping through the board on a game's page (with
-the ◀/▶ buttons, the move list, or the left/right arrow keys) shows the same explanation for
-whatever move you're currently viewing, right alongside the arrow pointing at the engine's
-suggestion. A game's page opens on the first move already played rather than the last, and a
-**Play** button (or the Space key) auto-advances through the game — pausing automatically on a
-blunder rather than requiring you to step through every quiet move to find one — until it reaches
-the end, or you pause it yourself. `0` jumps back to the start.
+- **Play** (or Space), which auto-advances and pauses on your blunders. ←/→ step and `0` restarts.
+- A **Move quality** table with Chess.com-style accuracy and move tiers for both sides.
+- **Engine lines**: the top 3 live lines for the current position. ▶ plays a line onto the board.
+- **Explore moves**: try your own moves from any point, with the engine following along.
+  Nothing is saved.
+- A **Position checklist** of hanging pieces, forks, pins and skewers in the current position,
+  also drawn on the board.
 
-A **Move quality** link below the move list opens a Chess.com-style accuracy table — one accuracy
-score (0-100) and a tally of Best/Excellent/Good/Inaccuracy/Mistake/Blunder moves, for you and your
-opponent — built entirely from the same saved analysis, no extra engine work needed.
+### Drilling
 
-Not every good move pays off immediately — sometimes the point only becomes clear a few moves
-later, which is hard to judge from notation alone if you can't calculate that far ahead yet. When
-the engine's own expected follow-up is available, it shows up as a "Plan: ..." line next to the
-suggestion, and — since a short move list still asks you to picture the position yourself — as a
-small interactive board underneath it, with its own Start/Previous/Next/End controls so you can
-actually step through where the plan leads instead of just reading it.
+`/drill` turns every repertoire deviation and every one of your blunders into a card: find the
+move you should have played. Scheduling is SM-2: right answers come back later, wrong ones
+tomorrow. Sessions hold 15 cards, the most overdue first. **Hint** reveals progressively more, and
+cards can be filtered by type and opening. Shortcuts: Space/Enter for the next card, H for a hint.
 
-### Live analysis and free exploration
+### Blunders
 
-Alongside the batch "Analyze" pass above, a game's page also runs the engine live: an **Engine
-lines** panel next to the board shows the top 3 candidate moves — with eval and a short expected
-continuation for each, formatted chess.com-style with a piece icon and move number per move, not
-just bare algebraic text — for whatever position you're currently looking at, re-searching every
-time you step to a different move. An eval bar and an arrow pointing at the engine's current top
-move appear right on the board too, for either side to move, not just your own. Nothing here is
-saved; it's a live readout, not a stored analysis.
+`/blunders` aggregates your blunders across analyzed games by opening and by piece, with a top-10
+worst list and an accuracy trend (per-game dots plus a 10-game rolling average). A date range
+filter scopes the whole page.
 
-**Explore moves** turns the board itself interactive: drag or click a piece to try something
-other than what was actually played, branching off freely from wherever you are in the game. The
-engine lines, eval bar, and best-move arrow all keep following along with your own moves, so you
-can test an idea and immediately see how the engine rates it. Nothing about your branch is saved
-either — the ◀/▶ buttons step back and forth through it while you're exploring, and clicking any
-move in the game's own move list (or the toggle again) drops it and returns you to the recorded
-game.
+### Learn
 
-Each engine line also has a ▶ button — click it to play that whole suggested line onto the board
-at once, instead of dragging each of its moves out yourself (which used to lose its own point of
-reference partway through, since every move you make re-searches and replaces the very line
-you're trying to follow). It lands you right back where you clicked from rather than jumping to
-the line's end, so the ◀/▶ buttons step through it one move at a time, watching each one land. The
-line stays visible as its own "Your line" strip pinned at the top of the Engine lines panel — not
-tucked below the board, and not something that disappears the moment the candidate lines below it
-refresh for wherever you've stepped to — with a ✕ next to it to clear the branch and jump back to
-exactly where you started exploring, without having to exit and re-enter exploration mode.
+`/learn` has short lessons on 14 openings and 3 basic endgames, each a line you step through
+with a note per move. **Quiz** mode tests you on one side while the opponent's moves play
+automatically. Opening lessons show how many of your own games reached that line. Content is
+adapted, in original wording, from Wikibooks'
+[Chess Opening Theory](https://en.wikibooks.org/wiki/Chess_Opening_Theory/1._e4) and
+[Chess/The Endgame](https://en.wikibooks.org/wiki/Chess/The_Endgame) (CC BY-SA).
 
-### Reading the evaluation
+### Puzzles
 
-- **Centipawns (cp)**, shown as e.g. `+1.4` or `-0.8`: material/positional advantage in units of
-  a pawn, always from **White's** point of view — positive favors White, negative favors Black.
-  `+1.4` means "White is up about a pawn and a half's worth of advantage," not literally a pawn
-  ahead.
-- **Mate scores**, shown as `M3` or `-M2`: a forced checkmate in that many moves, `M` for White
-  delivering it, `-M` for Black.
-- **Blunder**: any move after which the eval swings 200+ centipawns _against_ the player who
-  just moved. A move that was already losing and stays losing isn't flagged again — only the
-  swing matters. Every blunder is also tagged **Mistake** (200–399cp) or **Blunder** (400cp+) so
-  you can tell a near-miss from a disaster at a glance.
-- If you're new to reading engine evals, the [chessprogramming.org Evaluation
-  page](https://www.chessprogramming.org/Evaluation) covers the same centipawn/mate-score
-  convention Stockfish (and Blitzr) uses.
-
-## Position checklist
-
-Stepping through a game on its page, a **Position checklist** panel sits next to the board, below
-the move list, and updates as you move through the game — it scans whatever position you're
-currently looking at for hanging pieces, forks, pins, and skewers on either side, split into "Your
-pieces" and "Opponent's pieces." Unlike the blunder explanations above (which only fire on a move
-that actually swung the eval), this checks the position itself, so it's useful at any point in any
-game — including one you haven't run Stockfish on at all — for figuring out what to look for next
-instead of just moving pieces around. It's capped to the 3 most valuable findings per side so a
-busy position doesn't turn into a wall of text, and the same "How to read this" glossary from the
-analysis dialog is right there too, in case "skewer" or "fork" isn't a familiar term yet. It stays
-in view the whole time you're stepping through a game — no scrolling down to check it and back up
-to move again — and collapses down to one line ("nothing to flag right now") on a quiet position
-so it doesn't crowd out the move list when there's nothing to say.
-
-Each finding is also drawn directly on the board — a highlighted square for a hanging piece, an
-arrow for a fork/pin/skewer — so there's no mental step mapping "the knight on b5" back to an
-actual square. If a busy position makes that too much at once, every finding has its own Hide/Show
-link right next to its sentence, so you can dismiss just the ones you don't want without losing the
-rest.
-
-## Drilling
-
-On `/drill`, every repertoire deviation and every blunder from your own moves becomes a card:
-you're shown the position right before the mistake and have to find the move that should have
-been played (any of your repertoire's prepared replies for a deviation card, the engine's
-suggested move for a blunder card). Get it right and the card comes back further out; get it
-wrong and it comes back tomorrow, with the correct move revealed as an arrow. Whatever move you
-actually play, right or wrong, also gets checked for a hung piece, same as the Repertoire board.
-The deck stays in sync automatically — build more repertoire or analyze more games, and new
-cards just show up next time you visit.
-
-Stuck on a card? **Hint** reveals progressively more each time you click it — first which piece
-to move, then which square it's on, then the full move as an arrow. Finished a session but don't
-want to wait until tomorrow for the cards you got wrong? **Shuffle and restart** on the
-session-complete screen replays the same cards in a new order — and it's a real do-over, not
-just practice: answering again actually updates that card's schedule, same as a normal answer.
-
-A session is capped at 15 cards (the most overdue ones first) rather than throwing every due card
-at you at once — if there's more waiting, the session-complete screen says so with a link to
-load the next batch. Filter the deck by **All / Deviations / Blunders** and by opening if you
-only want to work on one thing at a time. And once you're mid-session: Space or Enter moves on
-to the next card, and H triggers the hint — no mouse needed.
-
-## Blunders
-
-On `/blunders`, every blunder from your own moves — across every game that's been analyzed so
-far — is rolled up into one view: an accuracy-over-time chart, grouped by opening, grouped by
-moved piece, and a top-10 "worst blunders" list (each entry in plain English, not just algebraic
-notation, plus a hung-piece explanation when that's what happened) linking back to each game.
-It's scoped to whatever's been analyzed (analyze more games, individually or with **Analyze
-all**, to fill it in further) rather than implying full coverage of your history.
-
-The chart plots your own-side accuracy for every analyzed game — muted dots (hideable with a
-checkbox) under a rolling 10-game-average line — a metric that works the same whether a game was
-rated, unrated, or against a bot, unlike Chess.com's own rating. Games are spaced by the order
-they were played rather than by calendar date, so a run of several games in one sitting doesn't
-pile up on top of each other; hover any point to see that exact game's date and accuracy. A
-date-range filter above it — Today / Last 3 days / Last week / Last 2 weeks presets, or a custom
-from/to — narrows the chart and every table below it together, and it's shareable as a link since
-it lives in the URL too.
-
-## Learn
-
-On `/learn`, short plain-language lessons (English and Spanish, see "Language" above) introduce
-common openings and endgames — not a repertoire, just the ideas behind one natural line, move by
-move. The index shows each one as a square card with a small preview of the position it leads to,
-switched between an "Openings" and an "Endgames" tab. Opening a lesson gives you a large
-interactive board to step through it, with each move getting its own one-line note on why it's
-played, right above the board — a flip button next to the board controls lets you view the line
-from either side.
-
-**Openings**: 14 lessons so far, spanning every major first move and both colors — King's Pawn
-Opening, Sicilian Defense, French Defense, Queen's Gambit, Italian Game, Caro-Kann Defense,
-Scandinavian Defense, King's Indian Defense, English Opening, Nimzo-Indian Defense, Grünfeld
-Defense, King's Gambit, Scotch Game, and Pirc Defense — not a full opening encyclopedia, but
-adding more from here is just a content-only change. Adapted from a specific page of Wikibooks'
-[Chess Opening Theory](https://en.wikibooks.org/wiki/Chess_Opening_Theory/1._e4) (CC BY-SA).
-
-**Endgames**: 3 lessons so far — King and Queen vs. King, King and Rook vs. King, and King and
-Pawn vs. King (opposition) — each one a complete, real technique demonstration that plays all the
-way to an actual checkmate (or, for the pawn ending, to the pawn promoting), not just a tabiya.
-Adapted from a different chapter of the same Wikibooks book,
-[Chess/The Endgame](https://en.wikibooks.org/wiki/Chess/The_Endgame).
-
-The overall summary lives behind a "?" button next to the board controls rather than always
-taking up space on the page — worth reading once, not on every visit. Summaries are written in
-original wording rather than reproduced from any source, with a link back (opens in a new tab)
-for attribution and further reading.
-
-A **Quiz** tab next to Study switches from reading the line to playing it from memory: you're only
-tested on one side (whichever color the board is currently oriented to — defaults to the side the
-lesson is written from, flip it to practice the other), the opponent's replies play themselves
-after a short pause. A "Not quite — try again" nudge appears
-on a wrong guess with no penalty for retrying immediately, a "Show move" button (or the `H` key)
-reveals the answer as an arrow if you're stuck, and each move's explanation still appears the
-instant you get it right. A "Restart" button (or the `R` key) is always available, not just once
-you finish, so you can bail out and start over mid-line. The board stays visible at the final
-position when you finish, alongside how many mistakes and hints it took. It's fully
-self-contained to this page — no spaced repetition, no saved progress — the deliberately
-lightweight way to actually test what you just read instead of only skimming it.
-
-Each _opening_ lesson also cross-links to your own Chess.com history: "You've played this in N of
-your games (WW/DD/LL)" (or a note that you haven't yet), linking through to `/openings`. This
-checks your synced games' actual moves against the lesson's line, rather than Chess.com's ECO
-categorization — a lesson teaches a starting position, but real games almost always continue past
-it into a more specific named variation, which is what Chess.com actually tags the game with.
-Endgame lessons skip this line entirely — a game doesn't "reach" a constructed endgame position
-the way it reaches an opening tabiya.
-
-## Puzzles
-
-On `/puzzles`, solve "mate in N" positions pulled from real tournament and match games — each one
-a moment where a real player actually found (or missed) a forced mate, not a generic filler
-puzzle. Unlike a typical trainer that plays the opponent's replies for you, here you play out the
-_entire_ line yourself, move by move, both sides — a puzzle only counts as solved once you've
-walked the whole forced sequence by hand, not just found the first move. A wrong move at any point
-just asks you to try again with no penalty; there are no hints, only an explicit "Reveal solution"
-for when you're stuck, which shows the answer but doesn't count as solving it. A ◀/▶ control lets
-you step back through moves you've already played to review them, and a promotion move (some
-puzzles are only mate because of an underpromotion) prompts you to pick which piece rather than
-assuming a queen.
-
-Solved puzzles are tracked and marked with a checkmark on the list, which is filterable by solved
-status, which side is delivering mate, and how many moves the mate takes (every puzzle today is
-mate-in-2, with room for other lengths later).
+`/puzzles` has mate-in-1/2/3 positions from real games and László Polgár's _5334 Problems,
+Combinations, and Games_. You play the whole line yourself, both sides. Wrong moves can be
+retried, and **Reveal solution** doesn't count as solving. Solved puzzles are tracked, and the
+list filters by status, side to move and mate length.
 
 ## Data hygiene
 
-- Your Chess.com username lives in `.env.local` (config), never in code. The API is
-  unauthenticated and public, so there's no secret to leak — `.env.example` documents the one
-  variable you need.
-- `data/*.db` (your synced games) is gitignored and never committed.
-- `public/stockfish/` (the ~7MB WASM engine) is gitignored too — `pnpm install` copies it from
-  `node_modules` via a `postinstall` script, so it's never committed either.
+- Your username lives in `.env.local`, never in code. The API is public, so there's no secret.
+- `data/*.db` and `public/stockfish/` (~7MB, copied from `node_modules` on install) are
+  gitignored.
 
 ## Credits
 
-- Chess piece icons (`components/PieceGlyph.tsx`) are the "light" (white) pieces from
-  [Wikimedia Commons' SVG chess piece set](https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces),
-  originally by [Cburnett](https://commons.wikimedia.org/wiki/User:Cburnett), used under the
-  BSD license.
+- Chess piece icons (`components/PieceGlyph.tsx`) are from
+  [Wikimedia Commons' SVG chess piece set](https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces)
+  by [Cburnett](https://commons.wikimedia.org/wiki/User:Cburnett), used under the BSD license.

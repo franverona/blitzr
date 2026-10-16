@@ -13,22 +13,13 @@ import { MoveExplanation } from './MoveExplanation'
 
 type Mode = 'study' | 'quiz'
 
-/** Owns the Study/Quiz toggle for a lesson page. `key={mode}` on
- *  BoardProvider remounts it on every switch — each mode wants a different
- *  starting ply (study opens on the first move already played; quiz starts
- *  from the empty board) and switching should always reset progress rather
- *  than carry over wherever the other mode's board happened to land. */
+/** Study/Quiz toggle. `key={mode}` resets the board on every switch. */
 export function LessonPractice({
   lesson,
   gameStats,
 }: {
   lesson: Lesson
-  /** How many of the account's own synced games reached this lesson's exact
-   *  line, computed server-side in `app/learn/[slug]/page.tsx` — only
-   *  meaningful for an opening lesson (a game doesn't "reach" an endgame
-   *  position via a move prefix from move 1), so `null` for an endgame
-   *  lesson skips the section entirely rather than showing a nonsense
-   *  "0 games" line. */
+  /** null for endgame lessons, which hides the section. */
   gameStats: LessonGameStatsData | null
 }) {
   const [mode, setMode] = useState<Mode>('study')
@@ -70,15 +61,10 @@ export function LessonPractice({
         {gameStats && <LessonGameStats stats={gameStats} />}
         {mode === 'study' ? (
           <BoardView
-            // Side-by-side (lg+), capped by viewport height like the game page
-            // so header + board + coordinates fit a 13" laptop screen without
-            // a page scroll; 13rem ≈ everything above/below the board here.
+            // lg+: 13rem ≈ chrome above/below the board.
             boardMaxWidthClassName="max-w-172 lg:max-w-[min(43rem,calc(100dvh-13rem))]"
             sidebarExtra={
-              // `lg:flex-1` splits the column's height evenly with the move
-              // list (also `flex-1`) rather than letting it take everything —
-              // a lesson is never more than ~10 moves, so half is plenty, and
-              // it keeps the nav controls and explanation near the top.
+              // Splits the column's height with the move list.
               <div className="flex min-h-0 flex-col gap-4 lg:flex-1">
                 <BoardNavControls />
                 <MoveExplanation moves={lesson.moves} />
