@@ -638,47 +638,63 @@ export function BoardNavControls() {
   }, [isPlaying, lastPly, blunderPlies, setPly])
 
   return (
-    <div className="flex items-center gap-2 text-sm">
+    <div className="flex items-center gap-2">
       <NavButton onClick={goToStart} disabled={displayPly === 0} label={s.board.navLabels.start}>
-        ⏮
+        <NavIcon d="M7 5v14M18 6l-6 6 6 6" />
       </NavButton>
       <NavButton
         onClick={goToPrevious}
         disabled={displayPly === 0}
         label={s.board.navLabels.previous}
       >
-        ◀
+        <NavIcon d="M15 6l-6 6 6 6" />
       </NavButton>
-      <span className="min-w-16 text-center text-zinc-400 tabular-nums">
-        {displayPly} / {displayLastPly}
-      </span>
+      <NavButton
+        onClick={togglePlaying}
+        disabled={lastPly === 0 || exploring}
+        label={isPlaying ? s.board.navLabels.pause : s.board.navLabels.play}
+        active={isPlaying}
+      >
+        {isPlaying ? (
+          <NavIcon d="M9 5v14M15 5v14" />
+        ) : (
+          <svg viewBox="0 0 24 24" className="size-5" fill="currentColor" aria-hidden>
+            <path d="M8 5v14l11-7z" />
+          </svg>
+        )}
+      </NavButton>
       <NavButton
         onClick={goToNext}
         disabled={displayPly === displayLastPly}
         label={s.board.navLabels.next}
       >
-        ▶
+        <NavIcon d="M9 6l6 6-6 6" />
       </NavButton>
       <NavButton
         onClick={goToEnd}
         disabled={displayPly === displayLastPly}
         label={s.board.navLabels.end}
       >
-        ⏭
+        <NavIcon d="M17 5v14M6 6l6 6-6 6" />
       </NavButton>
-      <span className="mx-1 h-4 w-px bg-zinc-300 dark:bg-zinc-700" />
-      <button
-        onClick={togglePlaying}
-        disabled={lastPly === 0 || exploring}
-        className={`rounded-md border px-2.5 py-1 disabled:opacity-40 ${
-          isPlaying
-            ? 'border-accent bg-accent/20 text-zinc-900 dark:text-white'
-            : 'border-zinc-300 hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800'
-        }`}
-      >
-        {isPlaying ? s.board.navLabels.pause : s.board.navLabels.play}
-      </button>
     </div>
+  )
+}
+
+function NavIcon({ d }: { d: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="size-5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={3}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d={d} />
+    </svg>
   )
 }
 
@@ -785,6 +801,7 @@ function GameEndBadge({
 
 export function BoardView({
   boardMaxWidthClassName = 'max-w-160',
+  sidebarMaxWidthClassName = 'lg:max-w-sm xl:max-w-md',
   sidebarExtra,
 }: {
   /** Lets a caller give the board more visual presence than the default
@@ -792,6 +809,9 @@ export function BoardView({
    *  `/learn` lesson page, which has no move-list-heavy sidebar competing
    *  for width. */
   boardMaxWidthClassName?: string
+  /** Width cap for the move-list sidebar column at lg+ — the game page
+   *  narrows it so its nav controls span the whole row. */
+  sidebarMaxWidthClassName?: string
   /** Extra content stacked below the move list, in the same width-capped
    *  sidebar column — e.g. `/learn`'s `MoveExplanation`. The move list
    *  itself grows to fill any leftover height in the column (`MoveList`'s
@@ -1183,7 +1203,7 @@ export function BoardView({
       </div>
 
       <div
-        className="flex min-h-0 w-full flex-col gap-4 lg:max-w-sm lg:flex-1 xl:max-w-md"
+        className={`flex min-h-0 w-full flex-col gap-4 lg:flex-1 ${sidebarMaxWidthClassName}`}
         style={sidebarHeight ? { height: sidebarHeight } : undefined}
       >
         <MoveList
@@ -1212,11 +1232,13 @@ function NavButton({
   onClick,
   disabled,
   label,
+  active = false,
   children,
 }: {
   onClick: () => void
   disabled: boolean
   label: string
+  active?: boolean
   children: React.ReactNode
 }) {
   return (
@@ -1224,7 +1246,12 @@ function NavButton({
       onClick={onClick}
       disabled={disabled}
       aria-label={label}
-      className="rounded-md border border-zinc-300 px-2.5 py-1 hover:bg-zinc-100 disabled:opacity-40 dark:border-zinc-700 dark:hover:bg-zinc-800"
+      title={label}
+      className={`flex h-10 min-w-14 flex-1 items-center justify-center rounded-lg border disabled:opacity-40 ${
+        active
+          ? 'border-accent bg-accent/20 text-zinc-900 dark:text-white'
+          : 'border-zinc-300 bg-zinc-50 text-zinc-700 hover:bg-zinc-200 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700'
+      }`}
     >
       {children}
     </button>
