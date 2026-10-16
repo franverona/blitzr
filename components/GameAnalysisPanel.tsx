@@ -87,26 +87,21 @@ export function GameAnalysisProvider({
   )
 }
 
-/** Name of the strength a saved analysis was run at, or its raw movetime if
- *  it doesn't match a current preset; null for analyses saved before
- *  `movetimeMs` was recorded. */
-function savedStrengthLabel(movetimeMs: number | undefined): string | null {
-  if (movetimeMs === undefined) return null
-  const strength = (Object.keys(ANALYSIS_STRENGTHS) as AnalysisStrength[]).find(
-    (k) => ANALYSIS_STRENGTHS[k] === movetimeMs,
-  )
-  return strength ? getStrings().settings.analysisStrengths[strength] : `${movetimeMs}ms`
-}
-
 /** The strength picker defaults to the Settings value but is local to this
  *  button, so re-running one game deeper doesn't change the default for
- *  every other analysis. */
+ *  every other analysis. The saved analysis's strength is marked with a ✓
+ *  in the picker (and in the button's tooltip) rather than a caption below
+ *  it — an extra line here makes this column taller than its row siblings
+ *  and throws off the header row's vertical alignment. Older analyses have
+ *  no `movetimeMs`, so nothing is marked for them. */
 export function AnalyzeButton() {
   const { analysis, progress, error, handleAnalyze } = useAnalysisContext()
   const { analysisStrength } = useSettings()
   const [strength, setStrength] = useState<AnalysisStrength>(analysisStrength)
   const s = getStrings()
-  const savedLabel = analysis && savedStrengthLabel(analysis.movetimeMs)
+  const savedStrength = (Object.keys(ANALYSIS_STRENGTHS) as AnalysisStrength[]).find(
+    (k) => ANALYSIS_STRENGTHS[k] === analysis?.movetimeMs,
+  )
 
   return (
     <div className="flex flex-col items-end gap-1">
@@ -125,6 +120,7 @@ export function AnalyzeButton() {
             {(Object.keys(ANALYSIS_STRENGTHS) as AnalysisStrength[]).map((k) => (
               <option key={k} value={k} className="bg-zinc-50 dark:bg-zinc-900">
                 {s.settings.analysisStrengths[k]}
+                {k === savedStrength && ' ✓'}
               </option>
             ))}
           </select>
@@ -146,6 +142,10 @@ export function AnalyzeButton() {
         <button
           onClick={() => handleAnalyze(strength)}
           disabled={progress !== null}
+          title={
+            savedStrength &&
+            s.analysisPanel.savedAtStrength(s.settings.analysisStrengths[savedStrength])
+          }
           className="rounded-r-md px-3 py-1.5 font-medium whitespace-nowrap hover:bg-zinc-100 disabled:opacity-50 dark:hover:bg-zinc-800"
         >
           {progress
@@ -155,11 +155,6 @@ export function AnalyzeButton() {
               : s.analysisPanel.analyzeWithStockfish}
         </button>
       </div>
-      {savedLabel && !progress && (
-        <p className="text-xs text-zinc-500 dark:text-zinc-400">
-          {s.analysisPanel.savedAtStrength(savedLabel)}
-        </p>
-      )}
       {error && <p className="text-sm text-rose-600 dark:text-rose-400">{error}</p>}
     </div>
   )
