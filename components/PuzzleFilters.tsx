@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { getStrings } from '@/lib/i18n/strings'
 import { startRouteProgress } from './RouteProgressBar'
+import { Select } from './Select'
 
 export type PuzzleStatusFilter = 'all' | 'solved' | 'unsolved'
 export type PuzzleColorFilter = 'all' | 'white' | 'black'
@@ -89,7 +90,7 @@ export function PuzzleFilters({
         )
       })}
       {availableMateIns.length > 0 && (
-        <select
+        <Select
           value={mateIn ?? ''}
           onChange={(e) => {
             startRouteProgress()
@@ -103,7 +104,7 @@ export function PuzzleFilters({
               {s.puzzles.mateIn(n)}
             </option>
           ))}
-        </select>
+        </Select>
       )}
     </div>
   )

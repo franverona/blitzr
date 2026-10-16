@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { getStrings } from '@/lib/i18n/strings'
+import { Select } from './Select'
 
 const FILTER_TRIGGER_CLASS =
   'rounded-md border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900'
@@ -113,7 +114,7 @@ export function GameSearchForm({
       />
 
       <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
-        <select
+        <Select
           value={result ?? ''}
           onChange={(e) => navigate({ result: e.target.value })}
           className={FILTER_TRIGGER_CLASS}
@@ -122,9 +123,9 @@ export function GameSearchForm({
           <option value="win">{s.common.result.win}</option>
           <option value="draw">{s.common.result.draw}</option>
           <option value="loss">{s.common.result.loss}</option>
-        </select>
+        </Select>
 
-        <select
+        <Select
           value={color ?? ''}
           onChange={(e) => navigate({ color: e.target.value })}
           className={FILTER_TRIGGER_CLASS}
@@ -132,9 +133,9 @@ export function GameSearchForm({
           <option value="">{s.gamesPage.allColors}</option>
           <option value="white">{s.common.color.white}</option>
           <option value="black">{s.common.color.black}</option>
-        </select>
+        </Select>
 
-        <select
+        <Select
           value={rated ?? ''}
           onChange={(e) => navigate({ rated: e.target.value })}
           className={FILTER_TRIGGER_CLASS}
@@ -142,7 +143,7 @@ export function GameSearchForm({
           <option value="">{s.gamesPage.allRated}</option>
           <option value="true">{s.gamesPage.rated}</option>
           <option value="false">{s.gamesPage.unrated}</option>
-        </select>
+        </Select>
 
         <AccuracyFilterPopover
           accOp={accOp}

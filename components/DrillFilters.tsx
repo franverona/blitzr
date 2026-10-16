@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { getStrings } from '@/lib/i18n/strings'
 import type { DrillSourceType } from '@/lib/types'
 import { startRouteProgress } from './RouteProgressBar'
+import { Select } from './Select'
 
 /** URL-driven deck filters (`?type=`/`?opening=`), same pattern as
  *  `RepertoireBoard.tsx`'s `ColorTab` — a real navigation, not client state,
@@ -57,7 +58,7 @@ export function DrillFilters({
         )
       })}
       {availableOpenings.length > 0 && (
-        <select
+        <Select
           value={opening ?? ''}
           onChange={(e) => {
             startRouteProgress()
@@ -71,7 +72,7 @@ export function DrillFilters({
               {label}
             </option>
           ))}
-        </select>
+        </Select>
       )}
     </div>
   )
