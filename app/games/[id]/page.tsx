@@ -77,7 +77,6 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
           blackAvatar={blackAvatar}
         />
         <div className="flex flex-wrap items-center justify-end gap-4">
-          {game.movesSan && <BoardNavControls />}
           {game.movesSan && <ExploreToggleButton />}
           {game.movesSan && (
             <DetailsDialogTrigger>
@@ -105,7 +104,19 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
         // Side-by-side (lg+), the board is also capped by viewport height so
         // the header + board + material/"better was" lines fit a 13" laptop
         // screen without a page scroll; 16rem ≈ everything above/below it.
-        <BoardView boardMaxWidthClassName="max-w-160 lg:max-w-[min(40rem,calc(100dvh-16rem))] xl:max-w-[min(43rem,calc(100dvh-16rem))] 2xl:max-w-[min(46rem,calc(100dvh-16rem))]" />
+        // The nav controls sit under the move list, spanning its (narrowed)
+        // width; the sidebar is pinned to the board column's height, so the
+        // list (`flex-1`) shrinks to make room for them rather than pushing
+        // them below the fold.
+        <BoardView
+          boardMaxWidthClassName="max-w-160 lg:max-w-[min(40rem,calc(100dvh-16rem))] xl:max-w-[min(43rem,calc(100dvh-16rem))] 2xl:max-w-[min(46rem,calc(100dvh-16rem))]"
+          sidebarMaxWidthClassName="lg:max-w-xs xl:max-w-sm"
+          sidebarExtra={
+            <div className="shrink-0">
+              <BoardNavControls />
+            </div>
+          }
+        />
       ) : (
         <div className="flex flex-col gap-2">
           <p className="text-sm text-amber-600 dark:text-amber-400">

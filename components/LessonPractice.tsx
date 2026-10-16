@@ -59,7 +59,6 @@ export function LessonPractice({
               onClick={() => setMode('quiz')}
             />
             <span className="mx-1 h-4 w-px bg-zinc-300 dark:bg-zinc-700" />
-            {mode === 'study' && <BoardNavControls />}
             <FlipBoardButton />
             <AboutOpeningButton
               name={lesson.name[locale]}
@@ -71,8 +70,20 @@ export function LessonPractice({
         {gameStats && <LessonGameStats stats={gameStats} />}
         {mode === 'study' ? (
           <BoardView
-            boardMaxWidthClassName="max-w-172"
-            sidebarExtra={<MoveExplanation moves={lesson.moves} />}
+            // Side-by-side (lg+), capped by viewport height like the game page
+            // so header + board + coordinates fit a 13" laptop screen without
+            // a page scroll; 13rem ≈ everything above/below the board here.
+            boardMaxWidthClassName="max-w-172 lg:max-w-[min(43rem,calc(100dvh-13rem))]"
+            sidebarExtra={
+              // `lg:flex-1` splits the column's height evenly with the move
+              // list (also `flex-1`) rather than letting it take everything —
+              // a lesson is never more than ~10 moves, so half is plenty, and
+              // it keeps the nav controls and explanation near the top.
+              <div className="flex min-h-0 flex-col gap-4 lg:flex-1">
+                <BoardNavControls />
+                <MoveExplanation moves={lesson.moves} />
+              </div>
+            }
           />
         ) : (
           <LessonQuiz sidebarExtra={<MoveExplanation moves={lesson.moves} />} />
