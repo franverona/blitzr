@@ -58,6 +58,7 @@ components/
   MoveExplanation.tsx                       # per-move note for the lesson currently on the board
   AboutOpeningButton.tsx                      # lesson summary + source link dialog
   FlipBoardButton.tsx                           # flips board orientation on a lesson
+  BoardCoordinates.tsx                            # rank/file labels in a gutter outside the board
   MiniBoard.tsx                                   # small board preview for /learn index cards
   BlunderStats.tsx                       # by-opening/by-piece/worst-blunders aggregate view
   AccuracyTrendChart.tsx                   # own-side accuracy-over-time chart on /blunders
@@ -204,8 +205,10 @@ file, not here — this section is only cross-cutting rules that span multiple f
   `movetimeMs`; it only affects batch analysis, not the live MultiPV panel.
   Hide-engine-hints (`blitzr-hide-engine-hints`) suppresses `BoardView`'s eval bar and both
   best-move arrows (saved and live) — the live lines panel and "better was" text still show.
-  Board coordinates (`blitzr-show-coordinates`, default on) is every board's `showNotation`
-  except `MiniBoard`, which never shows them.
+  Board coordinates (`blitzr-show-coordinates`, default on) are drawn _outside_ the board, in a
+  left/bottom gutter, by `BoardCoordinates.tsx` wrapping every board except `MiniBoard` (which
+  never shows them) — react-chessboard's own `showNotation` (inside the corner squares) is always
+  `false`. A sibling stretched next to the board (`EvalBar`) needs `mb-5` while it's on.
   Move sounds (`blitzr-move-sounds`, default on) are `useMoveSound(fen)` in each board — a
   sound per position change, picked by `moveSoundFor()` (`lib/moveSound.ts`: game end > check >
   promote/castle/capture > plain move), hotlinked from chess.com's CDN rather than bundled

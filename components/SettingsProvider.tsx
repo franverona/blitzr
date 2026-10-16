@@ -7,7 +7,7 @@ import {
   DEFAULT_ANALYSIS_STRENGTH,
 } from '@/lib/stockfish/analyze'
 import { type MoveSound, moveSoundFor } from '@/lib/moveSound'
-import { boardNotationStyles, getBoardColorPreset } from '@/lib/theme'
+import { getBoardColorPreset } from '@/lib/theme'
 
 // Not shared with app/layout.tsx's own read of this same cookie — a plain
 // constant exported from a 'use client' module doesn't reliably cross back
@@ -32,8 +32,6 @@ interface SettingsContextValue {
   presetId: string
   dark: string
   light: string
-  darkSquareNotationStyle: { color: string; fontWeight: 'bold' }
-  lightSquareNotationStyle: { color: string; fontWeight: 'bold' }
   setBoardColorPreset: (id: string) => void
   analysisStrength: AnalysisStrength
   setAnalysisStrength: (strength: AnalysisStrength) => void
@@ -139,7 +137,6 @@ export function SettingsProvider({
         presetId: preset.id,
         dark: preset.dark,
         light: preset.light,
-        ...boardNotationStyles(preset.dark, preset.light),
         setBoardColorPreset,
         analysisStrength,
         setAnalysisStrength,

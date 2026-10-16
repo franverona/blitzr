@@ -12,6 +12,7 @@ import {
 } from 'react'
 import { Chess } from 'chess.js'
 import { Chessboard } from 'react-chessboard'
+import { BoardCoordinates } from './BoardCoordinates'
 import { describeEval, findBlunders, formatEval } from '@/lib/analysis'
 import { buildPositionChecklist, findingKey, findingMarks } from '@/lib/checklist'
 import { whiteToMove } from '@/lib/drill'
@@ -23,7 +24,6 @@ import { StockfishEngine } from '@/lib/stockfish/client'
 import { describeBetterMove } from '@/lib/tactics'
 import {
   BOARD_ANIMATION_DURATION_MS,
-  BOARD_NOTATION_SIZE_STYLE,
   CHECKLIST_ARROW_COLOR,
   CHECKLIST_SQUARE_COLOR,
   GAME_END_SQUARE_COLORS,
@@ -1089,7 +1089,11 @@ export function BoardView({
       >
         <div className="flex items-stretch gap-2">
           {barEval && !boardColors.hideEngineHints && (
-            <EvalBar evaluation={barEval} boardOrientation={boardOrientation} />
+            <EvalBar
+              evaluation={barEval}
+              boardOrientation={boardOrientation}
+              className={boardColors.showCoordinates ? 'mb-5' : ''}
+            />
           )}
           {/* The `overflow-hidden` that clips the board image to its rounded
               corners has to live on an *inner* div — the game-end badges
@@ -1097,56 +1101,58 @@ export function BoardView({
               badge over a back-rank king (see `GameEndBadge`'s comment) can
               float past the board's own top/bottom edge instead of getting
               clipped by it. */}
-          <div className={`relative w-full ${boardMaxWidthClassName}`}>
-            <div className="w-full overflow-hidden rounded shadow-lg">
-              <Chessboard
-                options={{
-                  id: boardId,
-                  position: displayFen,
-                  boardOrientation,
-                  allowDragging: exploring,
-                  onPieceDrop: exploring ? handleExploreDrop : undefined,
-                  onSquareClick: exploring ? handleExploreSquareClick : undefined,
-                  // squareRenderer takes over a square's background entirely
-                  // (react-chessboard only auto-applies squareStyles when it's
-                  // absent) — used only while exploring, for the legal-move
-                  // dots; the checklist's squareStyles below is what draws
-                  // outside exploration instead.
-                  squareRenderer: exploring
-                    ? ({ square, children }) => (
-                        <LegalMoveSquare
-                          isSelected={square === selectedSquare}
-                          isLegalMove={legalMoveMap.has(square)}
-                          isCapture={legalMoveMap.get(square) ?? false}
-                        >
-                          {children}
-                        </LegalMoveSquare>
-                      )
-                    : undefined,
-                  showAnimations: isAdjacentStep,
-                  animationDurationInMs: BOARD_ANIMATION_DURATION_MS,
-                  darkSquareStyle: { backgroundColor: boardColors.dark },
-                  lightSquareStyle: { backgroundColor: boardColors.light },
-                  showNotation: boardColors.showCoordinates,
-                  darkSquareNotationStyle: boardColors.darkSquareNotationStyle,
-                  lightSquareNotationStyle: boardColors.lightSquareNotationStyle,
-                  alphaNotationStyle: BOARD_NOTATION_SIZE_STYLE,
-                  numericNotationStyle: BOARD_NOTATION_SIZE_STYLE,
-                  squareStyles: exploring ? undefined : boardSquareStyles,
-                  arrows: boardArrows,
-                }}
-              />
+          <BoardCoordinates
+            show={boardColors.showCoordinates}
+            orientation={boardOrientation}
+            className="w-full min-w-0"
+          >
+            <div className={`relative w-full ${boardMaxWidthClassName}`}>
+              <div className="w-full overflow-hidden rounded shadow-lg">
+                <Chessboard
+                  options={{
+                    id: boardId,
+                    position: displayFen,
+                    boardOrientation,
+                    allowDragging: exploring,
+                    onPieceDrop: exploring ? handleExploreDrop : undefined,
+                    onSquareClick: exploring ? handleExploreSquareClick : undefined,
+                    // squareRenderer takes over a square's background entirely
+                    // (react-chessboard only auto-applies squareStyles when it's
+                    // absent) — used only while exploring, for the legal-move
+                    // dots; the checklist's squareStyles below is what draws
+                    // outside exploration instead.
+                    squareRenderer: exploring
+                      ? ({ square, children }) => (
+                          <LegalMoveSquare
+                            isSelected={square === selectedSquare}
+                            isLegalMove={legalMoveMap.has(square)}
+                            isCapture={legalMoveMap.get(square) ?? false}
+                          >
+                            {children}
+                          </LegalMoveSquare>
+                        )
+                      : undefined,
+                    showAnimations: isAdjacentStep,
+                    animationDurationInMs: BOARD_ANIMATION_DURATION_MS,
+                    darkSquareStyle: { backgroundColor: boardColors.dark },
+                    lightSquareStyle: { backgroundColor: boardColors.light },
+                    showNotation: false,
+                    squareStyles: exploring ? undefined : boardSquareStyles,
+                    arrows: boardArrows,
+                  }}
+                />
+              </div>
+              {gameEndBadges.map((badge) => (
+                <GameEndBadge
+                  key={`${badge.variant}-${badge.square}`}
+                  square={badge.square}
+                  label={badge.label}
+                  variant={badge.variant}
+                  boardOrientation={boardOrientation}
+                />
+              ))}
             </div>
-            {gameEndBadges.map((badge) => (
-              <GameEndBadge
-                key={`${badge.variant}-${badge.square}`}
-                square={badge.square}
-                label={badge.label}
-                variant={badge.variant}
-                boardOrientation={boardOrientation}
-              />
-            ))}
-          </div>
+          </BoardCoordinates>
         </div>
         <p className="text-xs text-zinc-400">
           {s.board.material} {formatMaterialDiff(materialDiff(displayFen))}

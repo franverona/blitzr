@@ -4,13 +4,14 @@ import { useMemo, useRef, useState } from 'react'
 import { Chess } from 'chess.js'
 import Link from 'next/link'
 import { Chessboard } from 'react-chessboard'
+import { BoardCoordinates } from './BoardCoordinates'
 import { addRepertoireMove, deleteRepertoireMove, listRepertoire } from '@/app/actions'
 import { whiteToMove } from '@/lib/drill'
 import { getStrings } from '@/lib/i18n/strings'
 import { legalDestinations } from '@/lib/legalMoves'
 import { buildRepertoireIndex } from '@/lib/repertoire'
 import { describeBlunderReason, detectBlunderReason } from '@/lib/tactics'
-import { BOARD_ANIMATION_DURATION_MS, BOARD_NOTATION_SIZE_STYLE } from '@/lib/theme'
+import { BOARD_ANIMATION_DURATION_MS } from '@/lib/theme'
 import type { RepertoireColor, RepertoireNode } from '@/lib/types'
 import { useSettings, useMoveSound } from './SettingsProvider'
 import { LegalMoveSquare } from './LegalMoveSquare'
@@ -196,34 +197,36 @@ export function RepertoireBoard({
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
         <div className="flex shrink-0 flex-col gap-3">
-          <div className="w-full max-w-160 overflow-hidden rounded shadow-lg">
-            <Chessboard
-              options={{
-                position: currentFen,
-                boardOrientation: color,
-                allowDragging: !deleting,
-                animationDurationInMs: BOARD_ANIMATION_DURATION_MS,
-                onPieceDrop: handleDrop,
-                onSquareClick: handleSquareClick,
-                squareRenderer: ({ square, children }) => (
-                  <LegalMoveSquare
-                    isSelected={square === selectedSquare}
-                    isLegalMove={legalMoveMap.has(square)}
-                    isCapture={legalMoveMap.get(square) ?? false}
-                  >
-                    {children}
-                  </LegalMoveSquare>
-                ),
-                darkSquareStyle: { backgroundColor: boardColors.dark },
-                lightSquareStyle: { backgroundColor: boardColors.light },
-                showNotation: boardColors.showCoordinates,
-                darkSquareNotationStyle: boardColors.darkSquareNotationStyle,
-                lightSquareNotationStyle: boardColors.lightSquareNotationStyle,
-                alphaNotationStyle: BOARD_NOTATION_SIZE_STYLE,
-                numericNotationStyle: BOARD_NOTATION_SIZE_STYLE,
-              }}
-            />
-          </div>
+          <BoardCoordinates
+            show={boardColors.showCoordinates}
+            orientation={color}
+            className="w-full"
+          >
+            <div className="w-full max-w-160 overflow-hidden rounded shadow-lg">
+              <Chessboard
+                options={{
+                  position: currentFen,
+                  boardOrientation: color,
+                  allowDragging: !deleting,
+                  animationDurationInMs: BOARD_ANIMATION_DURATION_MS,
+                  onPieceDrop: handleDrop,
+                  onSquareClick: handleSquareClick,
+                  squareRenderer: ({ square, children }) => (
+                    <LegalMoveSquare
+                      isSelected={square === selectedSquare}
+                      isLegalMove={legalMoveMap.has(square)}
+                      isCapture={legalMoveMap.get(square) ?? false}
+                    >
+                      {children}
+                    </LegalMoveSquare>
+                  ),
+                  darkSquareStyle: { backgroundColor: boardColors.dark },
+                  lightSquareStyle: { backgroundColor: boardColors.light },
+                  showNotation: false,
+                }}
+              />
+            </div>
+          </BoardCoordinates>
 
           <div className="flex flex-wrap items-center gap-2 text-sm">
             <button

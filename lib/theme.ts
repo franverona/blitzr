@@ -33,29 +33,6 @@ export function getBoardColorPreset(id: string | undefined): BoardColorPreset {
   return BOARD_COLOR_PRESETS.find((preset) => preset.id === id) ?? BOARD_COLOR_PRESETS[0]
 }
 
-/** react-chessboard's coordinate labels default to a same-theme brown/tan
- *  pair (its own default light/dark square colors) rather than an actual
- *  color swap, so on a non-default board they'd render low-contrast.
- *  Swapping each square's label to the *other* square's background color
- *  keeps them legible, and bold keeps them readable at a glance. Every board
- *  with `showNotation: true` (`Board.tsx`, `DrillSession.tsx`,
- *  `LessonQuiz.tsx`, `RepertoireBoard.tsx`, `PlanBoard.tsx`) shares these,
- *  via `useSettings()` (`components/SettingsProvider.tsx`). */
-export function boardNotationStyles(dark: string, light: string) {
-  return {
-    darkSquareNotationStyle: { color: light, fontWeight: 'bold' as const },
-    lightSquareNotationStyle: { color: dark, fontWeight: 'bold' as const },
-  }
-}
-
-/** The letter/number glyphs render in their own nested span with their own
- *  inline `fontSize` (react-chessboard's `alphaNotationStyle`/
- *  `numericNotationStyle`, default 13px) — that inline style wins over
- *  whatever `fontSize` is set on the outer square span above (`
- *  darkSquareNotationStyle`/`lightSquareNotationStyle`), so sizing has to go
- *  through these two props instead. Pass to both on every board above. */
-export const BOARD_NOTATION_SIZE_STYLE = { fontSize: '15px' }
-
 /** Used for every "here's the move" reveal arrow in the app — the engine's
  *  suggested move, Drill's hint, the Learn quiz's "Show move" hint. */
 export const REVEAL_ARROW_COLOR = 'rgba(234, 179, 8, 0.9)'
