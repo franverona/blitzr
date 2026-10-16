@@ -58,6 +58,7 @@ export interface GameAnalysisTable {
   game_id: string
   evals: string
   analyzed_at: string
+  movetime_ms: number | null
 }
 
 export interface DrillCardsTable {

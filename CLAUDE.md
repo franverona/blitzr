@@ -202,7 +202,11 @@ file, not here — this section is only cross-cutting rules that span multiple f
   cookie-read-in-`app/layout.tsx`-then-seed-initial-state pattern as board colors. Analysis
   strength (`blitzr-analysis-strength`: `ANALYSIS_STRENGTHS` in `lib/stockfish/analyze.ts`,
   fast/normal/deep = 150/300/1000ms per position) feeds `analyzeGame()`/`analyzeGames()`'s
-  `movetimeMs`; it only affects batch analysis, not the live MultiPV panel.
+  `movetimeMs`; it only affects batch analysis, not the live MultiPV panel. It's only the
+  _default_ for a game page's `AnalyzeButton`, which has its own local strength `<select>` so
+  one game can be re-analyzed deeper without changing the setting; re-analyzing overwrites the
+  saved row (upsert), and each `game_analysis` row records the `movetime_ms` it was run at
+  (nullable — older rows predate it; added via a `PRAGMA table_info` check in `ensureSchema()`).
   Hide-engine-hints (`blitzr-hide-engine-hints`) suppresses `BoardView`'s eval bar and both
   best-move arrows (saved and live) — the live lines panel and "better was" text still show.
   Board coordinates (`blitzr-show-coordinates`, default on) are drawn _outside_ the board, in a

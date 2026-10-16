@@ -197,6 +197,7 @@ const en = {
     reanalyzing: 'Re-analyzing',
     analyzeWithStockfish: 'Analyze with Stockfish',
     reanalyze: 'Re-analyze',
+    savedAtStrength: (strength: string) => `Saved analysis: ${strength}`,
     analysisFailed: 'Analysis failed.',
     cleanGameNoBlunders: 'Clean game — no significant blunders from you.',
     biggestMoment: (isBlunder: boolean) =>
@@ -636,6 +637,7 @@ const es: Strings = {
     reanalyzing: 'Reanalizando',
     analyzeWithStockfish: 'Analizar con Stockfish',
     reanalyze: 'Reanalizar',
+    savedAtStrength: (strength: string) => `Análisis guardado: ${strength}`,
     analysisFailed: 'Error al analizar.',
     cleanGameNoBlunders: 'Partida limpia — sin errores importantes tuyos.',
     biggestMoment: (isBlunder: boolean) =>

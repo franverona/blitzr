@@ -73,3 +73,11 @@ describe('SqliteGameRepository.listGames opponent search', () => {
     ])
   })
 })
+
+describe('SqliteGameRepository.saveGameAnalysis', () => {
+  it('overwrites an existing analysis, including its strength', async () => {
+    await repo.saveGameAnalysis({ gameId: '1', evals: [], analyzedAt: 'a', movetimeMs: 150 })
+    await repo.saveGameAnalysis({ gameId: '1', evals: [], analyzedAt: 'b', movetimeMs: 1000 })
+    expect(await repo.getGameAnalysis('1')).toMatchObject({ analyzedAt: 'b', movetimeMs: 1000 })
+  })
+})

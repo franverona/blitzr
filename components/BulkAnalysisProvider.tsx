@@ -57,15 +57,16 @@ export function BulkAnalysisProvider({ children }: { children: React.ReactNode }
 
       setProgress({ gamesDone: 0, gamesTotal: games.length, positionsDone: 0, positionsTotal: 0 })
       let analyzed = 0
+      const movetimeMs = ANALYSIS_STRENGTHS[analysisStrength]
       await analyzeGames(
         games,
         async (gameId, evals) => {
-          await saveGameAnalysis(gameId, evals)
+          await saveGameAnalysis(gameId, evals, movetimeMs)
           analyzed++
         },
         setProgress,
         () => shouldContinueRef.current,
-        ANALYSIS_STRENGTHS[analysisStrength],
+        movetimeMs,
       )
 
       setToast({ text: s.bulkAnalyze.analyzed(analyzed, games.length), isError: false })

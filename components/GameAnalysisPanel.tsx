@@ -8,7 +8,7 @@ import { getStrings } from '@/lib/i18n/strings'
 import { MOVE_QUALITY_TIERS, summarizeMoveQuality } from '@/lib/moveQuality'
 import { buildPositions } from '@/lib/positions'
 import { describeMove, plyLabel } from '@/lib/san'
-import { ANALYSIS_STRENGTHS, analyzeGame } from '@/lib/stockfish/analyze'
+import { ANALYSIS_STRENGTHS, type AnalysisStrength, analyzeGame } from '@/lib/stockfish/analyze'
 import { describeBlunderReason, detectBlunderReason } from '@/lib/tactics'
 import type { GameAnalysis, MyColor } from '@/lib/types'
 import { useBoardContext } from './Board'
@@ -18,7 +18,7 @@ interface AnalysisContextValue {
   analysis: GameAnalysis | null
   progress: { done: number; total: number } | null
   error: string | null
-  handleAnalyze: () => void
+  handleAnalyze: (strength: AnalysisStrength) => void
   movesSan: string[]
   myColor: MyColor
   /** FEN before each ply, same indexing as `movesSan`/`analysis.evals` — computed
@@ -57,20 +57,20 @@ export function GameAnalysisProvider({
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null)
   const [error, setError] = useState<string | null>(null)
   const positions = useMemo(() => buildPositions(initialFen, movesSan), [initialFen, movesSan])
-  const { analysisStrength } = useSettings()
 
-  async function handleAnalyze() {
+  async function handleAnalyze(strength: AnalysisStrength) {
     setError(null)
     setProgress({ done: 0, total: movesSan.length + 1 })
     try {
+      const movetimeMs = ANALYSIS_STRENGTHS[strength]
       const evals = await analyzeGame(
         initialFen,
         movesSan,
         (done, total) => setProgress({ done, total }),
-        ANALYSIS_STRENGTHS[analysisStrength],
+        movetimeMs,
       )
-      setAnalysis({ gameId, evals, analyzedAt: new Date().toISOString() })
-      await saveGameAnalysis(gameId, evals)
+      setAnalysis({ gameId, evals, analyzedAt: new Date().toISOString(), movetimeMs })
+      await saveGameAnalysis(gameId, evals, movetimeMs)
     } catch (err) {
       setError(err instanceof Error ? err.message : getStrings().analysisPanel.analysisFailed)
     } finally {
@@ -87,23 +87,61 @@ export function GameAnalysisProvider({
   )
 }
 
+/** Name of the strength a saved analysis was run at, or its raw movetime if
+ *  it doesn't match a current preset; null for analyses saved before
+ *  `movetimeMs` was recorded. */
+function savedStrengthLabel(movetimeMs: number | undefined): string | null {
+  if (movetimeMs === undefined) return null
+  const strength = (Object.keys(ANALYSIS_STRENGTHS) as AnalysisStrength[]).find(
+    (k) => ANALYSIS_STRENGTHS[k] === movetimeMs,
+  )
+  return strength ? getStrings().settings.analysisStrengths[strength] : `${movetimeMs}ms`
+}
+
+/** The strength picker defaults to the Settings value but is local to this
+ *  button, so re-running one game deeper doesn't change the default for
+ *  every other analysis. */
 export function AnalyzeButton() {
   const { analysis, progress, error, handleAnalyze } = useAnalysisContext()
+  const { analysisStrength } = useSettings()
+  const [strength, setStrength] = useState<AnalysisStrength>(analysisStrength)
   const s = getStrings()
+  const savedLabel = analysis && savedStrengthLabel(analysis.movetimeMs)
 
   return (
     <div className="flex flex-col items-end gap-1">
-      <button
-        onClick={handleAnalyze}
-        disabled={progress !== null}
-        className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium whitespace-nowrap hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:hover:bg-zinc-800"
-      >
-        {progress
-          ? `${analysis ? s.analysisPanel.reanalyzing : s.analysisPanel.analyzing}… (${progress.done}/${progress.total})`
-          : analysis
-            ? s.analysisPanel.reanalyze
-            : s.analysisPanel.analyzeWithStockfish}
-      </button>
+      <div className="flex items-center gap-2">
+        <select
+          value={strength}
+          onChange={(e) => setStrength(e.target.value as AnalysisStrength)}
+          disabled={progress !== null}
+          aria-label={s.settings.analysisStrength}
+          title={s.settings.analysisStrengthHint}
+          className="rounded-md border border-zinc-300 bg-transparent px-2 py-1.5 text-sm disabled:opacity-50 dark:border-zinc-700"
+        >
+          {(Object.keys(ANALYSIS_STRENGTHS) as AnalysisStrength[]).map((k) => (
+            <option key={k} value={k}>
+              {s.settings.analysisStrengths[k]}
+            </option>
+          ))}
+        </select>
+        <button
+          onClick={() => handleAnalyze(strength)}
+          disabled={progress !== null}
+          className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium whitespace-nowrap hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:hover:bg-zinc-800"
+        >
+          {progress
+            ? `${analysis ? s.analysisPanel.reanalyzing : s.analysisPanel.analyzing}… (${progress.done}/${progress.total})`
+            : analysis
+              ? s.analysisPanel.reanalyze
+              : s.analysisPanel.analyzeWithStockfish}
+        </button>
+      </div>
+      {savedLabel && !progress && (
+        <p className="text-xs text-zinc-500 dark:text-zinc-400">
+          {s.analysisPanel.savedAtStrength(savedLabel)}
+        </p>
+      )}
       {error && <p className="text-sm text-rose-600 dark:text-rose-400">{error}</p>}
     </div>
   )

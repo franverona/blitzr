@@ -93,6 +93,7 @@ function rowToGameAnalysis(row: GameAnalysisTable): GameAnalysis {
     gameId: row.game_id,
     evals: JSON.parse(row.evals),
     analyzedAt: row.analyzed_at,
+    movetimeMs: row.movetime_ms ?? undefined,
   }
 }
 
@@ -291,12 +292,17 @@ export class SqliteGameRepository implements GameRepository {
       game_id: analysis.gameId,
       evals: JSON.stringify(analysis.evals),
       analyzed_at: analysis.analyzedAt,
+      movetime_ms: analysis.movetimeMs ?? null,
     }
     await db
       .insertInto('game_analysis')
       .values(row)
       .onConflict((oc) =>
-        oc.column('game_id').doUpdateSet({ evals: row.evals, analyzed_at: row.analyzed_at }),
+        oc.column('game_id').doUpdateSet({
+          evals: row.evals,
+          analyzed_at: row.analyzed_at,
+          movetime_ms: row.movetime_ms,
+        }),
       )
       .execute()
   }
