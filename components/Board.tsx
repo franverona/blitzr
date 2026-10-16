@@ -1092,7 +1092,7 @@ export function BoardView({
             <EvalBar
               evaluation={barEval}
               boardOrientation={boardOrientation}
-              className={boardColors.showCoordinates ? 'mb-5' : ''}
+              className={boardColors.showCoordinates ? 'mb-7' : ''}
             />
           )}
           {/* The `overflow-hidden` that clips the board image to its rounded

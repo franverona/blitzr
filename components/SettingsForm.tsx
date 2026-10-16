@@ -118,7 +118,7 @@ export function SettingsForm() {
             <EvalBar
               evaluation={PREVIEW_EVAL}
               boardOrientation="white"
-              className={settings.showCoordinates ? 'mb-5' : ''}
+              className={settings.showCoordinates ? 'mb-7' : ''}
             />
           )}
           <BoardCoordinates show={settings.showCoordinates} className="w-full min-w-0">

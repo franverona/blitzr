@@ -208,7 +208,7 @@ file, not here — this section is only cross-cutting rules that span multiple f
   Board coordinates (`blitzr-show-coordinates`, default on) are drawn _outside_ the board, in a
   left/bottom gutter, by `BoardCoordinates.tsx` wrapping every board except `MiniBoard` (which
   never shows them) — react-chessboard's own `showNotation` (inside the corner squares) is always
-  `false`. A sibling stretched next to the board (`EvalBar`) needs `mb-5` while it's on.
+  `false`. A sibling stretched next to the board (`EvalBar`) needs `mb-7` while it's on.
   Move sounds (`blitzr-move-sounds`, default on) are `useMoveSound(fen)` in each board — a
   sound per position change, picked by `moveSoundFor()` (`lib/moveSound.ts`: game end > check >
   promote/castle/capture > plain move), hotlinked from chess.com's CDN rather than bundled
