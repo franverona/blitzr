@@ -178,7 +178,9 @@ export function LessonQuiz({
 
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-center">
-      <div className="flex w-full max-w-140 shrink-0 flex-col gap-3">
+      {/* lg+: capped by viewport height so the page fits a 13" laptop screen
+          without a scroll; 17rem ≈ everything above/below the board. */}
+      <div className="flex w-full max-w-140 shrink-0 flex-col gap-3 lg:max-w-[min(35rem,calc(100dvh-17rem))]">
         {/* Fixed height so the row doesn't reflow (and shift the board below
             it) when it swaps between the taller "Line complete!" text and the
             progress text + hint button — the two variants have different

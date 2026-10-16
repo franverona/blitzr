@@ -202,7 +202,9 @@ export function RepertoireBoard({
             orientation={color}
             className="w-full"
           >
-            <div className="w-full max-w-160 overflow-hidden rounded shadow-lg">
+            {/* lg+: capped by viewport height so the page fits a 13" laptop
+                screen without a scroll; 14rem ≈ everything above/below it. */}
+            <div className="w-full max-w-160 overflow-hidden rounded shadow-lg lg:max-w-[min(40rem,calc(100dvh-14rem))]">
               <Chessboard
                 options={{
                   position: currentFen,

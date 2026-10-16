@@ -205,7 +205,9 @@ export function PuzzleBoard({ problem }: { problem: MateProblem }) {
 
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-center">
-      <div className="flex w-full max-w-140 shrink-0 flex-col gap-3">
+      {/* lg+: capped by viewport height so the page fits a 13" laptop screen
+          without a scroll; 19rem ≈ everything above/below the board. */}
+      <div className="flex w-full max-w-140 shrink-0 flex-col gap-3 lg:max-w-[min(35rem,calc(100dvh-19rem))]">
         <div className="flex items-center justify-between gap-2">
           <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
             {!finished && isLive ? s.puzzles.toMove(turnColor) : ' '}

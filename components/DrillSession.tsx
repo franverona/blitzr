@@ -276,7 +276,9 @@ export function DrillSession({
   const hintOriginSquares = new Set(hintLevel >= 2 ? revealed.map((a) => a.startSquare) : [])
 
   return (
-    <div className="mx-auto flex w-full max-w-140 flex-col gap-3">
+    // lg+: capped by viewport height so the whole card fits a 13" laptop
+    // screen without a page scroll; 18rem ≈ everything above/below the board.
+    <div className="mx-auto flex w-full max-w-140 flex-col gap-3 lg:max-w-[min(35rem,calc(100dvh-18rem))]">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <PlayerAvatar username={prompt.opponentUsername} avatarUrl={prompt.opponentAvatarUrl} />

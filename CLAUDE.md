@@ -137,6 +137,10 @@ file, not here — this section is only cross-cutting rules that span multiple f
   otherwise) and its board column needs the same `boardMaxWidthClassName` cap as the board
   itself — without that cap, long suggestion text can widen the column and shift the whole row
   sideways between plies.
+- **Every board is capped by viewport height at `lg+`** — `max-w-[min(<width>,calc(100dvh-<N>rem))]`
+  on the board (or its column), where `N` is that page's own measured chrome above/below the
+  board, so each board page fits a 13" laptop screen without a page scroll. Adding content
+  above/below a board means re-measuring its `N`.
 - **A long, unbreakable text line (an opening name, etc.) needs its own full-width row** — sharing
   a flex row with fixed-content siblings (nav buttons, badges) starves them of space and forces an
   overflow instead of a wrap. `app/games/[id]/page.tsx`'s `OpeningLine` was pulled out of
@@ -224,7 +228,9 @@ file, not here — this section is only cross-cutting rules that span multiple f
   `RepertoireBoard.tsx`) shares it.
 - **`BoardNavControls`** binds arrow keys to prev/next, Space to Play/Pause, and `0` to Start —
   globally, throttled to `BOARD_ANIMATION_DURATION_MS` so rapid input can't cut an animation
-  short. Mounted only on `games/[id]` and `/learn`'s Study mode (not Quiz mode). Ignored with a
+  short. Mounted only on `games/[id]` and `/learn`'s Study mode (not Quiz mode), in both cases
+  as `BoardView`'s `sidebarExtra` directly under the move list (no ply counter — the move list
+  already shows the current move). Ignored with a
   Cmd/Ctrl/Alt modifier, inside form fields, and inside any `<dialog>` that doesn't opt in with
   `data-board-shortcuts` (only `DetailsDialog` does, since its live-lines panel relies on ◀/▶).
 - **Play auto-advances one ply every `PLAY_INTERVAL_MS`, stopping on a blunder ply**
