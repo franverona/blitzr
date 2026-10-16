@@ -12,6 +12,7 @@ import { ANALYSIS_STRENGTHS, type AnalysisStrength, analyzeGame } from '@/lib/st
 import { describeBlunderReason, detectBlunderReason } from '@/lib/tactics'
 import type { GameAnalysis, MyColor } from '@/lib/types'
 import { useBoardContext } from './Board'
+import { Select } from './Select'
 import { useSettings } from './SettingsProvider'
 
 interface AnalysisContextValue {
@@ -109,37 +110,21 @@ export function AnalyzeButton() {
       {/* One split control (shared border, divider between) so the strength
           reads as a setting of this button, not a separate control. */}
       <div className="flex items-stretch divide-x divide-zinc-300 rounded-md border border-zinc-300 text-sm dark:divide-zinc-700 dark:border-zinc-700">
-        <div className="relative">
-          <select
-            value={strength}
-            onChange={(e) => setStrength(e.target.value as AnalysisStrength)}
-            disabled={progress !== null}
-            aria-label={s.settings.analysisStrength}
-            title={s.settings.analysisStrengthHint}
-            className="h-full cursor-pointer appearance-none rounded-l-md bg-transparent py-1.5 pr-7 pl-3 text-zinc-600 hover:bg-zinc-100 disabled:cursor-default disabled:opacity-50 dark:text-zinc-300 dark:hover:bg-zinc-800"
-          >
-            {(Object.keys(ANALYSIS_STRENGTHS) as AnalysisStrength[]).map((k) => (
-              <option key={k} value={k} className="bg-zinc-50 dark:bg-zinc-900">
-                {s.settings.analysisStrengths[k]}
-                {k === savedStrength && ' ✓'}
-              </option>
-            ))}
-          </select>
-          <svg
-            aria-hidden
-            viewBox="0 0 12 12"
-            className="pointer-events-none absolute top-1/2 right-2.5 h-3 w-3 -translate-y-1/2 text-zinc-500"
-          >
-            <path
-              d="M3 4.5 6 7.5 9 4.5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </div>
+        <Select
+          value={strength}
+          onChange={(e) => setStrength(e.target.value as AnalysisStrength)}
+          disabled={progress !== null}
+          aria-label={s.settings.analysisStrength}
+          title={s.settings.analysisStrengthHint}
+          className="rounded-l-md bg-transparent py-1.5 pl-3 text-zinc-600 hover:bg-zinc-100 disabled:opacity-50 dark:text-zinc-300 dark:hover:bg-zinc-800"
+        >
+          {(Object.keys(ANALYSIS_STRENGTHS) as AnalysisStrength[]).map((k) => (
+            <option key={k} value={k} className="bg-zinc-50 dark:bg-zinc-900">
+              {s.settings.analysisStrengths[k]}
+              {k === savedStrength && ' ✓'}
+            </option>
+          ))}
+        </Select>
         <button
           onClick={() => handleAnalyze(strength)}
           disabled={progress !== null}

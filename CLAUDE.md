@@ -66,6 +66,7 @@ components/
   EvalHelp.tsx                             # shared eval/blunder/swing/tactics glossary
   BlunderSeverityBadge.tsx                   # Mistake/Blunder severity pill
   LegalMoveSquare.tsx                    # legal-move dot/ring/selected square highlighting
+  Select.tsx                             # native <select> + overlaid chevron caret — use for every dropdown
   OpeningsTable.tsx                    # family/line aggregation table
   PieceGlyph.tsx / PieceMoveLabel.tsx    # chess piece SVGs
   KnightGlyph.tsx / KnightIcon.tsx         # favicon/side-badge knight icon
