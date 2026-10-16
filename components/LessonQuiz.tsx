@@ -3,10 +3,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Chess } from 'chess.js'
 import { Chessboard } from 'react-chessboard'
+import { BoardCoordinates } from './BoardCoordinates'
 import { whiteToMove } from '@/lib/drill'
 import { getStrings } from '@/lib/i18n/strings'
 import { legalDestinations } from '@/lib/legalMoves'
-import { BOARD_NOTATION_SIZE_STYLE, REVEAL_ARROW_COLOR } from '@/lib/theme'
+import { REVEAL_ARROW_COLOR } from '@/lib/theme'
 import { useBoardContext } from './Board'
 import { useSettings, useMoveSound } from './SettingsProvider'
 import { LegalMoveSquare } from './LegalMoveSquare'
@@ -217,34 +218,36 @@ export function LessonQuiz({
             than being replaced by a text-only summary screen — per direct user
             feedback that the board disappearing on finishing the line felt
             jarring. */}
-        <div className="w-full overflow-hidden rounded shadow-lg">
-          <Chessboard
-            options={{
-              position: fen,
-              boardOrientation,
-              allowDragging: isMyTurn,
-              onPieceDrop: handleDrop,
-              onSquareClick: handleSquareClick,
-              squareRenderer: ({ square, children }) => (
-                <LegalMoveSquare
-                  isSelected={square === selectedSquare}
-                  isLegalMove={legalMoveMap.has(square)}
-                  isCapture={legalMoveMap.get(square) ?? false}
-                >
-                  {children}
-                </LegalMoveSquare>
-              ),
-              darkSquareStyle: { backgroundColor: boardColors.dark },
-              lightSquareStyle: { backgroundColor: boardColors.light },
-              showNotation: boardColors.showCoordinates,
-              darkSquareNotationStyle: boardColors.darkSquareNotationStyle,
-              lightSquareNotationStyle: boardColors.lightSquareNotationStyle,
-              alphaNotationStyle: BOARD_NOTATION_SIZE_STYLE,
-              numericNotationStyle: BOARD_NOTATION_SIZE_STYLE,
-              arrows,
-            }}
-          />
-        </div>
+        <BoardCoordinates
+          show={boardColors.showCoordinates}
+          orientation={boardOrientation}
+          className="w-full"
+        >
+          <div className="w-full overflow-hidden rounded shadow-lg">
+            <Chessboard
+              options={{
+                position: fen,
+                boardOrientation,
+                allowDragging: isMyTurn,
+                onPieceDrop: handleDrop,
+                onSquareClick: handleSquareClick,
+                squareRenderer: ({ square, children }) => (
+                  <LegalMoveSquare
+                    isSelected={square === selectedSquare}
+                    isLegalMove={legalMoveMap.has(square)}
+                    isCapture={legalMoveMap.get(square) ?? false}
+                  >
+                    {children}
+                  </LegalMoveSquare>
+                ),
+                darkSquareStyle: { backgroundColor: boardColors.dark },
+                lightSquareStyle: { backgroundColor: boardColors.light },
+                showNotation: false,
+                arrows,
+              }}
+            />
+          </div>
+        </BoardCoordinates>
 
         {isComplete ? (
           <p className="text-sm text-zinc-500 dark:text-zinc-400">

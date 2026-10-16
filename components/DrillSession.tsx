@@ -3,12 +3,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Chess } from 'chess.js'
 import { Chessboard } from 'react-chessboard'
+import { BoardCoordinates } from './BoardCoordinates'
 import { submitDrillAnswer } from '@/app/actions'
 import { getStrings } from '@/lib/i18n/strings'
 import { legalDestinations } from '@/lib/legalMoves'
 import { hintPieceName } from '@/lib/san'
 import { describeBlunderReason, detectBlunderReason } from '@/lib/tactics'
-import { BOARD_NOTATION_SIZE_STYLE, REVEAL_ARROW_COLOR } from '@/lib/theme'
+import { REVEAL_ARROW_COLOR } from '@/lib/theme'
 import type { BlunderReason, DrillPrompt } from '@/lib/types'
 import { useSettings, useMoveSound } from './SettingsProvider'
 import { LegalMoveSquare } from './LegalMoveSquare'
@@ -298,35 +299,37 @@ export function DrillSession({
         </button>
       </div>
 
-      <div className="w-full overflow-hidden rounded shadow-lg">
-        <Chessboard
-          options={{
-            position: committedFen ?? prompt.fen,
-            boardOrientation: prompt.color,
-            allowDragging: !feedback,
-            onPieceDrop: handleDrop,
-            onSquareClick: handleSquareClick,
-            squareRenderer: ({ square, children }) => (
-              <LegalMoveSquare
-                isSelected={square === selectedSquare}
-                isLegalMove={legalMoveMap.has(square)}
-                isCapture={legalMoveMap.get(square) ?? false}
-                isHintOrigin={hintOriginSquares.has(square)}
-              >
-                {children}
-              </LegalMoveSquare>
-            ),
-            darkSquareStyle: { backgroundColor: boardColors.dark },
-            lightSquareStyle: { backgroundColor: boardColors.light },
-            showNotation: boardColors.showCoordinates,
-            darkSquareNotationStyle: boardColors.darkSquareNotationStyle,
-            lightSquareNotationStyle: boardColors.lightSquareNotationStyle,
-            alphaNotationStyle: BOARD_NOTATION_SIZE_STYLE,
-            numericNotationStyle: BOARD_NOTATION_SIZE_STYLE,
-            arrows,
-          }}
-        />
-      </div>
+      <BoardCoordinates
+        show={boardColors.showCoordinates}
+        orientation={prompt.color}
+        className="w-full"
+      >
+        <div className="w-full overflow-hidden rounded shadow-lg">
+          <Chessboard
+            options={{
+              position: committedFen ?? prompt.fen,
+              boardOrientation: prompt.color,
+              allowDragging: !feedback,
+              onPieceDrop: handleDrop,
+              onSquareClick: handleSquareClick,
+              squareRenderer: ({ square, children }) => (
+                <LegalMoveSquare
+                  isSelected={square === selectedSquare}
+                  isLegalMove={legalMoveMap.has(square)}
+                  isCapture={legalMoveMap.get(square) ?? false}
+                  isHintOrigin={hintOriginSquares.has(square)}
+                >
+                  {children}
+                </LegalMoveSquare>
+              ),
+              darkSquareStyle: { backgroundColor: boardColors.dark },
+              lightSquareStyle: { backgroundColor: boardColors.light },
+              showNotation: false,
+              arrows,
+            }}
+          />
+        </div>
+      </BoardCoordinates>
 
       {hintLevel >= 1 && (
         <p className="text-sm text-zinc-400">

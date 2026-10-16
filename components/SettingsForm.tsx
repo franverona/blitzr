@@ -1,9 +1,10 @@
 'use client'
 
 import { Chessboard } from 'react-chessboard'
+import { BoardCoordinates } from './BoardCoordinates'
 import { getStrings } from '@/lib/i18n/strings'
 import { ANALYSIS_STRENGTHS, type AnalysisStrength } from '@/lib/stockfish/analyze'
-import { BOARD_COLOR_PRESETS, BOARD_NOTATION_SIZE_STYLE, REVEAL_ARROW_COLOR } from '@/lib/theme'
+import { BOARD_COLOR_PRESETS, REVEAL_ARROW_COLOR } from '@/lib/theme'
 import { EvalBar } from './EvalBar'
 import { playMoveSound, useSettings } from './SettingsProvider'
 
@@ -114,27 +115,29 @@ export function SettingsForm() {
         </span>
         <div className="flex items-stretch gap-2">
           {!settings.hideEngineHints && (
-            <EvalBar evaluation={PREVIEW_EVAL} boardOrientation="white" />
-          )}
-          <div className="w-full overflow-hidden rounded">
-            <Chessboard
-              options={{
-                id: 'settings-preview',
-                position: PREVIEW_FEN,
-                allowDragging: false,
-                showNotation: settings.showCoordinates,
-                darkSquareStyle: { backgroundColor: settings.dark },
-                lightSquareStyle: { backgroundColor: settings.light },
-                darkSquareNotationStyle: settings.darkSquareNotationStyle,
-                lightSquareNotationStyle: settings.lightSquareNotationStyle,
-                alphaNotationStyle: BOARD_NOTATION_SIZE_STYLE,
-                numericNotationStyle: BOARD_NOTATION_SIZE_STYLE,
-                arrows: settings.hideEngineHints
-                  ? []
-                  : [{ startSquare: 'f3', endSquare: 'g5', color: REVEAL_ARROW_COLOR }],
-              }}
+            <EvalBar
+              evaluation={PREVIEW_EVAL}
+              boardOrientation="white"
+              className={settings.showCoordinates ? 'mb-7' : ''}
             />
-          </div>
+          )}
+          <BoardCoordinates show={settings.showCoordinates} className="w-full min-w-0">
+            <div className="w-full overflow-hidden rounded">
+              <Chessboard
+                options={{
+                  id: 'settings-preview',
+                  position: PREVIEW_FEN,
+                  allowDragging: false,
+                  showNotation: false,
+                  darkSquareStyle: { backgroundColor: settings.dark },
+                  lightSquareStyle: { backgroundColor: settings.light },
+                  arrows: settings.hideEngineHints
+                    ? []
+                    : [{ startSquare: 'f3', endSquare: 'g5', color: REVEAL_ARROW_COLOR }],
+                }}
+              />
+            </div>
+          </BoardCoordinates>
         </div>
       </div>
     </div>

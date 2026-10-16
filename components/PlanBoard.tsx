@@ -2,9 +2,10 @@
 
 import { useId, useMemo, useRef, useState } from 'react'
 import { Chessboard } from 'react-chessboard'
+import { BoardCoordinates } from './BoardCoordinates'
 import { getStrings } from '@/lib/i18n/strings'
 import { buildPositions } from '@/lib/positions'
-import { BOARD_ANIMATION_DURATION_MS, BOARD_NOTATION_SIZE_STYLE } from '@/lib/theme'
+import { BOARD_ANIMATION_DURATION_MS } from '@/lib/theme'
 import { useSettings } from './SettingsProvider'
 
 /** A small interactive stepper through the engine's suggested move and its
@@ -45,24 +46,26 @@ export function PlanBoard({
 
   return (
     <div className="flex w-full shrink-0 flex-col gap-3">
-      <div className="aspect-square w-full overflow-hidden rounded shadow-lg">
-        <Chessboard
-          options={{
-            id: boardId,
-            position: positions[ply],
-            boardOrientation,
-            allowDragging: false,
-            showNotation: boardColors.showCoordinates,
-            animationDurationInMs: BOARD_ANIMATION_DURATION_MS,
-            darkSquareStyle: { backgroundColor: boardColors.dark },
-            lightSquareStyle: { backgroundColor: boardColors.light },
-            darkSquareNotationStyle: boardColors.darkSquareNotationStyle,
-            lightSquareNotationStyle: boardColors.lightSquareNotationStyle,
-            alphaNotationStyle: BOARD_NOTATION_SIZE_STYLE,
-            numericNotationStyle: BOARD_NOTATION_SIZE_STYLE,
-          }}
-        />
-      </div>
+      <BoardCoordinates
+        show={boardColors.showCoordinates}
+        orientation={boardOrientation}
+        className="w-full"
+      >
+        <div className="aspect-square w-full overflow-hidden rounded shadow-lg">
+          <Chessboard
+            options={{
+              id: boardId,
+              position: positions[ply],
+              boardOrientation,
+              allowDragging: false,
+              showNotation: false,
+              animationDurationInMs: BOARD_ANIMATION_DURATION_MS,
+              darkSquareStyle: { backgroundColor: boardColors.dark },
+              lightSquareStyle: { backgroundColor: boardColors.light },
+            }}
+          />
+        </div>
+      </BoardCoordinates>
       <div className="flex items-center justify-between gap-2 text-xs text-zinc-500">
         <span>
           {s.planBoard.label} {ply} / {lastPly}

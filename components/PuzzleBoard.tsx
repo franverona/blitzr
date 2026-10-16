@@ -3,12 +3,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Chess } from 'chess.js'
 import { Chessboard } from 'react-chessboard'
+import { BoardCoordinates } from './BoardCoordinates'
 import { markPuzzleSolved } from '@/app/actions'
 import { getStrings } from '@/lib/i18n/strings'
 import { legalDestinations } from '@/lib/legalMoves'
 import { puzzleColorToMove, type MateProblem } from '@/lib/mateProblems'
 import type { SanPiece } from '@/lib/san'
-import { BOARD_ANIMATION_DURATION_MS, BOARD_NOTATION_SIZE_STYLE } from '@/lib/theme'
+import { BOARD_ANIMATION_DURATION_MS } from '@/lib/theme'
 import { useSettings, useMoveSound } from './SettingsProvider'
 import { LegalMoveSquare } from './LegalMoveSquare'
 import { MoveSequence } from './MoveSequence'
@@ -231,54 +232,56 @@ export function PuzzleBoard({ problem }: { problem: MateProblem }) {
             </button>
           </div>
         </div>
-        <div className="relative w-full overflow-hidden rounded shadow-lg">
-          <Chessboard
-            options={{
-              position: fen,
-              boardOrientation: orientation,
-              allowDragging: !finished && isLive && !pendingPromotion,
-              onPieceDrop: handleDrop,
-              onSquareClick: handleSquareClick,
-              animationDurationInMs: BOARD_ANIMATION_DURATION_MS,
-              squareRenderer: ({ square, children }) => (
-                <LegalMoveSquare
-                  isSelected={isLive && square === selectedSquare}
-                  isLegalMove={legalMoveMap.has(square)}
-                  isCapture={legalMoveMap.get(square) ?? false}
-                >
-                  {children}
-                </LegalMoveSquare>
-              ),
-              darkSquareStyle: { backgroundColor: boardColors.dark },
-              lightSquareStyle: { backgroundColor: boardColors.light },
-              showNotation: boardColors.showCoordinates,
-              darkSquareNotationStyle: boardColors.darkSquareNotationStyle,
-              lightSquareNotationStyle: boardColors.lightSquareNotationStyle,
-              alphaNotationStyle: BOARD_NOTATION_SIZE_STYLE,
-              numericNotationStyle: BOARD_NOTATION_SIZE_STYLE,
-            }}
-          />
-          {pendingPromotion && (
-            <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/50">
-              <div className="flex flex-col items-center gap-2 rounded-lg bg-zinc-50 p-4 shadow-xl dark:bg-zinc-900">
-                <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                  {s.puzzles.choosePromotion}
-                </p>
-                <div className="flex gap-2">
-                  {PROMOTION_PIECES.map(({ promotion, glyph }) => (
-                    <button
-                      key={promotion}
-                      onClick={() => choosePromotion(promotion)}
-                      className="h-12 w-12 rounded border border-zinc-300 bg-white p-1 hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700"
-                    >
-                      <PieceGlyph piece={glyph} color={turnColor} />
-                    </button>
-                  ))}
+        <BoardCoordinates
+          show={boardColors.showCoordinates}
+          orientation={orientation}
+          className="w-full"
+        >
+          <div className="relative w-full overflow-hidden rounded shadow-lg">
+            <Chessboard
+              options={{
+                position: fen,
+                boardOrientation: orientation,
+                allowDragging: !finished && isLive && !pendingPromotion,
+                onPieceDrop: handleDrop,
+                onSquareClick: handleSquareClick,
+                animationDurationInMs: BOARD_ANIMATION_DURATION_MS,
+                squareRenderer: ({ square, children }) => (
+                  <LegalMoveSquare
+                    isSelected={isLive && square === selectedSquare}
+                    isLegalMove={legalMoveMap.has(square)}
+                    isCapture={legalMoveMap.get(square) ?? false}
+                  >
+                    {children}
+                  </LegalMoveSquare>
+                ),
+                darkSquareStyle: { backgroundColor: boardColors.dark },
+                lightSquareStyle: { backgroundColor: boardColors.light },
+                showNotation: false,
+              }}
+            />
+            {pendingPromotion && (
+              <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/50">
+                <div className="flex flex-col items-center gap-2 rounded-lg bg-zinc-50 p-4 shadow-xl dark:bg-zinc-900">
+                  <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                    {s.puzzles.choosePromotion}
+                  </p>
+                  <div className="flex gap-2">
+                    {PROMOTION_PIECES.map(({ promotion, glyph }) => (
+                      <button
+                        key={promotion}
+                        onClick={() => choosePromotion(promotion)}
+                        className="h-12 w-12 rounded border border-zinc-300 bg-white p-1 hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700"
+                      >
+                        <PieceGlyph piece={glyph} color={turnColor} />
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        </BoardCoordinates>
 
         {feedback === 'incorrect' && !finished && isLive && (
           <p className="text-sm text-rose-600 dark:text-rose-400">{s.puzzles.incorrect}</p>
