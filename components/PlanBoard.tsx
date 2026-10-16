@@ -8,17 +8,8 @@ import { buildPositions } from '@/lib/positions'
 import { BOARD_ANIMATION_DURATION_MS } from '@/lib/theme'
 import { useSettings } from './SettingsProvider'
 
-/** A small interactive stepper through the engine's suggested move and its
- *  follow-up plan — SAN text alone doesn't let a beginner "see" where a
- *  quiet move leads a few plies out, so this replays it as a real,
- *  navigable board instead of a single static end-position thumbnail.
- *  `ply`/`setPly` are controlled by `PlanBoardButton` rather than owned
- *  here — its dialog needs the same state to route arrow-key shortcuts to
- *  this board instead of the game's own ply navigation while it's open (see
- *  `PlanBoardButton`'s `onKeyDown`).
- *
- *  Not rendered inline — see `PlanBoardButton` below, which is what every
- *  caller actually uses. */
+/** Steps through the engine's suggested move and its follow-up plan.
+ *  `ply` is controlled by `PlanBoardButton`. */
 export function PlanBoard({
   fenBefore,
   moves,
@@ -27,8 +18,7 @@ export function PlanBoard({
   setPly,
 }: {
   fenBefore: string
-  /** The suggested move followed by its expected continuation, e.g.
-   *  `[bestMove.san, ...bestMove.bestLine]`. */
+  /** `[bestMove.san, ...bestMove.bestLine]`. */
   moves: string[]
   boardOrientation: 'white' | 'black'
   ply: number
@@ -36,10 +26,7 @@ export function PlanBoard({
 }) {
   const positions = buildPositions(fenBefore, moves)
   const lastPly = positions.length - 1
-  // react-chessboard needs a unique `id` per instance — without one, this
-  // board collides with whatever other Chessboard is on the page (the main
-  // replay board, or another PlanBoard in a blunder list) on shared DOM ids
-  // internally and crashes with "Square width not found".
+  // Unique id required: multiple boards on one page crash otherwise.
   const boardId = useId()
   const s = getStrings()
   const boardColors = useSettings()
@@ -110,35 +97,15 @@ export function PlanBoard({
   )
 }
 
-/** "Show" link + dialog wrapper around `PlanBoard` — same native `<dialog>`
- *  convention as `AboutOpeningButton`. The plan board used to render inline,
- *  always visible right under the main board; that ate vertical space on
- *  every blunder ply whether or not you cared to see the follow-up, so it's
- *  opt-in now, next to the "Better was …" text that already names the move.
- *  Pass a fresh `key` (e.g. `key={ply}`) whenever `fenBefore`/`moves` change
- *  to a different plan, same requirement `PlanBoard` used to have on its own
- *  — this forwards it by remounting (and re-closing, and resetting the plan
- *  back to its own ply 0) the trigger + dialog.
- *
- *  Owns the plan's `ply` state (rather than leaving it inside `PlanBoard`)
- *  so the dialog's `onKeyDown` can drive it directly: `BoardNavControls`
- *  binds ←/→ globally on `window`, and a native `<dialog>`'s modal-ness
- *  doesn't stop a keydown that fires inside it from bubbling all the way up
- *  to `window` — without interception here, pressing an arrow key while
- *  this dialog is open would step the *game's* ply instead, which (via the
- *  `key={ply}` this component gets remounted on at the game-board call
- *  site) would unmount and re-close this dialog out from under you. Calling
- *  `stopPropagation` on the dialog element catches the event before it gets
- *  that far, so ←/→ step the plan while the dialog is open and only reach
- *  the game board again once it's closed (focus no longer inside it). */
+/** "Show" link + dialog around `PlanBoard`. Remount with a new `key` when the
+ *  plan changes. Owns `ply` so the dialog can stop ←/→ from bubbling to
+ *  `BoardNavControls`' window listener, which would step the game instead. */
 export function PlanBoardButton({
   betterMove,
   fenBefore,
   moves,
   boardOrientation,
 }: {
-  /** The already-formatted "better was" move description, reused as the
-   *  dialog title so it's clear which move's plan is being shown. */
   betterMove: string
   fenBefore: string
   moves: string[]

@@ -22,10 +22,7 @@ describe('puzzleColorToMove', () => {
   })
 })
 
-// Same rationale as endgameTheory.test.ts's "plays out as a fully legal move
-// sequence" check — a standing guard against a future bad edit (or import)
-// silently shipping a puzzle whose "solution" isn't actually legal or
-// doesn't actually mate, since nothing else re-verifies this at runtime.
+// Guards against a bad edit or import shipping an illegal or non-mating line.
 describe('MATE_PROBLEMS content', () => {
   it('every problem starts from a legal position (side not to move isn’t in check)', () => {
     for (const problem of MATE_PROBLEMS) {
@@ -56,12 +53,7 @@ describe('MATE_PROBLEMS content', () => {
     expect(ids).toEqual(MATE_PROBLEMS.map((_, i) => i + 1))
   })
 
-  // Exhaustively re-checking every mate-in-2/3 entry's forced-mate property
-  // (isForcedMate) on every test run doesn't scale at this data set's size —
-  // measured at over 2,000 entries, some individually taking multiple
-  // seconds, an exhaustive pass runs into hours serially. A random sample
-  // keeps this fast enough for a normal `pnpm test`/CI run while still
-  // covering the whole set probabilistically across repeated runs.
+  // Checking all 2,000+ entries takes hours, so sample a few per run.
   const FORCED_MATE_SAMPLE_SIZE = 8
 
   it(`a random sample of ${FORCED_MATE_SAMPLE_SIZE} mate-in-2/3 problems are forced against every legal reply`, () => {

@@ -12,9 +12,6 @@ import { useBoardContext } from './Board'
 import { useSettings, useMoveSound } from './SettingsProvider'
 import { LegalMoveSquare } from './LegalMoveSquare'
 
-// How long an auto-played opponent move sits highlighted before the next
-// ply becomes yours — long enough to read, short enough not to feel like a
-// stall.
 const OPPONENT_MOVE_DELAY_MS = 500
 
 function revealArrow(fen: string, san: string) {
@@ -26,33 +23,10 @@ function revealArrow(fen: string, san: string) {
   }
 }
 
-/** Active-recall practice for a lesson's line: play it from memory, one move
- *  at a time. Only quizzes *your* side — `boardOrientation` (flippable via
- *  FlipBoardButton in the lesson header) doubles as "which color am I
- *  practicing," same as it already means "which side is the board drawn
- *  from." The opponent's replies auto-play themselves after a short delay
- *  rather than being quizzed too: recalling the exact move an opponent would
- *  make isn't a real skill (in an actual game you just react to whatever
- *  they play), so testing it would just be memorizing trivia instead of
- *  practicing "what do I play here."
- *
- *  Reuses BoardProvider's own `ply`/`setPly` as the quiz's progress counter
- *  instead of separate state — which is also what lets MoveExplanation on
- *  the lesson page reveal each move's note the instant it's played (yours or
- *  the opponent's auto-played one), for free, with no wiring between the two
- *  components. Unlike DrillSession there's no per-card "Next" step: a wrong
- *  attempt just leaves you on the same ply to try again, since the "correct
- *  answer" here is always the one fixed line rather than one of several
- *  acceptable moves. */
-export function LessonQuiz({
-  /** Rendered beside the board, same row/column split as BoardView's own
-   *  `sidebarExtra` — e.g. the lesson page's MoveExplanation, so Study and
-   *  Quiz mode put it in the same spot instead of Quiz stacking it above a
-   *  centered single-column board. */
-  sidebarExtra,
-}: {
-  sidebarExtra?: React.ReactNode
-}) {
+/** Play a lesson's line from memory. Only your side (`boardOrientation`) is
+ *  quizzed; the opponent's replies auto-play. Progress is BoardProvider's
+ *  `ply`, so MoveExplanation follows along without extra wiring. */
+export function LessonQuiz({ sidebarExtra }: { sidebarExtra?: React.ReactNode }) {
   const { ply, setPly, positions, lastPly, boardOrientation, movesSan } = useBoardContext()
   const s = getStrings()
   const boardColors = useSettings()
@@ -75,20 +49,13 @@ export function LessonQuiz({
   const isMyTurn = ply < lastPly && (whiteToMove(ply + 1) ? 'white' : 'black') === boardOrientation
   const isComplete = ply >= lastPly
 
-  // Runs whenever it becomes the opponent's turn — advances the ply on their
-  // behalf after a beat, so the line keeps moving without you having to find
-  // (or even see quizzed) their move. Never fires two plies in a row since
-  // chess strictly alternates colors, so this only ever advances one ply
-  // before control returns to you.
+  // Auto-play the opponent's move after a short delay.
   useEffect(() => {
     if (isMyTurn || isComplete) return
     const timer = setTimeout(() => setPly(ply + 1), OPPONENT_MOVE_DELAY_MS)
     return () => clearTimeout(timer)
   }, [ply, isComplete, isMyTurn, setPly])
 
-  // useCallback (not plain functions) so both have a stable identity for the
-  // keydown effect's dependency array below — otherwise the listener would
-  // be torn down and re-added on every render.
   const handleHint = useCallback(() => {
     setRevealed(true)
     setHintsUsed((h) => h + 1)
@@ -103,12 +70,7 @@ export function LessonQuiz({
     setSelectedSquare(null)
   }, [setPly])
 
-  // H → Show move, R → Restart, mirroring DrillSession's keyboard shortcuts.
-  // Ignores the event when a <button> already has focus, same guard as
-  // DrillSession — pressing a shortcut key right after clicking a button
-  // would otherwise fire twice for one keypress (once from the button, once
-  // from this listener). Restart has no applicability guard (unlike hint) —
-  // it's always a valid action, mid-line or not.
+  // H → Show move, R → Restart. A focused button already handles keys natively.
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.target instanceof HTMLElement && e.target.tagName === 'BUTTON') return
@@ -128,8 +90,7 @@ export function LessonQuiz({
     const chess = new Chess(fen)
     let move
     try {
-      // ponytail: always promote to queen, same convention as
-      // RepertoireBoard/DrillSession — no promotion picker.
+      // ponytail: always promote to queen, no promotion picker.
       move = chess.move({ from, to, promotion: 'q' })
     } catch {
       return false
@@ -178,13 +139,9 @@ export function LessonQuiz({
 
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-center">
-      {/* lg+: capped by viewport height so the page fits a 13" laptop screen
-          without a scroll; 17rem ≈ everything above/below the board. */}
+      {/* lg+: 17rem ≈ chrome above/below the board. */}
       <div className="flex w-full max-w-140 shrink-0 flex-col gap-3 lg:max-w-[min(35rem,calc(100dvh-17rem))]">
-        {/* Fixed height so the row doesn't reflow (and shift the board below
-            it) when it swaps between the taller "Line complete!" text and the
-            progress text + hint button — the two variants have different
-            natural line-heights otherwise. */}
+        {/* Fixed height so swapping text variants doesn't shift the board. */}
         <div className="flex h-9 items-center justify-between gap-2">
           {isComplete ? (
             <p className="text-lg font-medium">{s.lessonQuiz.lineComplete}</p>
@@ -196,8 +153,6 @@ export function LessonQuiz({
             </p>
           )}
           <div className="flex shrink-0 items-center gap-2">
-            {/* Always available, not just after finishing — a way to bail out
-                and start over mid-line without playing through the rest first. */}
             <button
               onClick={handleRestart}
               className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
@@ -216,10 +171,6 @@ export function LessonQuiz({
           </div>
         </div>
 
-        {/* Stays mounted through completion, showing the final position, rather
-            than being replaced by a text-only summary screen — per direct user
-            feedback that the board disappearing on finishing the line felt
-            jarring. */}
         <BoardCoordinates
           show={boardColors.showCoordinates}
           orientation={boardOrientation}

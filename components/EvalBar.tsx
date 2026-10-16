@@ -11,16 +11,12 @@ export function EvalBar({
   className?: string
 }) {
   const whitePercent = evalBarPercent(evaluation)
-  // White's home rank renders at the bottom when the board isn't flipped, and
-  // at the top when viewing as black — anchor the white fill to whichever
-  // edge that is, so the bar agrees with which side of the board is White's.
+  // Anchor the white fill to White's side of the board.
   const justify = boardOrientation === 'white' ? 'justify-end' : 'justify-start'
 
   return (
     <div
-      // Deliberately not theme-aware — same as the board's own square colors
-      // (lib/theme.ts), this mimics chess.com's black/white eval gauge, not
-      // a themed UI surface.
+      // Fixed black/white like chess.com's gauge, not theme-aware.
       className={`flex w-3 shrink-0 flex-col ${justify} overflow-hidden bg-zinc-950 ${className}`}
       title={`${describeEval(evaluation)} (${formatEval(evaluation)})`}
     >

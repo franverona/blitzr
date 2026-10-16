@@ -1,17 +1,11 @@
 @import 'tailwindcss';
 
-/* Theme is a manual light/dark toggle (blitzr-theme cookie, read server-side
-   in app/layout.tsx to pick the .dark class before first paint), not
-   system-preference-driven — see Sidebar.tsx's toggle button. */
+/* Manual theme toggle via the .dark class (set server-side from a cookie). */
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
   --background: #ffffff;
   --foreground: #171717;
-  /* Tells the browser which native form-control/scrollbar rendering matches
-     the active theme (see .dark override below) — CSS color-scheme, not the
-     less granular <meta name="color-scheme"> (app/layout.tsx's viewport
-     export covers that as a fallback for the pre-hydration instant). */
   color-scheme: light;
 }
 
@@ -24,9 +18,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  /* Board dark-square green and brand/active-tab accent — the same value,
-     see lib/theme.ts's BOARD_DARK_SQUARE for the non-Tailwind (inline
-     style) uses this can't reach, e.g. react-chessboard's own color props. */
+  /* Same as the green board preset's dark square (lib/theme.ts). */
   --color-accent: #769656;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);

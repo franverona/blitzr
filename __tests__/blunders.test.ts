@@ -74,9 +74,7 @@ describe('buildBlunderStats', () => {
   })
 
   it('excludes mate-sentinel swings from the average but still counts them', () => {
-    // evalToCp maps a mate score to an internal ±100,000 sentinel (see
-    // lib/analysis.ts) — mixing that into a pawns average would produce a
-    // nonsense "985 pawns" figure, so avgSwingCp must skip it.
+    // Mate swings use a ±100,000 sentinel and must be left out of avgSwingCp.
     const normal = makeGame({ ecoCode: 'B20', movesSan: ['e4'] })
     const intoMate = makeGame({ ecoCode: 'B20', movesSan: ['Nc3'] })
     const onlyMate = makeGame({ ecoCode: 'C00', movesSan: ['Nf3'] })

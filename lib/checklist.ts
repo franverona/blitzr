@@ -11,10 +11,6 @@ function toColor(color: MyColor): Color {
   return color === 'white' ? 'w' : 'b'
 }
 
-// Every other always-visible line on the game page (material diff, eval,
-// better-move hint) is a single line — an uncapped dump of every hanging
-// piece/fork/pin/skewer in a busy middlegame would bury the point for
-// someone who's already stuck and doesn't need more noise.
 const MAX_FINDINGS_PER_SIDE = 3
 
 function severity(reason: BlunderReason): number {
@@ -26,14 +22,8 @@ function severity(reason: BlunderReason): number {
   return PIECE_VALUES[reason.pinnedPiece as PieceSymbol] ?? 0
 }
 
-/** Every hanging piece, fork, pin, and skewer currently threatening one
- *  side's pieces, most valuable first, capped to `MAX_FINDINGS_PER_SIDE`. A
- *  hanging-piece finding is skipped when that square is already a
- *  fork/skewer target for this side — the fork/skewer already explains
- *  *why* the piece is in danger, so repeating the weaker "it's hanging"
- *  note on the same square is just noise. (Pin overlaps are not
- *  suppressed — a piece that's both pinned and genuinely hanging is a
- *  materially different, still-urgent fact.) */
+/** Threats against one side, most valuable first. A hanging piece already
+ *  targeted by a fork/skewer is skipped (pins are not). */
 function buildSideFindings(fen: string, side: MyColor): ChecklistFinding[] {
   const color = toColor(side)
   const opponentColor = toColor(side === 'white' ? 'black' : 'white')
@@ -94,32 +84,14 @@ function buildSideFindings(fen: string, side: MyColor): ChecklistFinding[] {
     .slice(0, MAX_FINDINGS_PER_SIDE)
 }
 
-/**
- * Every currently-present tactical pattern for both sides, white then
- * black — unlike `detectHangingPiece()`/`detectFork()`/`detectPin()`/
- * `detectSkewer()` (`lib/hangingPiece.ts`/`lib/tactics.ts`, which diff a
- * move's before/after FEN for what became *newly* true), this scans one
- * static position directly, so stepping through any game — not just a move
- * Stockfish already flagged — can answer "what's actually going on right
- * now" for a beginner who doesn't know what to look for next.
- */
+/** Tactical patterns present in a static position, both sides — unlike the
+ *  `detect*()` functions, which diff a move's before/after FEN. */
 export function buildPositionChecklist(fen: string): ChecklistFinding[] {
   return [...buildSideFindings(fen, 'white'), ...buildSideFindings(fen, 'black')]
 }
 
-/**
- * Plain-English/Spanish sentence for one checklist finding — deliberately
- * separate from `describeBlunderReason()` (`lib/tactics.ts`): that
- * function's templates ("This leaves the queen on d5 hanging") read
- * naturally right after a move that caused the pattern, but a checklist
- * describes whatever's already true about the *current* position,
- * unconnected to any specific move — so each template here leads with the
- * piece/attacker as the sentence subject instead. The pin template uses a
- * plain verb ("pins"/"clava") rather than a gendered past-participle
- * adjective, same trick `describePinReason`/`describeSkewerReason` already
- * rely on, to sidestep the torre/dama-vs-everything-else gender-agreement
- * problem an adjective form would introduce.
- */
+/** Subject-led wording ("The queen on d5 is hanging"), since a checklist
+ *  isn't tied to a move like `describeBlunderReason()` is. */
 export function describeChecklistFinding(
   finding: ChecklistFinding,
   locale: Locale = getLocale(),
@@ -159,10 +131,7 @@ export function describeChecklistFinding(
     : `${pinner} on ${reason.pinnerSquare} pins ${pinned} on ${reason.pinnedSquare} to the king.`
 }
 
-/** A stable identity for one finding, keyed on its side/kind/squares (not
- *  array index — findings get re-sorted and re-capped every render) so a
- *  "hide this one" toggle (`components/Board.tsx`'s `hiddenFindingKeys`)
- *  survives ply-to-ply re-renders without needing a synthetic id anywhere. */
+/** Stable across re-renders (findings get re-sorted), so hide toggles persist. */
 export function findingKey(finding: ChecklistFinding): string {
   const { side, reason } = finding
   if (reason.kind === 'hanging-piece') return `${side}-hanging-${reason.square}`
@@ -172,12 +141,6 @@ export function findingKey(finding: ChecklistFinding): string {
   return `${side}-pin-${reason.pinnedSquare}`
 }
 
-/** Which squares to highlight and which arrows to draw for one finding, so
- *  `BoardView` can show a checklist finding directly on the board instead of
- *  only as sidebar text — the whole point of pointing at it rather than
- *  making a beginner map "knight on b5" back to the board themselves. Plain
- *  square-name strings, not react-chessboard types — this stays a pure,
- *  UI-agnostic mapping; `Board.tsx` applies the actual colors/styles. */
 export interface FindingMarks {
   squares: string[]
   arrows: [string, string][]
@@ -185,8 +148,7 @@ export interface FindingMarks {
 
 export function findingMarks(reason: BlunderReason): FindingMarks {
   if (reason.kind === 'hanging-piece') {
-    // No tracked attacker square for a hanging piece (only the FEN's own
-    // attack/defense count, see hangingSquares()) — highlight-only.
+    // No attacker square is tracked for a hanging piece.
     return { squares: [reason.square], arrows: [] }
   }
   if (reason.kind === 'fork') {

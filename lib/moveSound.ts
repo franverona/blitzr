@@ -10,11 +10,9 @@ function pieceCount(fen: string): number {
   return placement(fen).replace(/[^a-z]/gi, '').length
 }
 
-/** Which chess.com sound (by its CDN file name) the change from `prevFen` to `fen`
- *  should play. Finds the single legal move that turns one into the other to
- *  read its flags; a multi-ply jump (no such move) falls back to capture vs.
- *  plain move by piece count. Precedence matches chess.com: game end, then
- *  check, then promotion/castle/capture, then a plain move. */
+/** The chess.com sound for the change from `prevFen` to `fen`. A multi-ply
+ *  jump falls back to capture vs. plain move by piece count. Precedence:
+ *  game end, check, promotion/castle/capture, plain move. */
 export function moveSoundFor(prevFen: string, fen: string): MoveSound {
   let after: Chess
   try {
@@ -32,7 +30,7 @@ export function moveSoundFor(prevFen: string, fen: string): MoveSound {
     // per position change; pass the move itself in if a caller ever has it.
     move = before.moves({ verbose: true }).find((m) => placement(m.after) === placement(fen))
   } catch {
-    // unparseable prevFen — fall through to the piece-count fallback
+    // Unparseable prevFen: use the piece-count fallback.
   }
   if (move?.isPromotion()) return 'promote'
   if (move?.isKingsideCastle() || move?.isQueensideCastle()) return 'castle'

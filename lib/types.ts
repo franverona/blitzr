@@ -65,57 +65,27 @@ export interface SyncResult {
   gamesUpserted: number
 }
 
-/** One move in a `Lesson`'s line, with a short plain-language note on why
- *  it's played — shown for whichever ply the lesson board is currently on.
- *  Keyed by `Locale` (not a plain string) since this is hand-authored
- *  content translated alongside the rest of the app, not generated text. */
 export interface LessonMove {
   san: string
   explanation: Record<Locale, string>
 }
 
-/** A hand-authored lesson — either an opening (`lib/openingTheory.ts`) or an
- *  endgame (`lib/endgameTheory.ts`), same shape for both since they share
- *  every rendering component (`components/LessonPractice.tsx` and friends).
- *  Static content shipped with the app, not stored data, so this has no
- *  repository method of its own. */
+/** A hand-authored opening (`lib/openingTheory.ts`) or endgame
+ *  (`lib/endgameTheory.ts`) lesson. */
 export interface Lesson {
   slug: string
   name: Record<Locale, string>
-  /** Openings always start from the standard position; endgames need their
-   *  own constructed FEN (e.g. king + queen vs. lone king) — carried on the
-   *  data itself rather than a hardcoded constant in the board component,
-   *  since it now varies per lesson. */
   initialFen: string
-  /** The line from `initialFen` — deliberately short (a handful of plies
-   *  showing one natural continuation), not a deep repertoire line. For an
-   *  endgame lesson this runs all the way to an actual checkmate or, for
-   *  the pawn-ending lesson, to the pawn queening. */
+  /** Short line from `initialFen`. Endgame lessons run to mate (or promotion). */
   moves: LessonMove[]
   summary: Record<Locale, string>
   sourceUrl: string
-  /** Which side this lesson is framed around — e.g. White for "King's Pawn
-   *  Opening", Black for a defense named after Black's reply. Quiz mode
-   *  defaults to practicing this color (board orientation still flippable)
-   *  rather than always starting as White, since quizzing the *other* side
-   *  by default reads as testing the wrong player for a lesson named after
-   *  one side's plan. */
+  /** The side the lesson is framed around; Quiz mode defaults to it. */
   primaryColor: 'white' | 'black'
 }
 
-/** How many of the account's own synced games actually reached (played at
- *  least as far as) an opening `Lesson`'s exact move sequence — see
- *  `countGamesReachingLine()` in `lib/openingTheory.ts`. Opening-specific
- *  (endgame lessons don't have an equivalent — a game doesn't "reach" an
- *  endgame position via a fixed move prefix from move 1 the way it does an
- *  opening line). Deliberately not
- *  matched via Chess.com's ECO code/name: a lesson's line is usually just a
- *  tabiya (e.g. the position right after 3.Bb5, before Black even replies),
- *  and real games almost always continue into a deeper, more specific named
- *  sub-variation — Chess.com then tags the *whole game* with that deeper
- *  ECO code/name, not the shallower one the lesson teaches. Matching on the
- *  actual move prefix instead sidesteps needing to know which of
- *  potentially dozens of ECO codes/names share a lesson's opening family. */
+/** Own games that reached an opening lesson's exact move prefix — see
+ *  `countGamesReachingLine()`. */
 export interface LessonGameStats {
   games: number
   wins: number
@@ -138,45 +108,33 @@ export interface RepertoireNode {
 export interface RepertoireDiffResult {
   /** How many plies of the game matched the repertoire before it left book. */
   inBookPlies: number
-  /** The ply (1-indexed) where the user played outside their own prepared
-   *  moves — null if they never deviated (either stayed in book the whole
-   *  game, or the game left book because of an unprepared opponent move). */
+  /** 1-indexed ply where the user left their own prepared moves; null if
+   *  they never did (an unprepared opponent move doesn't count). */
   deviationPly: number | null
   deviationMove: string | null
   /** The move(s) the repertoire had prepared at the deviation point. */
   expectedMoves: string[] | null
 }
 
-/** The engine's suggested move from a position: `from`/`to` for drawing a
- *  board arrow, `san` for display in text (blunder lists, etc). */
 export interface BestMove {
   from: string
   to: string
   san: string
-  /** Up to a few more plies the engine expects to follow this move (SAN),
-   *  from its own principal variation — lets a "better was X" callout show
-   *  *why* a quiet move matters even when the payoff isn't immediate (no
-   *  hanging piece or fork to point to), by showing the short plan instead
-   *  of just the first move. Empty when the engine's PV didn't extend far
-   *  enough (e.g. near a forced mate) or the analysis predates this field. */
+  /** The engine's principal variation after this move (SAN). Empty if the PV
+   *  was short or the analysis predates this field. */
   bestLine: string[]
 }
 
-/** A single position's engine evaluation, always from White's perspective
- *  (UCI reports "score cp/mate" from the side-to-move's perspective, so this
- *  is normalized before storage — see lib/stockfish/client.ts). Exactly one
- *  of cp/mate is non-null. `bestMove` is null for a terminal position with
- *  no legal moves. */
+/** Always from White's perspective (normalized from UCI's side-to-move
+ *  score). Exactly one of cp/mate is non-null; `bestMove` is null for a
+ *  terminal position. */
 export interface PositionEval {
   cp: number | null
   mate: number | null
   bestMove: BestMove | null
 }
 
-/** One line from a live MultiPV search (`StockfishEngine.evaluateLines()`) —
- *  same eval shape as `PositionEval` but without its `bestMove` field, which
- *  reads oddly for a line that isn't necessarily *the* best one. `cp`/`mate`
- *  are normalized to White's perspective, same convention as `PositionEval`. */
+/** One line from a MultiPV search, White's perspective. */
 export interface EngineLine {
   cp: number | null
   mate: number | null
@@ -185,19 +143,13 @@ export interface EngineLine {
 
 export interface GameAnalysis {
   gameId: string
-  /** One eval per position, same length/indexing as a game's positions
-   *  array (movesSan.length + 1: index 0 is the starting position). */
+  /** One eval per position; index 0 is the starting position. */
   evals: PositionEval[]
   analyzedAt: string
-  /** Per-position engine think time this analysis was run at
-   *  (`ANALYSIS_STRENGTHS`). Undefined for analyses saved before it was
-   *  recorded. */
+  /** Undefined for analyses saved before it was recorded. */
   movetimeMs?: number
 }
 
-/** A synced game with no saved analysis yet — the minimal shape the bulk
- *  "Analyze all" action (`getUnanalyzedGames()`) needs to hand off to
- *  `analyzeGames()` (`lib/stockfish/analyze.ts`) and display progress. */
 export interface UnanalyzedGame {
   id: string
   initialFen: string
@@ -211,27 +163,16 @@ export interface Blunder {
   moveSan: string
   evalBefore: PositionEval
   evalAfter: PositionEval
-  /** How much worse the position got for the player who just moved, in
-   *  centipawns (always positive — that's what makes it a blunder). */
+  /** Centipawns lost by the mover (always positive). */
   swingCp: number
 }
 
-/** A simple tactical explanation for why a move was a blunder — v1 only
- *  detects a piece left hanging (attacked, undefended, capturable for free).
- *  Plain strings rather than chess.js's `Square`/`PieceSymbol` types, same
- *  "types.ts stays chess.js-agnostic" convention `BestMove` follows — see
- *  `lib/hangingPiece.ts` for the detector and `describeHangingPieceReason()`
- *  for the plain-English rendering. */
 export interface HangingPieceReason {
   kind: 'hanging-piece'
   piece: string
   square: string
 }
 
-/** A single opponent piece newly attacking 2+ of the mover's pieces at
- *  once — see `lib/tactics.ts` for the detector and `describeForkReason()`
- *  for the plain-English rendering. Same "plain strings, not chess.js
- *  types" convention as `HangingPieceReason`. */
 export interface ForkReason {
   kind: 'fork'
   attackerPiece: string
@@ -239,10 +180,7 @@ export interface ForkReason {
   targets: { piece: string; square: string }[]
 }
 
-/** A piece newly pinned to its own king by an enemy sliding piece —
- *  absolute pins only (see `detectPin()`/`pinnedPieces()` in
- *  `lib/tactics.ts`), same "plain strings, not chess.js types" convention
- *  as `HangingPieceReason`/`ForkReason`. */
+/** Absolute pins only (pinned to the king). */
 export interface PinReason {
   kind: 'pin'
   pinnedPiece: string
@@ -251,12 +189,8 @@ export interface PinReason {
   pinnerSquare: string
 }
 
-/** A sliding piece newly attacking two enemy pieces in a straight line,
- *  front then back — the reverse of a pin: the front piece (equal or more
- *  valuable, or the king in check) is the one forced to move, exposing the
- *  back piece to capture — see `detectSkewer()`/`skewers()` in
- *  `lib/tactics.ts`, same "plain strings, not chess.js types" convention as
- *  the other reasons. */
+/** A slider attacking two pieces in line; the front one must move, exposing
+ *  the back one. */
 export interface SkewerReason {
   kind: 'skewer'
   attackerPiece: string
@@ -267,19 +201,9 @@ export interface SkewerReason {
   backSquare: string
 }
 
-/** Any of the simple tactical patterns a blunder might be explained by —
- *  see `detectBlunderReason()`/`describeBlunderReason()` in
- *  `lib/tactics.ts`, which every call site uses instead of the individual
- *  detectors. */
 export type BlunderReason = HangingPieceReason | ForkReason | PinReason | SkewerReason
 
-/** One already-present tactical pattern found by scanning a single static
- *  position (`buildPositionChecklist()` in `lib/checklist.ts`) — reuses the
- *  same `BlunderReason` shape the diff-based detectors produce, since the
- *  underlying pattern is identical, just found a different way (a snapshot
- *  scan rather than a before/after diff off one specific move). `side` is
- *  whose piece(s) the finding is about — the one at risk of losing
- *  material or being forced to move, not the side doing the attacking. */
+/** `side` is the player whose piece is at risk, not the attacker. */
 export interface ChecklistFinding {
   side: MyColor
   reason: BlunderReason
@@ -287,10 +211,8 @@ export interface ChecklistFinding {
 
 export type DrillSourceType = 'deviation' | 'blunder'
 
-/** A spaced-repetition card, keyed by where it came from rather than a
- *  synthetic id — everything about *what* to show (FEN, accepted moves) is
- *  re-derived from the source game/repertoire/analysis at drill time, only
- *  the review schedule itself is durable state (see lib/drill.ts). */
+/** Only the review schedule is stored; the prompt is re-derived from the
+ *  source game/repertoire/analysis at drill time (see lib/drill.ts). */
 export interface DrillCard {
   gameId: string
   sourceType: DrillSourceType
@@ -307,14 +229,10 @@ export interface BlunderGroupStat {
   key: string
   label: string
   count: number
-  /** Average swing in centipawns, over blunders with a real cp swing only —
-   *  null if every blunder in the group was a swing into/out of a forced
-   *  mate (not comparable to a pawn count, see lib/analysis.ts's evalToCp). */
+  /** Over real cp swings only; null if every blunder involved a forced mate. */
   avgSwingCp: number | null
 }
 
-/** One own blunder, for the cross-game "worst blunders" list — carries
- *  enough to both display and link back to its source game. */
 export interface WorstBlunder {
   gameId: string
   gameLabel: string
@@ -323,39 +241,22 @@ export interface WorstBlunder {
   swingCp: number
   evalBefore: PositionEval
   evalAfter: PositionEval
-  /** Plain-English rendering of `moveSan`, e.g. "Queen captures pawn on f6,
-   *  check" — see `describeMove()` in `lib/san.ts`. */
   moveDescription: string
-  /** Why this was a blunder, if a simple tactical pattern explains it — null
-   *  when no such pattern was detected (the eval swing might still be real,
-   *  just not attributable to this v1 heuristic). See `lib/hangingPiece.ts`. */
+  /** null when no simple tactical pattern explains it. */
   reason: BlunderReason | null
-  /** The engine's suggested move instead, plain-English description and (if
-   *  detectable) why it's better — see `describeBetterMove()` in
-   *  `lib/tactics.ts`. Null if there's no suggestion or it matches what was
-   *  actually played. */
+  /** null if there's no suggestion or it matches the move played. */
   betterMove: string | null
 }
 
-/** Own-side accuracy + mistake/blunder counts for one analyzed game — the
- *  games list's precision/errors columns, same `summarizeMoveQuality()`
- *  numbers `MoveQualityLink` shows on the game page, just picked out for
- *  whichever color the account played. */
 export interface GameAccuracy {
   accuracy: number
   mistakes: number
   blunders: number
 }
 
-/** One analyzed game's own-side accuracy, for the /blunders accuracy trend
- *  chart — same number `GameAccuracy` carries, plus the date/label a trend
- *  needs to plot and order by that a bare id-keyed map doesn't. See
- *  `buildAccuracyTrend()` in lib/accuracyTrend.ts. */
 export interface AccuracyTrendPoint {
   gameId: string
-  /** Unix seconds, same as Game.endTime — kept numeric rather than
-   *  pre-formatted so the chart can space points by real elapsed time if it
-   *  ever needs to; display text goes through formatDate() instead. */
+  /** Unix seconds. */
   endTime: number
   accuracy: number
   gameLabel: string
@@ -368,29 +269,21 @@ export interface BlunderStats {
   byOpening: BlunderGroupStat[]
   byPiece: BlunderGroupStat[]
   worst: WorstBlunder[]
-  /** Oldest-first, one point per analyzed game in scope — see
-   *  buildAccuracyTrend(). Independent of totalBlunders/worst above: a
-   *  clean-sheet stretch still produces points here. */
+  /** Oldest first, one point per analyzed game in scope. */
   trend: AccuracyTrendPoint[]
 }
 
-/** A `DrillCard` hydrated into something a drill session can actually show. */
 export interface DrillPrompt {
   gameId: string
   sourceType: DrillSourceType
   ply: number
   fen: string
   color: MyColor
-  /** One or more SAN moves that count as correct — deviation cards accept
-   *  any of the repertoire's prepared replies, blunder cards accept only
-   *  the engine's suggested move. */
+  /** Deviation cards accept any prepared reply; blunder cards only the
+   *  engine's move. */
   correctMoves: string[]
-  /** For display above the board, e.g. "vs OMENrus98 · 17/07/2026". */
   gameLabel: string
   opponentUsername: string
-  /** Fetched once per unique opponent in `getDrillDeck()` (`app/actions.ts`),
-   *  same "resolve server-side, render client-side" split `PlayerAvatar.tsx`
-   *  already uses on the game page — `buildDrillPrompt()` itself stays pure,
-   *  no network calls. Null if Chess.com has none / the fetch failed. */
+  /** Null if Chess.com has none or the fetch failed. */
   opponentAvatarUrl: string | null
 }

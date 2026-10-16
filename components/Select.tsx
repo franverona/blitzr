@@ -1,10 +1,7 @@
 import type { ComponentProps } from 'react'
 
-/** Native `<select>` with its own caret. `appearance-none` drops the browser's
- *  arrow (which ignores padding and renders inconsistently across browsers/
- *  themes), so an SVG chevron is overlaid instead; `pr-7` reserves its space.
- *  The wrapper is `inline-flex` so the select still stretches to fill a
- *  stretched flex parent (the Analyze split button relies on that). */
+/** Native `<select>` with an overlaid chevron (the native arrow ignores
+ *  padding and varies by browser). */
 export function Select({ className = '', children, ...props }: ComponentProps<'select'>) {
   return (
     <div className="relative inline-flex">

@@ -29,43 +29,24 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  // Both are supported now (light is the default, dark via the .dark class
-  // — see globals.css); the per-theme CSS color-scheme property there is
-  // what actually drives native form-control/scrollbar rendering per toggle
-  // state, this is just the pre-hydration/no-JS fallback.
+  // Pre-hydration fallback; globals.css sets color-scheme per theme.
   colorScheme: 'light dark',
 }
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  // Every page renders through this layout, so a missing/misconfigured env
-  // var here shouldn't take the whole app down — unlike lib/sync.ts's own
-  // call (only reached from the Sync button), this one fails soft to "not
-  // shown" rather than an error boundary on every route.
+  // Fail soft: a missing username shouldn't break every page.
   let username: string | null
   try {
     username = getChesscomUsername()
   } catch {
     username = null
   }
-  // fetchPlayerAvatar() already swallows its own failures and returns null —
-  // same "purely decorative, never breaks the page" contract PlayerAvatar's
-  // other callers (the game page) rely on.
   const avatarUrl = username ? await fetchPlayerAvatar(username) : null
-  // Read server-side (instead of Sidebar reading localStorage client-side
-  // after mount) so the very first paint already renders the right width —
-  // no expanded-then-collapsed flash on refresh.
+  // Settings are read from cookies server-side so the first paint is right
+  // (no flash). Board colors in particular are inline-style props on
+  // react-chessboard, so they can't be patched after render.
   const sidebarCollapsed = (await cookies()).get('blitzr-sidebar-collapsed')?.value === '1'
-  // Defaults to dark (the app's look before this setting existed) rather
-  // than light, so an existing user with no cookie yet sees no change.
   const theme = (await cookies()).get('blitzr-theme')?.value === 'light' ? 'light' : 'dark'
-  // Same server-read-cookie, zero-flash pattern as theme above — board
-  // colors used to be a client-only localStorage preference, but
-  // react-chessboard's square colors are plain inline-style props, not
-  // something a pre-paint script can patch onto already-rendered DOM (that
-  // approach also fought React's own hydration diffing on <html>'s style
-  // attribute). Resolving the preset server-side and baking it into both
-  // <html>'s inline style and SettingsProvider's initial state means
-  // there's nothing left to visibly correct once the client mounts.
   const boardColorPreset = getBoardColorPreset((await cookies()).get('blitzr-board-color')?.value)
 
   return (

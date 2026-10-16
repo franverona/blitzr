@@ -3,10 +3,6 @@
 import { getStrings } from '@/lib/i18n/strings'
 import { useBoardContext } from './Board'
 
-// Same circular icon-button styling as AboutOpeningButton/RepertoireBoard's
-// HelpButton, so it reads as one matching set of controls next to
-// BoardNavControls. Only exposed on the /learn lesson board — game replay
-// pages fix orientation to the synced player's color and never render this.
 export function FlipBoardButton() {
   const { setBoardOrientation } = useBoardContext()
   const s = getStrings()

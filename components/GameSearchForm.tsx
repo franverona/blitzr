@@ -11,12 +11,8 @@ const FILTER_TRIGGER_CLASS =
 const SEARCH_DEBOUNCE_MS = 400
 const DEFAULT_ACCURACY_THRESHOLD = 80
 
-/** Opponent-name text search plus discrete result/color/rated filters and an
- *  accuracy threshold. The text field and the accuracy slider navigate on a
- *  debounce (typing/dragging shouldn't fire a navigation per
- *  keystroke/pixel); the discrete selects navigate immediately on change —
- *  same "URL-driven, no client state" pattern as `DrillFilters`, the
- *  debounce is the only local-only state here. */
+/** Opponent search plus result/color/rated/accuracy filters, all in the URL.
+ *  Text and slider changes are debounced; selects navigate immediately. */
 export function GameSearchForm({
   defaultValue,
   result,
@@ -38,19 +34,12 @@ export function GameSearchForm({
   const s = getStrings()
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Cancel a pending debounced navigation on unmount (e.g. another filter's
-  // immediate navigation remounts this component, via its key in
-  // app/page.tsx) — otherwise it fires after the fact, against stale props.
+  // Cancel a pending navigation on unmount, or it fires against stale props.
   useEffect(() => () => clearDebounce(), [])
 
-  // accOp/accValue are deliberately left out of this component's key in
-  // app/page.tsx (see its own comment) so the accuracy popover survives its
-  // own navigations — which means this state has to re-sync from the prop
-  // itself instead of a remount, for the one case a remount would've
-  // otherwise covered: browser back/forward changing accValue externally.
-  // Adjusted during render (React's documented pattern for this — an effect
-  // here would cost an extra render and trip the set-state-in-effect lint
-  // rule), guarded by prevAccValue so it only fires on an actual prop change.
+  // accOp/accValue aren't in this component's key (so the popover survives
+  // its own navigations), so re-sync from the prop during render instead,
+  // e.g. on back/forward.
   const [prevAccValue, setPrevAccValue] = useState(accValue)
   if (accValue !== prevAccValue) {
     setPrevAccValue(accValue)
@@ -98,10 +87,7 @@ export function GameSearchForm({
         onChange={(e) => {
           const next = e.target.value
           setValue(next)
-          // The input's native clear ("x") button — and backspacing to empty
-          // — fire this with an empty value. Skip the debounce for that case
-          // so the stale filtered list doesn't linger, and drop `q` entirely
-          // rather than navigating to a bare "?q=".
+          // Clearing the field navigates immediately and drops `q`.
           if (next === '') {
             clearDebounce()
             navigate({ q: '' })
@@ -157,11 +143,8 @@ export function GameSearchForm({
   )
 }
 
-/** The accuracy threshold's own select+slider are collapsed into a trigger
- *  button + a small popover — a bare inline slider sitting in the filter row
- *  reflowed every other control around it as it appeared/disappeared, and
- *  its width made the row jump. Closes on an outside click, same as any
- *  native `<select>` dropdown would. */
+/** Trigger + popover so the slider doesn't reflow the filter row. Closes on
+ *  outside click. */
 function AccuracyFilterPopover({
   accOp,
   accuracy,

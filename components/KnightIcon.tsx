@@ -1,9 +1,7 @@
 import { getStrings } from '@/lib/i18n/strings'
 import { KnightGlyph } from './KnightGlyph'
 
-// Badge background carries the white/black contrast (light vs dark circle),
-// not just the glyph's own tint — two similarly-light glyph colors were too
-// close to tell apart at a glance.
+// The badge background, not just the glyph tint, carries the color contrast.
 export function KnightIcon({ color }: { color: 'white' | 'black' }) {
   const s = getStrings()
   const isWhite = color === 'white'

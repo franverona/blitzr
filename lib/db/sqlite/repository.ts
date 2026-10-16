@@ -141,19 +141,14 @@ export class SqliteGameRepository implements GameRepository {
       .values(games.map(gameToRow))
       .onConflict((oc) => oc.doNothing())
       .execute()
-    // `results.length` is the attempted count, not how many were actually
-    // new — ON CONFLICT DO NOTHING means most calls (the current month's
-    // archive is always re-fetched) hit rows that already exist.
-    // numInsertedOrUpdatedRows reflects only what was actually inserted.
+    // Count actual inserts, not attempts (ON CONFLICT DO NOTHING skips most).
     return results.reduce((sum, r) => sum + Number(r.numInsertedOrUpdatedRows ?? 0), 0)
   }
 
   async listGames(
     params: Parameters<GameRepository['listGames']>[0] = {},
   ): Promise<{ games: Game[]; total: number }> {
-    // An empty (not undefined) gameIds means the accuracy filter matched
-    // nothing — short-circuit rather than issuing `where id in ()`, which
-    // SQLite rejects.
+    // SQLite rejects `where id in ()`.
     if (params.gameIds && params.gameIds.length === 0) {
       return { games: [], total: 0 }
     }
@@ -162,14 +157,11 @@ export class SqliteGameRepository implements GameRepository {
     const limit = params.limit ?? 50
     const offset = params.offset ?? 0
     const opponent = params.opponent?.trim()
-    // A literal, case-insensitive substring match. `LIKE '%q%'` treated `%`
-    // and `_` typed into the search box as wildcards (a lone `_` matched
-    // every game); instr() has no wildcards to escape.
+    // instr(), not LIKE, so `%`/`_` aren't wildcards.
     const needle = opponent?.toLowerCase()
     const contains = (column: 'white_username' | 'black_username') =>
       sql<boolean>`instr(lower(${sql.ref(column)}), ${needle}) > 0`
-    // Only the opponent's side — matching either username also matched the
-    // account's own name, so any query overlapping it returned every game.
+    // Opponent side only; matching both also matched the user's own name.
     const opponentFilter = (eb: ExpressionBuilder<DbSchema, 'games'>) =>
       eb.or([
         eb.and([eb('my_color', '=', 'black'), contains('white_username')]),

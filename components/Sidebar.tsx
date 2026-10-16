@@ -10,14 +10,10 @@ import { PlayerAvatar } from '@/components/PlayerAvatar'
 import { getStrings } from '@/lib/i18n/strings'
 import { ChevronLeftIcon, SettingsIcon } from './NavIcons'
 
+// Duplicated in app/layout.tsx; see SettingsProvider.tsx for why.
 const COLLAPSED_COOKIE = 'blitzr-sidebar-collapsed'
 
-// Below `md` the sidebar is always icon-only — width and label visibility
-// both fall back to plain Tailwind breakpoints for that, no JS media query
-// needed. `collapsed` state only controls the md+ toggle. Its initial value
-// comes from a cookie read server-side (RootLayout), not localStorage read
-// client-side after mount — that would flash "expanded" on every refresh,
-// since the server can't see localStorage but can see a cookie.
+// Below `md` the sidebar is always icon-only; `collapsed` only affects md+.
 export function Sidebar({
   username,
   avatarUrl,
@@ -40,22 +36,14 @@ export function Sidebar({
   }
 
   const labelClassName = collapsed ? 'hidden' : 'hidden md:inline'
-  // Icon-only rows (mobile always, or md+ while collapsed) need a smaller,
-  // symmetric horizontal padding — the expanded px-3 leaves only 16px of a
-  // 40px-wide collapsed row, so a 20-24px icon overflows the padding box
-  // and gets clipped on one side by the aside's scroll clipping (overflow-y
-  // implicitly makes overflow-x non-visible too), reading as "off-center".
+  // Icon-only rows need tighter padding or the icon gets clipped off-center.
   const iconRowClassName = collapsed
     ? 'justify-center px-1.5'
     : 'justify-center px-1.5 md:justify-start md:px-3'
 
   return (
-    // The toggle button lives on this wrapper, not on the scrollable <aside>
-    // itself — overflow-y-auto implicitly makes overflow-x auto too (CSS: an
-    // axis left "visible" while the other isn't computes to "auto"), which
-    // would clip a button positioned half outside the border. Its `top-9`
-    // is the logo row's own height (h-10) plus the aside's py-4 padding,
-    // so it lines up with the app name/icon row instead of the full sidebar.
+    // The toggle sits on this wrapper because the <aside>'s overflow-y-auto
+    // would clip it. `top-9` aligns it with the logo row.
     <div className={`relative flex h-full shrink-0 ${collapsed ? 'w-14' : 'w-14 md:w-40'}`}>
       <aside className="flex w-full flex-col gap-4 overflow-y-auto border-r border-zinc-200 px-2 py-4 dark:border-zinc-800">
         <Link
@@ -69,16 +57,8 @@ export function Sidebar({
         <div className={collapsed ? 'hidden' : 'hidden md:block'}>
           <BulkAnalysisIndicator />
         </div>
-        {/* Settings sits directly above the username row, both pinned to the
-            bottom together — a single mt-auto on this wrapper, not one on
-            each child, since flexbox splits free space evenly across every
-            auto margin on the same axis: two separate ones here would've
-            pushed Settings only partway down instead of flush against the
-            username row above it. */}
+        {/* One shared mt-auto: separate auto margins would split the free space. */}
         <div className="mt-auto flex flex-col">
-          {/* Its own page, not a dialog — most settings change how a board
-              looks, and a dialog opened from /blunders or the games list has
-              no board behind it to preview against (app/settings/page.tsx). */}
           <Link
             href="/settings"
             aria-current={settingsActive ? 'page' : undefined}

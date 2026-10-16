@@ -9,11 +9,7 @@ import { Select } from './Select'
 export type PuzzleStatusFilter = 'all' | 'solved' | 'unsolved'
 export type PuzzleColorFilter = 'all' | 'white' | 'black'
 
-/** URL-driven puzzle-list filters (`?status=`/`?color=`/`?mateIn=`), same
- *  "real navigation, not client state" pattern as DrillFilters — a filter
- *  change is a normal link click, so the list page (a server component)
- *  re-fetches solved ids and re-filters server-side rather than this
- *  component owning any of that itself. */
+/** URL-driven filters; the server page does the filtering. */
 export function PuzzleFilters({
   status,
   color,
@@ -42,10 +38,7 @@ export function PuzzleFilters({
 
   function hrefFor(next: { status?: string; color?: string; mateIn?: string }): string {
     const params = new URLSearchParams(searchParams.toString())
-    // A filter change always drops the current page — same convention
-    // GameSearchForm's own navigate() uses (it never carries `page` into its
-    // built params at all) — otherwise a page number from a wider result set
-    // could point past the end of a newly-narrowed one.
+    // Reset paging so the page number can't overrun a narrower result set.
     params.delete('page')
     for (const [key, value] of Object.entries(next)) {
       if (value) params.set(key, value)

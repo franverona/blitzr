@@ -9,12 +9,8 @@ import {
 import { type MoveSound, moveSoundFor } from '@/lib/moveSound'
 import { getBoardColorPreset } from '@/lib/theme'
 
-// Not shared with app/layout.tsx's own read of this same cookie — a plain
-// constant exported from a 'use client' module doesn't reliably cross back
-// into a Server Component (Next.js treats the whole module as a client
-// reference boundary), so the literal is duplicated instead, same as
-// Sidebar.tsx's COLLAPSED_COOKIE already is relative to
-// layout.tsx's own inline cookie names.
+// Duplicated in app/layout.tsx on purpose: a constant exported from a
+// 'use client' module reads as undefined in a Server Component.
 const THEME_COOKIE = 'blitzr-theme'
 const BOARD_COLOR_COOKIE = 'blitzr-board-color'
 const ANALYSIS_STRENGTH_COOKIE = 'blitzr-analysis-strength'
@@ -52,17 +48,8 @@ export function useSettings(): SettingsContextValue {
   return ctx
 }
 
-// Every per-viewer preference on the /settings page, in one provider rather
-// than one per setting. Mounted once in the root layout, seeded from the blitzr-board-color cookie
-// read server-side there — same zero-flash reasoning as the theme toggle's
-// own cookie (app/layout.tsx also bakes the resolved accent color straight
-// into <html>'s inline style from that same server read, so there's nothing
-// left for the client to visibly correct after hydration). A Context, not
-// the localStorage + useSyncExternalStore this used before: board colors
-// need to be known *before* first paint (react-chessboard's square colors
-// are plain inline-style props, not something a script can patch onto
-// already-rendered DOM afterward), which only a server-resolved value can
-// guarantee — localStorage can't be read until the client mounts.
+// Seeded from cookies read server-side in app/layout.tsx, so board colors
+// (inline-style props on react-chessboard) are right on first paint.
 export function SettingsProvider({
   initialTheme,
   initialPresetId,
@@ -92,8 +79,7 @@ export function SettingsProvider({
   )
   const preset = getBoardColorPreset(presetId)
 
-  // The `dark` class lives on <html> (app/layout.tsx), outside anything this
-  // provider renders, so it needs a direct DOM write.
+  // The `dark` class lives on <html>, outside this provider.
   function setTheme(next: 'light' | 'dark') {
     setThemeState(next)
     document.documentElement.classList.toggle('dark', next === 'dark')
@@ -103,9 +89,7 @@ export function SettingsProvider({
   function setBoardColorPreset(id: string) {
     setPresetId(id)
     setCookie(BOARD_COLOR_COOKIE, id)
-    // --color-accent (app/globals.css) is consumed via a Tailwind class, not
-    // a prop this context's value can reach — kept in sync by writing it
-    // directly here, same as the initial server-rendered value on <html>.
+    // --color-accent is used via Tailwind classes, so set it on <html> directly.
     document.documentElement.style.setProperty('--color-accent', getBoardColorPreset(id).dark)
   }
 
@@ -153,25 +137,19 @@ export function SettingsProvider({
   )
 }
 
-// ponytail: hotlinked from chess.com's own CDN rather than bundled — the files
-// are chess.com's, so this repo doesn't redistribute them. Needs internet, and
-// goes silent if chess.com ever moves them; swap in local files under
-// public/sounds/ if that happens. A fresh Audio per move so rapid moves overlap
-// instead of cutting each other off; the browser caches each file after its
-// first fetch.
+// ponytail: hotlinked from chess.com's CDN rather than redistributed. Needs
+// internet; swap in local files under public/sounds/ if they move. A fresh
+// Audio per move lets rapid moves overlap.
 const SOUND_BASE_URL = 'https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default'
 
 export function playMoveSound(sound: MoveSound) {
   const audio = new Audio(`${SOUND_BASE_URL}/${sound}.mp3`)
   audio.volume = 0.6
-  // Autoplay can be blocked before the first user gesture — a missed sound
-  // isn't worth surfacing.
+  // Autoplay may be blocked before the first user gesture.
   audio.play().catch(() => {})
 }
 
-/** Plays a move sound whenever `fen` changes (not on mount), if enabled in
- *  Settings — which one is picked by moveSoundFor(). Any position change
- *  counts, so a multi-ply jump plays one sound, not one per ply. */
+/** Plays a sound when `fen` changes (not on mount); a multi-ply jump plays one. */
 export function useMoveSound(fen: string) {
   const { moveSounds } = useSettings()
   const prevFenRef = useRef(fen)

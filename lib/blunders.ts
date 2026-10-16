@@ -12,19 +12,13 @@ import type { BlunderGroupStat, BlunderStats, Game, GameAnalysis, WorstBlunder }
 
 const WORST_LIST_SIZE = 10
 
-/** Pre-description shape collected while walking every game's blunders —
- *  `moveDescription`/`reason`/`betterMove` are only computed for the handful
- *  that survive the sort + slice to `WORST_LIST_SIZE`, not for every blunder
- *  counted along the way. */
+/** Descriptions are only computed for the entries that make the worst list. */
 type BlunderCandidate = Omit<WorstBlunder, 'moveDescription' | 'reason' | 'betterMove'>
 
 interface GroupAcc {
   label: string
   count: number
-  // Only real centipawn swings contribute here — a swing into/out of a mate
-  // uses evalToCp's internal ±100,000 sentinel (see lib/analysis.ts), which
-  // would blow up an average if mixed in with genuine pawn values. Tracked
-  // separately from `count` so the average is still over a meaningful unit.
+  // Mate swings use a ±100,000 sentinel, so they're excluded from the average.
   swingSum: number
   swingCount: number
 }
@@ -56,11 +50,6 @@ function toGroupStats(groups: Map<string, GroupAcc>): BlunderGroupStat[] {
     .sort((a, b) => b.count - a.count)
 }
 
-/** The piece that moved, for grouping blunders by piece — pawn moves and
- *  castling have no leading piece letter in SAN, so they get their own
- *  buckets rather than falling through as "unknown". Reuses `pieceName()`
- *  (`lib/san.ts`) for the K/Q/R/B/N labels rather than its own copy of the
- *  map, so a locale only needs translating once. */
 function pieceKey(moveSan: string, locale: Locale): { key: string; label: string } {
   if (moveSan.startsWith('O-O'))
     return { key: 'castle', label: locale === 'es' ? 'Enroque' : 'Castle' }
@@ -70,13 +59,8 @@ function pieceKey(moveSan: string, locale: Locale): { key: string; label: string
 }
 
 /**
- * Cross-game blunder aggregate, scoped to whatever games already have a
- * saved Stockfish analysis (there's no bulk "analyze everything" job) —
- * mirrors `buildOpeningFamilies` (`lib/openings.ts`): a pure function over
- * already-stored data, no new persistence. Excludes `BlunderStats.trend` —
- * that's a separate concern (`buildAccuracyTrend()`, lib/accuracyTrend.ts)
- * merged in by the caller (`getBlunderStats()`, app/actions.ts), not
- * something this blunder-specific aggregate needs to know about.
+ * Cross-game aggregate of the user's own blunders over analyzed games. The
+ * caller merges in `trend`.
  */
 export function buildBlunderStats(
   games: Game[],
@@ -135,8 +119,7 @@ export function buildBlunderStats(
       moveDescription: positions
         ? describeMove(positions[entry.ply - 1], entry.moveSan, locale)
         : entry.moveSan,
-      // `worst` entries are already filtered to the account's own moves, so
-      // the mover is always `game.myColor` — no parity check needed here.
+      // `worst` only holds the user's own moves.
       reason:
         positions && game
           ? detectBlunderReason(positions[entry.ply - 1], positions[entry.ply], game.myColor)

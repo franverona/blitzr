@@ -7,14 +7,9 @@ import type { SyncResult } from './types'
 const DAY_MS = 24 * 60 * 60 * 1000
 
 /**
- * The oldest archive month that may still gain games, as "YYYY-MM". Months
- * from this one on are always re-fetched and never marked complete. Using
- * the local calendar month was wrong: ahead of UTC (e.g. Spain, UTC+2), a
- * sync just after local midnight on the 1st marked the previous month
- * complete while it was still that month for Chess.com, and games finished
- * in the gap were never fetched. Looking one day back in UTC keeps a month
- * open until it has ended everywhere, whichever timezone Chess.com uses to
- * group its archives.
+ * The oldest archive month ("YYYY-MM") that may still gain games. Looks one
+ * day back in UTC so a month stays open until it has ended in every
+ * timezone; using the local month closed it too early ahead of UTC.
  */
 export function oldestOpenArchiveYm(now: Date = new Date()): string {
   const dayAgo = new Date(now.getTime() - DAY_MS)
@@ -27,9 +22,8 @@ function archiveYmFromUrl(url: string): string | null {
 }
 
 /**
- * Fetches every monthly archive not already marked complete, plus any month
- * that may still gain new games (always re-fetched — see oldestOpenArchiveYm).
- * Archives are fetched serially — Chess.com throttles parallel requests.
+ * Fetches every archive not marked complete, plus any still-open month.
+ * Serial, since Chess.com throttles parallel requests.
  */
 export async function syncAllArchives(): Promise<SyncResult> {
   const username = getChesscomUsername()

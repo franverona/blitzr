@@ -17,11 +17,7 @@ import { PieceGlyph } from './PieceGlyph'
 
 type Feedback = 'incorrect' | null
 
-// chess.js's own lowercase promotion letters, in the order offered to the
-// solver — not every mate needs a queen; several imported puzzles are only
-// mate because of an under-promotion (e.g. cxb8=N#), so unlike the other
-// boards in this app (RepertoireBoard, Board's explore mode), this can't
-// just hardcode 'q'.
+// Some puzzles only mate via underpromotion (e.g. cxb8=N#), so offer all four.
 const PROMOTION_PIECES: { promotion: 'q' | 'r' | 'b' | 'n'; glyph: SanPiece }[] = [
   { promotion: 'q', glyph: 'Q' },
   { promotion: 'r', glyph: 'R' },
@@ -29,27 +25,16 @@ const PROMOTION_PIECES: { promotion: 'q' | 'r' | 'b' | 'n'; glyph: SanPiece }[] 
   { promotion: 'n', glyph: 'N' },
 ]
 
-// No hints, no engine — the point is to work it out yourself. Fully manual:
-// unlike LessonQuiz's opponent-auto-plays-itself pattern, here *you* play
-// every ply of the line, both sides, one at a time — "solved" means you
-// walked the whole forced sequence yourself, not just found the first move.
-// The board orientation stays fixed at whoever starts (never flips
-// mid-solve), since you're moving both colors' pieces as you go.
+// Fully manual: the solver plays every ply of the line, both sides. No hints.
 export function PuzzleBoard({ problem }: { problem: MateProblem }) {
   const s = getStrings()
   const boardColors = useSettings()
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null)
   const [feedback, setFeedback] = useState<Feedback>(null)
   const [ply, setPly] = useState(0)
-  // Which already-played ply the board is showing — normally kept in sync
-  // with `ply` (the live tip), but the ◀/▶ nav below can pull it back to
-  // review an earlier move without disturbing solving progress. Nothing
-  // beyond `ply` exists to browse into (those moves haven't been found yet).
+  // The ply on screen; ◀/▶ can move it back from the live tip (`ply`).
   const [viewPly, setViewPly] = useState(0)
   const [revealed, setRevealed] = useState(false)
-  // Set instead of immediately resolving a move that lands a pawn on the
-  // back rank — attemptMove pauses there until choosePromotion picks a
-  // piece, rather than assuming queen like the app's other boards do.
   const [pendingPromotion, setPendingPromotion] = useState<{ from: string; to: string } | null>(
     null,
   )
@@ -57,15 +42,8 @@ export function PuzzleBoard({ problem }: { problem: MateProblem }) {
   const solved = ply >= problem.moves.length
   const finished = solved || revealed
   const orientation = puzzleColorToMove(problem)
-  // Revealing shows the whole forced line, not just what's been solved so
-  // far — the board should be browsable through all of it, not stuck at
-  // wherever the solver gave up.
   const maxViewPly = revealed ? problem.moves.length : ply
 
-  // One FEN per ply solved so far (or, once revealed, per ply of the whole
-  // solution), positions[0] being the puzzle's start — recomputed from
-  // problem.fen + problem.moves rather than kept as state, so it can never
-  // drift out of sync with `ply`.
   const positions = useMemo(() => {
     const chess = new Chess(problem.fen)
     const arr = [chess.fen()]
@@ -79,28 +57,16 @@ export function PuzzleBoard({ problem }: { problem: MateProblem }) {
   const fen = positions[viewPly]
   useMoveSound(fen)
   const turnColor = fen.split(' ')[1] === 'b' ? 'black' : 'white'
-  // Only the live tip is interactive — an earlier ply is read-only review,
-  // same idea as Board.tsx's own ply nav, just scoped to what's actually
-  // been solved so far.
   const isLive = viewPly === ply
 
   function goToPly(p: number) {
-    // Navigating away mid-promotion-pick would leave the piece-picker
-    // overlay open over a position `pendingPromotion`'s from/to squares no
-    // longer refer to.
+    // The promotion overlay refers to the current position's squares.
     if (pendingPromotion) return
     setSelectedSquare(null)
     setViewPly(Math.max(0, Math.min(maxViewPly, p)))
   }
 
-  // Left/right arrow keys step through the move list the same as the ◀/▶
-  // buttons — same global (not focus-scoped) convention BoardNavControls
-  // uses on the game/lesson pages, minus Space/0 (no autoplay or "jump to
-  // start" concept here). Throttled to BOARD_ANIMATION_DURATION_MS for the
-  // same reason: rapid key taps would otherwise cut the board's own slide
-  // animation off mid-flight. Steps `viewPly`/`maxViewPly` inline (not via
-  // `goToPly`) so the effect only needs stable state setters as deps, not a
-  // plain function that's a new reference on every render.
+  // Arrow keys step through played moves, throttled like BoardNavControls.
   const lastNavAtRef = useRef(0)
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -129,9 +95,7 @@ export function PuzzleBoard({ problem }: { problem: MateProblem }) {
 
   function attemptMove(from: string, to: string, promotion?: 'q' | 'r' | 'b' | 'n'): boolean {
     if (finished || !isLive) return false
-    // A fresh attempt (no explicit promotion yet) is blocked while the
-    // picker is already open — but the resolving call from choosePromotion
-    // itself, which always passes one, needs to get through.
+    // Without an explicit piece, a promotion move opens the picker instead.
     if (!promotion) {
       if (pendingPromotion) return false
       if (legalDestinations(fen, from).some((m) => m.to === to && m.isPromotion)) {
@@ -156,9 +120,6 @@ export function PuzzleBoard({ problem }: { problem: MateProblem }) {
       const nextPly = ply + 1
       setPly(nextPly)
       setViewPly(nextPly)
-      // Fire-and-forget, same convention as DrillSession's submitDrillAnswer
-      // — the UI already reflects "solved" from local state, this just
-      // persists it.
       if (nextPly >= problem.moves.length) {
         markPuzzleSolved(problem.id).catch(() => {})
       }
@@ -198,15 +159,12 @@ export function PuzzleBoard({ problem }: { problem: MateProblem }) {
     attemptMove(pendingPromotion.from, pendingPromotion.to, promotion)
   }
 
-  // Only the moves actually reached so far — the full solution only once
-  // finished (matching `positions`/`maxViewPly` above), so the list doesn't
-  // spoil the rest of the line while still solving.
+  // Don't spoil moves not yet reached.
   const shownMoves = problem.moves.slice(0, maxViewPly)
 
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-center">
-      {/* lg+: capped by viewport height so the page fits a 13" laptop screen
-          without a scroll; 19rem ≈ everything above/below the board. */}
+      {/* lg+: 19rem ≈ chrome above/below the board. */}
       <div className="flex w-full max-w-140 shrink-0 flex-col gap-3 lg:max-w-[min(35rem,calc(100dvh-19rem))]">
         <div className="flex items-center justify-between gap-2">
           <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">

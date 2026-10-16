@@ -3,8 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { getStrings } from '@/lib/i18n/strings'
 
-// Same padding/text-size on both so the preset buttons and the date inputs
-// render at identical heights sitting in one row.
+// Shared so the preset buttons and date inputs have the same height.
 const INPUT_CLASS =
   'rounded-md border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900'
 const PRESET_BUTTON_CLASS =
@@ -17,10 +16,7 @@ function toDateInputValue(d: Date): string {
   return `${y}-${m}-${day}`
 }
 
-/** "N days ago" as a `<input type="date">` value, in local time — 0 is
- *  today. Used both to compute a preset's own from/to and, at render time,
- *  to tell whether the current from/to already matches one (so its button
- *  can render as active). */
+/** "N days ago" as a local `<input type="date">` value; 0 is today. */
 function daysAgo(n: number): string {
   const d = new Date()
   d.setDate(d.getDate() - n)
@@ -34,15 +30,7 @@ const PRESETS = [
   { key: 'last2Weeks', sinceDays: 13 },
 ] as const
 
-/**
- * Scopes every section on /blunders (the aggregates and the accuracy trend
- * chart alike) to a date range — URL-driven (`?from=&to=`), same
- * "survives reload, shareable link" pattern GameSearchForm's own filters
- * use. A row of common presets sits above two native `<input type="date">`
- * fields for anything a preset doesn't cover. Neither needs a debounce (a
- * date picker/button commits immediately, not per keystroke the way typing
- * does) or a popover — everything here is compact enough to sit inline.
- */
+/** URL-driven (`?from=&to=`) date range that scopes all of /blunders. */
 export function DateRangeFilter({ from, to }: { from?: string; to?: string }) {
   const router = useRouter()
   const s = getStrings()

@@ -36,10 +36,7 @@ function buildMovePairs(movesSan: string[]): MovePair[] {
   return pairs
 }
 
-/** The detail block a selected blunder ply expands into — ported as-is from
- *  the old `AnalysisDialog` (`GameAnalysisPanel.tsx`), which this inline view
- *  replaces: same swing/reason/better-move content, just anchored under the
- *  move itself instead of in a separate dialog. */
+/** Detail shown under a selected blunder ply. */
 function BlunderDetail({
   blunder,
   fenBefore,
@@ -54,12 +51,8 @@ function BlunderDetail({
   const s = getStrings()
   const reason = detectBlunderReason(fenBefore, fenAfter, myColor)
   const bestMove = blunder.evalBefore.bestMove
-  // Full text (dialog title) still includes the engine's plan as a sentence,
-  // same as `PlanBoardButton`'s other call site (`Board.tsx`) — but the
-  // *inline* text below it strips the plan clause (`bestLine: []`) since
-  // `MoveSequence` right underneath already renders that same line with
-  // piece icons; showing it twice, once as a plain-text sentence and once
-  // as icons, was pure duplication.
+  // The dialog title keeps the plan sentence; the inline text drops it since
+  // MoveSequence below already shows the line.
   const betterMove = describeBetterMove(fenBefore, blunder.moveSan, bestMove, myColor)
   const betterMoveHead = bestMove
     ? describeBetterMove(fenBefore, blunder.moveSan, { ...bestMove, bestLine: [] }, myColor)
@@ -117,11 +110,9 @@ export function MoveList({
   ply: number
   onSelect: (ply: number) => void
   result?: string
-  /** Saved batch analysis, when present — drives the inline blunder badges
-   *  and expand-on-select detail below. Undefined for an unanalyzed game,
-   *  same "quietly render nothing extra" fallback other analysis UI uses. */
+  /** Saved analysis; drives the inline blunder badges. */
   evals?: PositionEval[]
-  /** FEN before each ply, same indexing as `evals`/`movesSan`. */
+  /** FEN before each ply. */
   positions: string[]
   myColor: MyColor
 }) {
@@ -129,9 +120,7 @@ export function MoveList({
   const activeRef = useRef<HTMLButtonElement>(null)
   const s = getStrings()
 
-  // Scoped to the account's own moves only — same convention as
-  // `GameSummary`/`/blunders`/drill cards (opponent mistakes aren't
-  // actionable for training).
+  // Own moves only.
   const blunderByPly = useMemo(() => {
     if (!evals) return new Map<number, Blunder>()
     const own = findBlunders(evals, movesSan, positions[0]).filter(

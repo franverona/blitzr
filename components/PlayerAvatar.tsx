@@ -1,6 +1,4 @@
-// Plain <img>, not next/image — avatar URLs are on Chess.com's CDN and
-// vary per user, not worth allowlisting a remote pattern for a purely
-// decorative image.
+// Plain <img>: avatar URLs vary per user on Chess.com's CDN.
 export function PlayerAvatar({
   username,
   avatarUrl,

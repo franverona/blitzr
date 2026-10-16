@@ -22,14 +22,9 @@ export default async function BlundersPage({
         </p>
       </div>
 
-      {/* Scopes every section below, not just the chart — see
-       *  DateRangeFilter's own comment. */}
       <DateRangeFilter from={from} to={to} />
 
-      {/* Rendered independently of BlunderStats' own early-returns (no
-       *  analyzed games / no blunders yet) — a clean-sheet stretch still has
-       *  an accuracy trend worth seeing even when there's nothing to list in
-       *  the blunder aggregates below. */}
+      {/* Outside BlunderStats' early returns: a clean stretch still has a trend. */}
       <AccuracyTrendChart points={stats.trend} />
 
       <BlunderStats stats={stats} />

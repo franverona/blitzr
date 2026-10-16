@@ -42,27 +42,18 @@ import type {
   UnanalyzedGame,
 } from '@/lib/types'
 
-// `listAllGames`/`listAllGameAnalyses` are full-table reads (every row,
-// every `moves_san`/`evals` JSON column parsed) — several actions below need
-// both, and a single page (the games list) calls more than one of those
-// actions in the same request. `cache()` memoizes per request, so the same
-// two queries run once no matter how many callers ask for them.
+// Full-table reads, memoized per request since one page can call several
+// actions that need them.
 const cachedListAllGames = cache(() => getRepository().listAllGames())
 const cachedListAllGameAnalyses = cache(() => getRepository().listAllGameAnalyses())
 
-// Sync keeps every variant (see lib/sync.ts); engine-based features only
-// make sense for standard rules, and opening/repertoire features also need
-// the normal starting position. See isStandardChess()/startsFromStandardPosition().
+// Sync keeps every variant: engine features need standard rules, opening
+// features also need the standard starting position.
 const cachedStandardGames = cache(async () => (await cachedListAllGames()).filter(isStandardChess))
 const cachedStandardStartGames = cache(async () =>
   (await cachedListAllGames()).filter(startsFromStandardPosition),
 )
 
-/** Narrows to games whose endTime falls within an inclusive from/to range —
- *  both undefined (the common case, no filter applied) returns `games`
- *  as-is. Shared by every section of /blunders (the aggregates and the
- *  accuracy trend alike), so a custom range scopes the whole page from one
- *  filter rather than each section reading its own slice. */
 function filterByDateRange(games: Game[], filters?: { from?: string; to?: string }): Game[] {
   if (!filters?.from && !filters?.to) return games
   const fromSeconds = filters.from ? startOfDaySeconds(filters.from) : undefined
@@ -121,18 +112,12 @@ export async function syncGames(): Promise<SyncResult> {
   return result
 }
 
-/** Games Chess.com's public API never exposes at all (e.g. "Play Bots"
- *  personality games) still get a fresh, never-synced-again `id`, so a
- *  future `syncGames()` can never overwrite or lose this row — see
- *  `upsertGames()`'s `ON CONFLICT (id) DO NOTHING`. */
+/** Gets a fresh id, so a later sync can never overwrite it. */
 export async function addManualGame(
   pgn: string,
 ): Promise<{ ok: true; gameId: string } | { ok: false; error: string }> {
-  // A bad paste is an expected, user-fixable error, so it's returned rather
-  // than thrown: Next replaces a thrown Server Action error's message with a
-  // generic one in production builds, which hid parseManualGame()'s specific
-  // reason ("missing White/Black headers", "no moves", …) from the dialog.
-  // Anything past parsing (a DB failure) is unexpected and still throws.
+  // Returned, not thrown: Next hides thrown Server Action messages in
+  // production, and the dialog needs parseManualGame()'s reason.
   let game: Game
   try {
     game = parseManualGame(pgn, getChesscomUsername())
@@ -178,10 +163,6 @@ export async function saveGameAnalysis(
   revalidatePath('/')
 }
 
-/** Every synced game with no saved analysis yet, for the bulk "Analyze all"
- *  action on the Games page — games whose moves couldn't be parsed have no
- *  positions to analyze and are skipped, same as the per-game Analyze
- *  button's visibility. */
 export async function getUnanalyzedGames(): Promise<UnanalyzedGame[]> {
   const [games, analyses] = await Promise.all([cachedStandardGames(), cachedListAllGameAnalyses()])
   const analyzedIds = new Set(analyses.map((a) => a.gameId))
@@ -199,12 +180,7 @@ export async function getUnanalyzedGames(): Promise<UnanalyzedGame[]> {
     })
 }
 
-/** Own-side accuracy + mistake/blunder counts, keyed by game id, for every
- *  analyzed game — the games list's precision/errors columns. Also doubles
- *  as the "analyzed" lookup (a game with saved analysis always has parseable
- *  `movesSan`, since analysis can only be triggered on one that does — see
- *  `getUnanalyzedGames()`), so there's no separate id-only variant. Same
- *  `listAllGames()` + `listAllGameAnalyses()` join `getBlunderStats()` uses. */
+/** Own-side accuracy and mistake/blunder counts per analyzed game. */
 export async function getGameAccuracyById(): Promise<Record<string, GameAccuracy>> {
   const [games, analyses] = await Promise.all([cachedStandardGames(), cachedListAllGameAnalyses()])
   const analysesByGameId = new Map(analyses.map((a) => [a.gameId, a]))
@@ -228,19 +204,13 @@ function cardKey(c: { gameId: string; sourceType: DrillSourceType; ply: number }
   return `${c.gameId}:${c.sourceType}:${c.ply}`
 }
 
-/** Same "group by family, not exact ECO code" convention `lib/blunders.ts`
- *  already uses for its by-opening grouping. */
 function openingLabel(game: Game): string {
   return game.ecoName ? ecoFamilyLabel(game.ecoName) : 'Unknown opening'
 }
 
 /**
- * Syncs the drill deck against current game/repertoire/analysis data (new
- * candidates get a fresh card, cards that no longer match anything — e.g.
- * the repertoire changed — get pruned) and returns the next session's
- * prompts (capped, most-overdue first). Runs on every /drill load rather
- * than behind a separate "sync" action — it's a cheap local recompute, same
- * as how the openings aggregation just runs fresh on every page load.
+ * Syncs the drill deck with current data (adds new candidates, prunes stale
+ * cards) and returns the next session's prompts. Runs on every /drill load.
  */
 export async function getDrillDeck(filters?: {
   sourceType?: DrillSourceType
@@ -308,9 +278,7 @@ export async function getDrillDeck(filters?: {
     })
     .filter((p): p is DrillPrompt => p !== null)
 
-  // buildDrillPrompt() stays pure (no I/O) — avatars are fetched here, once
-  // per unique opponent rather than once per card, same "resolve
-  // server-side" split the game page uses for fetchPlayerAvatar().
+  // Fetched once per unique opponent; buildDrillPrompt() stays pure.
   const opponentUsernames = [...new Set(rawPrompts.map((p) => p.opponentUsername))]
   const avatarEntries = await Promise.all(
     opponentUsernames.map(

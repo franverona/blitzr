@@ -39,14 +39,9 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
   if (!game) notFound()
 
   const event = parsePgnHeaders(game.pgn).Event
-  // "Play vs Coach" bot games get a url/PGN Link from Chess.com's API that
-  // never resolves to the actual game — no correct link exists, so don't
-  // show one rather than link somewhere wrong.
+  // "Play vs Coach" games get a Link that points to an unrelated game.
   const isBotGame = event === 'Play vs Coach'
-  // A "Play vs Bot" opponent's "username" is a bare personality display
-  // name, not a real account — fetch its avatar differently (see
-  // fetchBotAvatar()) instead of risking a match against an unrelated real
-  // account that happens to share the same plain name.
+  // "Play vs Bot" opponents have a bare display name, not a real account.
   const botColor: MyColor | null = isBareBotNameEvent(event)
     ? game.myColor === 'white'
       ? 'black'
@@ -101,13 +96,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
       <OpeningLine game={game} />
 
       {game.movesSan ? (
-        // Side-by-side (lg+), the board is also capped by viewport height so
-        // the header + board + material/"better was" lines fit a 13" laptop
-        // screen without a page scroll; 16rem ≈ everything above/below it.
-        // The nav controls sit under the move list, spanning its (narrowed)
-        // width; the sidebar is pinned to the board column's height, so the
-        // list (`flex-1`) shrinks to make room for them rather than pushing
-        // them below the fold.
+        // lg+: 16rem ≈ chrome above/below the board.
         <BoardView
           boardMaxWidthClassName="max-w-160 lg:max-w-[min(40rem,calc(100dvh-16rem))] xl:max-w-[min(43rem,calc(100dvh-16rem))] 2xl:max-w-[min(46rem,calc(100dvh-16rem))]"
           sidebarMaxWidthClassName="lg:max-w-xs xl:max-w-sm"
@@ -156,13 +145,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
   )
 }
 
-/** The opening name/ECO code/"Learn more" link, on its own full-width row
- *  below the header — not squeezed into `GameHeader`'s column, which shares
- *  its row with the nav/explore/analyze buttons and has limited width to
- *  work with. A long opening name (e.g. "Scandinavian Defense Blackburne
- *  Kloosterboer Gambit: 3.dxc6") forced that row to overflow rather than
- *  wrap when it lived there — full page width gives it room to wrap on its
- *  own instead. */
+/** Own full-width row: a long opening name in the header row overflowed it. */
 function OpeningLine({ game }: { game: Game }) {
   const s = getStrings()
   if (!game.ecoName) return null
@@ -276,9 +259,6 @@ function RepertoireDiff({
     )
   }
 
-  // Ran out of prepared prep without ever playing a move the repertoire
-  // didn't cover — not a deviation, and not worth a permanent line on every
-  // game page. `diff.inBookPlies` is still visible on the game if you care
-  // (e.g. via the repertoire tree itself), just not called out here.
+  // Ran out of repertoire without deviating — nothing worth showing.
   return null
 }

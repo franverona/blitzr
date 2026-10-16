@@ -13,13 +13,8 @@ export const MOVE_QUALITY_TIERS: readonly MoveQualityTier[] = [
 ]
 
 /**
- * Buckets one move's centipawn swing (see moveSwingCp, lib/analysis.ts) into
- * a Chess.com-style quality tier. The "blunder" cutoff is deliberately the
- * same BLUNDER_THRESHOLD_CP findBlunders() already uses, so a move that
- * lands in this tier here is exactly one findBlunders() would also flag —
- * this is a finer-grained view of the same swing, not a competing one.
- * Thresholds below that are this module's own bands, not derived from
- * anywhere else — there's no canonical source for them.
+ * Chess.com-style tier for a move's swing. The blunder cutoff matches
+ * findBlunders(); the lower bands are our own.
  */
 export function classifyMoveQuality(swingCp: number): MoveQualityTier {
   if (swingCp <= 0) return 'best'
@@ -30,13 +25,7 @@ export function classifyMoveQuality(swingCp: number): MoveQualityTier {
   return 'blunder'
 }
 
-/**
- * Per-move accuracy from a win% drop — the same formula Lichess's own
- * accuracy feature uses: a move that costs no win% scores ~100, and
- * accuracy decays smoothly (not linearly) as the drop grows, so one bad
- * move in an already-decided position doesn't tank the score the way a
- * blunder from an equal position does.
- */
+/** Lichess's per-move accuracy formula from the win% drop. */
 function moveAccuracy(winPctBefore: number, winPctAfter: number): number {
   const drop = Math.max(0, winPctBefore - winPctAfter)
   const raw = 103.1668 * Math.exp(-0.04354 * drop) - 3.1669
@@ -46,7 +35,7 @@ function moveAccuracy(winPctBefore: number, winPctAfter: number): number {
 export type MoveQualityCounts = Record<MoveQualityTier, number>
 
 export interface SideAccuracy {
-  /** 0-100, rounded to one decimal place like Chess.com's own display. */
+  /** 0-100, one decimal place. */
   accuracy: number
   counts: MoveQualityCounts
 }
@@ -60,19 +49,13 @@ function emptyCounts(): MoveQualityCounts {
   return { best: 0, excellent: 0, good: 0, inaccuracy: 0, mistake: 0, blunder: 0 }
 }
 
-// A side with no moves at all (e.g. a 1-ply game) reads as a clean 100
-// rather than 0 — there's nothing to have gotten wrong.
+// No moves means nothing went wrong.
 function average(nums: number[]): number {
   if (nums.length === 0) return 100
   return Math.round((nums.reduce((a, b) => a + b, 0) / nums.length) * 10) / 10
 }
 
-/**
- * A Chess.com-style per-game review: one accuracy score and a tally of
- * move-quality tiers, for each side. Walks the same evals/movesSan pair
- * findBlunders() does, just scoring every move instead of only the ones
- * that cross the blunder threshold.
- */
+/** Accuracy and move-quality tally per side. */
 export function summarizeMoveQuality(
   evals: PositionEval[],
   movesSan: string[],

@@ -4,20 +4,9 @@ import { formatMoveSequence } from '@/lib/san'
 import { PieceMoveLabel } from './PieceMoveLabel'
 
 /**
- * Renders a sequence of SAN moves from an arbitrary starting position,
- * chess.com-style: a piece icon (via `PieceMoveLabel`, colored per side —
- * same look the game's own move list already uses) next to each non-pawn
- * move, with a move-number label only before White's move (or once, as
- * "N…", if the sequence opens with Black).
- *
- * Shared by `LiveAnalysisPanel` (one engine line — no `currentIndex`, not
- * itself navigable) and `BoardView` (the explore branch's own played-so-far
- * line, `currentIndex` highlighting where the board actually is and
- * `onSelectIndex` letting a click jump straight there) rather than living in
- * either of those two files: Board.tsx and LiveAnalysisPanel.tsx already
- * import from each other in one direction (the panel needs
- * `useLiveAnalysisContext`/`useBoardContext` from Board.tsx), so this
- * couldn't live in either without a circular import.
+ * SAN moves from any starting position, with piece icons and move numbers.
+ * Its own file to avoid a circular import between Board.tsx and
+ * LiveAnalysisPanel.tsx.
  */
 export function MoveSequence({
   fen,
@@ -27,12 +16,9 @@ export function MoveSequence({
 }: {
   fen: string
   moves: string[]
-  /** 0-indexed move to highlight as "this is where the board is right now",
-   *  if any. */
+  /** 0-indexed move to highlight. */
   currentIndex?: number
-  /** Makes each move clickable, e.g. to jump the explore branch straight to
-   *  that point in its own line — omitted (as for an engine line, which
-   *  isn't itself a navigable position) leaves the moves as plain text. */
+  /** Makes each move clickable; omitted, moves are plain text. */
   onSelectIndex?: (index: number) => void
 }) {
   const formatted = formatMoveSequence(fen, moves)
@@ -40,11 +26,7 @@ export function MoveSequence({
   return (
     <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-1 gap-y-1">
       {formatted.map((move, i) => {
-        // zinc-500, not a darker shade — matches MoveList's own move-number
-        // color (Board.tsx) exactly, which stays this same shade regardless
-        // of whether that pair is the active one. A darker gray here reads
-        // fine against the light theme it was picked against but is too low
-        // -contrast against this panel's near-black background.
+        // zinc-500 matches MoveList's move numbers and stays readable in dark mode.
         const numberLabel = (move.color === 'white' || i === 0) && (
           <span className="text-zinc-500">
             {move.moveNumber}
