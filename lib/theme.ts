@@ -20,7 +20,7 @@ export interface BoardColorPreset {
 export const BOARD_COLOR_PRESETS: BoardColorPreset[] = [
   { id: 'green', dark: '#769656', light: '#eeeed2' },
   { id: 'brown', dark: '#b58863', light: '#f0d9b5' },
-  { id: 'blue', dark: '#6e9ac2', light: '#dbe6f0' },
+  { id: 'blue', dark: '#80a1b5', light: '#d5e0e6' },
   { id: 'purple', dark: '#8877b3', light: '#e6e1f5' },
 ]
 
