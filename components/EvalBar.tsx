@@ -4,9 +4,11 @@ import type { PositionEval } from '@/lib/types'
 export function EvalBar({
   evaluation,
   boardOrientation,
+  className = '',
 }: {
   evaluation: PositionEval
   boardOrientation: 'white' | 'black'
+  className?: string
 }) {
   const whitePercent = evalBarPercent(evaluation)
   // White's home rank renders at the bottom when the board isn't flipped, and
@@ -19,7 +21,7 @@ export function EvalBar({
       // Deliberately not theme-aware — same as the board's own square colors
       // (lib/theme.ts), this mimics chess.com's black/white eval gauge, not
       // a themed UI surface.
-      className={`flex w-3 shrink-0 flex-col ${justify} overflow-hidden bg-zinc-950`}
+      className={`flex w-3 shrink-0 flex-col ${justify} overflow-hidden bg-zinc-950 ${className}`}
       title={`${describeEval(evaluation)} (${formatEval(evaluation)})`}
     >
       <div
