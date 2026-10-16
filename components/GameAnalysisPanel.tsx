@@ -87,21 +87,22 @@ export function GameAnalysisProvider({
   )
 }
 
-/** The strength picker defaults to the Settings value but is local to this
- *  button, so re-running one game deeper doesn't change the default for
- *  every other analysis. The saved analysis's strength is marked with a ✓
- *  in the picker (and in the button's tooltip) rather than a caption below
- *  it — an extra line here makes this column taller than its row siblings
- *  and throws off the header row's vertical alignment. Older analyses have
- *  no `movetimeMs`, so nothing is marked for them. */
+/** The strength picker opens on the saved analysis's strength (so the ✓
+ *  marking it is visible without opening the list), falling back to the
+ *  Settings value for an unanalyzed game or an older analysis with no
+ *  recorded `movetimeMs`. It's local to this button, so re-running one game
+ *  deeper doesn't change the default for every other analysis. The saved
+ *  strength is shown in the picker (and the button's tooltip) rather than a
+ *  caption below it — an extra line here makes this column taller than its
+ *  row siblings and throws off the header row's vertical alignment. */
 export function AnalyzeButton() {
   const { analysis, progress, error, handleAnalyze } = useAnalysisContext()
   const { analysisStrength } = useSettings()
-  const [strength, setStrength] = useState<AnalysisStrength>(analysisStrength)
   const s = getStrings()
   const savedStrength = (Object.keys(ANALYSIS_STRENGTHS) as AnalysisStrength[]).find(
     (k) => ANALYSIS_STRENGTHS[k] === analysis?.movetimeMs,
   )
+  const [strength, setStrength] = useState<AnalysisStrength>(savedStrength ?? analysisStrength)
 
   return (
     <div className="flex flex-col items-end gap-1">
