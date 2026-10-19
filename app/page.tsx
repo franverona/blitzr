@@ -140,10 +140,12 @@ export default async function TodayPage() {
 
         <Card title={s.today.lastGameTitle} className="xl:row-span-2">
           {lastGame ? (
-            <div className="flex flex-col gap-2">
-              <Link href={`/games/${lastGame.id}`} className="w-full max-w-xs">
-                <MiniBoard fen={lastGame.fen} boardOrientation={lastGame.myColor} />
-              </Link>
+            <div className="flex flex-col gap-2 xl:min-h-0 xl:flex-1">
+              <BoardFill>
+                <Link href={`/games/${lastGame.id}`}>
+                  <MiniBoard fen={lastGame.fen} boardOrientation={lastGame.myColor} />
+                </Link>
+              </BoardFill>
               <div className="flex min-w-0 flex-col gap-0.5">
                 <p className="flex min-w-0 items-center gap-2">
                   <Link
@@ -186,13 +188,16 @@ export default async function TodayPage() {
 
         <Card title={s.today.puzzleTitle} className="xl:row-span-2">
           {puzzle ? (
-            <Link href={`/puzzles/${puzzle.id}`} className="group flex min-w-0 flex-col gap-2">
-              <div className="w-full max-w-xs">
+            <Link
+              href={`/puzzles/${puzzle.id}`}
+              className="group flex min-w-0 flex-col gap-2 xl:min-h-0 xl:flex-1"
+            >
+              <BoardFill>
                 <MiniBoard
                   fen={puzzle.fen}
                   boardOrientation={resolveOrientation(orientation, puzzleColorToMove(puzzle))}
                 />
-              </div>
+              </BoardFill>
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium group-hover:underline">{puzzle.title}</p>
                 <p className={mutedClassName}>{s.today.puzzleLabel(puzzle.id, puzzle.mateIn)}</p>
@@ -203,7 +208,7 @@ export default async function TodayPage() {
           )}
           {puzzles.total > 0 && (
             // Same bar as the /puzzles header, stacked above its label.
-            <div className="flex max-w-xs flex-col gap-1.5">
+            <div className="flex max-w-xs flex-col gap-1.5 xl:max-w-none">
               <div className="h-1.5 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800">
                 <div
                   className="h-full rounded-full bg-emerald-500"
@@ -340,6 +345,18 @@ const LOSS_CHIP_CLASS: Record<LossReason, string> = {
   resigned: 'bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
   abandoned: 'bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
   other: 'bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
+}
+
+/**
+ * xl: the board cards span both text rows, so the board grows into whatever height they
+ * leave (a size container, square at min(width, height)). Below xl it's a plain 20rem cap.
+ */
+function BoardFill({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="w-full max-w-xs xl:[container-type:size] xl:min-h-0 xl:max-w-none xl:flex-1">
+      <div className="xl:w-[min(100cqw,100cqh)]">{children}</div>
+    </div>
+  )
 }
 
 function FocusRow({
