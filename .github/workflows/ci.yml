@@ -30,4 +30,10 @@ jobs:
 
       - run: pnpm test
 
+      - uses: actions/cache@v6.1.0
+        with:
+          path: .next/cache
+          key: next-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('app/**', 'components/**', 'lib/**') }}
+          restore-keys: next-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
+
       - run: pnpm build
