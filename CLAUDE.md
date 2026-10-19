@@ -295,7 +295,8 @@ pnpm test
 pnpm build
 ```
 
-CI (`.github/workflows/ci.yml`) runs the same four on pushes to `main` and on PRs.
+CI (`.github/workflows/ci.yml`) runs the same four on pushes to `main` and on PRs, then
+smoke-tests `pnpm start`: the main routes must return 2xx against an empty database.
 
 ## Running
 
