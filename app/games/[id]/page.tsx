@@ -131,6 +131,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
       boardOrientation={game.myColor}
       myColor={game.myColor}
       result={pgnResult(game.myColor, game.myResult)}
+      finalResults={{ white: game.whiteResult, black: game.blackResult }}
       evals={analysis?.evals}
       initialPly={1}
     >

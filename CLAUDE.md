@@ -125,6 +125,8 @@ scripts/
   stops, saved hints, `MoveList` and `LessonQuiz`. Never read `boardOrientation` as "my color" —
   it's only the view, so a flip button can't change whose moves count.
 - **Game replay and lesson Study mode open on ply 1.**
+- **Game-end badges** (`gameEndBadges()`, `lib/gameEnd.ts`): mate/draw come from the position;
+  resignations, timeouts and agreed draws from the per-player result codes, on the final ply only.
 - **Beginner jargon is explained in place** (`<abbr title>` tooltips, `EvalHelp`), not removed.
 - **A component seeding state from props (`useState(initialX)`) needs `key={id}`** wherever it can
   receive a different record. Exception: a filter that must survive its own navigation (the
