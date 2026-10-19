@@ -7,11 +7,17 @@ import { getLocale } from '@/lib/i18n/locale'
 import { getStrings } from '@/lib/i18n/strings'
 import { getMateProblem, puzzleColorToMove } from '@/lib/mateProblems'
 import { getTrainingOrientation, resolveOrientation } from '@/lib/theme'
+import type { MyResult } from '@/lib/types'
 
 const linkClassName =
   'self-start rounded-md border border-zinc-300 px-2.5 py-1 text-sm font-medium text-zinc-900 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-100 dark:hover:bg-zinc-800'
 const mutedClassName = 'text-sm text-zinc-500 dark:text-zinc-400'
 const inlineLinkClassName = 'text-blue-600 hover:underline dark:text-blue-400'
+const RESULT_BADGE_CLASS: Record<MyResult, string> = {
+  win: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300',
+  loss: 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300',
+  draw: 'bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
+}
 
 export default async function TodayPage() {
   const s = getStrings()
@@ -150,23 +156,28 @@ export default async function TodayPage() {
 
         <Card title={s.today.lastGameTitle}>
           {lastGame ? (
-            <div className="flex items-center gap-3">
-              <Link href={`/games/${lastGame.id}`} className="w-28 shrink-0">
+            <div className="flex flex-wrap items-start gap-4">
+              <Link href={`/games/${lastGame.id}`} className="w-44 shrink-0">
                 <MiniBoard fen={lastGame.fen} boardOrientation={lastGame.myColor} />
               </Link>
-              <div className="flex min-w-0 flex-col gap-1">
-                <p className="text-sm">
-                  <Link href={`/games/${lastGame.id}`} className={inlineLinkClassName}>
-                    {s.today.lastGameVs(lastGame.opponent)}
-                  </Link>{' '}
-                  · {s.common.result[lastGame.result]}
-                </p>
+              <div className="flex min-w-0 flex-col items-start gap-2">
+                <span
+                  className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${RESULT_BADGE_CLASS[lastGame.result]}`}
+                >
+                  {s.common.result[lastGame.result]}
+                </span>
+                <Link
+                  href={`/games/${lastGame.id}`}
+                  className={`text-sm font-medium ${inlineLinkClassName}`}
+                >
+                  {s.today.lastGameVs(lastGame.opponent)}
+                </Link>
                 {lastGame.accuracy === null ? (
                   <p className={mutedClassName}>{s.today.notAnalyzed}</p>
                 ) : (
                   <>
                     <p className="text-sm">{s.today.lastGameAccuracy(lastGame.accuracy)}</p>
-                    <p className="text-sm">
+                    <p className={mutedClassName}>
                       {lastGame.firstBlunderPly === null
                         ? s.today.noBlunders
                         : s.today.firstBlunder(Math.ceil(lastGame.firstBlunderPly / 2))}
@@ -182,17 +193,15 @@ export default async function TodayPage() {
 
         <Card title={s.today.puzzleTitle}>
           {puzzle ? (
-            <Link
-              href={`/puzzles/${puzzle.id}`}
-              className="flex items-center gap-3 hover:underline"
-            >
-              <div className="w-28 shrink-0">
-                <MiniBoard
-                  fen={puzzle.fen}
-                  boardOrientation={resolveOrientation(orientation, puzzleColorToMove(puzzle))}
-                />
+            <Link href={`/puzzles/${puzzle.id}`} className="group flex w-44 flex-col gap-2">
+              <MiniBoard
+                fen={puzzle.fen}
+                boardOrientation={resolveOrientation(orientation, puzzleColorToMove(puzzle))}
+              />
+              <div>
+                <p className="truncate text-sm font-medium group-hover:underline">{puzzle.title}</p>
+                <p className={mutedClassName}>{s.today.puzzleLabel(puzzle.id, puzzle.mateIn)}</p>
               </div>
-              <span className="text-sm">{s.today.puzzleLabel(puzzle.id, puzzle.mateIn)}</span>
             </Link>
           ) : (
             <p className={mutedClassName}>{s.today.allPuzzlesSolved}</p>
