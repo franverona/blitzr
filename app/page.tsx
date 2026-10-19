@@ -3,13 +3,22 @@ import Link from 'next/link'
 import { getTodaySummary } from './actions'
 import { BulkAnalyzeButton } from '@/components/BulkAnalyzeButton'
 import { MiniBoard } from '@/components/MiniBoard'
-import { FlameIcon, RefreshCwIcon } from '@/components/NavIcons'
+import {
+  FlagIcon,
+  FlameIcon,
+  GraduationCapIcon,
+  LibraryBigIcon,
+  RefreshCwIcon,
+  TargetIcon,
+  ZapIcon,
+} from '@/components/NavIcons'
 import { formatDateTime } from '@/lib/dates'
 import { getLocale } from '@/lib/i18n/locale'
 import { getStrings } from '@/lib/i18n/strings'
 import { getMateProblem, puzzleColorToMove } from '@/lib/mateProblems'
 import { plyLabel } from '@/lib/san'
 import { getTrainingOrientation, resolveOrientation } from '@/lib/theme'
+import type { LossReason } from '@/lib/today'
 import type { MyResult } from '@/lib/types'
 
 const linkClassName =
@@ -209,70 +218,164 @@ export default async function TodayPage() {
         </Card>
 
         <Card title={s.today.focusTitle} className="sm:col-span-2">
-          {weakSpot ? (
-            <p className="text-sm">
-              {s.today.weakSpot(weakSpot.opening, weakSpot.blunders)}{' '}
-              <Link
-                href={
-                  weakSpot.drillable
+          <ul className="flex flex-col divide-y divide-zinc-200 dark:divide-zinc-800">
+            <FocusRow
+              icon={<TargetIcon className="size-4" />}
+              tone="amber"
+              label={s.today.weakSpotLabel}
+              action={
+                weakSpot && {
+                  href: weakSpot.drillable
                     ? `/drill?opening=${encodeURIComponent(weakSpot.opening)}`
-                    : '/blunders'
+                    : '/blunders',
+                  label: weakSpot.drillable ? s.today.drillOpening : s.today.seeBlunders,
                 }
-                className={inlineLinkClassName}
+              }
+            >
+              {weakSpot ? (
+                <>
+                  <p className="text-sm font-medium">{weakSpot.opening}</p>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                    {s.today.weakSpotDetail(weakSpot.blunders)}
+                  </p>
+                </>
+              ) : (
+                <p className={mutedClassName}>{s.today.noWeakSpot}</p>
+              )}
+            </FocusRow>
+
+            {today.worstBlunder && (
+              <FocusRow
+                icon={<ZapIcon className="size-4" />}
+                tone="rose"
+                label={s.today.worstBlunderLabel}
+                action={{
+                  // One ply back, so the board shows the position before the mistake.
+                  href: `/games/${today.worstBlunder.gameId}?ply=${today.worstBlunder.ply - 1}`,
+                  label: s.today.reviewIt,
+                }}
               >
-                {weakSpot.drillable ? s.today.drillOpening : s.today.seeBlunders}
-              </Link>
-            </p>
-          ) : (
-            <p className={mutedClassName}>{s.today.noWeakSpot}</p>
-          )}
-          {today.worstBlunder && (
-            <p className="text-sm">
-              {s.today.worstBlunder}{' '}
-              <span className="font-semibold">
-                {plyLabel(today.worstBlunder.ply)}
-                {today.worstBlunder.moveSan}
-              </span>{' '}
-              <span className="text-zinc-500 dark:text-zinc-400">({today.worstBlunder.label})</span>
-              : {today.worstBlunder.why}{' '}
-              <Link
-                // One ply back, so the board shows the position before the mistake.
-                href={`/games/${today.worstBlunder.gameId}?ply=${today.worstBlunder.ply - 1}`}
-                className={inlineLinkClassName}
+                <p className="text-sm">
+                  <span className="font-semibold">
+                    {plyLabel(today.worstBlunder.ply)}
+                    {today.worstBlunder.moveSan}
+                  </span>{' '}
+                  <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                    {today.worstBlunder.label}
+                  </span>
+                </p>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">{today.worstBlunder.why}</p>
+              </FocusRow>
+            )}
+
+            {lossCount > 0 && (
+              <FocusRow
+                icon={<FlagIcon className="size-4" />}
+                tone="zinc"
+                label={s.today.lossesHeading(lossCount)}
               >
-                {s.today.reviewIt}
-              </Link>
-            </p>
-          )}
-          {lossCount > 0 && (
-            <p className="text-sm">
-              {s.today.lossesHeading(lossCount)}{' '}
-              {today.losses.map((l) => `${l.count} ${s.today.lossReasons[l.reason]}`).join(' · ')}
-            </p>
-          )}
-          {repertoire.considered > 0 ? (
-            <p className="text-sm">
-              {s.today.repertoireDeviations(repertoire.deviated, repertoire.considered)}
-            </p>
-          ) : (
-            <p className={mutedClassName}>
-              {s.today.noRepertoire}{' '}
-              <Link href="/repertoire" className={inlineLinkClassName}>
-                {s.today.buildRepertoire}
-              </Link>
-            </p>
-          )}
-          {today.lesson && (
-            <p className="text-sm">
-              {s.today.lessonSuggestion(today.lesson.name, today.lesson.games)}{' '}
-              <Link href={`/learn/${today.lesson.slug}`} className={inlineLinkClassName}>
-                {s.today.studyLesson}
-              </Link>
-            </p>
-          )}
+                <div className="mt-0.5 flex flex-wrap gap-1.5">
+                  {today.losses.map((l) => (
+                    <span
+                      key={l.reason}
+                      className={`rounded-full px-2 py-0.5 text-xs font-medium ${LOSS_CHIP_CLASS[l.reason]}`}
+                    >
+                      {l.count} {s.today.lossReasons[l.reason]}
+                    </span>
+                  ))}
+                </div>
+              </FocusRow>
+            )}
+
+            <FocusRow
+              icon={<LibraryBigIcon className="size-4" />}
+              tone="blue"
+              label={s.today.repertoireLabel}
+              action={
+                repertoire.considered === 0 && {
+                  href: '/repertoire',
+                  label: s.today.buildRepertoire,
+                }
+              }
+            >
+              <p className={repertoire.considered > 0 ? 'text-sm' : mutedClassName}>
+                {repertoire.considered > 0
+                  ? s.today.repertoireDeviations(repertoire.deviated, repertoire.considered)
+                  : s.today.noRepertoire}
+              </p>
+            </FocusRow>
+
+            {today.lesson && (
+              <FocusRow
+                icon={<GraduationCapIcon className="size-4" />}
+                tone="emerald"
+                label={s.today.lessonLabel}
+                action={{ href: `/learn/${today.lesson.slug}`, label: s.today.studyLesson }}
+              >
+                <p className="text-sm font-medium">{today.lesson.name}</p>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  {s.today.lessonDetail(today.lesson.games)}
+                </p>
+              </FocusRow>
+            )}
+          </ul>
         </Card>
       </div>
     </div>
+  )
+}
+
+const FOCUS_TONE_CLASS = {
+  amber: 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400',
+  rose: 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-400',
+  zinc: 'bg-zinc-200 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400',
+  blue: 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400',
+  emerald: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400',
+}
+
+const LOSS_CHIP_CLASS: Record<LossReason, string> = {
+  timeout: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300',
+  checkmate: 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300',
+  resigned: 'bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
+  abandoned: 'bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
+  other: 'bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
+}
+
+function FocusRow({
+  icon,
+  tone,
+  label,
+  action,
+  children,
+}: {
+  icon: React.ReactNode
+  tone: keyof typeof FOCUS_TONE_CLASS
+  label: string
+  action?: { href: string; label: string } | null | false
+  children: React.ReactNode
+}) {
+  return (
+    <li className="flex items-start gap-3 py-2.5 first:pt-0 last:pb-0">
+      <span
+        className={`flex size-8 shrink-0 items-center justify-center rounded-md ${FOCUS_TONE_CLASS[tone]}`}
+      >
+        {icon}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-[11px] font-medium tracking-wide text-zinc-500 uppercase dark:text-zinc-400">
+          {label}
+        </p>
+        {children}
+      </div>
+      {action && (
+        <Link
+          href={action.href}
+          className="shrink-0 self-center text-sm font-medium whitespace-nowrap text-blue-600 hover:underline dark:text-blue-400"
+        >
+          {action.label} →
+        </Link>
+      )}
+    </li>
   )
 }
 
