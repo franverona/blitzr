@@ -193,12 +193,14 @@ export default async function TodayPage() {
 
         <Card title={s.today.puzzleTitle}>
           {puzzle ? (
-            <Link href={`/puzzles/${puzzle.id}`} className="group flex w-44 flex-col gap-2">
-              <MiniBoard
-                fen={puzzle.fen}
-                boardOrientation={resolveOrientation(orientation, puzzleColorToMove(puzzle))}
-              />
-              <div>
+            <Link href={`/puzzles/${puzzle.id}`} className="group flex min-w-0 flex-col gap-2">
+              <div className="w-44">
+                <MiniBoard
+                  fen={puzzle.fen}
+                  boardOrientation={resolveOrientation(orientation, puzzleColorToMove(puzzle))}
+                />
+              </div>
+              <div className="min-w-0">
                 <p className="truncate text-sm font-medium group-hover:underline">{puzzle.title}</p>
                 <p className={mutedClassName}>{s.today.puzzleLabel(puzzle.id, puzzle.mateIn)}</p>
               </div>
