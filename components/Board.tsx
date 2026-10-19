@@ -274,12 +274,21 @@ interface LiveAnalysisContextValue {
   fen: string | null
   /** A search is running or queued. */
   thinking: boolean
+  /** The details dialog holding `LiveAnalysisPanel` opened or closed. */
+  setPanelVisible: (visible: boolean) => void
 }
+
+type LiveAnalysisState = Omit<LiveAnalysisContextValue, 'setPanelVisible'>
 
 const LiveAnalysisContext = createContext<LiveAnalysisContextValue | null>(null)
 
 // Same value a provider exposes before its first result.
-const NO_LIVE_ANALYSIS: LiveAnalysisContextValue = { lines: null, fen: null, thinking: false }
+const NO_LIVE_ANALYSIS: LiveAnalysisContextValue = {
+  lines: null,
+  fen: null,
+  thinking: false,
+  setPanelVisible: () => {},
+}
 
 /** Doesn't throw without a provider: `/learn` renders `BoardView` without one
  *  to avoid spinning up an engine Worker for a hand-authored line. */
@@ -297,10 +306,15 @@ const LIVE_MOVETIME_MS = 600
  */
 export function LiveAnalysisProvider({ children }: { children: React.ReactNode }) {
   const { displayFen } = useBoardContext()
-  const [state, setState] = useState<LiveAnalysisContextValue>({
+  const { hideEngineHints } = useSettings()
+  const [panelVisible, setPanelVisible] = useState(false)
+  // Hidden hints hide the board's arrow and eval bar, so then only the panel
+  // needs a search.
+  const active = !hideEngineHints || panelVisible
+  const [state, setState] = useState<LiveAnalysisState>({
     lines: null,
     fen: null,
-    thinking: true,
+    thinking: active,
   })
 
   // Engine and request queue are created in the same effect so a Strict Mode
@@ -347,10 +361,14 @@ export function LiveAnalysisProvider({ children }: { children: React.ReactNode }
   }, [])
 
   useEffect(() => {
-    requestRef.current(displayFen)
-  }, [displayFen])
+    if (active) requestRef.current(displayFen)
+  }, [displayFen, active])
 
-  return <LiveAnalysisContext.Provider value={state}>{children}</LiveAnalysisContext.Provider>
+  return (
+    <LiveAnalysisContext.Provider value={{ ...state, setPanelVisible }}>
+      {children}
+    </LiveAnalysisContext.Provider>
+  )
 }
 
 export function ExploreToggleButton() {
