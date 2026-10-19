@@ -5,3 +5,7 @@ export function getChesscomUsername(): string {
   }
   return username
 }
+
+export function hasChesscomUsername(): boolean {
+  return Boolean(process.env.CHESSCOM_USERNAME?.trim())
+}
