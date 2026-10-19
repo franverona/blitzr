@@ -187,6 +187,7 @@ a prepared move. An opponent's unprepared move or the tree running out doesn't c
   from equal. `swingCp` is display-only.
 - Bulk "Analyze all" state lives in `BulkAnalysisProvider` (root layout) so a run survives
   navigation. Cancel is checked between games, so an in-flight game always finishes and saves.
+  While a run is active, `beforeunload` asks before the tab closes.
 - The games list's accuracy/error columns come from `getGameAccuracyById()` (not a `Game` field);
   `saveGameAnalysis()` revalidates `/` so they update during a bulk run.
 - Tactical explanations (`lib/tactics.ts`, `lib/hangingPiece.ts`) are deliberately narrow:

@@ -34,6 +34,18 @@ export function BulkAnalysisProvider({ children }: { children: React.ReactNode }
     return () => clearTimeout(timeout)
   }, [toast])
 
+  // Closing or reloading the tab kills the engines mid-run. Browsers show
+  // their own generic prompt; custom text is ignored.
+  const running = progress !== null
+  useEffect(() => {
+    if (!running) return
+    function onBeforeUnload(e: BeforeUnloadEvent) {
+      e.preventDefault()
+    }
+    window.addEventListener('beforeunload', onBeforeUnload)
+    return () => window.removeEventListener('beforeunload', onBeforeUnload)
+  }, [running])
+
   async function start() {
     if (runningRef.current) return
     runningRef.current = true
