@@ -1,3 +1,4 @@
+import { cookies } from 'next/headers'
 import Link from 'next/link'
 import { getSolvedPuzzleIds } from '../actions'
 import { MiniBoard } from '@/components/MiniBoard'
@@ -8,6 +9,7 @@ import {
 } from '@/components/PuzzleFilters'
 import { getStrings } from '@/lib/i18n/strings'
 import { MATE_PROBLEMS, puzzleColorToMove } from '@/lib/mateProblems'
+import { getTrainingOrientation, resolveOrientation } from '@/lib/theme'
 
 // Each card is a live react-chessboard; rendering 200+ at once hit
 // "Maximum update depth exceeded".
@@ -32,6 +34,9 @@ export default async function PuzzlesPage({
     mateIn: mateInParam,
   } = await searchParams
   const s = getStrings()
+  const orientation = getTrainingOrientation(
+    (await cookies()).get('blitzr-training-orientation')?.value,
+  )
 
   const page = Math.max(1, Number(pageParam) || 1)
   const status: PuzzleStatusFilter =
@@ -120,7 +125,10 @@ export default async function PuzzlesPage({
                         : 'border-zinc-200 dark:border-zinc-800'
                     }`}
                   >
-                    <MiniBoard fen={problem.fen} boardOrientation={puzzleColorToMove(problem)} />
+                    <MiniBoard
+                      fen={problem.fen}
+                      boardOrientation={resolveOrientation(orientation, puzzleColorToMove(problem))}
+                    />
                     <div className="mt-2 flex items-center justify-between gap-2">
                       <p className="text-xs text-zinc-500 dark:text-zinc-400">#{problem.id}</p>
                       <div className="flex items-center gap-1">
