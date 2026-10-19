@@ -148,7 +148,7 @@ export default async function TodayPage() {
                   <MiniBoard fen={lastGame.fen} boardOrientation={lastGame.myColor} />
                 </Link>
               </BoardFill>
-              <div className="flex min-w-0 flex-col gap-0.5">
+              <div className={BOARD_INFO_CLASS}>
                 <p className="flex min-w-0 items-center gap-2">
                   <Link
                     href={`/games/${lastGame.id}`}
@@ -189,39 +189,42 @@ export default async function TodayPage() {
         </Card>
 
         <Card title={s.today.puzzleTitle} className="xl:col-start-3 xl:row-span-2 xl:row-start-1">
-          {puzzle ? (
-            <Link
-              href={`/puzzles/${puzzle.id}`}
-              className="group flex min-w-0 flex-col gap-2 xl:min-h-0 xl:flex-1"
-            >
-              <BoardFill>
-                <MiniBoard
-                  fen={puzzle.fen}
-                  boardOrientation={resolveOrientation(orientation, puzzleColorToMove(puzzle))}
-                />
-              </BoardFill>
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium group-hover:underline">{puzzle.title}</p>
-                <p className={mutedClassName}>{s.today.puzzleLabel(puzzle.id, puzzle.mateIn)}</p>
-              </div>
-            </Link>
-          ) : (
-            <p className={mutedClassName}>{s.today.allPuzzlesSolved}</p>
-          )}
-          {puzzles.total > 0 && (
-            // Same bar as the /puzzles header, stacked above its label.
-            <div className="flex max-w-xs flex-col gap-1.5 xl:max-w-none">
-              <div className="h-1.5 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800">
-                <div
-                  className="h-full rounded-full bg-emerald-500"
-                  style={{ width: `${(puzzles.solved / puzzles.total) * 100}%` }}
-                />
-              </div>
-              <span className={mutedClassName}>
-                {s.puzzlesPage.solvedCount(puzzles.solved, puzzles.total)}
-              </span>
+          <div className="flex flex-col gap-2 xl:min-h-0 xl:flex-1">
+            {puzzle ? (
+              <Link href={`/puzzles/${puzzle.id}`} className="contents">
+                <BoardFill>
+                  <MiniBoard
+                    fen={puzzle.fen}
+                    boardOrientation={resolveOrientation(orientation, puzzleColorToMove(puzzle))}
+                  />
+                </BoardFill>
+              </Link>
+            ) : (
+              <p className={mutedClassName}>{s.today.allPuzzlesSolved}</p>
+            )}
+            <div className={BOARD_INFO_CLASS}>
+              {puzzle && (
+                <Link href={`/puzzles/${puzzle.id}`} className="min-w-0 hover:underline">
+                  <p className="truncate text-sm font-medium">{puzzle.title}</p>
+                  <p className={mutedClassName}>{s.today.puzzleLabel(puzzle.id, puzzle.mateIn)}</p>
+                </Link>
+              )}
+              {puzzles.total > 0 && (
+                // Same bar as the /puzzles header, stacked above its label.
+                <div className="mt-1.5 flex max-w-xs flex-col gap-1.5 xl:max-w-none">
+                  <div className="h-1.5 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800">
+                    <div
+                      className="h-full rounded-full bg-emerald-500"
+                      style={{ width: `${(puzzles.solved / puzzles.total) * 100}%` }}
+                    />
+                  </div>
+                  <span className={mutedClassName}>
+                    {s.puzzlesPage.solvedCount(puzzles.solved, puzzles.total)}
+                  </span>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </Card>
 
         <Card title={s.today.focusTitle} className="sm:col-span-2 xl:col-span-3">
@@ -347,6 +350,10 @@ const LOSS_CHIP_CLASS: Record<LossReason, string> = {
   abandoned: 'bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
   other: 'bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
 }
+
+// Both board cards reserve the same text height under the board at xl, so their boards,
+// which grow into what's left, come out the same size.
+const BOARD_INFO_CLASS = 'flex min-w-0 flex-col gap-0.5 xl:h-[5.5rem] xl:shrink-0'
 
 /**
  * xl: the board cards span both text rows, so the board grows into whatever height they
