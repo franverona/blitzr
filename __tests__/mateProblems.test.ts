@@ -59,6 +59,8 @@ describe('MATE_PROBLEMS content', () => {
   it(`a random sample of ${FORCED_MATE_SAMPLE_SIZE} mate-in-2/3 problems are forced against every legal reply`, () => {
     const candidates = MATE_PROBLEMS.filter((p) => p.mateIn > 1)
     const sample = [...candidates].sort(() => Math.random() - 0.5).slice(0, FORCED_MATE_SAMPLE_SIZE)
+    // Unseeded, so log the sample to make a failure reproducible.
+    console.info(`Forced-mate sample: ${sample.map((p) => `#${p.id}`).join(', ')}`)
 
     for (const problem of sample) {
       expect(problem.mateIn, `#${problem.id}: mateIn too deep to brute-force`).toBeLessThanOrEqual(
