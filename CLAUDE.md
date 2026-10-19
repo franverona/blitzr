@@ -289,13 +289,14 @@ since Next redacts thrown messages in production.
 ## Before considering a feature or fix done
 
 ```bash
+pnpm format:check
 pnpm exec tsc --noEmit
 pnpm lint
 pnpm test
 pnpm build
 ```
 
-CI (`.github/workflows/ci.yml`) runs the same four on pushes to `main` and on PRs.
+CI (`.github/workflows/ci.yml`) runs the same five on pushes to `main` and on PRs.
 
 ## Running
 
