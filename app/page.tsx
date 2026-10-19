@@ -72,8 +72,8 @@ export default async function GamesPage({
       </div>
 
       <GameSearchForm
-        // accOp/accValue excluded so the accuracy popover survives its own navigations.
-        key={`${q ?? ''}-${result ?? ''}-${color ?? ''}-${rated ?? ''}`}
+        // q/accOp/accValue excluded so typing and the accuracy popover survive their own navigations.
+        key={`${result ?? ''}-${color ?? ''}-${rated ?? ''}`}
         defaultValue={q ?? ''}
         result={result}
         color={color}

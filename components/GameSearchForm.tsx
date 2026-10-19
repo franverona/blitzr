@@ -46,6 +46,18 @@ export function GameSearchForm({
     setAccuracy(Number(accValue) || DEFAULT_ACCURACY_THRESHOLD)
   }
 
+  // Same for `q`, or each debounced search would remount the input mid-typing.
+  // Our own navigations are skipped: they can land after more was typed.
+  const [prevQ, setPrevQ] = useState(defaultValue)
+  const [pushedQ, setPushedQ] = useState<string | null>(null)
+  if (defaultValue !== prevQ) {
+    setPrevQ(defaultValue)
+    if (defaultValue !== pushedQ) {
+      setValue(defaultValue)
+      setPushedQ(null)
+    }
+  }
+
   function clearDebounce() {
     if (debounceRef.current) clearTimeout(debounceRef.current)
   }
@@ -63,6 +75,7 @@ export function GameSearchForm({
     for (const [key, val] of Object.entries(merged)) {
       if (val) params.set(key, val)
     }
+    setPushedQ(merged.q)
     const query = params.toString()
     router.push(query ? `/?${query}` : '/')
   }
