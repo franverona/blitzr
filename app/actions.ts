@@ -28,6 +28,7 @@ import { buildOpeningFamilies, ecoFamilyLabel, unknownOpeningLabel } from '@/lib
 import { countGamesReachingLine } from '@/lib/openingTheory'
 import { isStandardChess, startsFromStandardPosition } from '@/lib/positions'
 import { listPendingArchives, syncArchive } from '@/lib/sync'
+import { isValidAnalysis, normalizeRepertoireNode } from '@/lib/validate'
 import type {
   ArchiveSyncStatus,
   BlunderStats,
@@ -202,7 +203,14 @@ export async function listRepertoire(color: RepertoireColor): Promise<Repertoire
 }
 
 export async function addRepertoireMove(node: RepertoireNode): Promise<void> {
-  await getRepository().addRepertoireNode(node)
+  const repo = getRepository()
+  const parent =
+    node.parentId === null
+      ? undefined
+      : (await repo.listRepertoireNodes(node.color)).find((n) => n.id === node.parentId)
+  const valid = normalizeRepertoireNode(node, parent)
+  if (!valid) throw new Error('Invalid repertoire move')
+  await repo.addRepertoireNode(valid)
   revalidatePath('/repertoire')
 }
 
@@ -220,6 +228,10 @@ export async function saveGameAnalysis(
   evals: PositionEval[],
   movetimeMs: number,
 ): Promise<void> {
+  const game = await getRepository().getGame(gameId)
+  if (!game?.movesSan || !isValidAnalysis(evals, game.movesSan.length, movetimeMs)) {
+    throw new Error('Invalid analysis')
+  }
   await getRepository().saveGameAnalysis({
     gameId,
     evals,
