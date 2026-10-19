@@ -2,7 +2,8 @@ import { findBlunders, whiteToMove } from './analysis'
 import { summarizeMoveQuality } from './moveQuality'
 import { startsFromStandardPosition } from './positions'
 import { diffGameAgainstRepertoire } from './repertoire'
-import type { Game, GameAnalysis, MyResult, RepertoireColor, RepertoireNode } from './types'
+import { countGamesReachingLine } from './openingTheory'
+import type { Game, GameAnalysis, Lesson, MyResult, RepertoireColor, RepertoireNode } from './types'
 
 const DAY_SECONDS = 24 * 60 * 60
 
@@ -113,4 +114,61 @@ export function gameReview(
     (b) => whiteToMove(b.ply, game.initialFen) === (game.myColor === 'white'),
   )
   return { accuracy: mine.accuracy, firstBlunderPly: firstBlunder?.ply ?? null }
+}
+
+/** Keys into `s.today.lossReasons`. */
+export type LossReason = 'timeout' | 'resigned' | 'checkmate' | 'abandoned' | 'other'
+
+const LOSS_REASONS: Record<string, LossReason> = {
+  timeout: 'timeout',
+  resigned: 'resigned',
+  checkmated: 'checkmate',
+  abandoned: 'abandoned',
+}
+
+/** How `games` were lost, from the user's own result code, most common first. */
+export function lossReasons(games: Game[]): { reason: LossReason; count: number }[] {
+  const counts = new Map<LossReason, number>()
+  for (const game of games) {
+    if (game.myResult !== 'loss') continue
+    const code = game.myColor === 'white' ? game.whiteResult : game.blackResult
+    const reason = LOSS_REASONS[code] ?? 'other'
+    counts.set(reason, (counts.get(reason) ?? 0) + 1)
+  }
+  return [...counts].map(([reason, count]) => ({ reason, count })).sort((a, b) => b.count - a.count)
+}
+
+/** The lesson `games` reached most (ties go to the longer line), or null if none. */
+export function suggestLesson(
+  games: Game[],
+  lessons: Lesson[],
+): { lesson: Lesson; games: number } | null {
+  let best: { lesson: Lesson; games: number } | null = null
+  for (const lesson of lessons) {
+    const reached = countGamesReachingLine(
+      games,
+      lesson.moves.map((m) => m.san),
+    ).games
+    if (reached === 0) continue
+    if (
+      !best ||
+      reached > best.games ||
+      (reached === best.games && lesson.moves.length > best.lesson.moves.length)
+    ) {
+      best = { lesson, games: reached }
+    }
+  }
+  return best
+}
+
+/** Each time class's ratings over the last `days` days, oldest first (rated games only). */
+export function ratingHistory(games: Game[], now: Date, days = 30): Map<string, number[]> {
+  const since = now.getTime() / 1000 - days * DAY_SECONDS
+  const history = new Map<string, number[]>()
+  for (const game of [...games].sort((a, b) => a.endTime - b.endTime)) {
+    const rating = game.myColor === 'white' ? game.whiteRating : game.blackRating
+    if (!game.rated || rating === null || game.endTime < since) continue
+    history.set(game.timeClass, [...(history.get(game.timeClass) ?? []), rating])
+  }
+  return history
 }

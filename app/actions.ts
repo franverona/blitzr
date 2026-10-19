@@ -9,6 +9,7 @@ import { ChesscomApiError, fetchPlayerAvatar } from '@/lib/chesscom/client'
 import { endOfDaySeconds, formatDate, startOfDaySeconds } from '@/lib/dates'
 import { getChesscomUsername } from '@/lib/config'
 import { getRepository } from '@/lib/db'
+import { getLocale } from '@/lib/i18n/locale'
 import { getStrings } from '@/lib/i18n/strings'
 import type { GameRepository } from '@/lib/db/types'
 import {
@@ -26,16 +27,20 @@ import { parseManualGame, type ManualGameSide } from '@/lib/manualGame'
 import { summarizeMoveQuality } from '@/lib/moveQuality'
 import { buildOpeningFamilies, ecoFamilyLabel, unknownOpeningLabel } from '@/lib/openings'
 import { MATE_PROBLEMS } from '@/lib/mateProblems'
-import { countGamesReachingLine } from '@/lib/openingTheory'
+import { OPENING_LESSONS, countGamesReachingLine } from '@/lib/openingTheory'
 import { buildPositions, isStandardChess, startsFromStandardPosition } from '@/lib/positions'
 import { listPendingArchives, syncArchive } from '@/lib/sync'
+import { describeBlunderReason } from '@/lib/tactics'
 import {
   drillStreak,
   drillWeek,
   gameReview,
   localDay,
+  lossReasons,
+  ratingHistory,
   recentResults,
   repertoireDeviations,
+  suggestLesson,
 } from '@/lib/today'
 import { isValidAnalysis, normalizeRepertoireNode } from '@/lib/validate'
 import type {
@@ -442,6 +447,11 @@ export async function getTodaySummary(): Promise<{
   accuracy: ReturnType<typeof recentAccuracy>
   results: ReturnType<typeof recentResults>
   weakSpot: { opening: string; blunders: number; drillable: boolean } | null
+  worstBlunder: { gameId: string; ply: number; moveSan: string; label: string; why: string } | null
+  losses: ReturnType<typeof lossReasons>
+  lesson: { slug: string; name: string; games: number } | null
+  /** Per time class, the last 30 days' ratings, oldest first. */
+  ratingHistory: Record<string, number[]>
   lastGame: {
     id: string
     opponent: string
@@ -484,7 +494,13 @@ export async function getTodaySummary(): Promise<{
   const since = now.getTime() / 1000 - 7 * 24 * 60 * 60
   const recentGames = newestFirst.filter((g) => g.endTime >= since)
 
-  const worstOpening = buildBlunderStats(recentGames, analysesByGameId).byOpening[0]
+  const recentStats = buildBlunderStats(recentGames, analysesByGameId)
+  const worstOpening = recentStats.byOpening[0]
+  const worst = recentStats.worst[0]
+  const suggested = suggestLesson(
+    standardStartGames.filter((g) => g.endTime >= since),
+    OPENING_LESSONS,
+  )
   const weakSpot = worstOpening
     ? {
         opening: worstOpening.label,
@@ -540,6 +556,24 @@ export async function getTodaySummary(): Promise<{
       total: MATE_PROBLEMS.length,
     },
     lastSyncedAt: syncedAts.at(-1) ?? null,
+    worstBlunder: worst
+      ? {
+          gameId: worst.gameId,
+          ply: worst.ply,
+          moveSan: worst.moveSan,
+          label: worst.gameLabel,
+          why: worst.reason ? describeBlunderReason(worst.reason) : worst.moveDescription,
+        }
+      : null,
+    losses: lossReasons(recentGames),
+    lesson: suggested
+      ? {
+          slug: suggested.lesson.slug,
+          name: suggested.lesson.name[getLocale()],
+          games: suggested.games,
+        }
+      : null,
+    ratingHistory: Object.fromEntries(ratingHistory(games, now)),
     syncIsFresh:
       syncedAts.length > 0 && now.getTime() - Date.parse(syncedAts.at(-1)!) < 60 * 60 * 1000,
   }

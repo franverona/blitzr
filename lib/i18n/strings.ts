@@ -1,4 +1,5 @@
 import type { GameEndReason } from '../gameEnd'
+import type { LossReason } from '../today'
 import { getLocale, Locale } from './locale'
 
 // `es` is typed against `typeof en`, so a missing translation is a compile
@@ -51,6 +52,20 @@ const en = {
     focusTitle: 'Focus',
     weakSpot: (opening: string, n: number) => `Most blunders this week: ${opening} (${n}).`,
     drillOpening: 'Drill it',
+    worstBlunder: 'Worst blunder this week:',
+    reviewIt: 'Review it',
+    lossesHeading: (n: number) => `${n} loss${n === 1 ? '' : 'es'} this week:`,
+    lossReasons: {
+      timeout: 'on time',
+      resigned: 'resigned',
+      checkmate: 'checkmated',
+      abandoned: 'abandoned',
+      other: 'other',
+    } satisfies Record<LossReason, string>,
+    lessonSuggestion: (name: string, n: number) =>
+      `You reached the ${name} in ${n} game${n === 1 ? '' : 's'} this week.`,
+    studyLesson: 'Study the lesson',
+    ratingTrend: 'Rating over the last 30 days',
     noWeakSpot: 'No blunders in analyzed games this week.',
     repertoireDeviations: (deviated: number, considered: number) =>
       `You left your repertoire in ${deviated} of your last ${considered} games.`,
@@ -604,6 +619,20 @@ const es: Strings = {
     focusTitle: 'En qué centrarte',
     weakSpot: (opening: string, n: number) => `Más errores esta semana: ${opening} (${n}).`,
     drillOpening: 'Entrénala',
+    worstBlunder: 'Peor error de la semana:',
+    reviewIt: 'Revísalo',
+    lossesHeading: (n: number) => `${n} ${n === 1 ? 'derrota' : 'derrotas'} esta semana:`,
+    lossReasons: {
+      timeout: 'por tiempo',
+      resigned: 'por abandono',
+      checkmate: 'por jaque mate',
+      abandoned: 'por desconexión',
+      other: 'otras',
+    } satisfies Record<LossReason, string>,
+    lessonSuggestion: (name: string, n: number) =>
+      `Llegaste a «${name}» en ${n} ${n === 1 ? 'partida' : 'partidas'} esta semana.`,
+    studyLesson: 'Estudia la lección',
+    ratingTrend: 'Puntuación en los últimos 30 días',
     noWeakSpot: 'Ningún error en las partidas analizadas esta semana.',
     repertoireDeviations: (deviated: number, considered: number) =>
       `Te saliste de tu repertorio en ${deviated} de tus últimas ${considered} partidas.`,

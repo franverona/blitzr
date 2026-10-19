@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import { drillStreak, drillWeek, localDay, recentResults, repertoireDeviations } from '@/lib/today'
-import type { Game, RepertoireColor, RepertoireNode } from '@/lib/types'
+import {
+  drillStreak,
+  drillWeek,
+  localDay,
+  lossReasons,
+  ratingHistory,
+  suggestLesson,
+  recentResults,
+  repertoireDeviations,
+} from '@/lib/today'
+import type { Game, Lesson, RepertoireColor, RepertoireNode } from '@/lib/types'
 
 const START = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 const now = new Date(2026, 9, 19, 12)
@@ -122,5 +131,65 @@ describe('repertoireDeviations', () => {
     ]
     expect(repertoireDeviations(games, repertoire)).toEqual({ deviated: 2, considered: 3 })
     expect(repertoireDeviations(games, repertoire, 2)).toEqual({ deviated: 1, considered: 2 })
+  })
+})
+
+describe('lossReasons', () => {
+  it("groups losses by the user's own result code", () => {
+    const lost = (code: string, myColor: Game['myColor'] = 'white') =>
+      game({
+        myResult: 'loss',
+        myColor,
+        whiteResult: myColor === 'white' ? code : 'win',
+        blackResult: myColor === 'black' ? code : 'win',
+      })
+    expect(
+      lossReasons([
+        lost('timeout'),
+        lost('timeout', 'black'),
+        lost('checkmated'),
+        lost('loss'),
+        game({}),
+      ]),
+    ).toEqual([
+      { reason: 'timeout', count: 2 },
+      { reason: 'checkmate', count: 1 },
+      { reason: 'other', count: 1 },
+    ])
+  })
+})
+
+describe('suggestLesson', () => {
+  const lesson = (slug: string, moves: string[]) =>
+    ({ slug, moves: moves.map((san) => ({ san, explanation: { en: '', es: '' } })) }) as Lesson
+
+  it('picks the most-reached lesson, preferring the longer line on a tie', () => {
+    const games = [
+      game({ movesSan: ['e4', 'e5', 'Nf3'] }),
+      game({ movesSan: ['e4', 'e5', 'Nf3'] }),
+      game({ movesSan: ['d4'] }),
+    ]
+    const short = lesson('e4e5', ['e4', 'e5'])
+    const long = lesson('e4e5nf3', ['e4', 'e5', 'Nf3'])
+    expect(suggestLesson(games, [short, long, lesson('d4', ['d4'])])).toEqual({
+      lesson: long,
+      games: 2,
+    })
+    expect(suggestLesson(games, [lesson('c4', ['c4'])])).toBeNull()
+  })
+})
+
+describe('ratingHistory', () => {
+  it('lists rated ratings per time class in the last 30 days, oldest first', () => {
+    const history = ratingHistory(
+      [
+        game({ endTime: daysAgo(2), whiteRating: 1210 }),
+        game({ endTime: daysAgo(40), whiteRating: 1100 }),
+        game({ endTime: daysAgo(5), whiteRating: 1200 }),
+        game({ endTime: daysAgo(3), rated: false, whiteRating: 900 }),
+      ],
+      now,
+    )
+    expect(history.get('blitz')).toEqual([1200, 1210])
   })
 })

@@ -8,6 +8,7 @@ import { formatDateTime } from '@/lib/dates'
 import { getLocale } from '@/lib/i18n/locale'
 import { getStrings } from '@/lib/i18n/strings'
 import { getMateProblem, puzzleColorToMove } from '@/lib/mateProblems'
+import { plyLabel } from '@/lib/san'
 import { getTrainingOrientation, resolveOrientation } from '@/lib/theme'
 import type { MyResult } from '@/lib/types'
 
@@ -25,6 +26,7 @@ export default async function TodayPage() {
   const s = getStrings()
   const today = await getTodaySummary()
   const { drill, accuracy, results, weakSpot, lastGame, repertoire, puzzles } = today
+  const lossCount = today.losses.reduce((sum, l) => sum + l.count, 0)
   const puzzle = puzzles.nextId === null ? undefined : getMateProblem(puzzles.nextId)
   const orientation = getTrainingOrientation(
     (await cookies()).get('blitzr-training-orientation')?.value,
@@ -110,7 +112,7 @@ export default async function TodayPage() {
             <p className="text-sm">{s.today.record(results.wins, results.losses, results.draws)}</p>
           )}
           {results.ratings.map((r) => (
-            <p key={r.timeClass} className="text-sm">
+            <p key={r.timeClass} className="flex items-center gap-1.5 text-sm">
               {s.common.timeClass[r.timeClass as keyof typeof s.common.timeClass] ?? r.timeClass}{' '}
               {r.rating}{' '}
               <span
@@ -123,6 +125,7 @@ export default async function TodayPage() {
                 ({r.change >= 0 ? '+' : ''}
                 {r.change})
               </span>
+              <Sparkline points={today.ratingHistory[r.timeClass] ?? []} up={r.change >= 0} />
             </p>
           ))}
         </Card>
@@ -153,9 +156,16 @@ export default async function TodayPage() {
                   <>
                     <p className="text-sm">{s.today.lastGameAccuracy(lastGame.accuracy)}</p>
                     <p className={mutedClassName}>
-                      {lastGame.firstBlunderPly === null
-                        ? s.today.noBlunders
-                        : s.today.firstBlunder(Math.ceil(lastGame.firstBlunderPly / 2))}
+                      {lastGame.firstBlunderPly === null ? (
+                        s.today.noBlunders
+                      ) : (
+                        <Link
+                          href={`/games/${lastGame.id}?ply=${lastGame.firstBlunderPly - 1}`}
+                          className="hover:underline"
+                        >
+                          {s.today.firstBlunder(Math.ceil(lastGame.firstBlunderPly / 2))}
+                        </Link>
+                      )}
                     </p>
                   </>
                 )}
@@ -217,6 +227,30 @@ export default async function TodayPage() {
           ) : (
             <p className={mutedClassName}>{s.today.noWeakSpot}</p>
           )}
+          {today.worstBlunder && (
+            <p className="text-sm">
+              {s.today.worstBlunder}{' '}
+              <span className="font-semibold">
+                {plyLabel(today.worstBlunder.ply)}
+                {today.worstBlunder.moveSan}
+              </span>{' '}
+              <span className="text-zinc-500 dark:text-zinc-400">({today.worstBlunder.label})</span>
+              : {today.worstBlunder.why}{' '}
+              <Link
+                // One ply back, so the board shows the position before the mistake.
+                href={`/games/${today.worstBlunder.gameId}?ply=${today.worstBlunder.ply - 1}`}
+                className={inlineLinkClassName}
+              >
+                {s.today.reviewIt}
+              </Link>
+            </p>
+          )}
+          {lossCount > 0 && (
+            <p className="text-sm">
+              {s.today.lossesHeading(lossCount)}{' '}
+              {today.losses.map((l) => `${l.count} ${s.today.lossReasons[l.reason]}`).join(' · ')}
+            </p>
+          )}
           {repertoire.considered > 0 ? (
             <p className="text-sm">
               {s.today.repertoireDeviations(repertoire.deviated, repertoire.considered)}
@@ -229,9 +263,54 @@ export default async function TodayPage() {
               </Link>
             </p>
           )}
+          {today.lesson && (
+            <p className="text-sm">
+              {s.today.lessonSuggestion(today.lesson.name, today.lesson.games)}{' '}
+              <Link href={`/learn/${today.lesson.slug}`} className={inlineLinkClassName}>
+                {s.today.studyLesson}
+              </Link>
+            </p>
+          )}
         </Card>
       </div>
     </div>
+  )
+}
+
+/** Hand-rolled SVG (like AccuracyTrendChart), oldest to newest; nothing under 2 points. */
+function Sparkline({ points, up }: { points: number[]; up: boolean }) {
+  const s = getStrings()
+  if (points.length < 2) return null
+  const width = 64
+  const height = 16
+  const min = Math.min(...points)
+  const range = Math.max(...points) - min || 1
+  const coords = points
+    .map((p, i) => {
+      const x = (i / (points.length - 1)) * width
+      const y = height - 1 - ((p - min) / range) * (height - 2)
+      return `${x.toFixed(1)},${y.toFixed(1)}`
+    })
+    .join(' ')
+  return (
+    <svg
+      width={width}
+      height={height}
+      viewBox={`0 0 ${width} ${height}`}
+      role="img"
+      aria-label={s.today.ratingTrend}
+      className={up ? 'text-emerald-500' : 'text-rose-500'}
+    >
+      <title>{s.today.ratingTrend}</title>
+      <polyline
+        points={coords}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1.5}
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+    </svg>
   )
 }
 
