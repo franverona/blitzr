@@ -353,7 +353,7 @@ const LOSS_CHIP_CLASS: Record<LossReason, string> = {
 
 // Both board cards reserve the same text height under the board at xl, so their boards,
 // which grow into what's left, come out the same size.
-const BOARD_INFO_CLASS = 'flex min-w-0 flex-col gap-0.5 xl:h-[5.5rem] xl:shrink-0'
+const BOARD_INFO_CLASS = 'flex min-w-0 flex-col gap-0.5 xl:h-20 xl:shrink-0'
 
 /**
  * xl: the board cards span both text rows, so the board grows into whatever height they
