@@ -63,7 +63,7 @@ export function GameRow({ game, accuracy }: { game: Game; accuracy: GameAccuracy
             {accuracy.accuracy}
           </span>
         ) : (
-          <span className="text-zinc-700">—</span>
+          <span className="text-zinc-300 dark:text-zinc-700">—</span>
         )}
       </Cell>
       <Cell href={href} className="justify-center tabular-nums">
@@ -75,7 +75,7 @@ export function GameRow({ game, accuracy }: { game: Game; accuracy: GameAccuracy
             >
               {accuracy.mistakes}
             </abbr>
-            <span className="text-zinc-700">/</span>
+            <span className="text-zinc-300 dark:text-zinc-700">/</span>
             <abbr
               title={s.blunderBadge.titles.blunder}
               className="text-rose-600 no-underline dark:text-rose-400"
@@ -84,7 +84,7 @@ export function GameRow({ game, accuracy }: { game: Game; accuracy: GameAccuracy
             </abbr>
           </span>
         ) : (
-          <span className="text-zinc-700">—</span>
+          <span className="text-zinc-300 dark:text-zinc-700">—</span>
         )}
       </Cell>
       <Cell href={href} className="text-zinc-400">

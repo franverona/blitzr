@@ -1,6 +1,5 @@
+import { START_FEN } from './positions'
 import type { Game, Lesson, LessonGameStats } from './types'
-
-const START_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 
 // Summaries are paraphrased, never copied: the source is CC BY-SA and this
 // repo is MIT.

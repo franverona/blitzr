@@ -9,6 +9,7 @@ import { addRepertoireMove, deleteRepertoireMove, listRepertoire } from '@/app/a
 import { whiteToMove } from '@/lib/drill'
 import { getStrings } from '@/lib/i18n/strings'
 import { legalDestinations } from '@/lib/legalMoves'
+import { START_FEN } from '@/lib/positions'
 import { buildRepertoireIndex } from '@/lib/repertoire'
 import { describeBlunderReason, detectBlunderReason } from '@/lib/tactics'
 import { BOARD_ANIMATION_DURATION_MS } from '@/lib/theme'
@@ -16,8 +17,6 @@ import type { RepertoireColor, RepertoireNode } from '@/lib/types'
 import { useSettings, useMoveSound } from './SettingsProvider'
 import { LegalMoveSquare } from './LegalMoveSquare'
 import { RepertoireTree } from './RepertoireTree'
-
-const START_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 
 export function RepertoireBoard({
   color,
