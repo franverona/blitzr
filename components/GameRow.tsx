@@ -1,12 +1,11 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { formatDate } from '@/lib/dates'
 import { getStrings } from '@/lib/i18n/strings'
 import type { Game, GameAccuracy } from '@/lib/types'
 import { accuracyPillClass } from './GameAnalysisPanel'
 import { KnightIcon } from './KnightIcon'
-import { startRouteProgress } from './RouteProgressBar'
 
 const RESULT_BADGE_STYLES: Record<Game['myResult'], string> = {
   win: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400',
@@ -22,35 +21,23 @@ const RESULT_BADGE_GLYPHS: Record<Game['myResult'], string> = {
 
 export function GameRow({ game, accuracy }: { game: Game; accuracy: GameAccuracy | undefined }) {
   const s = getStrings()
-  const router = useRouter()
   const opponent = game.myColor === 'white' ? game.blackUsername : game.whiteUsername
   const myRating = game.myColor === 'white' ? game.whiteRating : game.blackRating
   const date = formatDate(game.endTime)
   const timeClassTooltip = s.gameRow.timeClassTooltips[game.timeClass]
 
-  function open() {
-    startRouteProgress()
-    router.push(`/games/${game.id}`)
-  }
+  const href = `/games/${game.id}`
 
   return (
-    <tr
-      onClick={open}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault()
-          open()
-        }
-      }}
-      tabIndex={0}
-      className="cursor-pointer outline-none hover:bg-zinc-100 focus:bg-zinc-100 dark:hover:bg-zinc-900/50 dark:focus:bg-zinc-900/50"
-    >
-      <td className="px-3 py-2 whitespace-nowrap">{date}</td>
-      <td className="px-3 py-2">{game.isMine ? <KnightIcon color={game.myColor} /> : '—'}</td>
-      <td className="px-3 py-2">
+    <tr className="focus-within:bg-zinc-100 hover:bg-zinc-100 dark:focus-within:bg-zinc-900/50 dark:hover:bg-zinc-900/50">
+      <Cell href={href} className="whitespace-nowrap" tabbable>
+        {date}
+      </Cell>
+      <Cell href={href}>{game.isMine ? <KnightIcon color={game.myColor} /> : '—'}</Cell>
+      <Cell href={href}>
         {game.isMine ? opponent : `${game.whiteUsername} ${s.common.vs} ${game.blackUsername}`}
-      </td>
-      <td className="px-3 py-2">
+      </Cell>
+      <Cell href={href}>
         {game.isMine ? (
           <span
             className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium ${RESULT_BADGE_STYLES[game.myResult]}`}
@@ -63,12 +50,12 @@ export function GameRow({ game, accuracy }: { game: Game; accuracy: GameAccuracy
             {s.gameRow.notMine}
           </span>
         )}
-      </td>
-      <td className="px-3 py-2 text-right text-zinc-400 tabular-nums">
+      </Cell>
+      <Cell href={href} className="justify-end text-zinc-400 tabular-nums">
         {/* An unrated game's rating isn't meaningful. */}
         {game.isMine && game.rated && myRating != null ? myRating : '—'}
-      </td>
-      <td className="px-3 py-2 text-center">
+      </Cell>
+      <Cell href={href} className="justify-center">
         {accuracy ? (
           <span
             className={`rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums ${accuracyPillClass(accuracy.accuracy)}`}
@@ -78,8 +65,8 @@ export function GameRow({ game, accuracy }: { game: Game; accuracy: GameAccuracy
         ) : (
           <span className="text-zinc-700">—</span>
         )}
-      </td>
-      <td className="px-3 py-2 text-center tabular-nums">
+      </Cell>
+      <Cell href={href} className="justify-center tabular-nums">
         {accuracy ? (
           <span className="inline-flex items-center gap-1.5">
             <abbr
@@ -99,8 +86,8 @@ export function GameRow({ game, accuracy }: { game: Game; accuracy: GameAccuracy
         ) : (
           <span className="text-zinc-700">—</span>
         )}
-      </td>
-      <td className="px-3 py-2 text-zinc-400">
+      </Cell>
+      <Cell href={href} className="text-zinc-400">
         {timeClassTooltip ? (
           <abbr title={timeClassTooltip}>
             {s.common.timeClass[game.timeClass as keyof typeof s.common.timeClass] ??
@@ -109,7 +96,36 @@ export function GameRow({ game, accuracy }: { game: Game; accuracy: GameAccuracy
         ) : (
           game.timeClass
         )}
-      </td>
+      </Cell>
     </tr>
+  )
+}
+
+/** A real link per cell, so Cmd/middle-click open a tab anywhere on the row.
+ *  Only the first is tabbable, so the keyboard stops once per row. */
+function Cell({
+  href,
+  className = '',
+  tabbable = false,
+  children,
+}: {
+  href: string
+  className?: string
+  tabbable?: boolean
+  children: React.ReactNode
+}) {
+  return (
+    // h-px + h-full: the link fills the cell even when a sibling sets the row height.
+    <td className="h-px p-0">
+      <Link
+        href={href}
+        // 50 rows x 8 links; router.push() never prefetched either.
+        prefetch={false}
+        tabIndex={tabbable ? 0 : -1}
+        className={`flex h-full items-center px-3 py-2 outline-none ${className}`}
+      >
+        {children}
+      </Link>
+    </td>
   )
 }
