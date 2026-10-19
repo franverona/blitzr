@@ -22,7 +22,6 @@ import { legalDestinations } from '@/lib/legalMoves'
 import { formatMaterialDiff, materialDiff } from '@/lib/material'
 import { buildPositions } from '@/lib/positions'
 import { StockfishEngine } from '@/lib/stockfish/client'
-import { describeBetterMove } from '@/lib/tactics'
 import {
   BOARD_ANIMATION_DURATION_MS,
   CHECKLIST_ARROW_COLOR,
@@ -35,7 +34,6 @@ import { useSettings, useMoveSound } from './SettingsProvider'
 import { EvalBar } from './EvalBar'
 import { LegalMoveSquare } from './LegalMoveSquare'
 import { MoveList } from './MoveList'
-import { PlanBoardButton } from './PlanBoard'
 import { PromotionPicker, type PromotionPiece } from './PromotionPicker'
 
 interface BoardContextValue {
@@ -843,14 +841,6 @@ export function BoardView({
     }
     return styles
   }, [checklistSquareStyles.styles, gameEndBadgeList])
-  const betterMove = bestMove
-    ? describeBetterMove(
-        positions[ply],
-        movesSan[ply] ?? '',
-        bestMove,
-        whiteToMove(ply + 1, positions[0]) ? 'white' : 'black',
-      )
-    : null
 
   // Only animate single-step moves; multi-ply jumps flicker. Switching between
   // recorded and explore modes counts as a jump.
@@ -965,21 +955,6 @@ export function BoardView({
             </>
           )}
         </p>
-        {betterMove && (
-          // <div>, not <p>: PlanBoardButton renders a <dialog>, invalid inside <p>.
-          <div className="text-xs text-amber-600 dark:text-amber-400">
-            {s.common.betterWas} {betterMove}
-            {bestMove && bestMove.bestLine?.length > 0 && (
-              <PlanBoardButton
-                key={ply}
-                betterMove={betterMove}
-                fenBefore={positions[ply]}
-                moves={[bestMove.san, ...bestMove.bestLine]}
-                boardOrientation={boardOrientation}
-              />
-            )}
-          </div>
-        )}
       </div>
 
       <div
