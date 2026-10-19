@@ -51,7 +51,7 @@ export default async function TodayPage() {
         </p>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Card title={s.today.drillTitle}>
           <p className="text-3xl font-semibold">{Math.min(drill.due, drill.sessionSize)}</p>
           <p className={mutedClassName}>
@@ -153,25 +153,30 @@ export default async function TodayPage() {
             </p>
           )}
         </Card>
+      </div>
 
+      {/* Board cards get their own row so the boards don't stretch the text cards. */}
+      <div className="grid gap-4 sm:grid-cols-2">
         <Card title={s.today.lastGameTitle}>
           {lastGame ? (
-            <div className="flex flex-wrap items-start gap-4">
-              <Link href={`/games/${lastGame.id}`} className="w-44 shrink-0">
+            <div className="flex flex-col gap-2">
+              <Link href={`/games/${lastGame.id}`} className="w-44">
                 <MiniBoard fen={lastGame.fen} boardOrientation={lastGame.myColor} />
               </Link>
-              <div className="flex min-w-0 flex-col items-start gap-2">
-                <span
-                  className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${RESULT_BADGE_CLASS[lastGame.result]}`}
-                >
-                  {s.common.result[lastGame.result]}
-                </span>
-                <Link
-                  href={`/games/${lastGame.id}`}
-                  className={`text-sm font-medium ${inlineLinkClassName}`}
-                >
-                  {s.today.lastGameVs(lastGame.opponent)}
-                </Link>
+              <div className="flex min-w-0 flex-col gap-0.5">
+                <p className="flex min-w-0 items-center gap-2">
+                  <Link
+                    href={`/games/${lastGame.id}`}
+                    className={`truncate text-sm font-medium ${inlineLinkClassName}`}
+                  >
+                    {s.today.lastGameVs(lastGame.opponent)}
+                  </Link>
+                  <span
+                    className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${RESULT_BADGE_CLASS[lastGame.result]}`}
+                  >
+                    {s.common.result[lastGame.result]}
+                  </span>
+                </p>
                 {lastGame.accuracy === null ? (
                   <p className={mutedClassName}>{s.today.notAnalyzed}</p>
                 ) : (
