@@ -239,7 +239,7 @@ function StreakBadge({ streak, week }: { streak: number; week: boolean[] }) {
   const s = getStrings()
   const drilledToday = week.at(-1) === true
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+    <div className="my-2 flex flex-wrap items-center gap-x-3 gap-y-1">
       <span
         className={`flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
           streak === 0
