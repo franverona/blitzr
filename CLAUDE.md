@@ -76,10 +76,11 @@ lib/
   db/                       # repository interface, factory, sqlite backend
 scripts/
   setup-stockfish.mjs       # postinstall — copies engine files into public/stockfish/
+  backup-db.mjs             # `pnpm backup` — online backup into data/backups/
   import-polgar-mates.mjs   # one-off puzzle import (not idempotent)
 ```
 
-`data/blitzr.db` and `public/stockfish/` are created at install/runtime and gitignored.
+`data/blitzr.db`, `data/backups/` and `public/stockfish/` are created at install/runtime and gitignored.
 
 ## Key conventions
 
@@ -89,7 +90,9 @@ scripts/
 - **Domain types are camelCase** (`lib/types.ts`), **DB columns snake_case** (`lib/db/types.ts`);
   the repository maps between them. Never leak snake_case past it.
 - **Migrations** run idempotently in `ensureSchema()` (`lib/db/sqlite/migrate.ts`) — no version
-  table. New columns are added after a `PRAGMA table_info` check.
+  table. New columns are added after a `PRAGMA table_info` check, through `alter()`, which first
+  copies an existing database to `data/backups/pre-migration-<time>.db`. Once per server process,
+  so a migration that keeps failing and retrying doesn't pile up copies.
 - **`moves_san` and `game_analysis.evals` are JSON array columns**, walked in app code.
 - **Aggregations, repertoire diffing and blunder detection are pure functions**, not repository
   methods — backend-agnostic and unit-testable.
@@ -147,7 +150,8 @@ scripts/
 - SQLite lives at `./data/blitzr.db`, created on first run. Delete it and re-sync to reset.
 - **Backup** (Settings → Data): `exportDatabaseBackup()` returns `GameRepository.exportBackup()`'s
   bytes to the client, which saves them as a file. SQLite makes it with `VACUUM INTO` a temp file,
-  so the copy is consistent and includes the WAL.
+  so the copy is consistent and includes the WAL. `pnpm backup` writes one to `data/backups/` from
+  the command line (`better-sqlite3`'s `db.backup()`).
 - Tables: `games`, `sync_state`, `repertoire_moves` (tree per color, `ON DELETE CASCADE` to the
   subtree — needs the `foreign_keys` pragma), `game_analysis` (one row per game), `drill_cards`
   (schedule only, keyed by `(game_id, source_type, ply)`), `puzzle_progress` (solved puzzle ids;
