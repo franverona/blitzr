@@ -212,7 +212,9 @@ and the slider are debounced (400ms); selects navigate immediately.
 `drill_cards` stores only the SM-2 schedule (binary grading); prompts are re-derived by
 `buildDrillPrompt()` from deviations and own-move blunders. The deck re-syncs on every `/drill`
 load and serves the 15 most-overdue cards. `DrillSession` snapshots its prompts so revalidation
-can't reshuffle an active session.
+can't reshuffle an active session. **Re-analyzing a game can reset its drill progress:** another
+strength can shift which plies count as blunders, and the deck sync deletes cards (with their SM-2
+schedules) whose ply no longer qualifies. Accepted, not a bug.
 
 ## Blunders page
 

@@ -134,6 +134,8 @@ A game page also has:
 move you should have played. Scheduling is SM-2: right answers come back later, wrong ones
 tomorrow. Sessions hold 15 cards, the most overdue first. **Hint** reveals progressively more, and
 cards can be filtered by type and opening. Shortcuts: Space/Enter for the next card, H for a hint.
+Re-analyzing a game at another strength can change which moves count as blunders, so its blunder
+cards (and their review history) may be replaced.
 
 ### Blunders
 
