@@ -174,8 +174,11 @@ adapted, in original wording, from Wikibooks'
 
 ### Today
 
-The landing page, **Today** (`/`), gathers what's waiting: drill cards due, games not analyzed yet (with **Analyze all**),
-your accuracy over the last 7 days against your overall average, and the next unsolved puzzle.
+The landing page, **Today** (`/`), gathers what's waiting: today's drill session (with the full
+due count split by type, and your streak), games not analyzed yet, the last 7 days' accuracy against
+your average with results and rating change per time control, the opening you blundered most this
+week (with a link to drill it), how often you left your repertoire lately, your last game with its
+final position, and the next unsolved puzzle.
 
 ### Puzzles
 

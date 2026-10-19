@@ -159,7 +159,8 @@ scripts/
   the command line (`better-sqlite3`'s `db.backup()`).
 - Tables: `games`, `sync_state`, `repertoire_moves` (tree per color, `ON DELETE CASCADE` to the
   subtree — needs the `foreign_keys` pragma), `game_analysis` (one row per game), `drill_cards`
-  (schedule only, keyed by `(game_id, source_type, ply)`), `puzzle_progress` (solved puzzle ids;
+  (schedule only, keyed by `(game_id, source_type, ply)`), `drill_review_days` (streak),
+  `puzzle_progress` (solved puzzle ids;
   the puzzles themselves are hardcoded).
 
 ## Chess.com ingestion
@@ -261,10 +262,14 @@ section. The trend chart's x-axis is game index, not date, because sessions are 
 
 ## Today
 
-`getTodaySummary()` feeds `/`, the landing page (the games list is `/games`): the due count goes
-through the same `reconcileDrillCards()` as `getDrillDeck()`, so it matches `/drill`; accuracy is
-`recentAccuracy()` (last 7 days against every analyzed game); the next puzzle is the first unsolved
-one in `MATE_PROBLEMS` order.
+`getTodaySummary()` feeds `/`, the landing page (the games list is `/games`). "Recent" means the
+last 7 days throughout; the pure parts live in `lib/today.ts`. The due count goes through the same
+`reconcileDrillCards()` as `getDrillDeck()`, so it matches `/drill`, and is shown against the session
+size. Ratings change per time class (`recentResults()`; Chess.com never mixes them). The weak spot
+is the top opening from `buildBlunderStats()` over recent games, linking to `/drill?opening=` only if
+the deck has a card for it. The drill streak reads `drill_review_days` (one row per local day with
+an answer, recorded by `submitDrillAnswer()`): `drill_cards.last_reviewed_at` keeps only the latest
+review, so the table was seeded once from it and undercounts older history.
 
 ## Puzzles
 
