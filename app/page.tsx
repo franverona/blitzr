@@ -72,9 +72,11 @@ export default async function TodayPage() {
         </p>
       )}
 
-      {/* xl: text cards fill the left half in two rows; the board cards span both on the right. */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Card title={s.today.drillTitle}>
+      {/* xl: Drill over Last 7 days on the left, the board cards spanning both beside them, and
+          Focus across the bottom. Three equal columns keep a full-width board about as tall as
+          the two stacked text cards. */}
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <Card title={s.today.drillTitle} className="xl:col-start-1 xl:row-start-1">
           <p className="text-3xl font-semibold">{Math.min(drill.due, drill.sessionSize)}</p>
           <p className={mutedClassName}>
             {s.today.sessionCards(Math.min(drill.due, drill.sessionSize))}
@@ -92,7 +94,7 @@ export default async function TodayPage() {
           )}
         </Card>
 
-        <Card title={s.today.accuracyTitle}>
+        <Card title={s.today.accuracyTitle} className="xl:col-start-1 xl:row-start-2">
           {accuracy.recent === null ? (
             <p className={mutedClassName}>{s.today.noRecentGames}</p>
           ) : (
@@ -138,7 +140,7 @@ export default async function TodayPage() {
           ))}
         </Card>
 
-        <Card title={s.today.lastGameTitle} className="xl:row-span-2">
+        <Card title={s.today.lastGameTitle} className="xl:col-start-2 xl:row-span-2 xl:row-start-1">
           {lastGame ? (
             <div className="flex flex-col gap-2 xl:min-h-0 xl:flex-1">
               <BoardFill>
@@ -186,7 +188,7 @@ export default async function TodayPage() {
           )}
         </Card>
 
-        <Card title={s.today.puzzleTitle} className="xl:row-span-2">
+        <Card title={s.today.puzzleTitle} className="xl:col-start-3 xl:row-span-2 xl:row-start-1">
           {puzzle ? (
             <Link
               href={`/puzzles/${puzzle.id}`}
@@ -222,9 +224,8 @@ export default async function TodayPage() {
           )}
         </Card>
 
-        <Card title={s.today.focusTitle} className="sm:col-span-2">
-          {/* Two columns so Focus stays about as tall as the board cards beside it. */}
-          <ul className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
+        <Card title={s.today.focusTitle} className="sm:col-span-2 xl:col-span-3">
+          <ul className="grid gap-x-6 gap-y-4 sm:grid-cols-2 xl:grid-cols-3">
             <FocusRow
               icon={<TargetIcon className="size-4" />}
               tone="amber"
