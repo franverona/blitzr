@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import {
   buildDrillPrompt,
+  dueDrillCards,
   findBlunderCandidates,
   findDeviationCandidates,
   getSessionSize,
   isNearBestMove,
   newCardSchedule,
+  reconcileDrillDeck,
   scheduleReview,
   selectSessionCards,
 } from '@/lib/drill'
@@ -300,5 +302,67 @@ describe('getSessionSize', () => {
     expect(getSessionSize('25')).toBe(25)
     expect(getSessionSize(undefined)).toBe(15)
     expect(getSessionSize('1000')).toBe(15)
+  })
+})
+
+describe('reconcileDrillDeck', () => {
+  const now = new Date('2024-02-01T00:00:00.000Z')
+
+  it('keeps matching cards with their schedule, prunes stale ones and adds new candidates', () => {
+    const kept = makeCard({ ply: 3, repetitions: 4, dueAt: '2024-03-01T00:00:00.000Z' })
+    const stale = makeCard({ ply: 5 })
+    const {
+      live,
+      stale: pruned,
+      added,
+    } = reconcileDrillDeck(
+      [kept, stale],
+      [
+        { gameId: 'g1', sourceType: 'blunder', ply: 3 },
+        { gameId: 'g2', sourceType: 'deviation', ply: 2 },
+      ],
+      now,
+    )
+
+    expect(pruned).toEqual([stale])
+    expect(added).toEqual([
+      {
+        gameId: 'g2',
+        sourceType: 'deviation',
+        ply: 2,
+        ...newCardSchedule(now),
+        createdAt: now.toISOString(),
+      },
+    ])
+    expect(live).toEqual([kept, ...added])
+  })
+
+  it('treats the same ply from another source as a different card', () => {
+    const { stale, added } = reconcileDrillDeck(
+      [makeCard({ sourceType: 'blunder', ply: 3 })],
+      [{ gameId: 'g1', sourceType: 'deviation', ply: 3 }],
+      now,
+    )
+    expect(stale).toHaveLength(1)
+    expect(added).toHaveLength(1)
+  })
+})
+
+describe('dueDrillCards', () => {
+  const now = new Date('2024-02-01T00:00:00.000Z')
+  const due = makeCard({ gameId: 'g1', ply: 1, dueAt: '2024-02-01T00:00:00.000Z' })
+  const future = makeCard({ gameId: 'g1', ply: 2, dueAt: '2024-02-02T00:00:00.000Z' })
+  const deviation = makeCard({ gameId: 'g2', ply: 3, sourceType: 'deviation' })
+  const orphan = makeCard({ gameId: 'gone', ply: 4 })
+  const openingOf = (id: string) => ({ g1: 'Italian Game', g2: 'Sicilian Defense' })[id]
+  const cards = [due, future, deviation, orphan]
+
+  it('keeps cards due by now, including exactly now', () => {
+    expect(dueDrillCards(cards, now, undefined, openingOf)).toEqual([due, deviation, orphan])
+  })
+
+  it('filters by source type and opening; a missing game fails the opening filter', () => {
+    expect(dueDrillCards(cards, now, { sourceType: 'deviation' }, openingOf)).toEqual([deviation])
+    expect(dueDrillCards(cards, now, { opening: 'Italian Game' }, openingOf)).toEqual([due])
   })
 })
