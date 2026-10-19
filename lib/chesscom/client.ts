@@ -71,11 +71,9 @@ export async function fetchArchiveMonth(
 const AVATAR_TIMEOUT_MS = 2000
 const AVATAR_TTL_MS = 60 * 60 * 1000
 const AVATAR_FAILURE_TTL_MS = 5 * 60 * 1000
-// ponytail: unbounded per-process cache; fine for one user's opponents.
 const avatarCache = new Map<string, { url: string | null; expires: number }>()
 
-/** Decorative and awaited by every page render, so it bypasses getJson's 429
- *  retries, times out fast, caches per username and returns null on any failure. */
+/** Decorative, so no retries and any failure returns null. */
 export async function fetchPlayerAvatar(username: string): Promise<string | null> {
   const key = username.toLowerCase()
   const cached = avatarCache.get(key)
@@ -88,7 +86,6 @@ export async function fetchPlayerAvatar(username: string): Promise<string | null
       headers: { 'User-Agent': USER_AGENT },
       signal: AbortSignal.timeout(AVATAR_TIMEOUT_MS),
     })
-    // 404 is a definitive "no such player"; anything else non-OK is transient.
     ok = res.ok || res.status === 404
     if (res.ok) url = ((await res.json()) as { avatar?: string }).avatar ?? null
   } catch {
