@@ -58,8 +58,10 @@ const en = {
   blunderBadge: {
     labels: { mistake: 'Mistake', blunder: 'Blunder' },
     titles: {
-      mistake: 'A blunder of 2–4 pawns of swing — the smaller of the two severities',
-      blunder: 'A blunder of 4+ pawns of swing — the more severe of the two severities',
+      mistake:
+        'A blunder costing as much as 2–4 pawns would from an equal position — the smaller of the two severities',
+      blunder:
+        'A blunder costing as much as 4+ pawns would from an equal position — the more severe of the two severities',
     },
   },
   drillFilters: {
@@ -68,7 +70,7 @@ const en = {
     deviationsTitle: 'Cards for games where you left your own prepared repertoire moves',
     blunders: 'Blunders',
     blundersTitle:
-      'Cards for your own moves that lost at least 2 pawns of advantage, found by Stockfish',
+      'Cards for your own moves that threw away real winning chances, found by Stockfish',
     allOpenings: 'All openings',
   },
   gameList: {
@@ -123,11 +125,11 @@ const en = {
       },
       {
         term: 'Blunder',
-        body: 'A move that made the position at least 2 pawns worse than the best available move, for whoever just played it. This is relative to the best move, not to whether that side was already ahead or behind — a losing position can still get worse, and that still counts.',
+        body: 'A move that cost whoever played it as many winning chances as losing 2 pawns from an equal position. It is measured in winning chances, not pawns: dropping from +9 to +6.5 is still completely winning, so it does not count, but the same 2.5 pawns from an equal position does.',
       },
       {
         term: 'Mistake / Blunder',
-        body: 'Two severities within what already counts as a blunder above: under 4 pawns worse is labeled Mistake, 4 pawns or worse is labeled Blunder. Both still count as "a blunder" everywhere else in the app (drilling, the totals above) — this is just a finer read on how bad it was.',
+        body: 'Two severities within what already counts as a blunder above: costing less than 4 pawns would from an equal position is labeled Mistake, more is labeled Blunder. Both still count as "a blunder" everywhere else in the app (drilling, the totals above) — this is just a finer read on how bad it was.',
       },
       {
         term: 'Swing',
@@ -496,8 +498,9 @@ const es: Strings = {
     labels: { mistake: 'Error', blunder: 'Error grave' },
     titles: {
       mistake:
-        'Un error de entre 2 y 4 peones de diferencia — la menos grave de las dos categorías',
-      blunder: 'Un error de 4 peones o más de diferencia — la más grave de las dos categorías',
+        'Un error que cuesta lo que costarían 2–4 peones desde una posición igualada — la menos grave de las dos categorías',
+      blunder:
+        'Un error que cuesta lo que costarían 4+ peones desde una posición igualada — la más grave de las dos categorías',
     },
   },
   drillFilters: {
@@ -506,7 +509,7 @@ const es: Strings = {
     deviationsTitle: 'Tarjetas de partidas donde te saliste de tus propias jugadas preparadas',
     blunders: 'Errores',
     blundersTitle:
-      'Tarjetas de tus propias jugadas que perdieron al menos 2 peones de ventaja, según Stockfish',
+      'Tarjetas de tus propias jugadas que tiraron opciones reales de ganar, según Stockfish',
     allOpenings: 'Todas las aperturas',
   },
   gameList: {
@@ -563,11 +566,11 @@ const es: Strings = {
       },
       {
         term: 'Error grave',
-        body: 'Una jugada que empeoró la posición al menos 2 peones respecto a la mejor jugada disponible, para quien acaba de jugarla. Esto es relativo a la mejor jugada, no a si ese lado ya iba ganando o perdiendo — una posición perdida también puede empeorar, y eso también cuenta.',
+        body: 'Una jugada que le costó a quien la jugó tantas opciones de ganar como perder 2 peones desde una posición igualada. Se mide en opciones de ganar, no en peones: pasar de +9 a +6.5 sigue siendo totalmente ganador, así que no cuenta, pero los mismos 2.5 peones desde una posición igualada sí.',
       },
       {
         term: 'Error / Error grave',
-        body: 'Dos niveles de gravedad dentro de lo que ya cuenta como error arriba: menos de 4 peones de diferencia se etiqueta Error, 4 peones o más se etiqueta Error grave. Ambos cuentan igual como "un error" en el resto de la app (entrenamiento, los totales de arriba) — esto es solo una lectura más fina de qué tan malo fue.',
+        body: 'Dos niveles de gravedad dentro de lo que ya cuenta como error arriba: costar menos que 4 peones desde una posición igualada se etiqueta Error, más se etiqueta Error grave. Ambos cuentan igual como "un error" en el resto de la app (entrenamiento, los totales de arriba) — esto es solo una lectura más fina de qué tan malo fue.',
       },
       {
         term: 'Diferencia',

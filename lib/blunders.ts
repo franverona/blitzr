@@ -102,13 +102,14 @@ export function buildBlunderStats(
         ply: blunder.ply,
         moveSan: blunder.moveSan,
         swingCp: blunder.swingCp,
+        winDrop: blunder.winDrop,
         evalBefore: blunder.evalBefore,
         evalAfter: blunder.evalAfter,
       })
     }
   }
 
-  worst.sort((a, b) => b.swingCp - a.swingCp)
+  worst.sort((a, b) => b.winDrop - a.winDrop)
 
   const gamesById = new Map(games.map((g) => [g.id, g]))
   const topWorst: WorstBlunder[] = worst.slice(0, WORST_LIST_SIZE).map((entry) => {

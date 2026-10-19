@@ -154,7 +154,7 @@ describe('buildBlunderStats', () => {
     expect(stats.worst[0].moveDescription).toBe('Dama a h5')
   })
 
-  it('sorts the worst list by swing descending and caps it at 10', () => {
+  it('sorts the worst list by win-% drop descending and caps it at 10', () => {
     const games = Array.from({ length: 12 }, () => makeGame({ movesSan: ['e4'] }))
     const analyses = new Map(
       games.map((g, i) => [g.id, makeAnalysis(g.id, [cp(0), cp(-(200 + i * 50))])]),

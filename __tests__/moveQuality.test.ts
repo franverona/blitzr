@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { winDropFromEqual } from '@/lib/analysis'
 import { classifyMoveQuality, summarizeMoveQuality } from '@/lib/moveQuality'
 import type { PositionEval } from '@/lib/types'
 
@@ -7,15 +8,20 @@ function cp(value: number): PositionEval {
 }
 
 describe('classifyMoveQuality', () => {
-  it('buckets swings from best to blunder', () => {
-    expect(classifyMoveQuality(-20)).toBe('best')
+  it('buckets win-% drops from best to blunder', () => {
+    expect(classifyMoveQuality(-2)).toBe('best')
     expect(classifyMoveQuality(0)).toBe('best')
-    expect(classifyMoveQuality(5)).toBe('excellent')
-    expect(classifyMoveQuality(20)).toBe('good')
-    expect(classifyMoveQuality(45)).toBe('inaccuracy')
-    expect(classifyMoveQuality(150)).toBe('mistake')
-    expect(classifyMoveQuality(200)).toBe('blunder')
-    expect(classifyMoveQuality(900)).toBe('blunder')
+    expect(classifyMoveQuality(winDropFromEqual(5))).toBe('excellent')
+    expect(classifyMoveQuality(winDropFromEqual(20))).toBe('good')
+    expect(classifyMoveQuality(winDropFromEqual(45))).toBe('inaccuracy')
+    expect(classifyMoveQuality(winDropFromEqual(150))).toBe('mistake')
+    expect(classifyMoveQuality(winDropFromEqual(200))).toBe('blunder')
+    expect(classifyMoveQuality(49)).toBe('blunder')
+  })
+
+  it('rates a big cp drop in a won position as minor', () => {
+    const summary = summarizeMoveQuality([cp(900), cp(650)], ['Qd2'])
+    expect(summary.white.counts.blunder).toBe(0)
   })
 })
 
