@@ -41,6 +41,9 @@ interface BoardContextValue {
   setPly: (updater: number | ((ply: number) => number)) => void
   positions: string[]
   lastPly: number
+  /** The user's side: auto-play stops, saved hints and "your move" checks.
+   *  Fixed, unlike `boardOrientation`, so flipping the board can't change it. */
+  myColor: 'white' | 'black'
   boardOrientation: 'white' | 'black'
   setBoardOrientation: (
     updater: 'white' | 'black' | ((o: 'white' | 'black') => 'white' | 'black'),
@@ -90,6 +93,7 @@ export function BoardProvider({
   initialFen,
   movesSan,
   boardOrientation: initialBoardOrientation,
+  myColor = initialBoardOrientation,
   result,
   evals,
   initialPly,
@@ -98,6 +102,8 @@ export function BoardProvider({
   initialFen: string
   movesSan: string[]
   boardOrientation: 'white' | 'black'
+  /** Defaults to `boardOrientation`. */
+  myColor?: 'white' | 'black'
   result?: string
   evals?: PositionEval[]
   /** Defaults to the last ply. */
@@ -229,6 +235,7 @@ export function BoardProvider({
         setPly,
         positions,
         lastPly,
+        myColor,
         boardOrientation,
         setBoardOrientation,
         result,
@@ -366,7 +373,7 @@ export function BoardNavControls() {
     movesSan,
     positions,
     evals,
-    boardOrientation,
+    myColor,
     exploring,
     explorePath,
     explorePly,
@@ -459,18 +466,17 @@ export function BoardNavControls() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [goToPrevious, goToNext, goToStart, togglePlaying])
 
-  // Auto-play stops on the user's own blunders. `boardOrientation` stands in
-  // for "my color" — game pages fix it to the synced player's side.
+  // Auto-play stops on the user's own blunders.
   const blunderPlies = useMemo(
     () =>
       evals
         ? new Set(
             findBlunders(evals, movesSan, positions[0])
-              .filter((b) => whiteToMove(b.ply, positions[0]) === (boardOrientation === 'white'))
+              .filter((b) => whiteToMove(b.ply, positions[0]) === (myColor === 'white'))
               .map((b) => b.ply),
           )
         : null,
-    [evals, movesSan, positions, boardOrientation],
+    [evals, movesSan, positions, myColor],
   )
 
   useEffect(() => {
@@ -645,6 +651,7 @@ export function BoardView({
   const {
     ply,
     positions,
+    myColor,
     boardOrientation,
     result,
     movesSan,
@@ -679,7 +686,7 @@ export function BoardView({
   // Saved suggestion only for the user's own moves, and not while exploring
   // (it belongs to the recorded ply).
   const bestMove =
-    !exploring && whiteToMove(ply + 1, positions[0]) === (boardOrientation === 'white')
+    !exploring && whiteToMove(ply + 1, positions[0]) === (myColor === 'white')
       ? evals?.[ply]?.bestMove
       : undefined
 
@@ -945,7 +952,7 @@ export function BoardView({
           result={result}
           evals={evals}
           positions={positions}
-          myColor={boardOrientation}
+          myColor={myColor}
         />
         {sidebarExtra}
       </div>

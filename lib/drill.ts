@@ -1,4 +1,5 @@
 import { findBlunders, whiteToMove } from './analysis'
+import { summarizeMoveQuality } from './moveQuality'
 export { whiteToMove }
 import { formatDate } from './dates'
 import { buildPositions } from './positions'
@@ -9,6 +10,7 @@ import type {
   DrillSourceType,
   Game,
   GameAnalysis,
+  PositionEval,
   RepertoireColor,
   RepertoireNode,
 } from './types'
@@ -84,6 +86,7 @@ export function buildDrillPrompt(
       fen,
       color,
       correctMoves: diff.expectedMoves,
+      evalBefore: null,
       gameLabel,
       opponentUsername: opponent,
       opponentAvatarUrl: null,
@@ -91,11 +94,12 @@ export function buildDrillPrompt(
   }
 
   const analysis = analysesByGameId.get(game.id)
-  const bestMove = analysis
+  const evalBefore = analysis
     ? findBlunders(analysis.evals, game.movesSan, game.initialFen).find((b) => b.ply === card.ply)
-        ?.evalBefore.bestMove
+        ?.evalBefore
     : undefined
-  if (!bestMove) return null
+  const bestMove = evalBefore?.bestMove
+  if (!evalBefore || !bestMove) return null
   return {
     gameId: game.id,
     sourceType: 'blunder',
@@ -103,10 +107,24 @@ export function buildDrillPrompt(
     fen,
     color,
     correctMoves: [bestMove.san],
+    evalBefore,
     gameLabel,
     opponentUsername: opponent,
     opponentAvatarUrl: null,
   }
+}
+
+/** Whether a move other than the engine's still passes a blunder card: it must
+ *  rate "good" or better, not merely avoid being a blunder. */
+export function isNearBestMove(
+  fenBefore: string,
+  evalBefore: PositionEval,
+  evalAfter: PositionEval,
+): boolean {
+  const summary = summarizeMoveQuality([evalBefore, evalAfter], ['?'], fenBefore)
+  const { best, excellent, good } =
+    fenBefore.split(' ')[1] === 'b' ? summary.black.counts : summary.white.counts
+  return best + excellent + good > 0
 }
 
 const NEW_CARD_EASE_FACTOR = 2.5

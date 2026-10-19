@@ -22,16 +22,17 @@ export function SyncButton() {
     setToast(null)
     startTransition(async () => {
       try {
-        const result = await syncGames()
-        setToast({
-          text: s.sync.synced(result.archivesSynced, result.gamesUpserted),
-          isError: false,
-        })
-      } catch (err) {
-        setToast({
-          text: err instanceof Error ? err.message : s.sync.failed,
-          isError: true,
-        })
+        const response = await syncGames()
+        setToast(
+          response.ok
+            ? {
+                text: s.sync.synced(response.result.archivesSynced, response.result.gamesUpserted),
+                isError: false,
+              }
+            : { text: response.error, isError: true },
+        )
+      } catch {
+        setToast({ text: s.sync.failed, isError: true })
       }
     })
   }

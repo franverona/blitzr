@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { parseManualGame } from '@/lib/manualGame'
 
 // Exact PGN from issue #62 — a "Play vs Bot" game, the case the public
@@ -112,5 +112,15 @@ describe('parseManualGame', () => {
   it('rejects a PGN with headers but no moves', () => {
     const pgn = '[White "A"]\n[Black "B"]\n[Result "1-0"]\n\n1-0'
     expect(() => parseManualGame(pgn, 'A')).toThrow(/no moves/)
+  })
+
+  it('localizes its error messages', () => {
+    vi.stubEnv('NEXT_PUBLIC_LOCALE', 'es')
+    try {
+      const pgn = '[White "A"]\n[Black "B"]\n[Result "1-0"]\n\n1-0'
+      expect(() => parseManualGame(pgn, 'A')).toThrow(/no tiene jugadas/)
+    } finally {
+      vi.unstubAllEnvs()
+    }
   })
 })

@@ -4,10 +4,11 @@ import { revalidatePath } from 'next/cache'
 import { cache } from 'react'
 import { buildAccuracyTrend } from '@/lib/accuracyTrend'
 import { buildBlunderStats } from '@/lib/blunders'
-import { fetchPlayerAvatar } from '@/lib/chesscom/client'
+import { ChesscomApiError, fetchPlayerAvatar } from '@/lib/chesscom/client'
 import { endOfDaySeconds, formatDate, startOfDaySeconds } from '@/lib/dates'
 import { getChesscomUsername } from '@/lib/config'
 import { getRepository } from '@/lib/db'
+import { getStrings } from '@/lib/i18n/strings'
 import type { GameRepository } from '@/lib/db/types'
 import {
   buildDrillPrompt,
@@ -20,7 +21,7 @@ import {
 import type { DrillCandidate } from '@/lib/drill'
 import { parseManualGame, type ManualGameSide } from '@/lib/manualGame'
 import { summarizeMoveQuality } from '@/lib/moveQuality'
-import { buildOpeningFamilies, ecoFamilyLabel } from '@/lib/openings'
+import { buildOpeningFamilies, ecoFamilyLabel, unknownOpeningLabel } from '@/lib/openings'
 import { countGamesReachingLine } from '@/lib/openingTheory'
 import { isStandardChess, startsFromStandardPosition } from '@/lib/positions'
 import { syncAllArchives } from '@/lib/sync'
@@ -108,11 +109,32 @@ export async function getArchiveSyncStatus(): Promise<ArchiveSyncStatus[]> {
   return getRepository().getArchiveSyncStatus()
 }
 
-export async function syncGames(): Promise<SyncResult> {
-  const result = await syncAllArchives()
-  revalidatePath('/')
-  revalidatePath('/openings')
-  return result
+/** Errors are returned, not thrown, for the same reason as addManualGame(). */
+export async function syncGames(): Promise<
+  { ok: true; result: SyncResult } | { ok: false; error: string }
+> {
+  const s = getStrings()
+  let username: string
+  try {
+    username = getChesscomUsername()
+  } catch {
+    return { ok: false, error: s.sync.noUsername }
+  }
+  try {
+    const result = await syncAllArchives()
+    revalidatePath('/')
+    revalidatePath('/openings')
+    return { ok: true, result }
+  } catch (err) {
+    console.error(err)
+    if (err instanceof ChesscomApiError && err.status === 429) {
+      return { ok: false, error: s.sync.rateLimited }
+    }
+    if (err instanceof ChesscomApiError && err.status === 404) {
+      return { ok: false, error: s.sync.userNotFound(username) }
+    }
+    return { ok: false, error: s.sync.failed }
+  }
 }
 
 /** Gets a fresh id, so a later sync can never overwrite it. */
@@ -221,7 +243,7 @@ function cardKey(c: { gameId: string; sourceType: DrillSourceType; ply: number }
 }
 
 function openingLabel(game: Game): string {
-  return game.ecoName ? ecoFamilyLabel(game.ecoName) : 'Unknown opening'
+  return game.ecoName ? ecoFamilyLabel(game.ecoName) : unknownOpeningLabel()
 }
 
 /**

@@ -59,8 +59,10 @@ const en = {
   blunderBadge: {
     labels: { mistake: 'Mistake', blunder: 'Blunder' },
     titles: {
-      mistake: 'A blunder of 2–4 pawns of swing — the smaller of the two severities',
-      blunder: 'A blunder of 4+ pawns of swing — the more severe of the two severities',
+      mistake:
+        'A blunder costing as much as 2–4 pawns would from an equal position — the smaller of the two severities',
+      blunder:
+        'A blunder costing as much as 4+ pawns would from an equal position — the more severe of the two severities',
     },
   },
   drillFilters: {
@@ -69,7 +71,7 @@ const en = {
     deviationsTitle: 'Cards for games where you left your own prepared repertoire moves',
     blunders: 'Blunders',
     blundersTitle:
-      'Cards for your own moves that lost at least 2 pawns of advantage, found by Stockfish',
+      'Cards for your own moves that threw away real winning chances, found by Stockfish',
     allOpenings: 'All openings',
   },
   gameList: {
@@ -124,11 +126,11 @@ const en = {
       },
       {
         term: 'Blunder',
-        body: 'A move that made the position at least 2 pawns worse than the best available move, for whoever just played it. This is relative to the best move, not to whether that side was already ahead or behind — a losing position can still get worse, and that still counts.',
+        body: 'A move that cost whoever played it as many winning chances as losing 2 pawns from an equal position. It is measured in winning chances, not pawns: dropping from +9 to +6.5 is still completely winning, so it does not count, but the same 2.5 pawns from an equal position does.',
       },
       {
         term: 'Mistake / Blunder',
-        body: 'Two severities within what already counts as a blunder above: under 4 pawns worse is labeled Mistake, 4 pawns or worse is labeled Blunder. Both still count as "a blunder" everywhere else in the app (drilling, the totals above) — this is just a finer read on how bad it was.',
+        body: 'Two severities within what already counts as a blunder above: costing less than 4 pawns would from an equal position is labeled Mistake, more is labeled Blunder. Both still count as "a blunder" everywhere else in the app (drilling, the totals above) — this is just a finer read on how bad it was.',
       },
       {
         term: 'Swing',
@@ -222,10 +224,22 @@ const en = {
         ? `Analyzed ${analyzed} game${analyzed === 1 ? '' : 's'}.`
         : `Analyzed ${analyzed} of ${total} games — stopped early.`,
   },
+  manualGame: {
+    noResult:
+      'PGN has no final result — add a [Result "1-0"], [Result "0-1"] or [Result "1/2-1/2"] header.',
+    missingPlayers: 'PGN is missing White/Black player headers.',
+    badMovetext: 'Could not parse this PGN — check the move text is valid.',
+    noMoves: 'PGN has no moves — paste the full game, not just its headers.',
+    notInGame: (username: string) =>
+      `Neither player is ${username} — pick the side you played, or "Not me" to keep it out of your stats.`,
+  },
   sync: {
     button: 'Sync games',
     syncing: 'Syncing…',
     failed: 'Sync failed.',
+    rateLimited: 'Chess.com is rate-limiting requests — try again in a few minutes.',
+    userNotFound: (username: string) => `Chess.com has no player named "${username}".`,
+    noUsername: 'CHESSCOM_USERNAME is not set. Copy .env.example to .env.local and fill it in.',
     synced: (archives: number, games: number) =>
       `Synced ${archives} archive${archives === 1 ? '' : 's'}, ${games} game${games === 1 ? '' : 's'} added.`,
   },
@@ -248,6 +262,8 @@ const en = {
     hint: '💡 Hint',
     correct: 'Correct!',
     notQuite: (moves: string) => `Not quite — the move was ${moves}.`,
+    alsoGood: (moves: string) => `Good move too — the engine preferred ${moves}.`,
+    checkingMove: 'Checking your move…',
     or: 'or',
     next: 'Next',
     findPreparedMove: 'Find your prepared move',
@@ -413,6 +429,7 @@ const en = {
     inBook: 'In book',
     deviatedTooltip: 'Played a different move than the one saved in your repertoire at this point',
     deviated: 'deviated',
+    deviatedOn: 'on',
     inBookFor: (n: number) => `for ${n} ${n === 1 ? 'move' : 'moves'}, then`,
     played: 'played',
     repertoireHas: 'repertoire has',
@@ -508,8 +525,9 @@ const es: Strings = {
     labels: { mistake: 'Error', blunder: 'Error grave' },
     titles: {
       mistake:
-        'Un error de entre 2 y 4 peones de diferencia — la menos grave de las dos categorías',
-      blunder: 'Un error de 4 peones o más de diferencia — la más grave de las dos categorías',
+        'Un error que cuesta lo que costarían 2–4 peones desde una posición igualada — la menos grave de las dos categorías',
+      blunder:
+        'Un error que cuesta lo que costarían 4+ peones desde una posición igualada — la más grave de las dos categorías',
     },
   },
   drillFilters: {
@@ -518,7 +536,7 @@ const es: Strings = {
     deviationsTitle: 'Tarjetas de partidas donde te saliste de tus propias jugadas preparadas',
     blunders: 'Errores',
     blundersTitle:
-      'Tarjetas de tus propias jugadas que perdieron al menos 2 peones de ventaja, según Stockfish',
+      'Tarjetas de tus propias jugadas que tiraron opciones reales de ganar, según Stockfish',
     allOpenings: 'Todas las aperturas',
   },
   gameList: {
@@ -575,11 +593,11 @@ const es: Strings = {
       },
       {
         term: 'Error grave',
-        body: 'Una jugada que empeoró la posición al menos 2 peones respecto a la mejor jugada disponible, para quien acaba de jugarla. Esto es relativo a la mejor jugada, no a si ese lado ya iba ganando o perdiendo — una posición perdida también puede empeorar, y eso también cuenta.',
+        body: 'Una jugada que le costó a quien la jugó tantas opciones de ganar como perder 2 peones desde una posición igualada. Se mide en opciones de ganar, no en peones: pasar de +9 a +6.5 sigue siendo totalmente ganador, así que no cuenta, pero los mismos 2.5 peones desde una posición igualada sí.',
       },
       {
         term: 'Error / Error grave',
-        body: 'Dos niveles de gravedad dentro de lo que ya cuenta como error arriba: menos de 4 peones de diferencia se etiqueta Error, 4 peones o más se etiqueta Error grave. Ambos cuentan igual como "un error" en el resto de la app (entrenamiento, los totales de arriba) — esto es solo una lectura más fina de qué tan malo fue.',
+        body: 'Dos niveles de gravedad dentro de lo que ya cuenta como error arriba: costar menos que 4 peones desde una posición igualada se etiqueta Error, más se etiqueta Error grave. Ambos cuentan igual como "un error" en el resto de la app (entrenamiento, los totales de arriba) — esto es solo una lectura más fina de qué tan malo fue.',
       },
       {
         term: 'Diferencia',
@@ -673,10 +691,23 @@ const es: Strings = {
         ? `${analyzed} ${analyzed === 1 ? 'partida analizada' : 'partidas analizadas'}.`
         : `${analyzed} de ${total} partidas analizadas — detenido antes de tiempo.`,
   },
+  manualGame: {
+    noResult:
+      'El PGN no tiene resultado final — añade una cabecera [Result "1-0"], [Result "0-1"] o [Result "1/2-1/2"].',
+    missingPlayers: 'Al PGN le faltan las cabeceras de jugadores White/Black.',
+    badMovetext: 'No se pudo interpretar este PGN — revisa que las jugadas sean válidas.',
+    noMoves: 'El PGN no tiene jugadas — pega la partida completa, no solo sus cabeceras.',
+    notInGame: (username: string) =>
+      `Ninguno de los jugadores es ${username} — elige con qué color jugaste, o "No soy yo" para dejarla fuera de tus estadísticas.`,
+  },
   sync: {
     button: 'Sincronizar partidas',
     syncing: 'Sincronizando…',
     failed: 'Error al sincronizar.',
+    rateLimited: 'Chess.com está limitando las peticiones — inténtalo de nuevo en unos minutos.',
+    userNotFound: (username: string) => `Chess.com no tiene ningún jugador llamado "${username}".`,
+    noUsername:
+      'CHESSCOM_USERNAME no está configurado. Copia .env.example a .env.local y rellénalo.',
     synced: (archives: number, games: number) =>
       `${archives} ${archives === 1 ? 'archivo sincronizado' : 'archivos sincronizados'}, ${games} ${games === 1 ? 'partida añadida' : 'partidas añadidas'}.`,
   },
@@ -699,6 +730,8 @@ const es: Strings = {
     hint: '💡 Pista',
     correct: '¡Correcto!',
     notQuite: (moves: string) => `No exactamente — la jugada era ${moves}.`,
+    alsoGood: (moves: string) => `También es buena — el motor prefería ${moves}.`,
+    checkingMove: 'Comprobando tu jugada…',
     or: 'o',
     next: 'Siguiente',
     findPreparedMove: 'Encuentra tu jugada preparada',
@@ -870,6 +903,7 @@ const es: Strings = {
     inBook: 'En libro',
     deviatedTooltip: 'Jugaste una jugada distinta a la guardada en tu repertorio en este punto',
     deviated: 'te saliste',
+    deviatedOn: 'en',
     inBookFor: (n: number) => `durante ${n} ${n === 1 ? 'jugada' : 'jugadas'}, luego`,
     played: 'jugaste',
     repertoireHas: 'el repertorio tiene',

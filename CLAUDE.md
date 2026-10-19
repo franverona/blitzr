@@ -121,6 +121,9 @@ scripts/
 - **`BoardNavControls`** binds ←/→, Space (play) and `0` (start) globally, ignoring modifier keys,
   form fields, and `<dialog>`s that don't set `data-board-shortcuts`.
 - **Play** auto-advances every `PLAY_INTERVAL_MS`, stopping on the user's own blunders.
+- **`BoardProvider`'s `myColor`** (defaults to `boardOrientation`) is the user's side for Play's
+  stops, saved hints, `MoveList` and `LessonQuiz`. Never read `boardOrientation` as "my color" —
+  it's only the view, so a flip button can't change whose moves count.
 - **Game replay and lesson Study mode open on ply 1.**
 - **Beginner jargon is explained in place** (`<abbr title>` tooltips, `EvalHelp`), not removed.
 - **A component seeding state from props (`useState(initialX)`) needs `key={id}`** wherever it can
@@ -179,8 +182,9 @@ a prepared move. An opponent's unprepared move or the tree running out doesn't c
 ## Engine analysis
 
 - Stockfish runs **client-side only**; Server Actions only persist results. Evals are normalized
-  to White's perspective. `findBlunders()` flags 200cp+ swings; `blunderSeverity()` splits them
-  into Mistake (200–399) and Blunder (400+).
+  to White's perspective. `findBlunders()` flags win-% drops (`moveWinDrop()`, the eval bar's
+  curve) at least as large as 200cp from equal; `blunderSeverity()` splits Mistake/Blunder at 400cp
+  from equal. `swingCp` is display-only.
 - Bulk "Analyze all" state lives in `BulkAnalysisProvider` (root layout) so a run survives
   navigation. Cancel is checked between games, so an in-flight game always finishes and saves.
 - The games list's accuracy/error columns come from `getGameAccuracyById()` (not a `Game` field);
@@ -216,7 +220,9 @@ and the slider are debounced (400ms); selects navigate immediately.
 `drill_cards` stores only the SM-2 schedule (binary grading); prompts are re-derived by
 `buildDrillPrompt()` from deviations and own-move blunders. The deck re-syncs on every `/drill`
 load and serves the 15 most-overdue cards. `DrillSession` snapshots its prompts so revalidation
-can't reshuffle an active session.
+can't reshuffle an active session. A blunder card also accepts a non-engine move when a one-off
+client-side eval rates it good or better (`isNearBestMove()`); if the engine fails, only the
+engine's move counts.
 
 ## Blunders page
 
@@ -231,7 +237,8 @@ section. The trend chart's x-axis is game index, not date, because sessions are 
 `isForcedMate()`, which the tests re-check on a random sample (a full pass takes hours). Side to
 move is read from each FEN (about a third are Black). `PuzzleBoard` makes the user play every ply,
 both sides; wrong moves retry, "Reveal" doesn't count as solved, and promotions show a piece picker
-(some puzzles need underpromotion).
+(some puzzles need underpromotion). `PromotionPicker` is shared with `DrillSession`, since an engine
+best move can be an underpromotion too.
 
 ## Lessons
 
@@ -254,7 +261,9 @@ is off while exploring, the text panel isn't.
 English and Spanish via `NEXT_PUBLIC_LOCALE` (rebuild to change). `es` is typed against
 `typeof en`, so missing keys fail `tsc`. Parameterized strings are functions. SAN, square names
 and Chess.com's `ecoName` are never translated. Description generators take an optional trailing
-`locale` param; Spanish articles go through `pieceWithArticle()`.
+`locale` param; Spanish articles go through `pieceWithArticle()`. User-facing errors come from the
+dictionary too, and Server Actions **return** them (`{ ok: false, error }`) rather than throw,
+since Next redacts thrown messages in production.
 
 ## Testing
 

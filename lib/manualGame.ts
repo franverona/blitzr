@@ -1,5 +1,6 @@
 import { Chess } from 'chess.js'
 import { ecoNameFromUrl, parsePgnHeaders } from './chesscom/normalize'
+import { getStrings } from './i18n/strings'
 import type { Game, MyColor, MyResult } from './types'
 
 // Builds a Game from a pasted PGN's headers. Unlike normalizeGame(), invalid
@@ -13,9 +14,7 @@ function pgnResult(headers: Record<string, string>, finalPosition: Chess): PgnRe
   if (result === '1-0' || result === '0-1' || result === '1/2-1/2') return result
   if (finalPosition.isCheckmate()) return finalPosition.turn() === 'w' ? '0-1' : '1-0'
   if (finalPosition.isDraw()) return '1/2-1/2'
-  throw new Error(
-    'PGN has no final result — add a [Result "1-0"], [Result "0-1"] or [Result "1/2-1/2"] header.',
-  )
+  throw new Error(getStrings().manualGame.noResult)
 }
 
 function myResultFromPgnResult(result: PgnResult, color: MyColor): MyResult {
@@ -48,18 +47,18 @@ export function parseManualGame(
 ): Game {
   const headers = parsePgnHeaders(pgn)
   if (!headers.White || !headers.Black) {
-    throw new Error('PGN is missing White/Black player headers.')
+    throw new Error(getStrings().manualGame.missingPlayers)
   }
 
   const chess = new Chess()
   try {
     chess.loadPgn(pgn)
   } catch {
-    throw new Error('Could not parse this PGN — check the move text is valid.')
+    throw new Error(getStrings().manualGame.badMovetext)
   }
   const movesSan = chess.history()
   if (movesSan.length === 0) {
-    throw new Error('PGN has no moves — paste the full game, not just its headers.')
+    throw new Error(getStrings().manualGame.noMoves)
   }
   const finalFen = chess.fen()
   const result = pgnResult(headers, chess)
@@ -69,10 +68,7 @@ export function parseManualGame(
     const name = username.toLowerCase()
     if (headers.White.toLowerCase() === name) myColor = 'white'
     else if (headers.Black.toLowerCase() === name) myColor = 'black'
-    else
-      throw new Error(
-        `Neither player is ${username} — pick the side you played, or "Not me" to keep it out of your stats.`,
-      )
+    else throw new Error(getStrings().manualGame.notInGame(username))
   } else {
     // A game the user didn't play is shown from White's side.
     myColor = side === 'notMine' ? 'white' : side

@@ -166,8 +166,10 @@ export interface Blunder {
   moveSan: string
   evalBefore: PositionEval
   evalAfter: PositionEval
-  /** Centipawns lost by the mover (always positive). */
+  /** Centipawns lost by the mover; display only. */
   swingCp: number
+  /** Win % (0-100) lost by the mover; drives detection and severity. */
+  winDrop: number
 }
 
 export interface HangingPieceReason {
@@ -242,6 +244,7 @@ export interface WorstBlunder {
   ply: number
   moveSan: string
   swingCp: number
+  winDrop: number
   evalBefore: PositionEval
   evalAfter: PositionEval
   moveDescription: string
@@ -282,9 +285,11 @@ export interface DrillPrompt {
   ply: number
   fen: string
   color: MyColor
-  /** Deviation cards accept any prepared reply; blunder cards only the
-   *  engine's move. */
+  /** Deviation cards accept any prepared reply; blunder cards the engine's
+   *  move, or another move `isNearBestMove()` accepts. */
   correctMoves: string[]
+  /** Saved eval of `fen`, for grading other moves; null on deviation cards. */
+  evalBefore: PositionEval | null
   gameLabel: string
   opponentUsername: string
   /** Null if Chess.com has none or the fetch failed. */
