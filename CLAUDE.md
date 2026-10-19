@@ -222,7 +222,9 @@ and the slider are debounced (400ms); selects navigate immediately.
 load and serves the 15 most-overdue cards. `DrillSession` snapshots its prompts so revalidation
 can't reshuffle an active session. A blunder card also accepts a non-engine move when a one-off
 client-side eval rates it good or better (`isNearBestMove()`); if the engine fails, only the
-engine's move counts.
+engine's move counts. **Re-analyzing a game can reset its drill progress:** another strength can
+shift which plies count as blunders, and the deck sync deletes cards (with their SM-2 schedules)
+whose ply no longer qualifies. Accepted, not a bug.
 
 ## Blunders page
 

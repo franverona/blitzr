@@ -136,9 +136,11 @@ A game page also has:
 
 `/drill` turns every repertoire deviation and every one of your blunders into a card: find the
 move you should have played. On a blunder card, a move other than the engine's still counts if a
-quick Stockfish check rates it good or better. Scheduling is SM-2: right answers come back later, wrong ones
-tomorrow. Sessions hold 15 cards, the most overdue first. **Hint** reveals progressively more, and
-cards can be filtered by type and opening. Shortcuts: Space/Enter for the next card, H for a hint.
+quick Stockfish check rates it good or better. Scheduling is SM-2: right answers come back later,
+wrong ones tomorrow. Sessions hold 15 cards, the most overdue first. **Hint** reveals progressively
+more, and cards can be filtered by type and opening. Shortcuts: Space/Enter for the next card, H for a hint.
+Re-analyzing a game at another strength can change which moves count as blunders, so its blunder
+cards (and their review history) may be replaced.
 
 ### Blunders
 
