@@ -2,6 +2,7 @@
 
 import { Chessboard } from 'react-chessboard'
 import { BoardCoordinates } from './BoardCoordinates'
+import { SESSION_SIZES } from '@/lib/drill'
 import { getStrings } from '@/lib/i18n/strings'
 import { ANALYSIS_STRENGTHS, type AnalysisStrength } from '@/lib/stockfish/analyze'
 import { BOARD_COLOR_PRESETS, REVEAL_ARROW_COLOR } from '@/lib/theme'
@@ -101,6 +102,30 @@ export function SettingsForm() {
               onChange={() => settings.setHideEngineHints(!settings.hideEngineHints)}
             />
             <p className="text-xs text-zinc-500">{s.settings.hideEngineHintsHint}</p>
+          </div>
+        </Section>
+
+        <Section title={s.settings.sections.training}>
+          <div className="flex flex-col gap-2 text-sm">
+            <span>{s.settings.drillSessionSize}</span>
+            <div className="flex overflow-hidden rounded-md border border-zinc-300 dark:border-zinc-700">
+              {SESSION_SIZES.map((size) => (
+                <button
+                  key={size}
+                  type="button"
+                  onClick={() => settings.setDrillSessionSize(size)}
+                  aria-pressed={settings.drillSessionSize === size}
+                  className={`flex-1 px-2 py-1 tabular-nums ${
+                    settings.drillSessionSize === size
+                      ? 'bg-accent text-white'
+                      : 'hover:bg-zinc-200 dark:hover:bg-zinc-800'
+                  }`}
+                >
+                  {size}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-zinc-500">{s.settings.drillSessionSizeHint}</p>
           </div>
         </Section>
       </div>

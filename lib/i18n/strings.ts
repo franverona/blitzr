@@ -46,7 +46,14 @@ const en = {
     moveSounds: 'Move sounds',
     moveSoundsCredit: 'Sounds © Chess.com, loaded from their site',
     preview: 'Preview',
-    sections: { appearance: 'Appearance', board: 'Board', analysis: 'Analysis' },
+    drillSessionSize: 'Cards per drill session',
+    drillSessionSizeHint: 'The most overdue cards come first',
+    sections: {
+      appearance: 'Appearance',
+      board: 'Board',
+      analysis: 'Analysis',
+      training: 'Training',
+    },
   },
   gameRow: {
     notMine: 'Not you',
@@ -528,7 +535,14 @@ const es: Strings = {
     moveSounds: 'Sonido de jugadas',
     moveSoundsCredit: 'Sonidos © Chess.com, cargados desde su web',
     preview: 'Vista previa',
-    sections: { appearance: 'Apariencia', board: 'Tablero', analysis: 'Análisis' },
+    drillSessionSize: 'Tarjetas por sesión de entrenamiento',
+    drillSessionSizeHint: 'Primero las tarjetas más atrasadas',
+    sections: {
+      appearance: 'Apariencia',
+      board: 'Tablero',
+      analysis: 'Análisis',
+      training: 'Entrenamiento',
+    },
   },
   gameRow: {
     notMine: 'No eres tú',

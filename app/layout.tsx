@@ -8,6 +8,7 @@ import { RouteProgressBar } from '@/components/RouteProgressBar'
 import { Sidebar } from '@/components/Sidebar'
 import { fetchPlayerAvatar } from '@/lib/chesscom/client'
 import { getChesscomUsername } from '@/lib/config'
+import { getSessionSize } from '@/lib/drill'
 import { getLocale } from '@/lib/i18n/locale'
 import { getStrings } from '@/lib/i18n/strings'
 import { getBoardColorPreset } from '@/lib/theme'
@@ -73,6 +74,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           initialHideEngineHints={(await cookies()).get('blitzr-hide-engine-hints')?.value === '1'}
           initialShowCoordinates={(await cookies()).get('blitzr-show-coordinates')?.value !== '0'}
           initialMoveSounds={(await cookies()).get('blitzr-move-sounds')?.value !== '0'}
+          initialDrillSessionSize={getSessionSize(
+            (await cookies()).get('blitzr-drill-session-size')?.value,
+          )}
         >
           <BulkAnalysisProvider>
             <Sidebar

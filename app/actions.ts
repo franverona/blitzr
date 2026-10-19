@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { cookies } from 'next/headers'
 import { cache } from 'react'
 import { buildAccuracyTrend } from '@/lib/accuracyTrend'
 import { buildBlunderStats } from '@/lib/blunders'
@@ -16,6 +17,7 @@ import {
   findDeviationCandidates,
   newCardSchedule,
   scheduleReview,
+  getSessionSize,
   selectSessionCards,
 } from '@/lib/drill'
 import type { DrillCandidate } from '@/lib/drill'
@@ -329,7 +331,8 @@ export async function getDrillDeck(filters?: {
     return true
   }
   const filteredDue = dueCardsAll.filter(matchesFilters)
-  const sessionCards = selectSessionCards(filteredDue)
+  const sessionSize = getSessionSize((await cookies()).get('blitzr-drill-session-size')?.value)
+  const sessionCards = selectSessionCards(filteredDue, sessionSize)
 
   const rawPrompts = sessionCards
     .map((card) => {

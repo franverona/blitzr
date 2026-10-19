@@ -7,6 +7,7 @@ import {
   DEFAULT_ANALYSIS_STRENGTH,
 } from '@/lib/stockfish/analyze'
 import { type MoveSound, moveSoundFor } from '@/lib/moveSound'
+import type { SessionSize } from '@/lib/drill'
 import { getBoardColorPreset } from '@/lib/theme'
 
 // Duplicated in app/layout.tsx on purpose: a constant exported from a
@@ -17,6 +18,7 @@ const ANALYSIS_STRENGTH_COOKIE = 'blitzr-analysis-strength'
 const HIDE_ENGINE_HINTS_COOKIE = 'blitzr-hide-engine-hints'
 const SHOW_COORDINATES_COOKIE = 'blitzr-show-coordinates'
 const MOVE_SOUNDS_COOKIE = 'blitzr-move-sounds'
+const DRILL_SESSION_SIZE_COOKIE = 'blitzr-drill-session-size'
 
 function setCookie(name: string, value: string) {
   document.cookie = `${name}=${value}; path=/; max-age=31536000; samesite=lax`
@@ -38,6 +40,8 @@ interface SettingsContextValue {
   setShowCoordinates: (show: boolean) => void
   moveSounds: boolean
   setMoveSounds: (on: boolean) => void
+  drillSessionSize: SessionSize
+  setDrillSessionSize: (size: SessionSize) => void
 }
 
 const SettingsContext = createContext<SettingsContextValue | null>(null)
@@ -57,6 +61,7 @@ export function SettingsProvider({
   initialHideEngineHints,
   initialShowCoordinates,
   initialMoveSounds,
+  initialDrillSessionSize,
   children,
 }: {
   initialTheme: 'light' | 'dark'
@@ -65,10 +70,12 @@ export function SettingsProvider({
   initialHideEngineHints: boolean
   initialShowCoordinates: boolean
   initialMoveSounds: boolean
+  initialDrillSessionSize: SessionSize
   children: React.ReactNode
 }) {
   const [theme, setThemeState] = useState(initialTheme)
   const [moveSounds, setMoveSoundsState] = useState(initialMoveSounds)
+  const [drillSessionSize, setDrillSessionSizeState] = useState(initialDrillSessionSize)
   const [showCoordinates, setShowCoordinatesState] = useState(initialShowCoordinates)
   const [hideEngineHints, setHideEngineHintsState] = useState(initialHideEngineHints)
   const [presetId, setPresetId] = useState(initialPresetId)
@@ -113,6 +120,12 @@ export function SettingsProvider({
     setCookie(MOVE_SOUNDS_COOKIE, on ? '1' : '0')
   }
 
+  // Read server-side by getDrillDeck(); applies from the next /drill load.
+  function setDrillSessionSize(size: SessionSize) {
+    setDrillSessionSizeState(size)
+    setCookie(DRILL_SESSION_SIZE_COOKIE, String(size))
+  }
+
   return (
     <SettingsContext.Provider
       value={{
@@ -130,6 +143,8 @@ export function SettingsProvider({
         setShowCoordinates,
         moveSounds,
         setMoveSounds,
+        drillSessionSize,
+        setDrillSessionSize,
       }}
     >
       {children}

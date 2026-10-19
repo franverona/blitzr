@@ -3,6 +3,7 @@ import {
   buildDrillPrompt,
   findBlunderCandidates,
   findDeviationCandidates,
+  getSessionSize,
   isNearBestMove,
   newCardSchedule,
   scheduleReview,
@@ -291,5 +292,13 @@ describe('selectSessionCards', () => {
       makeCard({ ply: i + 1, dueAt: `2024-01-0${i + 1}T00:00:00.000Z` }),
     )
     expect(selectSessionCards(cards, 2)).toHaveLength(2)
+  })
+})
+
+describe('getSessionSize', () => {
+  it('accepts only the offered sizes, defaulting to 15', () => {
+    expect(getSessionSize('25')).toBe(25)
+    expect(getSessionSize(undefined)).toBe(15)
+    expect(getSessionSize('1000')).toBe(15)
   })
 })
