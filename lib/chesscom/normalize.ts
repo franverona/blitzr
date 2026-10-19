@@ -86,6 +86,7 @@ export function normalizeGame(raw: ChesscomGame, username: string, archiveYm: st
     blackResult: raw.black.result,
     myColor,
     myResult,
+    isMine: true,
     ecoCode: headers.ECO ?? null,
     ecoName: ecoUrl ? ecoNameFromUrl(ecoUrl) : null,
     ecoUrl,
