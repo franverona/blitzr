@@ -197,9 +197,20 @@ export default async function TodayPage() {
           ) : (
             <p className={mutedClassName}>{s.today.allPuzzlesSolved}</p>
           )}
-          <p className={mutedClassName}>
-            {s.puzzlesPage.solvedCount(puzzles.solved, puzzles.total)}
-          </p>
+          {puzzles.total > 0 && (
+            // Same bar as the /puzzles header.
+            <div className="flex items-center gap-2">
+              <div className="h-1.5 w-24 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800">
+                <div
+                  className="h-full rounded-full bg-emerald-500"
+                  style={{ width: `${(puzzles.solved / puzzles.total) * 100}%` }}
+                />
+              </div>
+              <span className={mutedClassName}>
+                {s.puzzlesPage.solvedCount(puzzles.solved, puzzles.total)}
+              </span>
+            </div>
+          )}
         </Card>
       </div>
     </div>
