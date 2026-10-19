@@ -8,22 +8,13 @@ import { markPuzzleSolved } from '@/app/actions'
 import { getStrings } from '@/lib/i18n/strings'
 import { legalDestinations } from '@/lib/legalMoves'
 import { puzzleColorToMove, type MateProblem } from '@/lib/mateProblems'
-import type { SanPiece } from '@/lib/san'
 import { BOARD_ANIMATION_DURATION_MS } from '@/lib/theme'
 import { useSettings, useMoveSound } from './SettingsProvider'
 import { LegalMoveSquare } from './LegalMoveSquare'
 import { MoveSequence } from './MoveSequence'
-import { PieceGlyph } from './PieceGlyph'
+import { PromotionPicker, type PromotionPiece } from './PromotionPicker'
 
 type Feedback = 'incorrect' | null
-
-// Some puzzles only mate via underpromotion (e.g. cxb8=N#), so offer all four.
-const PROMOTION_PIECES: { promotion: 'q' | 'r' | 'b' | 'n'; glyph: SanPiece }[] = [
-  { promotion: 'q', glyph: 'Q' },
-  { promotion: 'r', glyph: 'R' },
-  { promotion: 'b', glyph: 'B' },
-  { promotion: 'n', glyph: 'N' },
-]
 
 // Fully manual: the solver plays every ply of the line, both sides. No hints.
 export function PuzzleBoard({ problem }: { problem: MateProblem }) {
@@ -93,7 +84,7 @@ export function PuzzleBoard({ problem }: { problem: MateProblem }) {
     [legalMoves],
   )
 
-  function attemptMove(from: string, to: string, promotion?: 'q' | 'r' | 'b' | 'n'): boolean {
+  function attemptMove(from: string, to: string, promotion?: PromotionPiece): boolean {
     if (finished || !isLive) return false
     // Without an explicit piece, a promotion move opens the picker instead.
     if (!promotion) {
@@ -154,7 +145,7 @@ export function PuzzleBoard({ problem }: { problem: MateProblem }) {
     if (piece) setSelectedSquare(square)
   }
 
-  function choosePromotion(promotion: 'q' | 'r' | 'b' | 'n') {
+  function choosePromotion(promotion: PromotionPiece) {
     if (!pendingPromotion) return
     attemptMove(pendingPromotion.from, pendingPromotion.to, promotion)
   }
@@ -220,26 +211,7 @@ export function PuzzleBoard({ problem }: { problem: MateProblem }) {
                 showNotation: false,
               }}
             />
-            {pendingPromotion && (
-              <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/50">
-                <div className="flex flex-col items-center gap-2 rounded-lg bg-zinc-50 p-4 shadow-xl dark:bg-zinc-900">
-                  <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                    {s.puzzles.choosePromotion}
-                  </p>
-                  <div className="flex gap-2">
-                    {PROMOTION_PIECES.map(({ promotion, glyph }) => (
-                      <button
-                        key={promotion}
-                        onClick={() => choosePromotion(promotion)}
-                        className="h-12 w-12 rounded border border-zinc-300 bg-white p-1 hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700"
-                      >
-                        <PieceGlyph piece={glyph} color={turnColor} />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
+            {pendingPromotion && <PromotionPicker color={turnColor} onChoose={choosePromotion} />}
           </div>
         </BoardCoordinates>
 
