@@ -103,11 +103,14 @@ scripts/
   explicit light class alongside its `dark:` one. Light palette is muted: canvas `bg-zinc-100`,
   elevated surfaces `bg-zinc-50`. `EvalBar` is deliberately not themed.
 - **Per-viewer settings** (theme, board color preset, analysis strength, hide engine hints,
-  coordinates, move sounds) live in `SettingsProvider`, each in a `blitzr-*` cookie read
-  server-side in `app/layout.tsx` and seeded as initial state. Cookies, not localStorage, because
-  react-chessboard's square colors are inline-style props and must be right on first render.
+  coordinates, move sounds, lesson/puzzle orientation) live in `SettingsProvider`, each in a
+  `blitzr-*` cookie read server-side in `app/layout.tsx` and seeded as initial state. Cookies, not
+  localStorage, because react-chessboard's square colors are inline-style props and must be right
+  on first render.
   **Cookie names are duplicated as literals** in `layout.tsx` and the client modules — a constant
   exported from a `'use client'` module reads as `undefined` in a Server Component.
+- **Lesson/puzzle orientation** (`TrainingOrientation`, `lib/theme.ts`): `auto` is the side that
+  plays. Lessons still pass the lesson's color as `myColor`, so the quiz tests the same side.
 - **Board colors** are one of four presets (`BOARD_COLOR_PRESETS`, `lib/theme.ts`), consumed via
   `useSettings()` by every board.
 - **Analysis strength** (fast/normal/deep = 150/300/1000ms per position) only affects batch
