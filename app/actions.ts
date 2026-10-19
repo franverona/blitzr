@@ -18,7 +18,7 @@ import {
   selectSessionCards,
 } from '@/lib/drill'
 import type { DrillCandidate } from '@/lib/drill'
-import { parseManualGame } from '@/lib/manualGame'
+import { parseManualGame, type ManualGameSide } from '@/lib/manualGame'
 import { summarizeMoveQuality } from '@/lib/moveQuality'
 import { buildOpeningFamilies, ecoFamilyLabel } from '@/lib/openings'
 import { countGamesReachingLine } from '@/lib/openingTheory'
@@ -48,10 +48,13 @@ const cachedListAllGames = cache(() => getRepository().listAllGames())
 const cachedListAllGameAnalyses = cache(() => getRepository().listAllGameAnalyses())
 
 // Sync keeps every variant: engine features need standard rules, opening
-// features also need the standard starting position.
+// features also need the standard starting position. Stats skip "not me" games.
 const cachedStandardGames = cache(async () => (await cachedListAllGames()).filter(isStandardChess))
+const cachedMyStandardGames = cache(async () =>
+  (await cachedStandardGames()).filter((g) => g.isMine),
+)
 const cachedStandardStartGames = cache(async () =>
-  (await cachedListAllGames()).filter(startsFromStandardPosition),
+  (await cachedListAllGames()).filter((g) => g.isMine && startsFromStandardPosition(g)),
 )
 
 function filterByDateRange(games: Game[], filters?: { from?: string; to?: string }): Game[] {
@@ -90,7 +93,7 @@ export async function getBlunderStats(filters?: {
   to?: string
 }): Promise<BlunderStats> {
   const [allGames, analyses] = await Promise.all([
-    cachedStandardGames(),
+    cachedMyStandardGames(),
     cachedListAllGameAnalyses(),
   ])
   const games = filterByDateRange(allGames, filters)
@@ -115,18 +118,28 @@ export async function syncGames(): Promise<SyncResult> {
 /** Gets a fresh id, so a later sync can never overwrite it. */
 export async function addManualGame(
   pgn: string,
+  side: ManualGameSide = 'auto',
 ): Promise<{ ok: true; gameId: string } | { ok: false; error: string }> {
   // Returned, not thrown: Next hides thrown Server Action messages in
   // production, and the dialog needs parseManualGame()'s reason.
   let game: Game
   try {
-    game = parseManualGame(pgn, getChesscomUsername())
+    game = parseManualGame(pgn, getChesscomUsername(), side)
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : '' }
   }
   await getRepository().upsertGames([game])
   revalidatePath('/')
   return { ok: true, gameId: game.id }
+}
+
+/** Synced games aren't deletable: the next sync would bring them back. */
+export async function deleteManualGame(id: string): Promise<void> {
+  const repo = getRepository()
+  const game = await repo.getGame(id)
+  if (game?.archiveYm !== 'manual') return
+  await repo.deleteGame(id)
+  for (const path of ['/', '/openings', '/blunders', '/drill']) revalidatePath(path)
 }
 
 export async function listRepertoire(color: RepertoireColor): Promise<RepertoireNode[]> {
@@ -182,7 +195,10 @@ export async function getUnanalyzedGames(): Promise<UnanalyzedGame[]> {
 
 /** Own-side accuracy and mistake/blunder counts per analyzed game. */
 export async function getGameAccuracyById(): Promise<Record<string, GameAccuracy>> {
-  const [games, analyses] = await Promise.all([cachedStandardGames(), cachedListAllGameAnalyses()])
+  const [games, analyses] = await Promise.all([
+    cachedMyStandardGames(),
+    cachedListAllGameAnalyses(),
+  ])
   const analysesByGameId = new Map(analyses.map((a) => [a.gameId, a]))
 
   const result: Record<string, GameAccuracy> = {}
@@ -224,7 +240,7 @@ export async function getDrillDeck(filters?: {
   const repo = getRepository()
   const [games, standardStartGames, whiteNodes, blackNodes, analyses, existingCards] =
     await Promise.all([
-      cachedStandardGames(),
+      cachedMyStandardGames(),
       cachedStandardStartGames(),
       repo.listRepertoireNodes('white'),
       repo.listRepertoireNodes('black'),

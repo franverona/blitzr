@@ -23,6 +23,7 @@ function makeGame(overrides: Partial<Game>): Game {
     blackResult: 'checkmated',
     myColor: 'white',
     myResult: 'win',
+    isMine: true,
     ecoCode: 'C50',
     ecoName: 'Italian Game: 3...Bc5',
     ecoUrl: null,

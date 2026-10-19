@@ -46,21 +46,27 @@ export function GameRow({ game, accuracy }: { game: Game; accuracy: GameAccuracy
       className="cursor-pointer outline-none hover:bg-zinc-100 focus:bg-zinc-100 dark:hover:bg-zinc-900/50 dark:focus:bg-zinc-900/50"
     >
       <td className="px-3 py-2 whitespace-nowrap">{date}</td>
+      <td className="px-3 py-2">{game.isMine ? <KnightIcon color={game.myColor} /> : '—'}</td>
       <td className="px-3 py-2">
-        <KnightIcon color={game.myColor} />
+        {game.isMine ? opponent : `${game.whiteUsername} ${s.common.vs} ${game.blackUsername}`}
       </td>
-      <td className="px-3 py-2">{opponent}</td>
       <td className="px-3 py-2">
-        <span
-          className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium ${RESULT_BADGE_STYLES[game.myResult]}`}
-        >
-          <span aria-hidden="true">{RESULT_BADGE_GLYPHS[game.myResult]}</span>
-          {s.common.result[game.myResult]}
-        </span>
+        {game.isMine ? (
+          <span
+            className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium ${RESULT_BADGE_STYLES[game.myResult]}`}
+          >
+            <span aria-hidden="true">{RESULT_BADGE_GLYPHS[game.myResult]}</span>
+            {s.common.result[game.myResult]}
+          </span>
+        ) : (
+          <span className="rounded bg-zinc-200 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+            {s.gameRow.notMine}
+          </span>
+        )}
       </td>
       <td className="px-3 py-2 text-right text-zinc-400 tabular-nums">
         {/* An unrated game's rating isn't meaningful. */}
-        {game.rated && myRating != null ? myRating : '—'}
+        {game.isMine && game.rated && myRating != null ? myRating : '—'}
       </td>
       <td className="px-3 py-2 text-center">
         {accuracy ? (

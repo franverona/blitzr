@@ -30,6 +30,7 @@ export interface GamesTable {
   black_result: string
   my_color: string
   my_result: string
+  is_mine: number
   eco_code: string | null
   eco_name: string | null
   eco_url: string | null
@@ -106,6 +107,8 @@ export interface GameRepository {
   }): Promise<{ games: Game[]; total: number }>
   listAllGames(): Promise<Game[]>
   getGame(id: string): Promise<Game | undefined>
+  /** Cascades to the game's analysis and drill cards. */
+  deleteGame(id: string): Promise<void>
   getArchiveSyncStatus(): Promise<ArchiveSyncStatus[]>
   markArchiveSynced(
     archiveYm: string,

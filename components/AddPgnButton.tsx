@@ -3,14 +3,17 @@
 import { useRouter } from 'next/navigation'
 import { useRef, useState, useTransition } from 'react'
 import { addManualGame } from '@/app/actions'
+import type { ManualGameSide } from '@/lib/manualGame'
 import { getStrings } from '@/lib/i18n/strings'
 import { CirclePlusIcon } from './NavIcons'
+import { Select } from './Select'
 import { startRouteProgress } from './RouteProgressBar'
 
 // Errors show inline so they sit next to the pasted text.
 export function AddPgnButton() {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const [pgn, setPgn] = useState('')
+  const [side, setSide] = useState<ManualGameSide>('auto')
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
@@ -18,6 +21,7 @@ export function AddPgnButton() {
 
   function open() {
     setPgn('')
+    setSide('auto')
     setError(null)
     dialogRef.current?.showModal()
   }
@@ -27,7 +31,7 @@ export function AddPgnButton() {
     setError(null)
     startTransition(async () => {
       try {
-        const result = await addManualGame(pgn)
+        const result = await addManualGame(pgn, side)
         if (!result.ok) {
           setError(result.error || s.addPgn.genericError)
           return
@@ -78,6 +82,20 @@ export function AddPgnButton() {
             required
             className="w-full rounded-md border border-zinc-300 bg-zinc-50 p-2 font-mono text-xs text-zinc-900 placeholder:text-zinc-400 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-600"
           />
+          <label className="flex flex-wrap items-center gap-2 text-sm">
+            {s.addPgn.sideLabel}
+            <Select
+              value={side}
+              onChange={(e) => setSide(e.target.value as ManualGameSide)}
+              className="rounded-md border border-zinc-300 bg-zinc-50 py-1 pl-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+            >
+              {(['auto', 'white', 'black', 'notMine'] as const).map((value) => (
+                <option key={value} value={value}>
+                  {s.addPgn.sides[value]}
+                </option>
+              ))}
+            </Select>
+          </label>
           {error && <p className="text-sm text-rose-600 dark:text-rose-400">{error}</p>}
           <button
             type="submit"
