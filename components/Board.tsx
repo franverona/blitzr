@@ -35,6 +35,7 @@ import { EvalBar } from './EvalBar'
 import { LegalMoveSquare } from './LegalMoveSquare'
 import { MoveList } from './MoveList'
 import { PlanBoardButton } from './PlanBoard'
+import { PromotionPicker, type PromotionPiece } from './PromotionPicker'
 
 interface BoardContextValue {
   ply: number
@@ -68,9 +69,9 @@ interface BoardContextValue {
   startExploring: () => void
   exitExploring: () => void
   setExplorePly: (updater: number | ((ply: number) => number)) => void
-  /** Always promotes to queen. Truncates any explored moves past the current
-   *  explore ply. Returns whether the move was legal. */
-  attemptExploreMove: (from: string, to: string) => boolean
+  /** Promotes to `promotion` (default queen). Truncates any explored moves
+   *  past the current explore ply. Returns whether the move was legal. */
+  attemptExploreMove: (from: string, to: string, promotion?: PromotionPiece) => boolean
   /** Appends a SAN line to the explore branch (entering explore mode if
    *  needed) without moving `explorePly`, so ◀/▶ can step through it. Stops at
    *  the first move that no longer applies. Returns false if nothing applied. */
@@ -165,7 +166,7 @@ export function BoardProvider({
   }, [])
 
   const attemptExploreMove = useCallback(
-    (from: string, to: string): boolean => {
+    (from: string, to: string, promotion: PromotionPiece = 'q'): boolean => {
       const currentPly = explorePlyRef.current
       const fen = (exploreBaseFen ? buildPositions(exploreBaseFen, explorePathRef.current) : [])[
         currentPly
@@ -174,7 +175,7 @@ export function BoardProvider({
       const chess = new Chess(fen)
       let move
       try {
-        move = chess.move({ from, to, promotion: 'q' })
+        move = chess.move({ from, to, promotion })
       } catch {
         return false
       }
@@ -700,6 +701,23 @@ export function BoardView({
     [legalMoves],
   )
 
+  // Keyed to the FEN it was opened on, so navigating away hides it.
+  const [pendingPromotion, setPendingPromotion] = useState<{
+    fen: string
+    from: string
+    to: string
+  } | null>(null)
+  const activePromotion = pendingPromotion?.fen === displayFen ? pendingPromotion : null
+
+  function tryExploreMove(from: string, to: string): boolean {
+    if (activePromotion) return false
+    if (legalDestinations(displayFen, from).some((m) => m.to === to && m.isPromotion)) {
+      setPendingPromotion({ fen: displayFen, from, to })
+      return true
+    }
+    return attemptExploreMove(from, to)
+  }
+
   function handleExploreDrop({
     sourceSquare,
     targetSquare,
@@ -708,7 +726,7 @@ export function BoardView({
     targetSquare: string | null
   }): boolean {
     if (!targetSquare) return false
-    return attemptExploreMove(sourceSquare, targetSquare)
+    return tryExploreMove(sourceSquare, targetSquare)
   }
 
   function handleExploreSquareClick({ square, piece }: { square: string; piece: unknown | null }) {
@@ -717,7 +735,7 @@ export function BoardView({
         setSelectedSquare(null)
         return
       }
-      const moved = attemptExploreMove(selectedSquare, square)
+      const moved = tryExploreMove(selectedSquare, square)
       setSelectedSquare(!moved && piece ? square : null)
       return
     }
@@ -899,6 +917,15 @@ export function BoardView({
                   }}
                 />
               </div>
+              {exploring && activePromotion && (
+                <PromotionPicker
+                  color={displayFen.split(' ')[1] === 'b' ? 'black' : 'white'}
+                  onChoose={(piece) => {
+                    setPendingPromotion(null)
+                    attemptExploreMove(activePromotion.from, activePromotion.to, piece)
+                  }}
+                />
+              )}
               {gameEndBadges.map((badge) => (
                 <GameEndBadge
                   key={`${badge.variant}-${badge.square}`}
