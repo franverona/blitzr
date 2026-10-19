@@ -8,6 +8,7 @@ import {
   ExploreToggleButton,
   LiveAnalysisProvider,
 } from '@/components/Board'
+import { DeleteGameButton } from '@/components/DeleteGameButton'
 import { DetailsDialogTrigger } from '@/components/DetailsDialog'
 import {
   AnalyzeButton,
@@ -49,7 +50,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
     : null
   const repertoireNodes = await listRepertoire(game.myColor)
   const diff =
-    game.movesSan && startsFromStandardPosition(game)
+    game.isMine && game.movesSan && startsFromStandardPosition(game)
       ? diffGameAgainstRepertoire(game.movesSan, game.myColor, repertoireNodes)
       : null
   const analysis = (await getGameAnalysis(id)) ?? null
@@ -90,6 +91,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
             </DetailsDialogTrigger>
           )}
           {game.movesSan && isStandardChess(game) && <AnalyzeButton />}
+          {game.archiveYm === 'manual' && <DeleteGameButton gameId={game.id} />}
         </div>
       </div>
 
@@ -127,6 +129,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
       initialFen={game.initialFen}
       movesSan={game.movesSan}
       boardOrientation={game.myColor}
+      myColor={game.myColor}
       result={pgnResult(game.myColor, game.myResult)}
       evals={analysis?.evals}
       initialPly={1}
@@ -195,7 +198,9 @@ function GameHeader({
       </h1>
       <p className="text-xs text-zinc-500 dark:text-zinc-400">
         {formatDateTime(game.endTime)} · {timeClassLabel} ·{' '}
-        {s.gamePage.playing(s.common.color[game.myColor])} · {s.common.result[game.myResult]}
+        {game.isMine
+          ? `${s.gamePage.playing(s.common.color[game.myColor])} · ${s.common.result[game.myResult]}`
+          : s.gamePage.notMine}
       </p>
       {!isBotGame && game.url && (
         <a
@@ -243,8 +248,8 @@ function RepertoireDiff({
       <p className="text-sm text-amber-600 dark:text-amber-400">
         <abbr title={s.gamePage.inBookTooltip}>{s.gamePage.inBook}</abbr>{' '}
         {s.gamePage.inBookFor(diff.inBookPlies)}{' '}
-        <abbr title={s.gamePage.deviatedTooltip}>{s.gamePage.deviated}</abbr> on{' '}
-        {plyLabel(diff.deviationPly)} — {s.gamePage.played}{' '}
+        <abbr title={s.gamePage.deviatedTooltip}>{s.gamePage.deviated}</abbr>{' '}
+        {s.gamePage.deviatedOn} {plyLabel(diff.deviationPly)} — {s.gamePage.played}{' '}
         <span className="font-medium">{diff.deviationMove}</span>, {s.gamePage.repertoireHas}{' '}
         <span className="font-medium">{diff.expectedMoves?.join(` ${s.drill.or} `)}</span>.
       </p>

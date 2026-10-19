@@ -4,10 +4,11 @@ import { revalidatePath } from 'next/cache'
 import { cache } from 'react'
 import { buildAccuracyTrend } from '@/lib/accuracyTrend'
 import { buildBlunderStats } from '@/lib/blunders'
-import { fetchPlayerAvatar } from '@/lib/chesscom/client'
+import { ChesscomApiError, fetchPlayerAvatar } from '@/lib/chesscom/client'
 import { endOfDaySeconds, formatDate, startOfDaySeconds } from '@/lib/dates'
 import { getChesscomUsername } from '@/lib/config'
 import { getRepository } from '@/lib/db'
+import { getStrings } from '@/lib/i18n/strings'
 import type { GameRepository } from '@/lib/db/types'
 import {
   buildDrillPrompt,
@@ -18,9 +19,9 @@ import {
   selectSessionCards,
 } from '@/lib/drill'
 import type { DrillCandidate } from '@/lib/drill'
-import { parseManualGame } from '@/lib/manualGame'
+import { parseManualGame, type ManualGameSide } from '@/lib/manualGame'
 import { summarizeMoveQuality } from '@/lib/moveQuality'
-import { buildOpeningFamilies, ecoFamilyLabel } from '@/lib/openings'
+import { buildOpeningFamilies, ecoFamilyLabel, unknownOpeningLabel } from '@/lib/openings'
 import { countGamesReachingLine } from '@/lib/openingTheory'
 import { isStandardChess, startsFromStandardPosition } from '@/lib/positions'
 import { syncAllArchives } from '@/lib/sync'
@@ -48,10 +49,13 @@ const cachedListAllGames = cache(() => getRepository().listAllGames())
 const cachedListAllGameAnalyses = cache(() => getRepository().listAllGameAnalyses())
 
 // Sync keeps every variant: engine features need standard rules, opening
-// features also need the standard starting position.
+// features also need the standard starting position. Stats skip "not me" games.
 const cachedStandardGames = cache(async () => (await cachedListAllGames()).filter(isStandardChess))
+const cachedMyStandardGames = cache(async () =>
+  (await cachedStandardGames()).filter((g) => g.isMine),
+)
 const cachedStandardStartGames = cache(async () =>
-  (await cachedListAllGames()).filter(startsFromStandardPosition),
+  (await cachedListAllGames()).filter((g) => g.isMine && startsFromStandardPosition(g)),
 )
 
 function filterByDateRange(games: Game[], filters?: { from?: string; to?: string }): Game[] {
@@ -90,7 +94,7 @@ export async function getBlunderStats(filters?: {
   to?: string
 }): Promise<BlunderStats> {
   const [allGames, analyses] = await Promise.all([
-    cachedStandardGames(),
+    cachedMyStandardGames(),
     cachedListAllGameAnalyses(),
   ])
   const games = filterByDateRange(allGames, filters)
@@ -105,28 +109,59 @@ export async function getArchiveSyncStatus(): Promise<ArchiveSyncStatus[]> {
   return getRepository().getArchiveSyncStatus()
 }
 
-export async function syncGames(): Promise<SyncResult> {
-  const result = await syncAllArchives()
-  revalidatePath('/')
-  revalidatePath('/openings')
-  return result
+/** Errors are returned, not thrown, for the same reason as addManualGame(). */
+export async function syncGames(): Promise<
+  { ok: true; result: SyncResult } | { ok: false; error: string }
+> {
+  const s = getStrings()
+  let username: string
+  try {
+    username = getChesscomUsername()
+  } catch {
+    return { ok: false, error: s.sync.noUsername }
+  }
+  try {
+    const result = await syncAllArchives()
+    revalidatePath('/')
+    revalidatePath('/openings')
+    return { ok: true, result }
+  } catch (err) {
+    console.error(err)
+    if (err instanceof ChesscomApiError && err.status === 429) {
+      return { ok: false, error: s.sync.rateLimited }
+    }
+    if (err instanceof ChesscomApiError && err.status === 404) {
+      return { ok: false, error: s.sync.userNotFound(username) }
+    }
+    return { ok: false, error: s.sync.failed }
+  }
 }
 
 /** Gets a fresh id, so a later sync can never overwrite it. */
 export async function addManualGame(
   pgn: string,
+  side: ManualGameSide = 'auto',
 ): Promise<{ ok: true; gameId: string } | { ok: false; error: string }> {
   // Returned, not thrown: Next hides thrown Server Action messages in
   // production, and the dialog needs parseManualGame()'s reason.
   let game: Game
   try {
-    game = parseManualGame(pgn, getChesscomUsername())
+    game = parseManualGame(pgn, getChesscomUsername(), side)
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : '' }
   }
   await getRepository().upsertGames([game])
   revalidatePath('/')
   return { ok: true, gameId: game.id }
+}
+
+/** Synced games aren't deletable: the next sync would bring them back. */
+export async function deleteManualGame(id: string): Promise<void> {
+  const repo = getRepository()
+  const game = await repo.getGame(id)
+  if (game?.archiveYm !== 'manual') return
+  await repo.deleteGame(id)
+  for (const path of ['/', '/openings', '/blunders', '/drill']) revalidatePath(path)
 }
 
 export async function listRepertoire(color: RepertoireColor): Promise<RepertoireNode[]> {
@@ -182,7 +217,10 @@ export async function getUnanalyzedGames(): Promise<UnanalyzedGame[]> {
 
 /** Own-side accuracy and mistake/blunder counts per analyzed game. */
 export async function getGameAccuracyById(): Promise<Record<string, GameAccuracy>> {
-  const [games, analyses] = await Promise.all([cachedStandardGames(), cachedListAllGameAnalyses()])
+  const [games, analyses] = await Promise.all([
+    cachedMyStandardGames(),
+    cachedListAllGameAnalyses(),
+  ])
   const analysesByGameId = new Map(analyses.map((a) => [a.gameId, a]))
 
   const result: Record<string, GameAccuracy> = {}
@@ -205,7 +243,7 @@ function cardKey(c: { gameId: string; sourceType: DrillSourceType; ply: number }
 }
 
 function openingLabel(game: Game): string {
-  return game.ecoName ? ecoFamilyLabel(game.ecoName) : 'Unknown opening'
+  return game.ecoName ? ecoFamilyLabel(game.ecoName) : unknownOpeningLabel()
 }
 
 /**
@@ -224,7 +262,7 @@ export async function getDrillDeck(filters?: {
   const repo = getRepository()
   const [games, standardStartGames, whiteNodes, blackNodes, analyses, existingCards] =
     await Promise.all([
-      cachedStandardGames(),
+      cachedMyStandardGames(),
       cachedStandardStartGames(),
       repo.listRepertoireNodes('white'),
       repo.listRepertoireNodes('black'),

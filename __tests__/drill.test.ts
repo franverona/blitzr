@@ -3,6 +3,7 @@ import {
   buildDrillPrompt,
   findBlunderCandidates,
   findDeviationCandidates,
+  isNearBestMove,
   newCardSchedule,
   scheduleReview,
   selectSessionCards,
@@ -41,6 +42,7 @@ function makeGame(overrides: Partial<Game>): Game {
     blackResult: 'checkmated',
     myColor: 'white',
     myResult: 'win',
+    isMine: true,
     ecoCode: null,
     ecoName: null,
     ecoUrl: null,
@@ -138,6 +140,7 @@ describe('buildDrillPrompt', () => {
       fen: positions[2],
       color: 'white',
       correctMoves: ['Nf3', 'Bc4'],
+      evalBefore: null,
       gameLabel: `vs opp · ${formatDate(game.endTime)}`,
       opponentUsername: 'opp',
       opponentAvatarUrl: null,
@@ -173,6 +176,7 @@ describe('buildDrillPrompt', () => {
       fen: positions[2],
       color: 'white',
       correctMoves: ['Nf3'],
+      evalBefore: evals[2],
       gameLabel: `vs opp · ${formatDate(game.endTime)}`,
       opponentUsername: 'opp',
       opponentAvatarUrl: null,
@@ -192,6 +196,24 @@ describe('buildDrillPrompt', () => {
       new Map(),
     )
     expect(prompt).toBeNull()
+  })
+})
+
+describe('isNearBestMove', () => {
+  const whiteToMoveFen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+  const blackToMoveFen = 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1'
+
+  it('accepts a move that keeps nearly the same eval', () => {
+    expect(isNearBestMove(whiteToMoveFen, cp(40), cp(25))).toBe(true)
+  })
+
+  it('rejects a move that loses real ground even if it is not a blunder', () => {
+    expect(isNearBestMove(whiteToMoveFen, cp(40), cp(-80))).toBe(false)
+  })
+
+  it("judges Black's moves from Black's side", () => {
+    expect(isNearBestMove(blackToMoveFen, cp(30), cp(40))).toBe(true)
+    expect(isNearBestMove(blackToMoveFen, cp(30), cp(200))).toBe(false)
   })
 })
 
