@@ -2,6 +2,7 @@
 
 import { Chessboard } from 'react-chessboard'
 import { BoardCoordinates } from './BoardCoordinates'
+import { SESSION_SIZES, type SessionSize } from '@/lib/drill'
 import { getStrings } from '@/lib/i18n/strings'
 import { ANALYSIS_STRENGTHS, type AnalysisStrength } from '@/lib/stockfish/analyze'
 import {
@@ -115,6 +116,19 @@ export function SettingsForm() {
               onChange={() => settings.setHideEngineHints(!settings.hideEngineHints)}
             />
             <p className="text-xs text-zinc-500">{s.settings.hideEngineHintsHint}</p>
+          </div>
+        </Section>
+
+        <Section title={s.settings.sections.training}>
+          <div className="flex flex-col gap-2 text-sm">
+            <span>{s.settings.drillSessionSize}</span>
+            <Segmented
+              options={SESSION_SIZES.map(String)}
+              value={String(settings.drillSessionSize)}
+              onChange={(size) => settings.setDrillSessionSize(Number(size) as SessionSize)}
+              label={(size) => size}
+            />
+            <p className="text-xs text-zinc-500">{s.settings.drillSessionSizeHint}</p>
           </div>
         </Section>
       </div>
