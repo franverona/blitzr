@@ -186,6 +186,17 @@ export async function deleteManualGame(id: string): Promise<void> {
   for (const path of ['/', '/openings', '/blunders', '/drill']) revalidatePath(path)
 }
 
+export async function exportDatabaseBackup(): Promise<
+  { ok: true; data: Uint8Array<ArrayBuffer> } | { ok: false; error: string }
+> {
+  try {
+    return { ok: true, data: await getRepository().exportBackup() }
+  } catch (err) {
+    console.error(err)
+    return { ok: false, error: getStrings().settings.backupFailed }
+  }
+}
+
 export async function listRepertoire(color: RepertoireColor): Promise<RepertoireNode[]> {
   return getRepository().listRepertoireNodes(color)
 }

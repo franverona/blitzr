@@ -53,11 +53,19 @@ const en = {
     preview: 'Preview',
     drillSessionSize: 'Cards per drill session',
     drillSessionSizeHint: 'The most overdue cards come first',
+    backup: 'Download backup',
+    backupPreparing: 'Preparing…',
+    backupHint:
+      'A copy of the whole database. Your repertoire, drill schedules and puzzle progress can’t be rebuilt by re-syncing.',
+    backupRestoreHint:
+      'To restore, stop Blitzr and replace data/blitzr.db with the downloaded file.',
+    backupFailed: 'Couldn’t create the backup.',
     sections: {
       appearance: 'Appearance',
       board: 'Board',
       analysis: 'Analysis',
       training: 'Training',
+      data: 'Data',
     },
   },
   gameRow: {
@@ -561,11 +569,19 @@ const es: Strings = {
     preview: 'Vista previa',
     drillSessionSize: 'Tarjetas por sesión de entrenamiento',
     drillSessionSizeHint: 'Primero las tarjetas más atrasadas',
+    backup: 'Descargar copia de seguridad',
+    backupPreparing: 'Preparando…',
+    backupHint:
+      'Una copia de toda la base de datos. Tu repertorio, el calendario de repasos y el progreso en puzzles no se recuperan volviendo a sincronizar.',
+    backupRestoreHint:
+      'Para restaurarla, detén Blitzr y reemplaza data/blitzr.db por el archivo descargado.',
+    backupFailed: 'No se pudo crear la copia de seguridad.',
     sections: {
       appearance: 'Apariencia',
       board: 'Tablero',
       analysis: 'Análisis',
       training: 'Entrenamiento',
+      data: 'Datos',
     },
   },
   gameRow: {
