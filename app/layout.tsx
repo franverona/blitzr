@@ -63,7 +63,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         .join(' ')}
       style={{ '--color-accent': boardColorPreset.dark } as React.CSSProperties}
     >
-      <body className="flex h-full overflow-hidden bg-zinc-100 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
+      {/* dvh: on phones, h-full can reach behind the browser toolbar, which never hides
+          because the page itself doesn't scroll (main does). */}
+      <body className="flex h-dvh overflow-hidden bg-zinc-100 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
         <Suspense fallback={null}>
           <RouteProgressBar />
         </Suspense>
@@ -88,7 +90,10 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
               avatarUrl={avatarUrl}
               initialCollapsed={sidebarCollapsed}
             />
-            <main id="main-scroll" className="min-w-0 flex-1 overflow-y-auto px-6 py-6">
+            <main
+              id="main-scroll"
+              className="min-w-0 flex-1 overflow-y-auto px-6 pt-6 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-6"
+            >
               <div className="mx-auto max-w-7xl">{children}</div>
             </main>
           </BulkAnalysisProvider>
