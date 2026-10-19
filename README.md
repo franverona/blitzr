@@ -109,8 +109,9 @@ opponent's unprepared move doesn't count.
 result. **Analyze all** on the games page does this for every unanalyzed game, saving as it goes,
 and keeps running while you browse other pages.
 
-A blunder is a 200+ centipawn swing against the player who moved, tagged **Mistake** (200–399)
-or **Blunder** (400+). Where a simple pattern explains it — a hanging piece, a fork, a skewer, or
+A blunder is a move that drops the mover's winning chances as much as a 200+ centipawn loss from
+an equal position would, tagged **Mistake** (200–399 equivalent) or **Blunder** (400+). Measuring
+win chances means a move that stays completely winning (+9 → +6.5) isn't flagged. Where a simple pattern explains it — a hanging piece, a fork, a skewer, or
 a pin to the king — you get a plain-English explanation, along with the engine's better move and
 its follow-up plan on a small step-through board. These checks are intentionally simple, so many
 blunders show only the eval swing.

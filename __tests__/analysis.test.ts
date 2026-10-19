@@ -8,6 +8,7 @@ import {
   formatEval,
   formatSwing,
   whiteToMove,
+  winDropFromEqual,
 } from '@/lib/analysis'
 import type { Blunder, PositionEval } from '@/lib/types'
 
@@ -67,6 +68,15 @@ describe('findBlunders', () => {
     expect(blunders[0].ply).toBe(1)
   })
 
+  it('does not flag a big cp drop that keeps the mover completely winning', () => {
+    expect(findBlunders([cp(900), cp(650)], ['Qd2'])).toEqual([])
+    expect(findBlunders([mate(3), cp(900)], ['Kh1'])).toEqual([])
+  })
+
+  it('flags the same cp drop near equality', () => {
+    expect(findBlunders([cp(100), cp(-150)], ['Qd2'])).toHaveLength(1)
+  })
+
   it('skips positions with a missing eval rather than throwing', () => {
     const evals = [cp(0), cp(20)]
     const movesSan = ['e4', 'e5', 'Nf3']
@@ -79,11 +89,11 @@ describe('biggestBlunder', () => {
     expect(biggestBlunder([])).toBeNull()
   })
 
-  it('returns the blunder with the largest swing', () => {
+  it('returns the blunder with the largest win-% drop', () => {
     const blunders = [
-      { ply: 1, moveSan: 'a', evalBefore: cp(0), evalAfter: cp(0), swingCp: 250 },
-      { ply: 3, moveSan: 'b', evalBefore: cp(0), evalAfter: cp(0), swingCp: 600 },
-      { ply: 5, moveSan: 'c', evalBefore: cp(0), evalAfter: cp(0), swingCp: 400 },
+      { ply: 1, moveSan: 'a', evalBefore: cp(0), evalAfter: cp(0), swingCp: 900, winDrop: 20 },
+      { ply: 3, moveSan: 'b', evalBefore: cp(0), evalAfter: cp(0), swingCp: 300, winDrop: 40 },
+      { ply: 5, moveSan: 'c', evalBefore: cp(0), evalAfter: cp(0), swingCp: 400, winDrop: 30 },
     ]
     expect(biggestBlunder(blunders)?.ply).toBe(3)
   })
@@ -159,24 +169,17 @@ describe('describeEval', () => {
 })
 
 describe('blunderSeverity', () => {
-  it('classifies a swing just over the blunder threshold as a mistake', () => {
-    expect(blunderSeverity(200)).toBe('mistake')
-    expect(blunderSeverity(399)).toBe('mistake')
-  })
-
-  it('classifies a swing of 400cp or more as a blunder', () => {
-    expect(blunderSeverity(400)).toBe('blunder')
-    expect(blunderSeverity(1000)).toBe('blunder')
-  })
-
-  it('classifies a mate-sentinel-scale swing as a blunder', () => {
-    expect(blunderSeverity(98_810)).toBe('blunder')
+  it('splits at the win-% drop of 400cp from equal', () => {
+    expect(blunderSeverity(winDropFromEqual(200))).toBe('mistake')
+    expect(blunderSeverity(winDropFromEqual(399))).toBe('mistake')
+    expect(blunderSeverity(winDropFromEqual(400))).toBe('blunder')
+    expect(blunderSeverity(49)).toBe('blunder')
   })
 })
 
 describe('formatSwing', () => {
   function blunder(evalBefore: PositionEval, evalAfter: PositionEval, swingCp: number): Blunder {
-    return { ply: 1, moveSan: 'a6', evalBefore, evalAfter, swingCp }
+    return { ply: 1, moveSan: 'a6', evalBefore, evalAfter, swingCp, winDrop: 20 }
   }
 
   it('formats an ordinary swing in real pawns', () => {
