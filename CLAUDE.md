@@ -232,12 +232,12 @@ and the slider are debounced (400ms); selects navigate immediately.
 `drill_cards` stores only the SM-2 schedule (binary grading); prompts are re-derived by
 `buildDrillPrompt()` from deviations and own-move blunders. The deck re-syncs on every `/drill` load
 (`reconcileDrillDeck()`, pure) and serves the most-overdue cards (`blitzr-drill-session-size`
-cookie: 10/15/25, default 15, read by `getDrillDeck()` itself). `DrillSession` snapshots its
-prompts so revalidation can't reshuffle an active session. A blunder card also accepts a non-engine move when a one-off client-side eval rates
-it good or better (`isNearBestMove()`); if the engine fails, only the engine's move counts.
-**Re-analyzing a game can reset its drill progress:** another strength can shift which plies count
-as blunders, and the deck sync deletes cards (with their SM-2 schedules) whose ply no longer
-qualifies. Accepted, not a bug.
+cookie: 10/15/25, default 15, read by `getDrillDeck()` itself). `DrillSession` snapshots its prompts
+so revalidation can't reshuffle an active session. A blunder card also accepts a non-engine move
+when a one-off client-side eval rates it good or better (`isNearBestMove()`); if the engine fails,
+only the engine's move counts. **Re-analyzing a game can reset its drill progress:** another
+strength can shift which plies count as blunders, and the deck sync deletes cards (with their SM-2
+schedules) whose ply no longer qualifies. Accepted, not a bug.
 
 ## Blunders page
 
