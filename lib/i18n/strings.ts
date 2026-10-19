@@ -174,6 +174,13 @@ const en = {
     winner: 'Winner',
     draw: 'Draw',
   },
+  positionActions: {
+    copyFen: 'Copy FEN',
+    copyPgn: 'Copy PGN',
+    copyLinePgn: 'Copy line PGN',
+    copied: 'Copied!',
+    openInLichess: 'Lichess ↗',
+  },
   moveExplanation: {
     startingPosition: 'Starting position.',
   },
@@ -642,6 +649,13 @@ const es: Strings = {
     checkmate: 'Jaque mate',
     winner: 'Ganador',
     draw: 'Tablas',
+  },
+  positionActions: {
+    copyFen: 'Copiar FEN',
+    copyPgn: 'Copiar PGN',
+    copyLinePgn: 'Copiar PGN de la línea',
+    copied: '¡Copiado!',
+    openInLichess: 'Lichess ↗',
   },
   moveExplanation: {
     startingPosition: 'Posición inicial.',

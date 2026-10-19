@@ -209,6 +209,8 @@ a prepared move. An opponent's unprepared move or the tree running out doesn't c
 - Explore mode is a separate branch in `BoardContext` (`explorePath`/`explorePly`), never persisted.
   The ◀/▶ nav follows it; Play and the saved-analysis hints are off while exploring.
   `playExploreLine()` replays an engine line onto the branch, stopping at the first illegal move.
+- `PositionActions` (game page, under the nav controls) copies the FEN on screen and the game's
+  PGN, or the explored line's PGN (`linePgn()`) while exploring, and links to Lichess analysis.
 - `useLiveAnalysisContext()` returns an empty default without a provider, so `/learn` can render
   `BoardView` without spinning up an engine.
 
