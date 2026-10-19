@@ -29,7 +29,14 @@ import { MATE_PROBLEMS } from '@/lib/mateProblems'
 import { countGamesReachingLine } from '@/lib/openingTheory'
 import { buildPositions, isStandardChess, startsFromStandardPosition } from '@/lib/positions'
 import { listPendingArchives, syncArchive } from '@/lib/sync'
-import { drillStreak, gameReview, localDay, recentResults, repertoireDeviations } from '@/lib/today'
+import {
+  drillStreak,
+  drillWeek,
+  gameReview,
+  localDay,
+  recentResults,
+  repertoireDeviations,
+} from '@/lib/today'
 import { isValidAnalysis, normalizeRepertoireNode } from '@/lib/validate'
 import type {
   ArchiveSyncStatus,
@@ -428,6 +435,8 @@ export async function getTodaySummary(): Promise<{
     dueBlunders: number
     sessionSize: number
     streak: number
+    /** Last 7 days, oldest first; the last entry is today. */
+    week: boolean[]
   }
   unanalyzedGames: number
   accuracy: ReturnType<typeof recentAccuracy>
@@ -500,6 +509,7 @@ export async function getTodaySummary(): Promise<{
       dueBlunders: due.filter((c) => c.sourceType === 'blunder').length,
       sessionSize: getSessionSize((await cookies()).get('blitzr-drill-session-size')?.value),
       streak: drillStreak(reviewDays, now),
+      week: drillWeek(reviewDays, now),
     },
     unanalyzedGames: unanalyzed.length,
     accuracy: recentAccuracy(buildAccuracyTrend(games, analysesByGameId), now),

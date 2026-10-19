@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { getTodaySummary } from './actions'
 import { BulkAnalyzeButton } from '@/components/BulkAnalyzeButton'
 import { MiniBoard } from '@/components/MiniBoard'
-import { RefreshCwIcon } from '@/components/NavIcons'
+import { FlameIcon, RefreshCwIcon } from '@/components/NavIcons'
 import { formatDateTime } from '@/lib/dates'
 import { getLocale } from '@/lib/i18n/locale'
 import { getStrings } from '@/lib/i18n/strings'
@@ -73,7 +73,7 @@ export default async function TodayPage() {
               {s.today.dueBreakdown(drill.due, drill.dueDeviations, drill.dueBlunders)}
             </p>
           )}
-          {drill.streak > 0 && <p className="text-sm">{s.today.streak(drill.streak)}</p>}
+          <StreakBadge streak={drill.streak} week={drill.week} />
           {drill.due > 0 && (
             <Link href="/drill" className={linkClassName}>
               {s.today.startDrill}
@@ -231,6 +231,41 @@ export default async function TodayPage() {
           )}
         </Card>
       </div>
+    </div>
+  )
+}
+
+function StreakBadge({ streak, week }: { streak: number; week: boolean[] }) {
+  const s = getStrings()
+  const drilledToday = week.at(-1) === true
+  return (
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+      <span
+        className={`flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+          streak === 0
+            ? 'bg-zinc-200 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400'
+            : drilledToday
+              ? 'bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300'
+              : 'border border-orange-300 text-orange-700 dark:border-orange-800 dark:text-orange-300'
+        }`}
+      >
+        <FlameIcon className="size-3.5 shrink-0" />
+        {streak === 0 ? s.today.noStreak : s.today.streak(streak)}
+      </span>
+      {/* Last 7 days, today on the right. */}
+      <span className="flex items-center gap-1" title={s.today.streakWeek}>
+        {week.map((reviewed, i) => (
+          <span
+            key={i}
+            className={`size-2 rounded-full ${
+              reviewed ? 'bg-orange-500' : 'bg-zinc-300 dark:bg-zinc-700'
+            } ${i === week.length - 1 ? 'ring-1 ring-orange-500/60 ring-offset-1 ring-offset-zinc-50 dark:ring-offset-zinc-900' : ''}`}
+          />
+        ))}
+      </span>
+      {streak > 0 && !drilledToday && (
+        <span className="text-xs text-zinc-500 dark:text-zinc-400">{s.today.keepStreak}</span>
+      )}
     </div>
   )
 }

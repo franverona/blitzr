@@ -68,6 +68,16 @@ export function drillStreak(reviewDays: string[], now: Date): number {
   return streak
 }
 
+/** Whether each of the last `days` local days had a review, oldest first (today last). */
+export function drillWeek(reviewDays: string[], now: Date, days = 7): boolean[] {
+  const reviewed = new Set(reviewDays)
+  return Array.from({ length: days }, (_, i) => {
+    const day = new Date(now)
+    day.setDate(day.getDate() - (days - 1 - i))
+    return reviewed.has(localDay(day))
+  })
+}
+
 /**
  * Of the most recent `limit` games with a repertoire for their color, how many
  * left it. `games` must be newest first.

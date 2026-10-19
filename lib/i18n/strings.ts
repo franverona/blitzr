@@ -37,7 +37,10 @@ const en = {
       n === 1 ? "card in today's session" : "cards in today's session",
     dueBreakdown: (due: number, deviations: number, blunders: number) =>
       `${due} due: ${deviations} repertoire, ${blunders} blunder`,
-    streak: (days: number) => `Drilled ${days} day${days === 1 ? '' : 's'} in a row`,
+    streak: (days: number) => `${days}-day streak`,
+    noStreak: 'Drill today to start a streak',
+    keepStreak: 'Drill today to keep it',
+    streakWeek: 'Days drilled this week (today on the right)',
     startDrill: 'Start drilling',
     accuracyTitle: 'Last 7 days',
     accuracyVsAverage: (games: number, overall: number) =>
@@ -587,7 +590,10 @@ const es: Strings = {
       n === 1 ? 'tarjeta en la sesión de hoy' : 'tarjetas en la sesión de hoy',
     dueBreakdown: (due: number, deviations: number, blunders: number) =>
       `${due} pendientes: ${deviations} de repertorio, ${blunders} de errores`,
-    streak: (days: number) => `${days} ${days === 1 ? 'día' : 'días'} seguidos entrenando`,
+    streak: (days: number) => `Racha de ${days} ${days === 1 ? 'día' : 'días'}`,
+    noStreak: 'Entrena hoy para empezar una racha',
+    keepStreak: 'Entrena hoy para mantenerla',
+    streakWeek: 'Días entrenados esta semana (hoy a la derecha)',
     startDrill: 'Empezar a entrenar',
     accuracyTitle: 'Últimos 7 días',
     accuracyVsAverage: (games: number, overall: number) =>

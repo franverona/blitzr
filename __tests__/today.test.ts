@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { drillStreak, localDay, recentResults, repertoireDeviations } from '@/lib/today'
+import { drillStreak, drillWeek, localDay, recentResults, repertoireDeviations } from '@/lib/today'
 import type { Game, RepertoireColor, RepertoireNode } from '@/lib/types'
 
 const START = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
@@ -81,6 +81,22 @@ describe('drillStreak', () => {
 
   it('is 0 after a missed day', () => {
     expect(drillStreak([day(2), day(3)], now)).toBe(0)
+  })
+})
+
+describe('drillWeek', () => {
+  const day = (n: number) => localDay(new Date(now.getTime() - n * 86400000))
+
+  it('marks the last 7 days, oldest first', () => {
+    expect(drillWeek([day(0), day(2), day(6), day(7)], now)).toEqual([
+      true,
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+    ])
   })
 })
 
