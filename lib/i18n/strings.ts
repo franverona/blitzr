@@ -16,6 +16,7 @@ const en = {
     pawns: (n: number) => `${n.toFixed(1)} pawns`,
   },
   nav: {
+    today: 'Today',
     games: 'Games',
     openings: 'Openings',
     learn: 'Learn',
@@ -25,6 +26,23 @@ const en = {
     puzzles: 'Puzzles',
     collapse: 'Collapse',
     expand: 'Expand',
+  },
+  today: {
+    title: 'Today',
+    drillTitle: 'Drill',
+    cardsDue: (n: number): string => (n === 1 ? 'card due' : 'cards due'),
+    startDrill: 'Start drilling',
+    analysisTitle: 'Analysis',
+    unanalyzed: (n: number): string =>
+      n === 1 ? 'game not analyzed yet' : 'games not analyzed yet',
+    accuracyTitle: 'Last 7 days',
+    accuracyVsAverage: (games: number, overall: number) =>
+      `Accuracy over ${games} game${games === 1 ? '' : 's'}, against ${overall}% on average`,
+    noRecentGames: 'No analyzed games in the last 7 days.',
+    seeBlunders: 'See blunders',
+    puzzleTitle: 'Next puzzle',
+    puzzleLabel: (id: number, mateIn: number) => `#${id} · Mate in ${mateIn}`,
+    allPuzzlesSolved: 'Every puzzle is solved.',
   },
   settings: {
     trigger: 'Settings',
@@ -527,6 +545,7 @@ const es: Strings = {
     pawns: (n: number) => `${n.toFixed(1)} peones`,
   },
   nav: {
+    today: 'Hoy',
     games: 'Partidas',
     openings: 'Aperturas',
     learn: 'Aprender',
@@ -536,6 +555,22 @@ const es: Strings = {
     puzzles: 'Problemas',
     collapse: 'Contraer',
     expand: 'Expandir',
+  },
+  today: {
+    title: 'Hoy',
+    drillTitle: 'Entrenar',
+    cardsDue: (n: number): string => (n === 1 ? 'tarjeta pendiente' : 'tarjetas pendientes'),
+    startDrill: 'Empezar a entrenar',
+    analysisTitle: 'Análisis',
+    unanalyzed: (n: number): string => (n === 1 ? 'partida sin analizar' : 'partidas sin analizar'),
+    accuracyTitle: 'Últimos 7 días',
+    accuracyVsAverage: (games: number, overall: number) =>
+      `Precisión en ${games} ${games === 1 ? 'partida' : 'partidas'}, frente a un ${overall}% de media`,
+    noRecentGames: 'No hay partidas analizadas en los últimos 7 días.',
+    seeBlunders: 'Ver errores',
+    puzzleTitle: 'Siguiente problema',
+    puzzleLabel: (id: number, mateIn: number) => `#${id} · Mate en ${mateIn}`,
+    allPuzzlesSolved: 'Todos los problemas están resueltos.',
   },
   settings: {
     trigger: 'Ajustes',

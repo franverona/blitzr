@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { cache } from 'react'
-import { buildAccuracyTrend } from '@/lib/accuracyTrend'
+import { buildAccuracyTrend, recentAccuracy } from '@/lib/accuracyTrend'
 import { buildBlunderStats } from '@/lib/blunders'
 import { ChesscomApiError, fetchPlayerAvatar } from '@/lib/chesscom/client'
 import { endOfDaySeconds, formatDate, startOfDaySeconds } from '@/lib/dates'
@@ -25,6 +25,7 @@ import type { DrillCandidate } from '@/lib/drill'
 import { parseManualGame, type ManualGameSide } from '@/lib/manualGame'
 import { summarizeMoveQuality } from '@/lib/moveQuality'
 import { buildOpeningFamilies, ecoFamilyLabel, unknownOpeningLabel } from '@/lib/openings'
+import { MATE_PROBLEMS } from '@/lib/mateProblems'
 import { countGamesReachingLine } from '@/lib/openingTheory'
 import { isStandardChess, startsFromStandardPosition } from '@/lib/positions'
 import { listPendingArchives, syncArchive } from '@/lib/sync'
@@ -154,6 +155,7 @@ export async function syncArchiveMonth(
     // Per month, so a first sync fills the list as it goes.
     revalidatePath('/')
     revalidatePath('/openings')
+    revalidatePath('/today')
     return { ok: true, gamesUpserted }
   } catch (err) {
     return syncError(err)
@@ -241,6 +243,7 @@ export async function saveGameAnalysis(
   revalidatePath(`/games/${gameId}`)
   revalidatePath('/blunders')
   revalidatePath('/')
+  revalidatePath('/today')
 }
 
 export async function getUnanalyzedGames(): Promise<UnanalyzedGame[]> {
@@ -289,19 +292,8 @@ function openingLabel(game: Game): string {
   return game.ecoName ? ecoFamilyLabel(game.ecoName) : unknownOpeningLabel()
 }
 
-/**
- * Syncs the drill deck with current data (adds new candidates, prunes stale
- * cards) and returns the next session's prompts. Runs on every /drill load.
- */
-export async function getDrillDeck(filters?: {
-  sourceType?: DrillSourceType
-  opening?: string
-}): Promise<{
-  prompts: DrillPrompt[]
-  totalCards: number
-  dueCount: number
-  availableOpenings: string[]
-}> {
+/** Adds new drill candidates and prunes stale cards; every deck read goes through it. */
+async function reconcileDrillCards() {
   const repo = getRepository()
   const [games, standardStartGames, whiteNodes, blackNodes, analyses, existingCards] =
     await Promise.all([
@@ -331,6 +323,25 @@ export async function getDrillDeck(filters?: {
     ...(stale.length > 0 ? [repo.deleteDrillCards(stale)] : []),
     ...added.map((c) => repo.upsertDrillCard(c)),
   ])
+
+  return { liveCards, gamesById, repertoireByColor, analysesByGameId, now }
+}
+
+/**
+ * Syncs the drill deck with current data (adds new candidates, prunes stale
+ * cards) and returns the next session's prompts. Runs on every /drill load.
+ */
+export async function getDrillDeck(filters?: {
+  sourceType?: DrillSourceType
+  opening?: string
+}): Promise<{
+  prompts: DrillPrompt[]
+  totalCards: number
+  dueCount: number
+  availableOpenings: string[]
+}> {
+  const { liveCards, gamesById, repertoireByColor, analysesByGameId, now } =
+    await reconcileDrillCards()
 
   const filteredDue = dueDrillCards(liveCards, now, filters, (gameId) => {
     const game = gamesById.get(gameId)
@@ -401,6 +412,31 @@ export async function submitDrillAnswer(
     createdAt: current?.createdAt ?? now.toISOString(),
   })
   revalidatePath('/drill')
+  revalidatePath('/today')
+}
+
+/** Everything the /today page shows. */
+export async function getTodaySummary(): Promise<{
+  dueCards: number
+  unanalyzedGames: number
+  accuracy: ReturnType<typeof recentAccuracy>
+  nextPuzzleId: number | null
+}> {
+  const [{ liveCards, now }, unanalyzed, games, analyses, solved] = await Promise.all([
+    reconcileDrillCards(),
+    getUnanalyzedGames(),
+    cachedMyStandardGames(),
+    cachedListAllGameAnalyses(),
+    getRepository().listSolvedPuzzleIds(),
+  ])
+  const solvedIds = new Set(solved)
+  const trend = buildAccuracyTrend(games, new Map(analyses.map((a) => [a.gameId, a])))
+  return {
+    dueCards: dueDrillCards(liveCards, now, undefined, () => undefined).length,
+    unanalyzedGames: unanalyzed.length,
+    accuracy: recentAccuracy(trend, now),
+    nextPuzzleId: MATE_PROBLEMS.find((p) => !solvedIds.has(p.id))?.id ?? null,
+  }
 }
 
 export async function getSolvedPuzzleIds(): Promise<number[]> {
@@ -410,4 +446,5 @@ export async function getSolvedPuzzleIds(): Promise<number[]> {
 export async function markPuzzleSolved(puzzleId: number): Promise<void> {
   await getRepository().markPuzzleSolved(puzzleId)
   revalidatePath('/puzzles')
+  revalidatePath('/today')
 }

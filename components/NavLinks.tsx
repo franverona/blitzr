@@ -10,10 +10,12 @@ import {
   LibraryBigIcon,
   PuzzleIcon,
   ShieldAlertIcon,
+  SunIcon,
   SwatchBookIcon,
 } from './NavIcons'
 
 const LINK_ROUTES = [
+  { href: '/today', key: 'today', Icon: SunIcon },
   { href: '/', key: 'games', Icon: ChessPawnIcon },
   { href: '/openings', key: 'openings', Icon: SwatchBookIcon },
   { href: '/learn', key: 'learn', Icon: GraduationCapIcon },
