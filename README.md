@@ -56,8 +56,9 @@ cp .env.example .env.local   # set CHESSCOM_USERNAME
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000), go to **Games** and click **Sync games**. Later syncs only
-fetch months that aren't complete yet.
+Open [http://localhost:3000](http://localhost:3000), go to **Games** and click **Sync games**. Later
+syncs only fetch months that aren't complete yet, and run on their own when you open Blitzr more
+than an hour after the last one. A sync that adds games offers to analyze them.
 
 The database is created at `./data/blitzr.db` on first run. To reset, delete it and re-sync.
 

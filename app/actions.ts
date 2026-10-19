@@ -7,7 +7,7 @@ import { buildAccuracyTrend, recentAccuracy } from '@/lib/accuracyTrend'
 import { buildBlunderStats } from '@/lib/blunders'
 import { ChesscomApiError, fetchPlayerAvatar } from '@/lib/chesscom/client'
 import { endOfDaySeconds, formatDate, startOfDaySeconds } from '@/lib/dates'
-import { getChesscomUsername } from '@/lib/config'
+import { getChesscomUsername, hasChesscomUsername } from '@/lib/config'
 import { getRepository } from '@/lib/db'
 import { getLocale } from '@/lib/i18n/locale'
 import { getStrings } from '@/lib/i18n/strings'
@@ -29,7 +29,7 @@ import { buildOpeningFamilies, ecoFamilyLabel, unknownOpeningLabel } from '@/lib
 import { MATE_PROBLEMS } from '@/lib/mateProblems'
 import { OPENING_LESSONS, countGamesReachingLine } from '@/lib/openingTheory'
 import { buildPositions, isStandardChess, startsFromStandardPosition } from '@/lib/positions'
-import { listPendingArchives, syncArchive } from '@/lib/sync'
+import { isSyncStale, listPendingArchives, syncArchive } from '@/lib/sync'
 import { describeBlunderReason } from '@/lib/tactics'
 import {
   drillStreak,
@@ -140,19 +140,10 @@ function syncError(err: unknown): SyncError {
   return { ok: false, error: s.sync.failed }
 }
 
-function hasUsername(): boolean {
-  try {
-    getChesscomUsername()
-    return true
-  } catch {
-    return false
-  }
-}
-
 /** Step 1 of a sync; the client then calls syncArchiveMonth() per month to
  *  show progress. Errors are returned, not thrown, as in addManualGame(). */
 export async function listArchivesToSync(): Promise<{ ok: true; archives: string[] } | SyncError> {
-  if (!hasUsername()) return { ok: false, error: getStrings().sync.noUsername }
+  if (!hasChesscomUsername()) return { ok: false, error: getStrings().sync.noUsername }
   try {
     return { ok: true, archives: await listPendingArchives() }
   } catch (err) {
@@ -433,6 +424,7 @@ export async function submitDrillAnswer(
 /** Everything the Today page (`/`) shows. Each recent stat covers the last 7 days. */
 export async function getTodaySummary(): Promise<{
   hasGames: boolean
+  hasUsername: boolean
   drill: {
     due: number
     dueDeviations: number
@@ -462,7 +454,7 @@ export async function getTodaySummary(): Promise<{
   repertoire: ReturnType<typeof repertoireDeviations>
   puzzles: { nextId: number | null; solved: number; total: number }
   lastSyncedAt: string | null
-  /** Under an hour old, auto-sync's threshold. */
+  /** Not yet stale by auto-sync's `isSyncStale()`. */
   syncIsFresh: boolean
 }> {
   const repo = getRepository()
@@ -516,6 +508,7 @@ export async function getTodaySummary(): Promise<{
 
   return {
     hasGames: allGames.length > 0,
+    hasUsername: hasChesscomUsername(),
     drill: {
       due: due.length,
       dueDeviations: due.filter((c) => c.sourceType === 'deviation').length,
@@ -570,8 +563,7 @@ export async function getTodaySummary(): Promise<{
           games: suggested.games,
         }
       : null,
-    syncIsFresh:
-      syncedAts.length > 0 && now.getTime() - Date.parse(syncedAts.at(-1)!) < 60 * 60 * 1000,
+    syncIsFresh: syncedAts.length > 0 && !isSyncStale(syncedAts, now),
   }
 }
 

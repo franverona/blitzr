@@ -50,6 +50,7 @@ components/
   PositionChecklist.tsx     # live hanging-piece/fork/pin/skewer scan
   SettingsProvider.tsx      # per-viewer settings context (cookie-seeded)
   BulkAnalysisProvider.tsx  # "Analyze all" run state, mounted in the root layout
+  SyncProvider.tsx          # sync run state + auto-sync on open, mounted in the root layout
   GameSearchForm.tsx        # games list filters
   DateRangeFilter.tsx       # /blunders date range
   AccuracyTrendChart.tsx    # hand-rolled SVG chart on /blunders
@@ -167,9 +168,14 @@ scripts/
 ## Chess.com ingestion
 
 - `https://api.chess.com/pub`, no API key. Always send a descriptive `User-Agent`.
+- A missing `CHESSCOM_USERNAME` fails soft (`hasChesscomUsername()`): the games page shows a setup
+  notice instead, then an "Analyze all" hint while games exist but none is analyzed.
 - Archives are fetched **serially**; 429s retry with backoff honoring `Retry-After`. The client
   drives a sync (`listArchivesToSync()`, then `syncArchiveMonth()` per month) so `SyncButton` can
   show progress; each month revalidates `/games`, and a failed month leaves earlier ones saved.
+- Sync state lives in `SyncProvider` (root layout, inside `BulkAnalysisProvider`). Opening the app
+  syncs once if the newest `sync_state.synced_at` is over an hour old (`isSyncStale()`; never before a
+  first manual sync), silently unless it finds games. A sync that adds games offers "Analyze them".
 - Incremental: `sync_state` marks months `complete`/`partial`. The current month, and the previous
   one until a full UTC day has passed (`oldestOpenArchiveYm()`), are always re-fetched.
 - Ingestion is unfiltered (variants, daily, everything). Filtering happens in `app/actions.ts`:

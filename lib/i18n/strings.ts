@@ -339,6 +339,7 @@ const en = {
     noUsername: 'CHESSCOM_USERNAME is not set. Copy .env.example to .env.local and fill it in.',
     synced: (archives: number, games: number) =>
       `Synced ${archives} archive${archives === 1 ? '' : 's'}, ${games} game${games === 1 ? '' : 's'} added.`,
+    analyzeNew: 'Analyze them',
   },
   addPgn: {
     button: 'Add game by PGN',
@@ -435,6 +436,10 @@ const en = {
     anyAccuracy: 'Any accuracy',
     accuracyAtLeast: 'Accuracy ≥',
     accuracyAtMost: 'Accuracy ≤',
+    setupUsername:
+      'To get started, copy .env.example to .env.local, set CHESSCOM_USERNAME to your Chess.com username, restart Blitzr, then click "Sync games".',
+    setupAnalyze:
+      'Next, click "Analyze all" to find your blunders. Stockfish runs in this browser tab and keeps going while you browse other pages.',
   },
   blundersPage: {
     title: 'Blunders',
@@ -917,6 +922,7 @@ const es: Strings = {
       'CHESSCOM_USERNAME no está configurado. Copia .env.example a .env.local y rellénalo.',
     synced: (archives: number, games: number) =>
       `${archives} ${archives === 1 ? 'archivo sincronizado' : 'archivos sincronizados'}, ${games} ${games === 1 ? 'partida añadida' : 'partidas añadidas'}.`,
+    analyzeNew: 'Analizarlas',
   },
   addPgn: {
     button: 'Añadir partida por PGN',
@@ -1015,6 +1021,10 @@ const es: Strings = {
     anyAccuracy: 'Cualquier precisión',
     accuracyAtLeast: 'Precisión ≥',
     accuracyAtMost: 'Precisión ≤',
+    setupUsername:
+      'Para empezar, copia .env.example a .env.local, pon tu usuario de Chess.com en CHESSCOM_USERNAME, reinicia Blitzr y haz clic en "Sincronizar partidas".',
+    setupAnalyze:
+      'Ahora haz clic en "Analizar todas" para encontrar tus errores. Stockfish se ejecuta en esta pestaña del navegador y sigue mientras navegas por otras páginas.',
   },
   blundersPage: {
     title: 'Errores',

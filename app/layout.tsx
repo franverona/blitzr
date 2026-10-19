@@ -2,15 +2,18 @@ import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { cookies } from 'next/headers'
 import { Suspense } from 'react'
+import { getArchiveSyncStatus } from './actions'
 import { SettingsProvider } from '@/components/SettingsProvider'
 import { BulkAnalysisProvider } from '@/components/BulkAnalysisProvider'
 import { RouteProgressBar } from '@/components/RouteProgressBar'
 import { Sidebar } from '@/components/Sidebar'
+import { SyncProvider } from '@/components/SyncProvider'
 import { fetchPlayerAvatar } from '@/lib/chesscom/client'
 import { getChesscomUsername } from '@/lib/config'
 import { getSessionSize } from '@/lib/drill'
 import { getLocale } from '@/lib/i18n/locale'
 import { getStrings } from '@/lib/i18n/strings'
+import { isSyncStale } from '@/lib/sync'
 import { getBoardColorPreset, getPlaySpeed, getTrainingOrientation } from '@/lib/theme'
 import './globals.css'
 
@@ -43,6 +46,14 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     username = null
   }
   const avatarUrl = username ? await fetchPlayerAvatar(username) : null
+  let autoSync = false
+  if (username) {
+    try {
+      autoSync = isSyncStale((await getArchiveSyncStatus()).map((a) => a.syncedAt))
+    } catch {
+      // A database error belongs to the page's error boundary, not the layout.
+    }
+  }
   // Settings are read from cookies server-side so the first paint is right
   // (no flash). Board colors in particular are inline-style props on
   // react-chessboard, so they can't be patched after render.
@@ -85,17 +96,19 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           )}
         >
           <BulkAnalysisProvider>
-            <Sidebar
-              username={username}
-              avatarUrl={avatarUrl}
-              initialCollapsed={sidebarCollapsed}
-            />
-            <main
-              id="main-scroll"
-              className="min-w-0 flex-1 overflow-y-auto px-6 pt-6 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-6"
-            >
-              <div className="mx-auto max-w-7xl">{children}</div>
-            </main>
+            <SyncProvider autoSync={autoSync}>
+              <Sidebar
+                username={username}
+                avatarUrl={avatarUrl}
+                initialCollapsed={sidebarCollapsed}
+              />
+              <main
+                id="main-scroll"
+                className="min-w-0 flex-1 overflow-y-auto px-6 pt-6 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-6"
+              >
+                <div className="mx-auto max-w-7xl">{children}</div>
+              </main>
+            </SyncProvider>
           </BulkAnalysisProvider>
         </SettingsProvider>
       </body>
