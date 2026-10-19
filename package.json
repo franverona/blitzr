@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "packageManager": "pnpm@12.5.1",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -12,6 +15,7 @@
     "lint": "eslint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "preinstall": "node -e \"if (+process.versions.node.split('.')[0] < 22) { console.error('blitzr needs Node 22+ (see .nvmrc)'); process.exit(1) }\"",
     "prepare": "husky",
     "postinstall": "node scripts/setup-stockfish.mjs"
   },

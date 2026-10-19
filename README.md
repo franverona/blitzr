@@ -46,6 +46,8 @@ implies endorsement.
 
 ## Getting started
 
+Needs Node 22+ (`.nvmrc`); `pnpm install` refuses older versions.
+
 ```bash
 pnpm install
 cp .env.example .env.local   # set CHESSCOM_USERNAME
