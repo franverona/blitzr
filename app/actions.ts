@@ -153,9 +153,9 @@ export async function syncArchiveMonth(
   try {
     const gamesUpserted = await syncArchive(archiveYm)
     // Per month, so a first sync fills the list as it goes.
-    revalidatePath('/')
+    revalidatePath('/games')
     revalidatePath('/openings')
-    revalidatePath('/today')
+    revalidatePath('/')
     return { ok: true, gamesUpserted }
   } catch (err) {
     return syncError(err)
@@ -176,7 +176,7 @@ export async function addManualGame(
     return { ok: false, error: err instanceof Error ? err.message : '' }
   }
   await getRepository().upsertGames([game])
-  revalidatePath('/')
+  revalidatePath('/games')
   return { ok: true, gameId: game.id }
 }
 
@@ -186,7 +186,7 @@ export async function deleteManualGame(id: string): Promise<void> {
   const game = await repo.getGame(id)
   if (game?.archiveYm !== 'manual') return
   await repo.deleteGame(id)
-  for (const path of ['/', '/openings', '/blunders', '/drill']) revalidatePath(path)
+  for (const path of ['/', '/games', '/openings', '/blunders', '/drill']) revalidatePath(path)
 }
 
 export async function exportDatabaseBackup(): Promise<
@@ -242,8 +242,8 @@ export async function saveGameAnalysis(
   })
   revalidatePath(`/games/${gameId}`)
   revalidatePath('/blunders')
+  revalidatePath('/games')
   revalidatePath('/')
-  revalidatePath('/today')
 }
 
 export async function getUnanalyzedGames(): Promise<UnanalyzedGame[]> {
@@ -412,17 +412,19 @@ export async function submitDrillAnswer(
     createdAt: current?.createdAt ?? now.toISOString(),
   })
   revalidatePath('/drill')
-  revalidatePath('/today')
+  revalidatePath('/')
 }
 
 /** Everything the /today page shows. */
 export async function getTodaySummary(): Promise<{
+  hasGames: boolean
   dueCards: number
   unanalyzedGames: number
   accuracy: ReturnType<typeof recentAccuracy>
   nextPuzzleId: number | null
 }> {
-  const [{ liveCards, now }, unanalyzed, games, analyses, solved] = await Promise.all([
+  const [allGames, { liveCards, now }, unanalyzed, games, analyses, solved] = await Promise.all([
+    cachedListAllGames(),
     reconcileDrillCards(),
     getUnanalyzedGames(),
     cachedMyStandardGames(),
@@ -432,6 +434,7 @@ export async function getTodaySummary(): Promise<{
   const solvedIds = new Set(solved)
   const trend = buildAccuracyTrend(games, new Map(analyses.map((a) => [a.gameId, a])))
   return {
+    hasGames: allGames.length > 0,
     dueCards: dueDrillCards(liveCards, now, undefined, () => undefined).length,
     unanalyzedGames: unanalyzed.length,
     accuracy: recentAccuracy(trend, now),
@@ -446,5 +449,5 @@ export async function getSolvedPuzzleIds(): Promise<number[]> {
 export async function markPuzzleSolved(puzzleId: number): Promise<void> {
   await getRepository().markPuzzleSolved(puzzleId)
   revalidatePath('/puzzles')
-  revalidatePath('/today')
+  revalidatePath('/')
 }

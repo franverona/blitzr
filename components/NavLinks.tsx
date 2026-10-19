@@ -15,8 +15,8 @@ import {
 } from './NavIcons'
 
 const LINK_ROUTES = [
-  { href: '/today', key: 'today', Icon: SunIcon },
-  { href: '/', key: 'games', Icon: ChessPawnIcon },
+  { href: '/', key: 'today', Icon: SunIcon },
+  { href: '/games', key: 'games', Icon: ChessPawnIcon },
   { href: '/openings', key: 'openings', Icon: SwatchBookIcon },
   { href: '/learn', key: 'learn', Icon: GraduationCapIcon },
   { href: '/repertoire', key: 'repertoire', Icon: LibraryBigIcon },
@@ -25,9 +25,9 @@ const LINK_ROUTES = [
   { href: '/blunders', key: 'blunders', Icon: ShieldAlertIcon },
 ] as const
 
-// Game pages live under /games/:id, not under the Games link's "/".
+// "/" (Today) would otherwise prefix-match every route.
 function isLinkActive(pathname: string, href: string): boolean {
-  if (href === '/') return pathname === '/' || pathname.startsWith('/games/')
+  if (href === '/') return pathname === '/'
   return pathname === href || pathname.startsWith(`${href}/`)
 }
 

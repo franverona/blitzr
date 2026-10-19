@@ -23,7 +23,8 @@ Built incrementally, one feature or fix at a time — don't scaffold speculative
 ```
 app/
   actions.ts                # all DB reads/writes + sync/analysis triggers (Server Actions)
-  page.tsx                  # games list (paginated, filterable)
+  page.tsx                  # Today: due cards, unanalyzed games, recent accuracy, next puzzle
+  games/page.tsx            # games list (paginated, filterable)
   layout.tsx                # sidebar nav + main content, reads settings cookies
   error.tsx / not-found.tsx / loading.tsx  # root fallbacks; loading streams, so `notFound()` returns 200
   games/[id]/page.tsx       # single game — replay, repertoire diff, analysis
@@ -36,7 +37,6 @@ app/
   blunders/page.tsx         # cross-game blunder aggregate + accuracy trend
   puzzles/page.tsx          # mate-in-N puzzle list
   puzzles/[id]/page.tsx     # one puzzle
-  today/page.tsx            # due cards, unanalyzed games, recent accuracy, next puzzle
 components/
   Board.tsx                 # BoardProvider/BoardView/BoardNavControls/LiveAnalysisProvider
   LiveAnalysisPanel.tsx     # live MultiPV engine lines
@@ -167,7 +167,7 @@ scripts/
 - `https://api.chess.com/pub`, no API key. Always send a descriptive `User-Agent`.
 - Archives are fetched **serially**; 429s retry with backoff honoring `Retry-After`. The client
   drives a sync (`listArchivesToSync()`, then `syncArchiveMonth()` per month) so `SyncButton` can
-  show progress; each month revalidates `/`, and a failed month leaves earlier ones saved.
+  show progress; each month revalidates `/games`, and a failed month leaves earlier ones saved.
 - Incremental: `sync_state` marks months `complete`/`partial`. The current month, and the previous
   one until a full UTC day has passed (`oldestOpenArchiveYm()`), are always re-fetched.
 - Ingestion is unfiltered (variants, daily, everything). Filtering happens in `app/actions.ts`:
@@ -211,7 +211,7 @@ a prepared move. An opponent's unprepared move or the tree running out doesn't c
   navigation. Cancel is checked between games, so an in-flight game always finishes and saves.
   While a run is active, `beforeunload` asks before the tab closes.
 - The games list's accuracy/error columns come from `getGameAccuracyById()` (not a `Game` field);
-  `saveGameAnalysis()` revalidates `/` so they update during a bulk run.
+  `saveGameAnalysis()` revalidates `/games` so they update during a bulk run.
 - Tactical explanations (`lib/tactics.ts`, `lib/hangingPiece.ts`) are deliberately narrow:
   one-ply lookback, no exchange evaluation, absolute pins only. `detectBlunderReason()` is the
   entry point; `describeBetterMove()` explains the engine's move and appends its plan.
@@ -261,8 +261,8 @@ section. The trend chart's x-axis is game index, not date, because sessions are 
 
 ## Today
 
-`getTodaySummary()` feeds `/today` (first in the nav): the due count goes through the same
-`reconcileDrillCards()` as `getDrillDeck()`, so it matches `/drill`; accuracy is
+`getTodaySummary()` feeds `/`, the landing page (the games list is `/games`): the due count goes
+through the same `reconcileDrillCards()` as `getDrillDeck()`, so it matches `/drill`; accuracy is
 `recentAccuracy()` (last 7 days against every analyzed game); the next puzzle is the first unsolved
 one in `MATE_PROBLEMS` order.
 

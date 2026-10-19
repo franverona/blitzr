@@ -56,7 +56,7 @@ cp .env.example .env.local   # set CHESSCOM_USERNAME
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) and click **Sync games**. Later syncs only
+Open [http://localhost:3000](http://localhost:3000), go to **Games** and click **Sync games**. Later syncs only
 fetch months that aren't complete yet.
 
 The database is created at `./data/blitzr.db` on first run. To reset, delete it and re-sync.
@@ -174,7 +174,7 @@ adapted, in original wording, from Wikibooks'
 
 ### Today
 
-`/today` gathers what's waiting: drill cards due, games not analyzed yet (with **Analyze all**),
+The landing page, **Today** (`/`), gathers what's waiting: drill cards due, games not analyzed yet (with **Analyze all**),
 your accuracy over the last 7 days against your overall average, and the next unsolved puzzle.
 
 ### Puzzles

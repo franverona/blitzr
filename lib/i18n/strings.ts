@@ -29,6 +29,8 @@ const en = {
   },
   today: {
     title: 'Today',
+    noGames: 'No games yet — sync your Chess.com history to fill this page.',
+    goToGames: 'Go to Games',
     drillTitle: 'Drill',
     cardsDue: (n: number): string => (n === 1 ? 'card due' : 'cards due'),
     startDrill: 'Start drilling',
@@ -558,6 +560,8 @@ const es: Strings = {
   },
   today: {
     title: 'Hoy',
+    noGames: 'Aún no hay partidas — sincroniza tu historial de Chess.com para llenar esta página.',
+    goToGames: 'Ir a Partidas',
     drillTitle: 'Entrenar',
     cardsDue: (n: number): string => (n === 1 ? 'tarjeta pendiente' : 'tarjetas pendientes'),
     startDrill: 'Empezar a entrenar',
