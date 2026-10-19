@@ -105,3 +105,25 @@ export function parseManualGame(
     createdAt: new Date().toISOString(),
   }
 }
+
+// Chess.com URLs vary: "/analysis/game/…/analysis", "?move=0"; the type and id are what match.
+const CHESSCOM_GAME_ID = /\/game\/(live|daily|computer)\/(\d+)/
+
+/** Keys a game can be matched on: its Chess.com game id, and its players plus moves. */
+function duplicateKeys(game: Game): string[] {
+  const keys = [
+    `players:${game.whiteUsername.toLowerCase()}|${game.blackUsername.toLowerCase()}|${(game.movesSan ?? []).join(' ')}`,
+  ]
+  const id = game.url.match(CHESSCOM_GAME_ID)
+  if (id) keys.push(`chesscom:${id[1]}/${id[2]}`)
+  return keys
+}
+
+/**
+ * A game in `existing` that is the same game as `game`. A pasted copy has a
+ * random id, so the id-based ON CONFLICT can't catch it; this can.
+ */
+export function findDuplicateGame(game: Game, existing: Game[]): Game | undefined {
+  const keys = new Set(duplicateKeys(game))
+  return existing.find((other) => duplicateKeys(other).some((key) => keys.has(key)))
+}
