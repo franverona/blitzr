@@ -8,7 +8,8 @@ import {
   type PuzzleStatusFilter,
 } from '@/components/PuzzleFilters'
 import { getStrings } from '@/lib/i18n/strings'
-import { MATE_PROBLEMS, puzzleColorToMove } from '@/lib/mateProblems'
+import { puzzleColorToMove } from '@/lib/mateProblems'
+import { allMateProblems } from '@/lib/puzzleSet'
 import { getTrainingOrientation, resolveOrientation } from '@/lib/theme'
 
 // Each card is a live react-chessboard; rendering 200+ at once hit
@@ -46,9 +47,12 @@ export default async function PuzzlesPage({
   const mateIn = mateInParam ? Number(mateInParam) : undefined
 
   const solvedIds = new Set(await getSolvedPuzzleIds())
-  const availableMateIns = [...new Set(MATE_PROBLEMS.map((p) => p.mateIn))].sort((a, b) => a - b)
+  const problems = allMateProblems()
+  // Progress can include puzzles missing from this set (e.g. local Polgár on another machine).
+  const solvedCount = problems.filter((p) => solvedIds.has(p.id)).length
+  const availableMateIns = [...new Set(problems.map((p) => p.mateIn))].sort((a, b) => a - b)
 
-  const filtered = MATE_PROBLEMS.filter((problem) => {
+  const filtered = problems.filter((problem) => {
     if (status === 'solved' && !solvedIds.has(problem.id)) return false
     if (status === 'unsolved' && solvedIds.has(problem.id)) return false
     if (color !== 'all' && puzzleColorToMove(problem) !== color) return false
@@ -56,7 +60,7 @@ export default async function PuzzlesPage({
     return true
   })
   // Ignores the status filter but honors color/mateIn.
-  const nextUnsolved = MATE_PROBLEMS.find((problem) => {
+  const nextUnsolved = problems.find((problem) => {
     if (solvedIds.has(problem.id)) return false
     if (color !== 'all' && puzzleColorToMove(problem) !== color) return false
     if (mateIn !== undefined && problem.mateIn !== mateIn) return false
@@ -71,17 +75,17 @@ export default async function PuzzlesPage({
       <div className="flex flex-col gap-1 border-b border-zinc-200 pb-4 dark:border-zinc-800">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 className="text-xl font-semibold">{s.puzzlesPage.title}</h1>
-          {MATE_PROBLEMS.length > 0 && (
+          {problems.length > 0 && (
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
                 <div className="h-1.5 w-24 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800">
                   <div
                     className="h-full rounded-full bg-emerald-500 transition-[width]"
-                    style={{ width: `${(solvedIds.size / MATE_PROBLEMS.length) * 100}%` }}
+                    style={{ width: `${(solvedCount / problems.length) * 100}%` }}
                   />
                 </div>
                 <span className="text-sm text-zinc-500 dark:text-zinc-400">
-                  {s.puzzlesPage.solvedCount(solvedIds.size, MATE_PROBLEMS.length)}
+                  {s.puzzlesPage.solvedCount(solvedCount, problems.length)}
                 </span>
               </div>
               {nextUnsolved && (
@@ -98,7 +102,7 @@ export default async function PuzzlesPage({
         <p className="text-sm text-zinc-500 dark:text-zinc-400">{s.puzzlesPage.intro}</p>
       </div>
 
-      {MATE_PROBLEMS.length === 0 ? (
+      {problems.length === 0 ? (
         <p className="text-sm text-zinc-500 dark:text-zinc-400">{s.puzzlesPage.empty}</p>
       ) : (
         <>
@@ -147,7 +151,13 @@ export default async function PuzzlesPage({
                     </div>
                     <p className="text-sm font-medium">{problem.title}</p>
                     <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                      {[problem.source, problem.year].filter(Boolean).join(', ')}
+                      {[
+                        problem.source,
+                        problem.year,
+                        problem.rating && s.puzzles.rating(problem.rating),
+                      ]
+                        .filter(Boolean)
+                        .join(', ')}
                     </p>
                   </Link>
                 )

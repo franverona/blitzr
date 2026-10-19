@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { PuzzleBoard } from '@/components/PuzzleBoard'
 import { getStrings } from '@/lib/i18n/strings'
-import { getMateProblem, MATE_PROBLEMS } from '@/lib/mateProblems'
+import { allMateProblems, getMateProblem } from '@/lib/puzzleSet'
 
 export default async function PuzzlePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -10,9 +10,10 @@ export default async function PuzzlePage({ params }: { params: Promise<{ id: str
   if (!problem) notFound()
 
   const s = getStrings()
-  const index = MATE_PROBLEMS.findIndex((p) => p.id === problem.id)
-  const previous = index > 0 ? MATE_PROBLEMS[index - 1] : null
-  const next = index < MATE_PROBLEMS.length - 1 ? MATE_PROBLEMS[index + 1] : null
+  const problems = allMateProblems()
+  const index = problems.findIndex((p) => p.id === problem.id)
+  const previous = index > 0 ? problems[index - 1] : null
+  const next = index < problems.length - 1 ? problems[index + 1] : null
 
   return (
     <div className="flex flex-col gap-4">
@@ -32,7 +33,27 @@ export default async function PuzzlePage({ params }: { params: Promise<{ id: str
           </span>
         </div>
         <p className="text-sm text-zinc-500 dark:text-zinc-400">
-          {[problem.composer, problem.source, problem.year].filter(Boolean).join(' · ')}
+          {[
+            problem.composer,
+            problem.source,
+            problem.year,
+            problem.rating && s.puzzles.rating(problem.rating),
+          ]
+            .filter(Boolean)
+            .join(' · ')}
+          {problem.url && (
+            <>
+              {' · '}
+              <a
+                href={problem.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline dark:text-blue-400"
+              >
+                {s.puzzles.viewOnLichess}
+              </a>
+            </>
+          )}
         </p>
       </div>
 
