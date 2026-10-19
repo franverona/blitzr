@@ -71,6 +71,7 @@ export async function fetchArchiveMonth(
 const AVATAR_TIMEOUT_MS = 2000
 const AVATAR_TTL_MS = 60 * 60 * 1000
 const AVATAR_FAILURE_TTL_MS = 5 * 60 * 1000
+const AVATAR_CACHE_MAX = 1000
 const avatarCache = new Map<string, { url: string | null; expires: number }>()
 
 /** Decorative, so no retries and any failure returns null. */
@@ -91,10 +92,13 @@ export async function fetchPlayerAvatar(username: string): Promise<string | null
   } catch {
     ok = false
   }
+  // Map keeps insertion order, so delete-then-set makes the first key the oldest.
+  avatarCache.delete(key)
   avatarCache.set(key, {
     url,
     expires: Date.now() + (ok ? AVATAR_TTL_MS : AVATAR_FAILURE_TTL_MS),
   })
+  if (avatarCache.size > AVATAR_CACHE_MAX) avatarCache.delete(avatarCache.keys().next().value!)
   return url
 }
 

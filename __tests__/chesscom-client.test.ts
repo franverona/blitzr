@@ -15,6 +15,19 @@ describe('fetchPlayerAvatar', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1)
   })
 
+  it('evicts the oldest entry past 1000 usernames', async () => {
+    const fetchMock = vi.fn(async () => Response.json({ avatar: 'https://img/a.png' }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    for (let i = 0; i <= 1000; i++) await fetchPlayerAvatar(`evict-${i}`)
+    fetchMock.mockClear()
+
+    await fetchPlayerAvatar('evict-1000')
+    expect(fetchMock).not.toHaveBeenCalled()
+    await fetchPlayerAvatar('evict-0')
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
   it('returns null on 429 without retrying', async () => {
     const fetchMock = vi.fn(
       async () => new Response(null, { status: 429, headers: { 'retry-after': '30' } }),
