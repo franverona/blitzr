@@ -6,7 +6,6 @@ import { MiniBoard } from '@/components/MiniBoard'
 import { getLocale } from '@/lib/i18n/locale'
 import { getStrings } from '@/lib/i18n/strings'
 import { getMateProblem, puzzleColorToMove } from '@/lib/mateProblems'
-import { plyLabel } from '@/lib/san'
 import { getTrainingOrientation, resolveOrientation } from '@/lib/theme'
 
 const linkClassName =
@@ -151,25 +150,31 @@ export default async function TodayPage() {
 
         <Card title={s.today.lastGameTitle}>
           {lastGame ? (
-            <>
-              <p className="text-sm">
-                <Link href={`/games/${lastGame.id}`} className={inlineLinkClassName}>
-                  {s.today.lastGameVs(lastGame.opponent)}
-                </Link>{' '}
-                · {s.common.result[lastGame.result]}
-              </p>
-              {lastGame.accuracy === null ? (
-                <p className={mutedClassName}>{s.today.notAnalyzed}</p>
-              ) : (
+            <div className="flex items-center gap-3">
+              <Link href={`/games/${lastGame.id}`} className="w-28 shrink-0">
+                <MiniBoard fen={lastGame.fen} boardOrientation={lastGame.myColor} />
+              </Link>
+              <div className="flex min-w-0 flex-col gap-1">
                 <p className="text-sm">
-                  {s.today.lastGameAccuracy(lastGame.accuracy)}
-                  {' · '}
-                  {lastGame.firstBlunderPly === null
-                    ? s.today.noBlunders
-                    : s.today.firstBlunder(plyLabel(lastGame.firstBlunderPly))}
+                  <Link href={`/games/${lastGame.id}`} className={inlineLinkClassName}>
+                    {s.today.lastGameVs(lastGame.opponent)}
+                  </Link>{' '}
+                  · {s.common.result[lastGame.result]}
                 </p>
-              )}
-            </>
+                {lastGame.accuracy === null ? (
+                  <p className={mutedClassName}>{s.today.notAnalyzed}</p>
+                ) : (
+                  <>
+                    <p className="text-sm">{s.today.lastGameAccuracy(lastGame.accuracy)}</p>
+                    <p className="text-sm">
+                      {lastGame.firstBlunderPly === null
+                        ? s.today.noBlunders
+                        : s.today.firstBlunder(Math.ceil(lastGame.firstBlunderPly / 2))}
+                    </p>
+                  </>
+                )}
+              </div>
+            </div>
           ) : (
             <p className={mutedClassName}>{s.today.noLastGame}</p>
           )}

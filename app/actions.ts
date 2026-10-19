@@ -27,7 +27,7 @@ import { summarizeMoveQuality } from '@/lib/moveQuality'
 import { buildOpeningFamilies, ecoFamilyLabel, unknownOpeningLabel } from '@/lib/openings'
 import { MATE_PROBLEMS } from '@/lib/mateProblems'
 import { countGamesReachingLine } from '@/lib/openingTheory'
-import { isStandardChess, startsFromStandardPosition } from '@/lib/positions'
+import { buildPositions, isStandardChess, startsFromStandardPosition } from '@/lib/positions'
 import { listPendingArchives, syncArchive } from '@/lib/sync'
 import { drillStreak, gameReview, localDay, recentResults, repertoireDeviations } from '@/lib/today'
 import { isValidAnalysis, normalizeRepertoireNode } from '@/lib/validate'
@@ -40,6 +40,7 @@ import type {
   GameAccuracy,
   GameAnalysis,
   LessonGameStats,
+  MyColor,
   MyResult,
   OpeningFamily,
   PositionEval,
@@ -436,6 +437,9 @@ export async function getTodaySummary(): Promise<{
     id: string
     opponent: string
     result: MyResult
+    myColor: MyColor
+    /** The final position, for its mini board. */
+    fen: string
     accuracy: number | null
     firstBlunderPly: number | null
   } | null
@@ -504,6 +508,12 @@ export async function getTodaySummary(): Promise<{
           id: last.id,
           opponent: last.myColor === 'white' ? last.blackUsername : last.whiteUsername,
           result: last.myResult,
+          myColor: last.myColor,
+          fen:
+            last.finalFen ??
+            (last.movesSan
+              ? buildPositions(last.initialFen, last.movesSan).at(-1)!
+              : last.initialFen),
           ...gameReview(last, analysesByGameId.get(last.id)),
         }
       : null,
