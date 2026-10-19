@@ -103,12 +103,12 @@ scripts/
   explicit light class alongside its `dark:` one. Light palette is muted: canvas `bg-zinc-100`,
   elevated surfaces `bg-zinc-50`. `EvalBar` is deliberately not themed.
 - **Per-viewer settings** (theme, board color preset, analysis strength, hide engine hints,
-  coordinates, move sounds, lesson/puzzle orientation, auto-play speed) live in `SettingsProvider`,
-  each in a `blitzr-*` cookie read server-side in `app/layout.tsx` and seeded as initial state.
-  Cookies, not localStorage, because react-chessboard's square colors are inline-style props and
-  must be right on first render. **Cookie names are duplicated as literals** in `layout.tsx` and the
-  client modules — a constant exported from a `'use client'` module reads as `undefined` in a Server
-  Component.
+  coordinates, move sounds, lesson/puzzle orientation, auto-play speed, drill session size) live in
+  `SettingsProvider`, each in a `blitzr-*` cookie read server-side in `app/layout.tsx` and seeded as
+  initial state. Cookies, not localStorage, because react-chessboard's square colors are
+  inline-style props and must be right on first render. **Cookie names are duplicated as literals**
+  in `layout.tsx` and the client modules — a constant exported from a `'use client'` module reads as
+  `undefined` in a Server Component.
 - **Lesson/puzzle orientation** (`TrainingOrientation`, `lib/theme.ts`): `auto` is the side that
   plays. Lessons still pass the lesson's color as `myColor`, so the quiz tests the same side.
 - **Board colors** are one of four presets (`BOARD_COLOR_PRESETS`, `lib/theme.ts`), consumed via
@@ -230,13 +230,14 @@ and the slider are debounced (400ms); selects navigate immediately.
 ## Drilling
 
 `drill_cards` stores only the SM-2 schedule (binary grading); prompts are re-derived by
-`buildDrillPrompt()` from deviations and own-move blunders. The deck re-syncs on every `/drill`
-load and serves the 15 most-overdue cards. `DrillSession` snapshots its prompts so revalidation
-can't reshuffle an active session. A blunder card also accepts a non-engine move when a one-off
-client-side eval rates it good or better (`isNearBestMove()`); if the engine fails, only the
-engine's move counts. **Re-analyzing a game can reset its drill progress:** another strength can
-shift which plies count as blunders, and the deck sync deletes cards (with their SM-2 schedules)
-whose ply no longer qualifies. Accepted, not a bug.
+`buildDrillPrompt()` from deviations and own-move blunders. The deck re-syncs on every `/drill` load
+and serves the most-overdue cards (`blitzr-drill-session-size` cookie: 10/15/25, default 15, read by
+`getDrillDeck()` itself). `DrillSession` snapshots its prompts so revalidation can't reshuffle an
+active session. A blunder card also accepts a non-engine move when a one-off client-side eval rates
+it good or better (`isNearBestMove()`); if the engine fails, only the engine's move counts.
+**Re-analyzing a game can reset its drill progress:** another strength can shift which plies count
+as blunders, and the deck sync deletes cards (with their SM-2 schedules) whose ply no longer
+qualifies. Accepted, not a bug.
 
 ## Blunders page
 

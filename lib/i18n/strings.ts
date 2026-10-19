@@ -51,7 +51,14 @@ const en = {
     playSpeeds: { slow: 'Slow', normal: 'Normal', fast: 'Fast' },
     playSpeedTitle: (ms: number) => `One move every ${ms / 1000}s`,
     preview: 'Preview',
-    sections: { appearance: 'Appearance', board: 'Board', analysis: 'Analysis' },
+    drillSessionSize: 'Cards per drill session',
+    drillSessionSizeHint: 'The most overdue cards come first',
+    sections: {
+      appearance: 'Appearance',
+      board: 'Board',
+      analysis: 'Analysis',
+      training: 'Training',
+    },
   },
   gameRow: {
     notMine: 'Not you',
@@ -542,7 +549,14 @@ const es: Strings = {
     playSpeeds: { slow: 'Lenta', normal: 'Normal', fast: 'Rápida' },
     playSpeedTitle: (ms: number) => `Una jugada cada ${String(ms / 1000).replace('.', ',')} s`,
     preview: 'Vista previa',
-    sections: { appearance: 'Apariencia', board: 'Tablero', analysis: 'Análisis' },
+    drillSessionSize: 'Tarjetas por sesión de entrenamiento',
+    drillSessionSizeHint: 'Primero las tarjetas más atrasadas',
+    sections: {
+      appearance: 'Apariencia',
+      board: 'Tablero',
+      analysis: 'Análisis',
+      training: 'Entrenamiento',
+    },
   },
   gameRow: {
     notMine: 'No eres tú',

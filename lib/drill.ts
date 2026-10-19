@@ -130,10 +130,21 @@ export function isNearBestMove(
 const NEW_CARD_EASE_FACTOR = 2.5
 const MIN_EASE_FACTOR = 1.3
 
-export const MAX_SESSION_CARDS = 15
+/** Cards per drill session, picked in settings. */
+export const SESSION_SIZES = [10, 15, 25] as const
+export type SessionSize = (typeof SESSION_SIZES)[number]
+export const DEFAULT_SESSION_SIZE: SessionSize = 15
+
+export function getSessionSize(raw: string | undefined): SessionSize {
+  const n = Number(raw)
+  return SESSION_SIZES.find((size) => size === n) ?? DEFAULT_SESSION_SIZE
+}
 
 /** The `max` most-overdue cards. ISO `dueAt` strings sort chronologically. */
-export function selectSessionCards(dueCards: DrillCard[], max = MAX_SESSION_CARDS): DrillCard[] {
+export function selectSessionCards(
+  dueCards: DrillCard[],
+  max: number = DEFAULT_SESSION_SIZE,
+): DrillCard[] {
   return [...dueCards].sort((a, b) => a.dueAt.localeCompare(b.dueAt)).slice(0, max)
 }
 

@@ -8,6 +8,7 @@ import { RouteProgressBar } from '@/components/RouteProgressBar'
 import { Sidebar } from '@/components/Sidebar'
 import { fetchPlayerAvatar } from '@/lib/chesscom/client'
 import { getChesscomUsername } from '@/lib/config'
+import { getSessionSize } from '@/lib/drill'
 import { getLocale } from '@/lib/i18n/locale'
 import { getStrings } from '@/lib/i18n/strings'
 import { getBoardColorPreset, getPlaySpeed, getTrainingOrientation } from '@/lib/theme'
@@ -77,6 +78,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             (await cookies()).get('blitzr-training-orientation')?.value,
           )}
           initialPlaySpeed={getPlaySpeed((await cookies()).get('blitzr-play-speed')?.value)}
+          initialDrillSessionSize={getSessionSize(
+            (await cookies()).get('blitzr-drill-session-size')?.value,
+          )}
         >
           <BulkAnalysisProvider>
             <Sidebar
