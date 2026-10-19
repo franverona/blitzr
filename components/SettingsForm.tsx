@@ -4,7 +4,7 @@ import { Chessboard } from 'react-chessboard'
 import { BoardCoordinates } from './BoardCoordinates'
 import { getStrings } from '@/lib/i18n/strings'
 import { ANALYSIS_STRENGTHS, type AnalysisStrength } from '@/lib/stockfish/analyze'
-import { BOARD_COLOR_PRESETS, REVEAL_ARROW_COLOR } from '@/lib/theme'
+import { BOARD_COLOR_PRESETS, PLAY_SPEEDS, type PlaySpeed, REVEAL_ARROW_COLOR } from '@/lib/theme'
 import { EvalBar } from './EvalBar'
 import { playMoveSound, useSettings } from './SettingsProvider'
 
@@ -68,6 +68,27 @@ export function SettingsForm() {
               }}
             />
             <p className="text-xs text-zinc-500">{s.settings.moveSoundsCredit}</p>
+          </div>
+          <div className="flex flex-col gap-2 text-sm">
+            <span>{s.settings.playSpeed}</span>
+            <div className="flex overflow-hidden rounded-md border border-zinc-300 dark:border-zinc-700">
+              {(Object.keys(PLAY_SPEEDS) as PlaySpeed[]).map((speed) => (
+                <button
+                  key={speed}
+                  type="button"
+                  onClick={() => settings.setPlaySpeed(speed)}
+                  aria-pressed={settings.playSpeed === speed}
+                  title={s.settings.playSpeedTitle(PLAY_SPEEDS[speed])}
+                  className={`flex-1 px-2 py-1 ${
+                    settings.playSpeed === speed
+                      ? 'bg-accent text-white'
+                      : 'hover:bg-zinc-200 dark:hover:bg-zinc-800'
+                  }`}
+                >
+                  {s.settings.playSpeeds[speed]}
+                </button>
+              ))}
+            </div>
           </div>
         </Section>
 

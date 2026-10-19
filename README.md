@@ -33,7 +33,7 @@ implies endorsement.
 - Opening and endgame lessons with study and quiz modes
 - Mate-in-N puzzles you solve move by move
 - Settings: light/dark theme, board colors, analysis strength, hide engine hints, coordinates,
-  move sounds
+  move sounds, auto-play speed
 - English and Spanish UI
 
 ## Stack

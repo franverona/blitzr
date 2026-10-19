@@ -10,7 +10,7 @@ import { fetchPlayerAvatar } from '@/lib/chesscom/client'
 import { getChesscomUsername } from '@/lib/config'
 import { getLocale } from '@/lib/i18n/locale'
 import { getStrings } from '@/lib/i18n/strings'
-import { getBoardColorPreset } from '@/lib/theme'
+import { getBoardColorPreset, getPlaySpeed } from '@/lib/theme'
 import './globals.css'
 
 const geistSans = Geist({
@@ -73,6 +73,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           initialHideEngineHints={(await cookies()).get('blitzr-hide-engine-hints')?.value === '1'}
           initialShowCoordinates={(await cookies()).get('blitzr-show-coordinates')?.value !== '0'}
           initialMoveSounds={(await cookies()).get('blitzr-move-sounds')?.value !== '0'}
+          initialPlaySpeed={getPlaySpeed((await cookies()).get('blitzr-play-speed')?.value)}
         >
           <BulkAnalysisProvider>
             <Sidebar

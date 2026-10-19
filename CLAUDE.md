@@ -103,9 +103,10 @@ scripts/
   explicit light class alongside its `dark:` one. Light palette is muted: canvas `bg-zinc-100`,
   elevated surfaces `bg-zinc-50`. `EvalBar` is deliberately not themed.
 - **Per-viewer settings** (theme, board color preset, analysis strength, hide engine hints,
-  coordinates, move sounds) live in `SettingsProvider`, each in a `blitzr-*` cookie read
-  server-side in `app/layout.tsx` and seeded as initial state. Cookies, not localStorage, because
-  react-chessboard's square colors are inline-style props and must be right on first render.
+  coordinates, move sounds, auto-play speed) live in `SettingsProvider`, each in a
+  `blitzr-*` cookie read server-side in `app/layout.tsx` and seeded as initial state. Cookies, not
+  localStorage, because react-chessboard's square colors are inline-style props and must be right
+  on first render.
   **Cookie names are duplicated as literals** in `layout.tsx` and the client modules — a constant
   exported from a `'use client'` module reads as `undefined` in a Server Component.
 - **Board colors** are one of four presets (`BOARD_COLOR_PRESETS`, `lib/theme.ts`), consumed via
@@ -121,7 +122,8 @@ scripts/
 - **`BoardNavControls`** binds ←/→, Space (play), Home/↑/`0` (start), End/↓ (end) and `F` (flip)
   globally, ignoring modifier keys, form fields, and `<dialog>`s that don't set
   `data-board-shortcuts`.
-- **Play** auto-advances every `PLAY_INTERVAL_MS`, stopping on the user's own blunders.
+- **Play** auto-advances at the `playSpeed` setting (`PLAY_SPEEDS`, 1000/500/250ms), stopping on
+  the user's own blunders.
 - **`BoardProvider`'s `myColor`** (defaults to `boardOrientation`) is the user's side for Play's
   stops, saved hints, `MoveList` and `LessonQuiz`. Never read `boardOrientation` as "my color" —
   it's only the view, so a flip button can't change whose moves count.
