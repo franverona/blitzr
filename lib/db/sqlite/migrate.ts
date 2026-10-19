@@ -127,6 +127,19 @@ async function runMigrations(db: Kysely<DbSchema>): Promise<void> {
 
   await sql`CREATE INDEX IF NOT EXISTS drill_cards_due_at_idx ON drill_cards (due_at)`.execute(db)
 
+  // drill_cards keeps only each card's latest review, which loses earlier days,
+  // so the streak gets its own table, seeded once from those (a lower bound).
+  const reviewDays =
+    await sql`SELECT 1 FROM sqlite_master WHERE name = 'drill_review_days'`.execute(db)
+  await sql`CREATE TABLE IF NOT EXISTS drill_review_days (day TEXT PRIMARY KEY)`.execute(db)
+  if (reviewDays.rows.length === 0) {
+    await sql`
+      INSERT OR IGNORE INTO drill_review_days
+      SELECT DISTINCT date(last_reviewed_at, 'localtime') FROM drill_cards
+      WHERE last_reviewed_at IS NOT NULL
+    `.execute(db)
+  }
+
   await sql`
     CREATE TABLE IF NOT EXISTS puzzle_progress (
       puzzle_id INTEGER PRIMARY KEY,

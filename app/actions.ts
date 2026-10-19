@@ -29,6 +29,7 @@ import { MATE_PROBLEMS } from '@/lib/mateProblems'
 import { countGamesReachingLine } from '@/lib/openingTheory'
 import { isStandardChess, startsFromStandardPosition } from '@/lib/positions'
 import { listPendingArchives, syncArchive } from '@/lib/sync'
+import { drillStreak, gameReview, localDay, recentResults, repertoireDeviations } from '@/lib/today'
 import { isValidAnalysis, normalizeRepertoireNode } from '@/lib/validate'
 import type {
   ArchiveSyncStatus,
@@ -39,6 +40,7 @@ import type {
   GameAccuracy,
   GameAnalysis,
   LessonGameStats,
+  MyResult,
   OpeningFamily,
   PositionEval,
   RepertoireColor,
@@ -411,34 +413,111 @@ export async function submitDrillAnswer(
     ...next,
     createdAt: current?.createdAt ?? now.toISOString(),
   })
+  await repo.recordDrillReviewDay(localDay(now))
   revalidatePath('/drill')
   revalidatePath('/')
 }
 
-/** Everything the /today page shows. */
+/** Everything the Today page (`/`) shows. Each recent stat covers the last 7 days. */
 export async function getTodaySummary(): Promise<{
   hasGames: boolean
-  dueCards: number
+  drill: {
+    due: number
+    dueDeviations: number
+    dueBlunders: number
+    sessionSize: number
+    streak: number
+  }
   unanalyzedGames: number
   accuracy: ReturnType<typeof recentAccuracy>
-  nextPuzzleId: number | null
+  results: ReturnType<typeof recentResults>
+  weakSpot: { opening: string; blunders: number; drillable: boolean } | null
+  lastGame: {
+    id: string
+    opponent: string
+    result: MyResult
+    accuracy: number | null
+    firstBlunderPly: number | null
+  } | null
+  repertoire: ReturnType<typeof repertoireDeviations>
+  puzzles: { nextId: number | null; solved: number; total: number }
+  lastSyncedAt: string | null
 }> {
-  const [allGames, { liveCards, now }, unanalyzed, games, analyses, solved] = await Promise.all([
+  const repo = getRepository()
+  const [
+    allGames,
+    { liveCards, gamesById, repertoireByColor, analysesByGameId, now },
+    unanalyzed,
+    games,
+    standardStartGames,
+    solved,
+    reviewDays,
+    syncStatus,
+  ] = await Promise.all([
     cachedListAllGames(),
     reconcileDrillCards(),
     getUnanalyzedGames(),
     cachedMyStandardGames(),
-    cachedListAllGameAnalyses(),
-    getRepository().listSolvedPuzzleIds(),
+    cachedStandardStartGames(),
+    repo.listSolvedPuzzleIds(),
+    repo.listDrillReviewDays(),
+    repo.getArchiveSyncStatus(),
   ])
+
+  const due = dueDrillCards(liveCards, now, undefined, () => undefined)
+  const newestFirst = [...games].sort((a, b) => b.endTime - a.endTime)
+  const since = now.getTime() / 1000 - 7 * 24 * 60 * 60
+  const recentGames = newestFirst.filter((g) => g.endTime >= since)
+
+  const worstOpening = buildBlunderStats(recentGames, analysesByGameId).byOpening[0]
+  const weakSpot = worstOpening
+    ? {
+        opening: worstOpening.label,
+        blunders: worstOpening.count,
+        // The drill's opening filter would come up empty without a card for it.
+        drillable: liveCards.some((c) => {
+          const game = gamesById.get(c.gameId)
+          return game !== undefined && openingLabel(game) === worstOpening.label
+        }),
+      }
+    : null
+
+  const last = newestFirst[0]
   const solvedIds = new Set(solved)
-  const trend = buildAccuracyTrend(games, new Map(analyses.map((a) => [a.gameId, a])))
+  const syncedAts = syncStatus.map((a) => a.syncedAt).sort()
+
   return {
     hasGames: allGames.length > 0,
-    dueCards: dueDrillCards(liveCards, now, undefined, () => undefined).length,
+    drill: {
+      due: due.length,
+      dueDeviations: due.filter((c) => c.sourceType === 'deviation').length,
+      dueBlunders: due.filter((c) => c.sourceType === 'blunder').length,
+      sessionSize: getSessionSize((await cookies()).get('blitzr-drill-session-size')?.value),
+      streak: drillStreak(reviewDays, now),
+    },
     unanalyzedGames: unanalyzed.length,
-    accuracy: recentAccuracy(trend, now),
-    nextPuzzleId: MATE_PROBLEMS.find((p) => !solvedIds.has(p.id))?.id ?? null,
+    accuracy: recentAccuracy(buildAccuracyTrend(games, analysesByGameId), now),
+    results: recentResults(games, now),
+    weakSpot,
+    lastGame: last
+      ? {
+          id: last.id,
+          opponent: last.myColor === 'white' ? last.blackUsername : last.whiteUsername,
+          result: last.myResult,
+          ...gameReview(last, analysesByGameId.get(last.id)),
+        }
+      : null,
+    // Newest first, like the rest; cachedStandardStartGames() is in insertion order.
+    repertoire: repertoireDeviations(
+      [...standardStartGames].sort((a, b) => b.endTime - a.endTime),
+      repertoireByColor,
+    ),
+    puzzles: {
+      nextId: MATE_PROBLEMS.find((p) => !solvedIds.has(p.id))?.id ?? null,
+      solved: solvedIds.size,
+      total: MATE_PROBLEMS.length,
+    },
+    lastSyncedAt: syncedAts.at(-1) ?? null,
   }
 }
 
