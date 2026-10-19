@@ -289,7 +289,7 @@ CI (`.github/workflows/ci.yml`) runs the same four on pushes to `main` and on PR
 
 ```bash
 pnpm dev                          # development
-pnpm build && pnpm start -p 9877  # production (pm2 manages this, see README)
+pnpm build && pnpm start -p 9877  # production, localhost only (pm2 manages this, see README)
 ```
 
 **`pnpm build` corrupts a running `pnpm dev`'s Turbopack cache** (they share `.next/`), so the
