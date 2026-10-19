@@ -184,10 +184,23 @@ final position, and the next unsolved puzzle.
 
 ### Puzzles
 
-`/puzzles` has mate-in-1/2/3 positions from real games and László Polgár's _5334 Problems,
-Combinations, and Games_. You play the whole line yourself, both sides. Wrong moves can be
+`/puzzles` has mate-in-1/2/3 positions from real games and 2,000 from the
+[Lichess puzzle database](https://database.lichess.org/#puzzles) (CC0), sorted from easy to hard,
+each linked back to Lichess. You play the whole line yourself, both sides. Wrong moves can be
 retried, and **Reveal solution** doesn't count as solving. Solved puzzles are tracked, and the
 list filters by status, side to move and mate length.
+
+László Polgár's _5334 Problems, Combinations, and Games_ is copyrighted, so its mates stay out of
+the published puzzle set and live in the gitignored `data/polgar-mates.json` instead, joining the
+list after a restart. To create that file (Node 22.18+):
+
+- `node scripts/import-polgar-mates.mjs --from-git` restores it from git history, where the
+  puzzles were committed before moving out of the repo. Any clone can do this.
+- `node scripts/import-polgar-mates.mjs` imports it from your own copy of the book's PGN at
+  `polgar.pgn`.
+
+Either way the puzzles keep their ids, so solved progress in a restored database still matches.
+Copying `data/polgar-mates.json` to another machine works too.
 
 ## Data hygiene
 
@@ -196,6 +209,9 @@ list filters by status, side to move and mate length.
   gitignored.
 
 ## Credits
+
+- Puzzles from the [Lichess puzzle database](https://database.lichess.org/#puzzles), released
+  under CC0.
 
 - Chess piece icons (`components/PieceGlyph.tsx`) are from
   [Wikimedia Commons' SVG chess piece set](https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces)

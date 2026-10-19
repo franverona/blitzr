@@ -1,70 +1,39 @@
-// One-shot import of mate-in-1/2/3 puzzles from Polgár's "5334 Problems,
-// Combinations, and Games" (polgar.pgn, Latin-1) into lib/mateProblems.ts.
-// Not idempotent: re-running duplicates entries.
+// Imports mate-in-1/2/3 puzzles from Polgár's "5334 Problems, Combinations,
+// and Games" (polgar.pgn, Latin-1, in the repo root) into data/polgar-mates.json.
+// The book is copyrighted, so the output is gitignored: it's for local study,
+// and lib/puzzleSet.ts loads it when present (restart the server after).
+//
+// No PGN? `node scripts/import-polgar-mates.mjs --from-git` rebuilds the file
+// from git history instead: the puzzles were in lib/mateProblems.ts until
+// they moved out of the repo, so any clone still has them.
+//
+// Re-running is safe: it rewrites the file, keeping each position's id, so
+// solved progress (puzzle_progress, keyed by id) survives. Needs Node 22.18+,
+// which runs the imported TypeScript as is.
 //
 // Candidates are kept only if they replay to checkmate (many records are
 // truncated) and, for mate-in-2/3, the mate is forced against every reply.
 // That check is slow, so this file doubles as its own worker_threads pool.
+import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads'
 import { Chess } from 'chess.js'
+import { isForcedMate } from '../lib/forcedMate.ts'
+import { REAL_GAME_MATES } from '../lib/realGameMates.ts'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const pgnPath = path.join(__dirname, '..', 'polgar.pgn')
-const mateProblemsPath = path.join(__dirname, '..', 'lib', 'mateProblems.ts')
+const outPath = path.join(__dirname, '..', 'data', 'polgar-mates.json')
+// The ids right after the 221 real-game puzzles, which is where they started.
+const FIRST_ID = 222
 
 const TARGET_CATEGORIES = {
   'Mate in one': 1,
   'Mate in two': 2,
   'Mate in three': 3,
-}
-
-// Copy of lib/mateProblems.ts's isForcedMate — keep in sync by hand.
-const FORCED_MATE_NODE_BUDGET = 3_000
-
-function isForcedMate(fen, mateIn) {
-  return canForceMate(new Chess(fen), mateIn, { remaining: FORCED_MATE_NODE_BUDGET })
-}
-
-function canForceMate(chess, mateIn, budget) {
-  if (mateIn < 1) return false
-  if (budget.remaining <= 0) return false
-  budget.remaining -= 1
-
-  for (const solverMove of chess.moves()) {
-    chess.move(solverMove)
-
-    if (mateIn === 1) {
-      const solved = chess.isCheckmate()
-      chess.undo()
-      if (solved) return true
-      continue
-    }
-    if (chess.isCheckmate()) {
-      chess.undo()
-      continue
-    }
-
-    const opponentReplies = chess.moves()
-    if (opponentReplies.length === 0) {
-      chess.undo()
-      continue
-    }
-
-    const forced = opponentReplies.every((reply) => {
-      chess.move(reply)
-      const result = canForceMate(chess, mateIn - 1, budget)
-      chess.undo()
-      return result
-    })
-    chess.undo()
-    if (forced) return true
-    if (budget.remaining <= 0) return false
-  }
-  return false
 }
 
 // --- Worker branch: validate an assigned chunk, report back, exit ---------
@@ -112,6 +81,31 @@ function formatSolution(moves, sideToMove) {
   return parts.join(' ')
 }
 
+// --- 0. --from-git: restore the last committed copy, then stop ----------
+
+// The last commit with the Polgár puzzles inline in lib/mateProblems.ts.
+const LAST_COMMIT_WITH_POLGAR = 'ab7c1d2'
+
+if (process.argv.includes('--from-git')) {
+  const source = execFileSync('git', ['show', `${LAST_COMMIT_WITH_POLGAR}:lib/mateProblems.ts`], {
+    cwd: path.join(__dirname, '..'),
+    maxBuffer: 64 * 1024 * 1024,
+  }).toString()
+  // Imported from inside the repo so its `chess.js` import resolves.
+  const tmp = path.join(path.dirname(outPath), `.polgar-from-git-${process.pid}.ts`)
+  fs.mkdirSync(path.dirname(outPath), { recursive: true })
+  fs.writeFileSync(tmp, source)
+  try {
+    const { MATE_PROBLEMS } = await import(tmp)
+    const polgar = MATE_PROBLEMS.filter((p) => p.composer === 'László Polgár')
+    fs.writeFileSync(outPath, JSON.stringify(polgar, null, 2) + '\n')
+    console.log(`Restored ${polgar.length} puzzles from ${LAST_COMMIT_WITH_POLGAR} to ${outPath}`)
+  } finally {
+    fs.rmSync(tmp, { force: true })
+  }
+  process.exit(0)
+}
+
 // --- 1. Read + split ---------------------------------------------------
 
 const raw = fs.readFileSync(pgnPath).toString('latin1')
@@ -137,12 +131,12 @@ for (const record of records) {
   })
 }
 
-// --- 3. Existing FENs (for dedup) ---------------------------------------
+// --- 3. Dedup against the real-game puzzles; keep ids from a previous run --
 
-const existingSource = fs.readFileSync(mateProblemsPath, 'utf8')
-const seenFens = new Set([...existingSource.matchAll(/fen: '([^']+)'/g)].map((m) => m[1]))
-const existingIdMatches = [...existingSource.matchAll(/\n {4}id: (\d+),/g)].map((m) => Number(m[1]))
-let nextId = Math.max(...existingIdMatches) + 1
+const seenFens = new Set(REAL_GAME_MATES.map((p) => p.fen))
+const previous = fs.existsSync(outPath) ? JSON.parse(fs.readFileSync(outPath, 'utf8')) : []
+const idByFen = new Map(previous.map((p) => [p.fen, p.id]))
+let nextId = Math.max(FIRST_ID - 1, ...previous.map((p) => p.id)) + 1
 
 // --- 4. Checkmate-replay pass (cheap, serial) -----------------------------
 
@@ -221,7 +215,7 @@ for (const category of Object.keys(TARGET_CATEGORIES)) {
 
     const sideToMove = fen.split(' ')[1]
     newEntries.push({
-      id: nextId++,
+      id: idByFen.get(fen) ?? nextId++,
       fen,
       moves,
       mateIn,
@@ -238,43 +232,11 @@ for (const category of Object.keys(TARGET_CATEGORIES)) {
   report[category].imported = forcedOk - deduped
 }
 
-// --- 7. Emit + splice into lib/mateProblems.ts ---------------------------
+// --- 7. Write -------------------------------------------------------------
 
-function tsString(value) {
-  return `'${value.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`
-}
-
-function tsEntry(entry) {
-  const movesLiteral = `[${entry.moves.map(tsString).join(', ')}]`
-  return [
-    '  {',
-    `    id: ${entry.id},`,
-    `    fen: ${tsString(entry.fen)},`,
-    `    moves: ${movesLiteral},`,
-    `    mateIn: ${entry.mateIn},`,
-    `    title: ${tsString(entry.title)},`,
-    `    composer: ${tsString(entry.composer)},`,
-    `    source: ${tsString(entry.source)},`,
-    `    year: ${tsString(entry.year)},`,
-    `    solution: ${tsString(entry.solution)},`,
-    '  },',
-  ].join('\n')
-}
-
-const newEntriesText = newEntries.map(tsEntry).join('\n')
-const closingBracket = '\n]\n'
-const insertAt = existingSource.lastIndexOf(closingBracket)
-if (insertAt === -1) {
-  throw new Error('Could not find MATE_PROBLEMS closing bracket in lib/mateProblems.ts')
-}
-const updatedSource =
-  existingSource.slice(0, insertAt) +
-  '\n' +
-  newEntriesText +
-  closingBracket +
-  existingSource.slice(insertAt + closingBracket.length)
-
-fs.writeFileSync(mateProblemsPath, updatedSource)
+newEntries.sort((a, b) => a.id - b.id)
+fs.mkdirSync(path.dirname(outPath), { recursive: true })
+fs.writeFileSync(outPath, JSON.stringify(newEntries, null, 2) + '\n')
 
 // --- 8. Report -------------------------------------------------------------
 
