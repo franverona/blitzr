@@ -221,10 +221,20 @@ const en = {
         ? `Analyzed ${analyzed} game${analyzed === 1 ? '' : 's'}.`
         : `Analyzed ${analyzed} of ${total} games — stopped early.`,
   },
+  manualGame: {
+    noResult:
+      'PGN has no final result — add a [Result "1-0"], [Result "0-1"] or [Result "1/2-1/2"] header.',
+    missingPlayers: 'PGN is missing White/Black player headers.',
+    badMovetext: 'Could not parse this PGN — check the move text is valid.',
+    noMoves: 'PGN has no moves — paste the full game, not just its headers.',
+  },
   sync: {
     button: 'Sync games',
     syncing: 'Syncing…',
     failed: 'Sync failed.',
+    rateLimited: 'Chess.com is rate-limiting requests — try again in a few minutes.',
+    userNotFound: (username: string) => `Chess.com has no player named "${username}".`,
+    noUsername: 'CHESSCOM_USERNAME is not set. Copy .env.example to .env.local and fill it in.',
     synced: (archives: number, games: number) =>
       `Synced ${archives} archive${archives === 1 ? '' : 's'}, ${games} game${games === 1 ? '' : 's'} added.`,
   },
@@ -402,6 +412,7 @@ const en = {
     inBook: 'In book',
     deviatedTooltip: 'Played a different move than the one saved in your repertoire at this point',
     deviated: 'deviated',
+    deviatedOn: 'on',
     inBookFor: (n: number) => `for ${n} ${n === 1 ? 'move' : 'moves'}, then`,
     played: 'played',
     repertoireHas: 'repertoire has',
@@ -661,10 +672,21 @@ const es: Strings = {
         ? `${analyzed} ${analyzed === 1 ? 'partida analizada' : 'partidas analizadas'}.`
         : `${analyzed} de ${total} partidas analizadas — detenido antes de tiempo.`,
   },
+  manualGame: {
+    noResult:
+      'El PGN no tiene resultado final — añade una cabecera [Result "1-0"], [Result "0-1"] o [Result "1/2-1/2"].',
+    missingPlayers: 'Al PGN le faltan las cabeceras de jugadores White/Black.',
+    badMovetext: 'No se pudo interpretar este PGN — revisa que las jugadas sean válidas.',
+    noMoves: 'El PGN no tiene jugadas — pega la partida completa, no solo sus cabeceras.',
+  },
   sync: {
     button: 'Sincronizar partidas',
     syncing: 'Sincronizando…',
     failed: 'Error al sincronizar.',
+    rateLimited: 'Chess.com está limitando las peticiones — inténtalo de nuevo en unos minutos.',
+    userNotFound: (username: string) => `Chess.com no tiene ningún jugador llamado "${username}".`,
+    noUsername:
+      'CHESSCOM_USERNAME no está configurado. Copia .env.example a .env.local y rellénalo.',
     synced: (archives: number, games: number) =>
       `${archives} ${archives === 1 ? 'archivo sincronizado' : 'archivos sincronizados'}, ${games} ${games === 1 ? 'partida añadida' : 'partidas añadidas'}.`,
   },
@@ -847,6 +869,7 @@ const es: Strings = {
     inBook: 'En libro',
     deviatedTooltip: 'Jugaste una jugada distinta a la guardada en tu repertorio en este punto',
     deviated: 'te saliste',
+    deviatedOn: 'en',
     inBookFor: (n: number) => `durante ${n} ${n === 1 ? 'jugada' : 'jugadas'}, luego`,
     played: 'jugaste',
     repertoireHas: 'el repertorio tiene',

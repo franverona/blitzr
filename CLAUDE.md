@@ -250,7 +250,9 @@ is off while exploring, the text panel isn't.
 English and Spanish via `NEXT_PUBLIC_LOCALE` (rebuild to change). `es` is typed against
 `typeof en`, so missing keys fail `tsc`. Parameterized strings are functions. SAN, square names
 and Chess.com's `ecoName` are never translated. Description generators take an optional trailing
-`locale` param; Spanish articles go through `pieceWithArticle()`.
+`locale` param; Spanish articles go through `pieceWithArticle()`. User-facing errors come from the
+dictionary too, and Server Actions **return** them (`{ ok: false, error }`) rather than throw,
+since Next redacts thrown messages in production.
 
 ## Testing
 
