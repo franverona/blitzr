@@ -82,6 +82,8 @@ scripts/
 
 ## Key conventions
 
+- **Comments are terse** — only where needed, stating what's really important (a non-obvious why,
+  a gotcha), never restating the code.
 - **Server Actions** for all DB reads/writes and triggers — no API routes.
 - **Domain types are camelCase** (`lib/types.ts`), **DB columns snake_case** (`lib/db/types.ts`);
   the repository maps between them. Never leak snake_case past it.
