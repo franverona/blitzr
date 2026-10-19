@@ -378,6 +378,10 @@ const en = {
     anyAccuracy: 'Any accuracy',
     accuracyAtLeast: 'Accuracy ≥',
     accuracyAtMost: 'Accuracy ≤',
+    setupUsername:
+      'To get started, copy .env.example to .env.local, set CHESSCOM_USERNAME to your Chess.com username, restart Blitzr, then click "Sync games".',
+    setupAnalyze:
+      'Next, click "Analyze all" to find your blunders. Stockfish runs in this browser tab and keeps going while you browse other pages.',
   },
   blundersPage: {
     title: 'Blunders',
@@ -901,6 +905,10 @@ const es: Strings = {
     anyAccuracy: 'Cualquier precisión',
     accuracyAtLeast: 'Precisión ≥',
     accuracyAtMost: 'Precisión ≤',
+    setupUsername:
+      'Para empezar, copia .env.example a .env.local, pon tu usuario de Chess.com en CHESSCOM_USERNAME, reinicia Blitzr y haz clic en "Sincronizar partidas".',
+    setupAnalyze:
+      'Ahora haz clic en "Analizar todas" para encontrar tus errores. Stockfish se ejecuta en esta pestaña del navegador y sigue mientras navegas por otras páginas.',
   },
   blundersPage: {
     title: 'Errores',

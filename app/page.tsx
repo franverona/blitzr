@@ -6,6 +6,7 @@ import { BulkAnalyzeButton } from '@/components/BulkAnalyzeButton'
 import { GameList } from '@/components/GameList'
 import { GameSearchForm } from '@/components/GameSearchForm'
 import { SyncButton } from '@/components/SyncButton'
+import { hasChesscomUsername } from '@/lib/config'
 import { getStrings } from '@/lib/i18n/strings'
 import type { MyColor, MyResult } from '@/lib/types'
 
@@ -56,6 +57,7 @@ export default async function GamesPage({
   })
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
   const filters = { q, result, color, rated, accOp, accValue }
+  const filtered = Object.values(filters).some((v) => v !== undefined && v !== '')
   // A stale or hand-typed page past the end would otherwise show "no games".
   if (page > totalPages) redirect(pageHref(totalPages, filters))
   const s = getStrings()
@@ -71,6 +73,17 @@ export default async function GamesPage({
         </div>
       </div>
 
+      <SetupNotice
+        hasUsername={hasChesscomUsername()}
+        // Unfiltered, games without accuracy are unanalyzed, so none analyzed means a fresh sync.
+        suggestAnalyze={
+          !filtered &&
+          total > 0 &&
+          Object.keys(accuracyByGameId).length === 0 &&
+          unanalyzedGames.length > 0
+        }
+      />
+
       <GameSearchForm
         // q/accOp/accValue excluded so typing and the accuracy popover survive their own navigations.
         key={`${result ?? ''}-${color ?? ''}-${rated ?? ''}`}
@@ -82,11 +95,7 @@ export default async function GamesPage({
         accValue={accValue}
       />
 
-      <GameList
-        games={games}
-        accuracyByGameId={accuracyByGameId}
-        filtered={Object.values(filters).some((v) => v !== undefined && v !== '')}
-      />
+      <GameList games={games} accuracyByGameId={accuracyByGameId} filtered={filtered} />
 
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-4 text-sm">
@@ -101,6 +110,26 @@ export default async function GamesPage({
           </PageLink>
         </div>
       )}
+    </div>
+  )
+}
+
+/** First-run steps: set the username, then (after a sync) analyze. */
+function SetupNotice({
+  hasUsername,
+  suggestAnalyze,
+}: {
+  hasUsername: boolean
+  suggestAnalyze: boolean
+}) {
+  const s = getStrings()
+  if (hasUsername && !suggestAnalyze) return null
+  return (
+    <div
+      role="status"
+      className="rounded-md border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-100"
+    >
+      {hasUsername ? s.gamesPage.setupAnalyze : s.gamesPage.setupUsername}
     </div>
   )
 }

@@ -165,6 +165,8 @@ scripts/
 ## Chess.com ingestion
 
 - `https://api.chess.com/pub`, no API key. Always send a descriptive `User-Agent`.
+- A missing `CHESSCOM_USERNAME` fails soft (`hasChesscomUsername()`): the games page shows a setup
+  notice instead, then an "Analyze all" hint while games exist but none is analyzed.
 - Archives are fetched **serially**; 429s retry with backoff honoring `Retry-After`. The client
   drives a sync (`listArchivesToSync()`, then `syncArchiveMonth()` per month) so `SyncButton` can
   show progress; each month revalidates `/`, and a failed month leaves earlier ones saved.
