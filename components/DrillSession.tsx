@@ -14,6 +14,7 @@ import type { BlunderReason, DrillPrompt } from '@/lib/types'
 import { useSettings, useMoveSound } from './SettingsProvider'
 import { LegalMoveSquare } from './LegalMoveSquare'
 import { PlayerAvatar } from './PlayerAvatar'
+import { PromotionPicker, type PromotionPiece } from './PromotionPicker'
 
 type Feedback = 'correct' | 'incorrect' | null
 
@@ -72,6 +73,9 @@ export function DrillSession({
   // Set only on a correct answer so the move visibly lands. On a wrong answer
   // the reveal arrow is drawn from `prompt.fen`, so the board stays there.
   const [committedFen, setCommittedFen] = useState<string | null>(null)
+  const [pendingPromotion, setPendingPromotion] = useState<{ from: string; to: string } | null>(
+    null,
+  )
 
   // A ref, not state, so a move can't be graded twice within the same tick.
   const answeredRef = useRef(false)
@@ -98,6 +102,7 @@ export function DrillSession({
     setHintLevel(0)
     setCommittedFen(null)
     setSelectedSquare(null)
+    setPendingPromotion(null)
     answeredRef.current = false
   }
 
@@ -169,17 +174,25 @@ export function DrillSession({
   // Narrowed copy for the closures below.
   const activePrompt = prompt
 
-  function attemptMove(from: string, to: string): boolean {
+  function attemptMove(from: string, to: string, promotion?: PromotionPiece): boolean {
     if (answeredRef.current) return false
+    // An engine "best move" can be an underpromotion, so ask instead of assuming a queen.
+    if (!promotion) {
+      if (pendingPromotion) return false
+      if (legalDestinations(activePrompt.fen, from).some((m) => m.to === to && m.isPromotion)) {
+        setPendingPromotion({ from, to })
+        return true
+      }
+    }
     const chess = new Chess(activePrompt.fen)
     let move
     try {
-      // ponytail: always promote to queen; underpromotion doesn't come up here.
-      move = chess.move({ from, to, promotion: 'q' })
+      move = chess.move({ from, to, promotion: promotion ?? 'q' })
     } catch {
       return false
     }
     if (!move) return false
+    setPendingPromotion(null)
 
     answeredRef.current = true
     const correct = activePrompt.correctMoves.includes(move.san)
@@ -256,7 +269,7 @@ export function DrillSession({
         orientation={prompt.color}
         className="w-full"
       >
-        <div className="w-full overflow-hidden rounded shadow-lg">
+        <div className="relative w-full overflow-hidden rounded shadow-lg">
           <Chessboard
             options={{
               position: committedFen ?? prompt.fen,
@@ -280,6 +293,12 @@ export function DrillSession({
               arrows,
             }}
           />
+          {pendingPromotion && (
+            <PromotionPicker
+              color={prompt.color}
+              onChoose={(piece) => attemptMove(pendingPromotion.from, pendingPromotion.to, piece)}
+            />
+          )}
         </div>
       </BoardCoordinates>
 
