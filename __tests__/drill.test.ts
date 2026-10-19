@@ -85,6 +85,20 @@ describe('findDeviationCandidates', () => {
     ])
   })
 
+  it('keeps one card per deviation position, on the oldest game', () => {
+    const e4 = node({ id: 'e4', ply: 1, moveSan: 'e4' })
+    const repertoireByColor = new Map<RepertoireColor, RepertoireNode[]>([['white', [e4]]])
+    const games = [
+      makeGame({ id: 'newer', movesSan: ['d4', 'd5'], endTime: 200 }),
+      makeGame({ id: 'older', movesSan: ['c4', 'e5'], endTime: 100 }),
+      makeGame({ id: 'black', movesSan: ['d4', 'd5'], myColor: 'black', endTime: 50 }),
+    ]
+
+    expect(findDeviationCandidates(games, repertoireByColor)).toEqual([
+      { gameId: 'older', sourceType: 'deviation', ply: 1 },
+    ])
+  })
+
   it('skips games with no repertoire for their color, and games fully in book', () => {
     const inBook = makeGame({ id: 'in-book', movesSan: ['e4', 'e5'] })
     const noRepertoire = makeGame({ id: 'no-rep', myColor: 'black' })

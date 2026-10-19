@@ -21,22 +21,37 @@ export interface DrillCandidate {
   ply: number
 }
 
-/** Each game's first deviation from the repertoire. */
+/**
+ * Each game's first deviation from the repertoire, one card per position: games that
+ * left the tree at the same point share a prompt, so only the oldest one gets the card
+ * (stable as new games sync in).
+ */
 export function findDeviationCandidates(
   games: Game[],
   repertoireByColor: Map<RepertoireColor, RepertoireNode[]>,
 ): DrillCandidate[] {
-  const candidates: DrillCandidate[] = []
+  const byPosition = new Map<string, { game: Game; ply: number }>()
   for (const game of games) {
     if (!game.movesSan) continue
     const nodes = repertoireByColor.get(game.myColor) ?? []
     if (nodes.length === 0) continue
-    const diff = diffGameAgainstRepertoire(game.movesSan, game.myColor, nodes)
-    if (diff.deviationPly !== null) {
-      candidates.push({ gameId: game.id, sourceType: 'deviation', ply: diff.deviationPly })
+    const { deviationPly } = diffGameAgainstRepertoire(game.movesSan, game.myColor, nodes)
+    if (deviationPly === null) continue
+    const key = `${game.myColor}:${game.movesSan.slice(0, deviationPly - 1).join(' ')}`
+    const kept = byPosition.get(key)
+    if (
+      !kept ||
+      game.endTime < kept.game.endTime ||
+      (game.endTime === kept.game.endTime && game.id < kept.game.id)
+    ) {
+      byPosition.set(key, { game, ply: deviationPly })
     }
   }
-  return candidates
+  return [...byPosition.values()].map(({ game, ply }) => ({
+    gameId: game.id,
+    sourceType: 'deviation',
+    ply,
+  }))
 }
 
 /** Blunders on the user's own plies only. */
