@@ -136,7 +136,7 @@ scripts/
 - **Beginner jargon is explained in place** (`<abbr title>` tooltips, `EvalHelp`), not removed.
 - **A component seeding state from props (`useState(initialX)`) needs `key={id}`** wherever it can
   receive a different record. Exception: a filter that must survive its own navigation (the
-  accuracy popover) stays out of the key and re-syncs from props during render.
+  accuracy popover, the search text) stays out of the key and re-syncs from props during render.
 - **react-chessboard needs a unique `options.id` (`useId()`) when two boards share a page**, and
   keys arrows by start/end square only — dedupe arrows before passing them.
 
