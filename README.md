@@ -60,8 +60,10 @@ fetch months that aren't complete yet.
 
 The database is created at `./data/blitzr.db` on first run. To reset, delete it and re-sync.
 
-Settings → Data → **Download backup** saves a copy of it. Your repertoire, drill schedules and
-puzzle progress can't be rebuilt by re-syncing, so take one before updating. To restore, stop
+Settings → Data → **Download backup** saves a copy of it, and `pnpm backup` writes one to
+`data/backups/`. Your repertoire, drill schedules and puzzle progress can't be rebuilt by
+re-syncing, so take one before updating. A schema change also copies the database to
+`data/backups/pre-migration-<time>.db` before applying itself. To restore, stop
 Blitzr, delete `data/blitzr.db-wal` and `data/blitzr.db-shm` if present, and replace
 `data/blitzr.db` with the backup.
 
@@ -84,7 +86,7 @@ pm2 startup   # follow the printed command to register with launchd
 Open [http://localhost:9877](http://localhost:9877). To update:
 
 ```bash
-git pull && pnpm install && pnpm build && pm2 restart blitzr
+pnpm backup && git pull && pnpm install && pnpm build && pm2 restart blitzr
 ```
 
 Other useful commands: `pm2 status`, `pm2 logs blitzr`, `pm2 stop blitzr`, `pm2 delete blitzr`.
@@ -97,6 +99,7 @@ pnpm build           # production build
 pnpm test            # unit tests (Vitest); pnpm test:watch for watch mode
 pnpm lint            # ESLint
 pnpm format          # Prettier (write); pnpm format:check to check
+pnpm backup          # copy the database into data/backups/
 ```
 
 ## How it works
@@ -178,7 +181,7 @@ list filters by status, side to move and mate length.
 ## Data hygiene
 
 - Your username lives in `.env.local`, never in code. The API is public, so there's no secret.
-- `data/*.db` and `public/stockfish/` (~7MB, copied from `node_modules` on install) are
+- `data/*.db`, `data/backups/` and `public/stockfish/` (~7MB, copied from `node_modules` on install) are
   gitignored.
 
 ## Credits
