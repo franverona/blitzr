@@ -10,7 +10,7 @@ import { fetchPlayerAvatar } from '@/lib/chesscom/client'
 import { getChesscomUsername } from '@/lib/config'
 import { getLocale } from '@/lib/i18n/locale'
 import { getStrings } from '@/lib/i18n/strings'
-import { getBoardColorPreset, getTrainingOrientation } from '@/lib/theme'
+import { getBoardColorPreset, getPlaySpeed, getTrainingOrientation } from '@/lib/theme'
 import './globals.css'
 
 const geistSans = Geist({
@@ -76,6 +76,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           initialTrainingOrientation={getTrainingOrientation(
             (await cookies()).get('blitzr-training-orientation')?.value,
           )}
+          initialPlaySpeed={getPlaySpeed((await cookies()).get('blitzr-play-speed')?.value)}
         >
           <BulkAnalysisProvider>
             <Sidebar
