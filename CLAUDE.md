@@ -23,7 +23,8 @@ Built incrementally, one feature or fix at a time — don't scaffold speculative
 ```
 app/
   actions.ts                # all DB reads/writes + sync/analysis triggers (Server Actions)
-  page.tsx                  # games list (paginated, filterable)
+  page.tsx                  # Today: due cards, unanalyzed games, recent accuracy, next puzzle
+  games/page.tsx            # games list (paginated, filterable)
   layout.tsx                # sidebar nav + main content, reads settings cookies
   error.tsx / not-found.tsx / loading.tsx  # root fallbacks; loading streams, so `notFound()` returns 200
   games/[id]/page.tsx       # single game — replay, repertoire diff, analysis
@@ -138,7 +139,8 @@ scripts/
 - **`BoardProvider`'s `myColor`** (defaults to `boardOrientation`) is the user's side for Play's
   stops, saved hints, `MoveList` and `LessonQuiz`. Never read `boardOrientation` as "my color" —
   it's only the view, so a flip button can't change whose moves count.
-- **Game replay and lesson Study mode open on ply 1.**
+- **Game replay and lesson Study mode open on ply 1.** A game page's `?ply=` overrides it (Today
+  links a blunder one ply early, so the board shows the position before it).
 - **Game-end badges** (`gameEndBadges()`, `lib/gameEnd.ts`): mate/draw come from the position;
   resignations, timeouts and agreed draws from the per-player result codes, on the final ply only.
 - **Beginner jargon is explained in place** (`<abbr title>` tooltips, `EvalHelp`), not removed.
@@ -159,7 +161,8 @@ scripts/
   the command line (`better-sqlite3`'s `db.backup()`).
 - Tables: `games`, `sync_state`, `repertoire_moves` (tree per color, `ON DELETE CASCADE` to the
   subtree — needs the `foreign_keys` pragma), `game_analysis` (one row per game), `drill_cards`
-  (schedule only, keyed by `(game_id, source_type, ply)`), `puzzle_progress` (solved puzzle ids;
+  (schedule only, keyed by `(game_id, source_type, ply)`), `drill_review_days` (streak),
+  `puzzle_progress` (solved puzzle ids;
   the puzzles themselves are hardcoded).
 
 ## Chess.com ingestion
@@ -169,7 +172,7 @@ scripts/
   notice instead, then an "Analyze all" hint while games exist but none is analyzed.
 - Archives are fetched **serially**; 429s retry with backoff honoring `Retry-After`. The client
   drives a sync (`listArchivesToSync()`, then `syncArchiveMonth()` per month) so `SyncButton` can
-  show progress; each month revalidates `/`, and a failed month leaves earlier ones saved.
+  show progress; each month revalidates `/games`, and a failed month leaves earlier ones saved.
 - Sync state lives in `SyncProvider` (root layout, inside `BulkAnalysisProvider`). Opening the app
   syncs once if the newest `sync_state.synced_at` is over an hour old (`isSyncStale()`; never before a
   first manual sync), silently unless it finds games. A sync that adds games offers "Analyze them".
@@ -216,7 +219,7 @@ a prepared move. An opponent's unprepared move or the tree running out doesn't c
   navigation. Cancel is checked between games, so an in-flight game always finishes and saves.
   While a run is active, `beforeunload` asks before the tab closes.
 - The games list's accuracy/error columns come from `getGameAccuracyById()` (not a `Game` field);
-  `saveGameAnalysis()` revalidates `/` so they update during a bulk run.
+  `saveGameAnalysis()` revalidates `/games` so they update during a bulk run.
 - Tactical explanations (`lib/tactics.ts`, `lib/hangingPiece.ts`) are deliberately narrow:
   one-ply lookback, no exchange evaluation, absolute pins only. `detectBlunderReason()` is the
   entry point; `describeBetterMove()` explains the engine's move and appends its plan.
@@ -263,6 +266,20 @@ schedules) whose ply no longer qualifies. Accepted, not a bug.
 `buildBlunderStats()` and `buildAccuracyTrend()` are pure aggregations merged by
 `getBlunderStats()`, which applies the `?from=&to=` date range (local calendar days) to every
 section. The trend chart's x-axis is game index, not date, because sessions are bursty.
+
+## Today
+
+`getTodaySummary()` feeds `/`, the landing page (the games list is `/games`). "Recent" means the
+last 7 days throughout; the pure parts live in `lib/today.ts`. The due count goes through the same
+`reconcileDrillCards()` as `getDrillDeck()`, so it matches `/drill`, and is shown against the
+session size. Ratings change per time class (`recentResults()`; Chess.com never mixes them). The
+weak spot is the top opening from `buildBlunderStats()` over recent games, linking to
+`/drill?opening=` only if the deck has a card for it. Focus also lists the week's worst blunder
+(`buildBlunderStats().worst[0]`), how the week's games were lost (`lossReasons()`, from the user's
+own result code) and the opening lesson those games reached most (`suggestLesson()`, exact SAN
+prefix like `countGamesReachingLine()`). The drill streak reads `drill_review_days` (one row per
+local day with an answer, recorded by `submitDrillAnswer()`): `drill_cards.last_reviewed_at` keeps
+only the latest review, so the table was seeded once from it and undercounts older history.
 
 ## Puzzles
 

@@ -79,6 +79,11 @@ export interface PuzzleProgressTable {
   solved_at: string
 }
 
+export interface DrillReviewDaysTable {
+  /** Local "YYYY-MM-DD". */
+  day: string
+}
+
 export interface DbSchema {
   games: GamesTable
   sync_state: SyncStateTable
@@ -86,6 +91,7 @@ export interface DbSchema {
   game_analysis: GameAnalysisTable
   drill_cards: DrillCardsTable
   puzzle_progress: PuzzleProgressTable
+  drill_review_days: DrillReviewDaysTable
 }
 
 export type DbType = 'sqlite'
@@ -132,6 +138,10 @@ export interface GameRepository {
   deleteDrillCards(
     keys: { gameId: string; sourceType: DrillSourceType; ply: number }[],
   ): Promise<void>
+
+  /** Days ("YYYY-MM-DD", local) with at least one drill answer, for the streak. */
+  listDrillReviewDays(): Promise<string[]>
+  recordDrillReviewDay(day: string): Promise<void>
 
   listSolvedPuzzleIds(): Promise<number[]>
   /** No-op if already solved, keeping the original solved_at. */

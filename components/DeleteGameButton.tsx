@@ -16,7 +16,7 @@ export function DeleteGameButton({ gameId }: { gameId: string }) {
     startTransition(async () => {
       await deleteManualGame(gameId)
       startRouteProgress()
-      router.push('/')
+      router.push('/games')
     })
   }
 

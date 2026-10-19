@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildAccuracyTrend, rollingAverageAccuracy } from '@/lib/accuracyTrend'
+import { buildAccuracyTrend, recentAccuracy, rollingAverageAccuracy } from '@/lib/accuracyTrend'
 import type { AccuracyTrendPoint, Game, GameAnalysis, PositionEval } from '@/lib/types'
 
 function cp(value: number): PositionEval {
@@ -87,5 +87,28 @@ describe('rollingAverageAccuracy', () => {
   it('shrinks the window for the first points instead of leaving them undefined', () => {
     const points = [point({ accuracy: 50 })]
     expect(rollingAverageAccuracy(points, 10)).toEqual([50])
+  })
+})
+
+describe('recentAccuracy', () => {
+  const now = new Date('2026-10-19T12:00:00Z')
+  const at = (daysAgo: number, accuracy: number) => ({
+    gameId: `${daysAgo}`,
+    endTime: now.getTime() / 1000 - daysAgo * 86400,
+    accuracy,
+    gameLabel: '',
+  })
+
+  it('compares the last 7 days with every game', () => {
+    expect(recentAccuracy([at(30, 60), at(10, 70), at(2, 80), at(1, 85)], now)).toEqual({
+      recent: 82.5,
+      recentGames: 2,
+      overall: 73.8,
+    })
+  })
+
+  it('is null without games', () => {
+    expect(recentAccuracy([at(30, 60)], now)).toEqual({ recent: null, recentGames: 0, overall: 60 })
+    expect(recentAccuracy([], now).overall).toBeNull()
   })
 })
