@@ -1,9 +1,13 @@
+import fs from 'fs'
+import path from 'path'
 import { Kysely, sql } from 'kysely'
 import type { DbSchema } from '../types'
 
 // Caches the in-flight promise so concurrent first calls share one run;
 // cleared on failure so the next call retries.
 let _migration: Promise<void> | null = null
+// Survives failed runs, so a migration that keeps failing copies once, not per retry.
+let _backedUp = false
 
 export function ensureSchema(db: Kysely<DbSchema>): Promise<void> {
   if (!_migration) {
@@ -16,6 +20,17 @@ export function ensureSchema(db: Kysely<DbSchema>): Promise<void> {
 }
 
 async function runMigrations(db: Kysely<DbSchema>): Promise<void> {
+  // A fresh database has nothing to lose, so only an existing one is copied.
+  const existing = await sql`SELECT 1 FROM sqlite_master WHERE name = 'games'`.execute(db)
+  const fresh = existing.rows.length === 0
+  async function alter(statement: ReturnType<typeof sql>) {
+    if (!fresh && !_backedUp) {
+      await backupBeforeMigration(db)
+      _backedUp = true
+    }
+    await statement.execute(db)
+  }
+
   await sql`
     CREATE TABLE IF NOT EXISTS games (
       id TEXT PRIMARY KEY,
@@ -87,12 +102,12 @@ async function runMigrations(db: Kysely<DbSchema>): Promise<void> {
   // so check table_info first to stay idempotent.
   const gameColumns = await sql<{ name: string }>`PRAGMA table_info(games)`.execute(db)
   if (!gameColumns.rows.some((c) => c.name === 'is_mine')) {
-    await sql`ALTER TABLE games ADD COLUMN is_mine INTEGER NOT NULL DEFAULT 1`.execute(db)
+    await alter(sql`ALTER TABLE games ADD COLUMN is_mine INTEGER NOT NULL DEFAULT 1`)
   }
 
   const analysisColumns = await sql<{ name: string }>`PRAGMA table_info(game_analysis)`.execute(db)
   if (!analysisColumns.rows.some((c) => c.name === 'movetime_ms')) {
-    await sql`ALTER TABLE game_analysis ADD COLUMN movetime_ms INTEGER`.execute(db)
+    await alter(sql`ALTER TABLE game_analysis ADD COLUMN movetime_ms INTEGER`)
   }
 
   await sql`
@@ -118,4 +133,16 @@ async function runMigrations(db: Kysely<DbSchema>): Promise<void> {
       solved_at TEXT NOT NULL
     )
   `.execute(db)
+}
+
+/** Copies the database to `backups/pre-migration-<time>.db` next to it; no-op in memory. */
+async function backupBeforeMigration(db: Kysely<DbSchema>): Promise<void> {
+  const { rows } = await sql<{ name: string; file: string }>`PRAGMA database_list`.execute(db)
+  const file = rows.find((r) => r.name === 'main')?.file
+  if (!file) return
+  const dir = path.join(path.dirname(file), 'backups')
+  fs.mkdirSync(dir, { recursive: true })
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-')
+  // VACUUM INTO writes a consistent copy that includes the WAL.
+  await sql`VACUUM INTO ${path.join(dir, `pre-migration-${stamp}.db`)}`.execute(db)
 }

@@ -10,6 +10,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start -H 127.0.0.1",
+    "backup": "node scripts/backup-db.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint",
