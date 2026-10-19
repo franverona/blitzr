@@ -6,9 +6,9 @@ const STYLES = {
   blunder: 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-400',
 } as const
 
-export function BlunderSeverityBadge({ swingCp }: { swingCp: number }) {
+export function BlunderSeverityBadge({ winDrop }: { winDrop: number }) {
   const s = getStrings()
-  const severity = blunderSeverity(swingCp)
+  const severity = blunderSeverity(winDrop)
   return (
     <abbr
       title={s.blunderBadge.titles[severity]}

@@ -154,7 +154,7 @@ export function GameSummary() {
   }
 
   const reason = detectBlunderReason(positions[worst.ply - 1], positions[worst.ply], myColor)
-  const isBlunder = blunderSeverity(worst.swingCp) === 'blunder'
+  const isBlunder = blunderSeverity(worst.winDrop) === 'blunder'
   return (
     <p className="text-sm text-zinc-500 dark:text-zinc-400">
       {s.analysisPanel.biggestMoment(isBlunder)}{' '}
