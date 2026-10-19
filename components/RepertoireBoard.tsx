@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useRef, useState } from 'react'
+import { useId, useMemo, useRef, useState } from 'react'
 import { Chess } from 'chess.js'
 import Link from 'next/link'
 import { Chessboard } from 'react-chessboard'
@@ -280,6 +280,7 @@ function ColorTab({ color, active }: { color: RepertoireColor; active: boolean }
 
 function HelpButton() {
   const dialogRef = useRef<HTMLDialogElement>(null)
+  const titleId = useId()
   const s = getStrings()
 
   return (
@@ -293,6 +294,7 @@ function HelpButton() {
       </button>
       <dialog
         ref={dialogRef}
+        aria-labelledby={titleId}
         onClick={(e) => {
           if (e.target === e.currentTarget) dialogRef.current?.close()
         }}
@@ -300,7 +302,9 @@ function HelpButton() {
       >
         <div className="flex flex-col gap-3 p-5">
           <div className="flex items-center justify-between gap-4">
-            <h2 className="text-sm font-semibold">{s.repertoire.helpTitle}</h2>
+            <h2 id={titleId} className="text-sm font-semibold">
+              {s.repertoire.helpTitle}
+            </h2>
             <button
               onClick={() => dialogRef.current?.close()}
               aria-label={s.common.close}

@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useRef, useState, useTransition } from 'react'
+import { useId, useRef, useState, useTransition } from 'react'
 import { addManualGame } from '@/app/actions'
 import type { ManualGameSide } from '@/lib/manualGame'
 import { getStrings } from '@/lib/i18n/strings'
@@ -12,6 +12,7 @@ import { startRouteProgress } from './RouteProgressBar'
 // Errors show inline so they sit next to the pasted text.
 export function AddPgnButton() {
   const dialogRef = useRef<HTMLDialogElement>(null)
+  const titleId = useId()
   const [pgn, setPgn] = useState('')
   const [side, setSide] = useState<ManualGameSide>('auto')
   const [error, setError] = useState<string | null>(null)
@@ -57,6 +58,7 @@ export function AddPgnButton() {
       </button>
       <dialog
         ref={dialogRef}
+        aria-labelledby={titleId}
         onClick={(e) => {
           if (e.target === e.currentTarget) dialogRef.current?.close()
         }}
@@ -64,7 +66,9 @@ export function AddPgnButton() {
       >
         <form onSubmit={handleSubmit} className="flex flex-col gap-3 p-5">
           <div className="flex items-center justify-between gap-4">
-            <h2 className="text-sm font-semibold">{s.addPgn.title}</h2>
+            <h2 id={titleId} className="text-sm font-semibold">
+              {s.addPgn.title}
+            </h2>
             <button
               type="button"
               onClick={() => dialogRef.current?.close()}

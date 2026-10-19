@@ -112,6 +112,7 @@ export function PlanBoardButton({
   boardOrientation: 'white' | 'black'
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null)
+  const titleId = useId()
   const [ply, setPly] = useState(0)
   const lastPly = useMemo(() => buildPositions(fenBefore, moves).length - 1, [fenBefore, moves])
   const s = getStrings()
@@ -127,6 +128,7 @@ export function PlanBoardButton({
       </button>
       <dialog
         ref={dialogRef}
+        aria-labelledby={titleId}
         onClick={(e) => {
           if (e.target === e.currentTarget) dialogRef.current?.close()
         }}
@@ -140,7 +142,7 @@ export function PlanBoardButton({
       >
         <div className="flex flex-col gap-3 p-5">
           <div className="flex items-center justify-between gap-4">
-            <h2 className="text-sm font-semibold text-amber-600 dark:text-amber-400">
+            <h2 id={titleId} className="text-sm font-semibold text-amber-600 dark:text-amber-400">
               {s.common.betterWas} {betterMove}
             </h2>
             <button
