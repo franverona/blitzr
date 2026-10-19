@@ -45,9 +45,18 @@ describe('parseManualGame', () => {
     expect(game.myColor).toBe('black')
   })
 
-  it('defaults to white when neither header matches the configured username', () => {
-    const game = parseManualGame(BOT_GAME_PGN, 'someone-else')
-    expect(game.myColor).toBe('white')
+  it('rejects auto-detection when neither header matches the configured username', () => {
+    expect(() => parseManualGame(BOT_GAME_PGN, 'someone-else')).toThrow(/Neither player/)
+  })
+
+  it('uses an explicit side over the username match', () => {
+    const game = parseManualGame(BOT_GAME_PGN, 'someone-else', 'black')
+    expect(game).toMatchObject({ myColor: 'black', myResult: 'win', isMine: true })
+  })
+
+  it('stores a "not me" game from White\'s side, flagged as not mine', () => {
+    const game = parseManualGame(BOT_GAME_PGN, 'fverona', 'notMine')
+    expect(game).toMatchObject({ myColor: 'white', myResult: 'loss', isMine: false })
   })
 
   it('generates a fresh id per call, never colliding with a real sync', () => {
@@ -58,7 +67,7 @@ describe('parseManualGame', () => {
 
   it('falls back gracefully when optional headers are missing', () => {
     const pgn = '[White "A"]\n[Black "B"]\n[Result "1/2-1/2"]\n\n1. e4 e5 *'
-    const game = parseManualGame(pgn, 'someone-else')
+    const game = parseManualGame(pgn, 'someone-else', 'white')
     expect(game.whiteRating).toBeNull()
     expect(game.blackRating).toBeNull()
     expect(game.ecoCode).toBeNull()

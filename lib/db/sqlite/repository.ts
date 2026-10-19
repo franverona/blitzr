@@ -39,6 +39,7 @@ function rowToGame(row: GamesTable): Game {
     blackResult: row.black_result,
     myColor: row.my_color as Game['myColor'],
     myResult: row.my_result as Game['myResult'],
+    isMine: row.is_mine === 1,
     ecoCode: row.eco_code,
     ecoName: row.eco_name,
     ecoUrl: row.eco_url,
@@ -68,6 +69,7 @@ function gameToRow(game: Game): GamesTable {
     black_result: game.blackResult,
     my_color: game.myColor,
     my_result: game.myResult,
+    is_mine: game.isMine ? 1 : 0,
     eco_code: game.ecoCode,
     eco_name: game.ecoName,
     eco_url: game.ecoUrl,
@@ -171,8 +173,13 @@ export class SqliteGameRepository implements GameRepository {
     const contains = (column: 'white_username' | 'black_username') =>
       sql<boolean>`instr(lower(${sql.ref(column)}), ${needle}) > 0`
     // Opponent side only; matching both also matched the user's own name.
+    // A "not me" game has no user side, so either player matches.
     const opponentFilter = (eb: ExpressionBuilder<DbSchema, 'games'>) =>
       eb.or([
+        eb.and([
+          eb('is_mine', '=', 0),
+          eb.or([contains('white_username'), contains('black_username')]),
+        ]),
         eb.and([eb('my_color', '=', 'black'), contains('white_username')]),
         eb.and([eb('my_color', '=', 'white'), contains('black_username')]),
       ])
@@ -182,6 +189,11 @@ export class SqliteGameRepository implements GameRepository {
     if (opponent) {
       rowsQuery = rowsQuery.where(opponentFilter)
       countQuery = countQuery.where(opponentFilter)
+    }
+    // A "not me" game's color and result are placeholders.
+    if (params.result || params.color) {
+      rowsQuery = rowsQuery.where('is_mine', '=', 1)
+      countQuery = countQuery.where('is_mine', '=', 1)
     }
     if (params.result) {
       rowsQuery = rowsQuery.where('my_result', '=', params.result)
@@ -270,6 +282,11 @@ export class SqliteGameRepository implements GameRepository {
       created_at: node.createdAt,
     }
     await db.insertInto('repertoire_moves').values(row).execute()
+  }
+
+  async deleteGame(id: string): Promise<void> {
+    const db = await this.ready()
+    await db.deleteFrom('games').where('id', '=', id).execute()
   }
 
   async deleteRepertoireNode(id: string): Promise<void> {

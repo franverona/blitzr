@@ -8,6 +8,7 @@ import {
   ExploreToggleButton,
   LiveAnalysisProvider,
 } from '@/components/Board'
+import { DeleteGameButton } from '@/components/DeleteGameButton'
 import { DetailsDialogTrigger } from '@/components/DetailsDialog'
 import {
   AnalyzeButton,
@@ -49,7 +50,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
     : null
   const repertoireNodes = await listRepertoire(game.myColor)
   const diff =
-    game.movesSan && startsFromStandardPosition(game)
+    game.isMine && game.movesSan && startsFromStandardPosition(game)
       ? diffGameAgainstRepertoire(game.movesSan, game.myColor, repertoireNodes)
       : null
   const analysis = (await getGameAnalysis(id)) ?? null
@@ -90,6 +91,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
             </DetailsDialogTrigger>
           )}
           {game.movesSan && isStandardChess(game) && <AnalyzeButton />}
+          {game.archiveYm === 'manual' && <DeleteGameButton gameId={game.id} />}
         </div>
       </div>
 
@@ -196,7 +198,9 @@ function GameHeader({
       </h1>
       <p className="text-xs text-zinc-500 dark:text-zinc-400">
         {formatDateTime(game.endTime)} · {timeClassLabel} ·{' '}
-        {s.gamePage.playing(s.common.color[game.myColor])} · {s.common.result[game.myResult]}
+        {game.isMine
+          ? `${s.gamePage.playing(s.common.color[game.myColor])} · ${s.common.result[game.myResult]}`
+          : s.gamePage.notMine}
       </p>
       {!isBotGame && game.url && (
         <a

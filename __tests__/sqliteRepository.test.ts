@@ -31,6 +31,7 @@ function game(id: string, white: string, black: string, myColor: Game['myColor']
     blackResult: 'checkmated',
     myColor,
     myResult: myColor === 'white' ? 'win' : 'loss',
+    isMine: true,
     ecoCode: null,
     ecoName: null,
     ecoUrl: null,
@@ -79,6 +80,41 @@ describe('SqliteGameRepository.saveGameAnalysis', () => {
     await repo.saveGameAnalysis({ gameId: '1', evals: [], analyzedAt: 'a', movetimeMs: 150 })
     await repo.saveGameAnalysis({ gameId: '1', evals: [], analyzedAt: 'b', movetimeMs: 1000 })
     expect(await repo.getGameAnalysis('1')).toMatchObject({ analyzedAt: 'b', movetimeMs: 1000 })
+  })
+})
+
+describe('SqliteGameRepository "not me" games', () => {
+  it('matches either player on search but never the result/color filters', async () => {
+    await repo.upsertGames([{ ...game('nm', 'carol', 'dave', 'white'), isMine: false }])
+    expect((await repo.listGames({ opponent: 'carol' })).games.map((g) => g.id)).toEqual(['nm'])
+    expect((await repo.listGames({ opponent: 'dave' })).games.map((g) => g.id)).toEqual(['nm'])
+    const wins = await repo.listGames({ result: 'win', limit: 5000 })
+    expect(wins.games.some((g) => g.id === 'nm')).toBe(false)
+    expect((await repo.getGame('nm'))?.isMine).toBe(false)
+  })
+})
+
+describe('SqliteGameRepository.deleteGame', () => {
+  it('removes the game and cascades to its analysis and drill cards', async () => {
+    await repo.upsertGames([game('del', 'fverona', 'eve', 'white')])
+    await repo.saveGameAnalysis({ gameId: 'del', evals: [], analyzedAt: 'a', movetimeMs: 300 })
+    await repo.upsertDrillCard({
+      gameId: 'del',
+      sourceType: 'blunder',
+      ply: 1,
+      dueAt: 'x',
+      intervalDays: 0,
+      easeFactor: 2.5,
+      repetitions: 0,
+      lastReviewedAt: null,
+      createdAt: 'x',
+    })
+
+    await repo.deleteGame('del')
+
+    expect(await repo.getGame('del')).toBeUndefined()
+    expect(await repo.getGameAnalysis('del')).toBeUndefined()
+    expect((await repo.listDrillCards()).some((c) => c.gameId === 'del')).toBe(false)
   })
 })
 

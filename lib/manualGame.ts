@@ -37,7 +37,14 @@ function ratingFromHeader(value: string | undefined): number | null {
   return Number.isNaN(rating) ? null : rating
 }
 
-export function parseManualGame(pgn: string, username: string): Game {
+/** 'auto' matches the username against the PGN's players. */
+export type ManualGameSide = 'auto' | MyColor | 'notMine'
+
+export function parseManualGame(
+  pgn: string,
+  username: string,
+  side: ManualGameSide = 'auto',
+): Game {
   const headers = parsePgnHeaders(pgn)
   if (!headers.White || !headers.Black) {
     throw new Error(getStrings().manualGame.missingPlayers)
@@ -56,9 +63,16 @@ export function parseManualGame(pgn: string, username: string): Game {
   const finalFen = chess.fen()
   const result = pgnResult(headers, chess)
 
-  const isBlack = headers.Black.toLowerCase() === username.toLowerCase()
-  // ponytail: a pasted game may not involve the user at all; default to White.
-  const myColor: MyColor = isBlack ? 'black' : 'white'
+  let myColor: MyColor
+  if (side === 'auto') {
+    const name = username.toLowerCase()
+    if (headers.White.toLowerCase() === name) myColor = 'white'
+    else if (headers.Black.toLowerCase() === name) myColor = 'black'
+    else throw new Error(getStrings().manualGame.notInGame(username))
+  } else {
+    // A game the user didn't play is shown from White's side.
+    myColor = side === 'notMine' ? 'white' : side
+  }
   const myResult = myResultFromPgnResult(result, myColor)
 
   const ecoUrl = headers.ECOUrl ?? null
@@ -83,6 +97,7 @@ export function parseManualGame(pgn: string, username: string): Game {
     blackResult: myResultFromPgnResult(result, 'black'),
     myColor,
     myResult,
+    isMine: side !== 'notMine',
     ecoCode: headers.ECO ?? null,
     ecoName: ecoUrl ? ecoNameFromUrl(ecoUrl) : null,
     ecoUrl,

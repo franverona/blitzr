@@ -48,6 +48,7 @@ const en = {
     sections: { appearance: 'Appearance', board: 'Board', analysis: 'Analysis' },
   },
   gameRow: {
+    notMine: 'Not you',
     timeClassTooltips: {
       bullet: 'Bullet — under 3 minutes per player',
       blitz: 'Blitz — 3 to 10 minutes per player',
@@ -229,6 +230,8 @@ const en = {
     missingPlayers: 'PGN is missing White/Black player headers.',
     badMovetext: 'Could not parse this PGN — check the move text is valid.',
     noMoves: 'PGN has no moves — paste the full game, not just its headers.',
+    notInGame: (username: string) =>
+      `Neither player is ${username} — pick the side you played, or "Not me" to keep it out of your stats.`,
   },
   sync: {
     button: 'Sync games',
@@ -247,6 +250,13 @@ const en = {
     submit: 'Add game',
     adding: 'Adding…',
     genericError: 'Could not add this game.',
+    sideLabel: 'You played',
+    sides: {
+      auto: 'Detect from my username',
+      white: 'White',
+      black: 'Black',
+      notMine: 'Not me (keep out of my stats)',
+    },
   },
   drill: {
     hint: '💡 Hint',
@@ -410,6 +420,9 @@ const en = {
     gameDetails: 'Game details',
     unparsedMoves: `This game's moves couldn't be parsed (likely a non-standard variant) — showing the raw PGN instead.`,
     playing: (color: string) => `playing ${color}`,
+    notMine: 'not your game — kept out of your stats',
+    deleteGame: 'Delete game',
+    deleteGameConfirm: 'Delete this pasted game, its analysis and its drill cards?',
     noRepertoireYet: (color: string) => `No ${color} repertoire defined yet —`,
     buildOne: 'build one',
     inBookTooltip: 'Still following your prepared moves up to this point',
@@ -499,6 +512,7 @@ const es: Strings = {
     sections: { appearance: 'Apariencia', board: 'Tablero', analysis: 'Análisis' },
   },
   gameRow: {
+    notMine: 'No eres tú',
     timeClassTooltips: {
       bullet: 'Bala — menos de 3 minutos por jugador',
       blitz: 'Blitz — de 3 a 10 minutos por jugador',
@@ -683,6 +697,8 @@ const es: Strings = {
     missingPlayers: 'Al PGN le faltan las cabeceras de jugadores White/Black.',
     badMovetext: 'No se pudo interpretar este PGN — revisa que las jugadas sean válidas.',
     noMoves: 'El PGN no tiene jugadas — pega la partida completa, no solo sus cabeceras.',
+    notInGame: (username: string) =>
+      `Ninguno de los jugadores es ${username} — elige con qué color jugaste, o "No soy yo" para dejarla fuera de tus estadísticas.`,
   },
   sync: {
     button: 'Sincronizar partidas',
@@ -702,6 +718,13 @@ const es: Strings = {
     submit: 'Añadir partida',
     adding: 'Añadiendo…',
     genericError: 'No se pudo añadir esta partida.',
+    sideLabel: 'Jugaste con',
+    sides: {
+      auto: 'Detectar por mi usuario',
+      white: 'Blancas',
+      black: 'Negras',
+      notMine: 'No soy yo (fuera de mis estadísticas)',
+    },
   },
   drill: {
     hint: '💡 Pista',
@@ -870,6 +893,10 @@ const es: Strings = {
     unparsedMoves:
       'No se pudieron interpretar las jugadas de esta partida (probablemente una variante no estándar) — mostrando el PGN sin procesar en su lugar.',
     playing: (color: string) => `jugando con ${color}`,
+    notMine: 'no es tu partida — fuera de tus estadísticas',
+    deleteGame: 'Eliminar partida',
+    deleteGameConfirm:
+      '¿Eliminar esta partida pegada, su análisis y sus tarjetas de entrenamiento?',
     noRepertoireYet: (color: string) => `Aún no hay repertorio de ${color} definido —`,
     buildOne: 'crea uno',
     inBookTooltip: 'Todavía siguiendo tus jugadas preparadas hasta este punto',

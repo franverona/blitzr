@@ -23,6 +23,9 @@ export interface Game {
   blackResult: string
   myColor: MyColor
   myResult: MyResult
+  /** False for a pasted game the user didn't play; it's kept out of every
+   *  stat, and `myColor` is just the board orientation. */
+  isMine: boolean
   ecoCode: string | null
   ecoName: string | null
   ecoUrl: string | null

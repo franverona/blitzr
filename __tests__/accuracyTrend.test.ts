@@ -27,6 +27,7 @@ function makeGame(overrides: Partial<Game>): Game {
     blackResult: 'checkmated',
     myColor: 'white',
     myResult: 'win',
+    isMine: true,
     ecoCode: null,
     ecoName: null,
     ecoUrl: null,
