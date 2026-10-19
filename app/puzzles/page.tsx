@@ -48,6 +48,8 @@ export default async function PuzzlesPage({
 
   const solvedIds = new Set(await getSolvedPuzzleIds())
   const problems = allMateProblems()
+  // Progress can include puzzles missing from this set (e.g. local Polgár on another machine).
+  const solvedCount = problems.filter((p) => solvedIds.has(p.id)).length
   const availableMateIns = [...new Set(problems.map((p) => p.mateIn))].sort((a, b) => a - b)
 
   const filtered = problems.filter((problem) => {
@@ -79,11 +81,11 @@ export default async function PuzzlesPage({
                 <div className="h-1.5 w-24 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800">
                   <div
                     className="h-full rounded-full bg-emerald-500 transition-[width]"
-                    style={{ width: `${(solvedIds.size / problems.length) * 100}%` }}
+                    style={{ width: `${(solvedCount / problems.length) * 100}%` }}
                   />
                 </div>
                 <span className="text-sm text-zinc-500 dark:text-zinc-400">
-                  {s.puzzlesPage.solvedCount(solvedIds.size, problems.length)}
+                  {s.puzzlesPage.solvedCount(solvedCount, problems.length)}
                 </span>
               </div>
               {nextUnsolved && (

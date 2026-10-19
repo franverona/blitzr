@@ -543,7 +543,8 @@ export async function getTodaySummary(): Promise<{
     ),
     puzzles: {
       nextId: problems.find((p) => !solvedIds.has(p.id))?.id ?? null,
-      solved: solvedIds.size,
+      // Only puzzles in this set: progress can include ones missing from it (local Polgár).
+      solved: problems.filter((p) => solvedIds.has(p.id)).length,
       total: problems.length,
     },
     lastSyncedAt: syncedAts.at(-1) ?? null,
