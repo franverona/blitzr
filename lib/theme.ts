@@ -31,6 +31,7 @@ export const CHECKLIST_SQUARE_COLOR = 'rgba(244, 63, 94, 0.35)'
 
 export const GAME_END_SQUARE_COLORS = {
   loss: CHECKLIST_SQUARE_COLOR,
+  flag: CHECKLIST_SQUARE_COLOR,
   win: 'rgba(16, 185, 129, 0.35)',
   draw: 'rgba(161, 161, 170, 0.35)',
 }

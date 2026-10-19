@@ -16,6 +16,7 @@ import { BoardCoordinates } from './BoardCoordinates'
 import { describeEval, findBlunders, formatEval } from '@/lib/analysis'
 import { buildPositionChecklist, findingKey, findingMarks } from '@/lib/checklist'
 import { whiteToMove } from '@/lib/drill'
+import { gameEndBadges, type GameEndVariant } from '@/lib/gameEnd'
 import { getStrings } from '@/lib/i18n/strings'
 import { legalDestinations } from '@/lib/legalMoves'
 import { formatMaterialDiff, materialDiff } from '@/lib/material'
@@ -49,6 +50,9 @@ interface BoardContextValue {
     updater: 'white' | 'black' | ((o: 'white' | 'black') => 'white' | 'black'),
   ) => void
   result?: string
+  /** Per-player result codes, for end badges the final position can't show
+   *  (resignation, timeout, agreed draw). */
+  finalResults?: { white: string; black: string }
   movesSan: string[]
   evals?: PositionEval[]
   /** Checklist findings the user has hidden from the board (`findingKey()`). */
@@ -95,6 +99,7 @@ export function BoardProvider({
   boardOrientation: initialBoardOrientation,
   myColor = initialBoardOrientation,
   result,
+  finalResults,
   evals,
   initialPly,
   children,
@@ -105,6 +110,7 @@ export function BoardProvider({
   /** Defaults to `boardOrientation`. */
   myColor?: 'white' | 'black'
   result?: string
+  finalResults?: { white: string; black: string }
   evals?: PositionEval[]
   /** Defaults to the last ply. */
   initialPly?: number
@@ -239,6 +245,7 @@ export function BoardProvider({
         boardOrientation,
         setBoardOrientation,
         result,
+        finalResults,
         movesSan,
         evals,
         hiddenFindingKeys,
@@ -573,6 +580,7 @@ function squarePercent(square: string, orientation: 'white' | 'black') {
 
 const GAME_END_BADGE_COLORS = {
   loss: 'bg-rose-600',
+  flag: 'bg-rose-600',
   win: 'bg-emerald-600',
   draw: 'bg-zinc-500',
 }
@@ -614,7 +622,15 @@ function DrawIcon() {
   )
 }
 
-const GAME_END_BADGE_ICONS = { loss: MateIcon, win: WinnerIcon, draw: DrawIcon }
+function FlagIcon() {
+  return (
+    <svg viewBox="0 0 18 19" width="70%" height="70%">
+      <path fill="#fff" d="M4 2.5h1.6v14H4zM6.4 3.2h8.1l-2 3.3 2 3.3H6.4z" />
+    </svg>
+  )
+}
+
+const GAME_END_BADGE_ICONS = { loss: MateIcon, flag: FlagIcon, win: WinnerIcon, draw: DrawIcon }
 
 function GameEndBadge({
   square,
@@ -624,7 +640,7 @@ function GameEndBadge({
 }: {
   square: string
   label: string
-  variant: 'loss' | 'win' | 'draw'
+  variant: GameEndVariant
   boardOrientation: 'white' | 'black'
 }) {
   const { left, top } = squarePercent(square, boardOrientation)
@@ -665,6 +681,7 @@ export function BoardView({
     myColor,
     boardOrientation,
     result,
+    finalResults,
     movesSan,
     evals,
     setPly,
@@ -782,42 +799,32 @@ export function BoardView({
     return [...arrows.values()]
   }, [checklistSquareStyles.arrows, bestMove, exploring, liveLine, boardColors.hideEngineHints])
 
-  // Derived from the board, not the PGN `result` — most games end by
-  // resignation or timeout, not on-board mate.
-  const gameEndBadges = useMemo(() => {
-    const chess = new Chess(displayFen)
-    const kingSquare = (color: 'w' | 'b') =>
-      chess
+  // The position shows mate/draw itself; resignations and timeouts (most
+  // games) only get a badge on the recorded final ply.
+  const gameEndBadgeList = useMemo(() => {
+    const atRecordedEnd = !exploring && ply === positions.length - 1
+    const kings = new Map(
+      new Chess(displayFen)
         .board()
         .flat()
-        .find((cell) => cell !== null && cell.type === 'k' && cell.color === color)?.square
-    type Badge = { square: string; label: string; variant: 'loss' | 'win' | 'draw' }
-    if (chess.isCheckmate()) {
-      const losingColor = chess.turn()
-      const winningColor = losingColor === 'w' ? 'b' : 'w'
-      return [
-        { square: kingSquare(losingColor), label: s.board.checkmate, variant: 'loss' as const },
-        { square: kingSquare(winningColor), label: s.board.winner, variant: 'win' as const },
-      ].filter((b) => b.square !== undefined) as Badge[]
-    }
-    if (chess.isDraw()) {
-      return (['w', 'b'] as const)
-        .map((color) => ({
-          square: kingSquare(color),
-          label: s.board.draw,
-          variant: 'draw' as const,
-        }))
-        .filter((b) => b.square !== undefined) as Badge[]
-    }
-    return [] as Badge[]
-  }, [displayFen, s])
+        .flatMap((cell) =>
+          cell?.type === 'k'
+            ? [[cell.color === 'w' ? 'white' : 'black', cell.square] as const]
+            : [],
+        ),
+    )
+    return gameEndBadges(displayFen, atRecordedEnd ? finalResults : undefined).flatMap((b) => {
+      const square = kings.get(b.color)
+      return square ? [{ square, variant: b.variant, label: s.board.endReasons[b.reason] }] : []
+    })
+  }, [displayFen, exploring, ply, positions.length, finalResults, s])
   const boardSquareStyles = useMemo(() => {
     const styles = { ...checklistSquareStyles.styles }
-    for (const badge of gameEndBadges) {
+    for (const badge of gameEndBadgeList) {
       styles[badge.square] = { backgroundColor: GAME_END_SQUARE_COLORS[badge.variant] }
     }
     return styles
-  }, [checklistSquareStyles.styles, gameEndBadges])
+  }, [checklistSquareStyles.styles, gameEndBadgeList])
   const betterMove = bestMove
     ? describeBetterMove(
         positions[ply],
@@ -910,7 +917,7 @@ export function BoardView({
                   }}
                 />
               </div>
-              {gameEndBadges.map((badge) => (
+              {gameEndBadgeList.map((badge) => (
                 <GameEndBadge
                   key={`${badge.variant}-${badge.square}`}
                   square={badge.square}

@@ -126,6 +126,8 @@ scripts/
   stops, saved hints, `MoveList` and `LessonQuiz`. Never read `boardOrientation` as "my color" —
   it's only the view, so a flip button can't change whose moves count.
 - **Game replay and lesson Study mode open on ply 1.**
+- **Game-end badges** (`gameEndBadges()`, `lib/gameEnd.ts`): mate/draw come from the position;
+  resignations, timeouts and agreed draws from the per-player result codes, on the final ply only.
 - **Beginner jargon is explained in place** (`<abbr title>` tooltips, `EvalHelp`), not removed.
 - **A component seeding state from props (`useState(initialX)`) needs `key={id}`** wherever it can
   receive a different record. Exception: a filter that must survive its own navigation (the
@@ -210,6 +212,8 @@ a prepared move. An opponent's unprepared move or the tree running out doesn't c
 - Explore mode is a separate branch in `BoardContext` (`explorePath`/`explorePly`), never persisted.
   The ◀/▶ nav follows it; Play and the saved-analysis hints are off while exploring.
   `playExploreLine()` replays an engine line onto the branch, stopping at the first illegal move.
+- `PositionActions` (game page, under the nav controls) copies the FEN on screen and the game's
+  PGN, or the explored line's PGN (`linePgn()`) while exploring, and links to Lichess analysis.
 - `useLiveAnalysisContext()` returns an empty default without a provider, so `/learn` can render
   `BoardView` without spinning up an engine.
 

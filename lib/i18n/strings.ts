@@ -1,3 +1,4 @@
+import type { GameEndReason } from '../gameEnd'
 import { getLocale, Locale } from './locale'
 
 // `es` is typed against `typeof en`, so a missing translation is a compile
@@ -170,9 +171,25 @@ const en = {
     },
     startingPositionButton: 'Starting position',
     material: 'Material:',
-    checkmate: 'Checkmate',
-    winner: 'Winner',
-    draw: 'Draw',
+    endReasons: {
+      checkmate: 'Checkmate',
+      winner: 'Winner',
+      draw: 'Draw',
+      resigned: 'Resigned',
+      timeout: 'Lost on time',
+      abandoned: 'Abandoned',
+      lost: 'Lost',
+      agreed: 'Draw agreed',
+      repetition: 'Draw by repetition',
+      timevsinsufficient: 'Draw: time out vs. insufficient material',
+    } satisfies Record<GameEndReason, string>,
+  },
+  positionActions: {
+    copyFen: 'Copy FEN',
+    copyPgn: 'Copy PGN',
+    copyLinePgn: 'Copy line PGN',
+    copied: 'Copied!',
+    openInLichess: 'Lichess ↗',
   },
   moveExplanation: {
     startingPosition: 'Starting position.',
@@ -639,9 +656,25 @@ const es: Strings = {
     },
     startingPositionButton: 'Posición inicial',
     material: 'Material:',
-    checkmate: 'Jaque mate',
-    winner: 'Ganador',
-    draw: 'Tablas',
+    endReasons: {
+      checkmate: 'Jaque mate',
+      winner: 'Ganador',
+      draw: 'Tablas',
+      resigned: 'Se rindió',
+      timeout: 'Perdió por tiempo',
+      abandoned: 'Abandonó',
+      lost: 'Perdió',
+      agreed: 'Tablas de mutuo acuerdo',
+      repetition: 'Tablas por repetición',
+      timevsinsufficient: 'Tablas: tiempo agotado sin material suficiente',
+    },
+  },
+  positionActions: {
+    copyFen: 'Copiar FEN',
+    copyPgn: 'Copiar PGN',
+    copyLinePgn: 'Copiar PGN de la línea',
+    copied: '¡Copiado!',
+    openInLichess: 'Lichess ↗',
   },
   moveExplanation: {
     startingPosition: 'Posición inicial.',
