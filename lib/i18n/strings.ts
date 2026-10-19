@@ -184,6 +184,13 @@ const en = {
       timevsinsufficient: 'Draw: time out vs. insufficient material',
     } satisfies Record<GameEndReason, string>,
   },
+  positionActions: {
+    copyFen: 'Copy FEN',
+    copyPgn: 'Copy PGN',
+    copyLinePgn: 'Copy line PGN',
+    copied: 'Copied!',
+    openInLichess: 'Lichess ↗',
+  },
   moveExplanation: {
     startingPosition: 'Starting position.',
   },
@@ -661,6 +668,13 @@ const es: Strings = {
       repetition: 'Tablas por repetición',
       timevsinsufficient: 'Tablas: tiempo agotado sin material suficiente',
     },
+  },
+  positionActions: {
+    copyFen: 'Copiar FEN',
+    copyPgn: 'Copiar PGN',
+    copyLinePgn: 'Copiar PGN de la línea',
+    copied: '¡Copiado!',
+    openInLichess: 'Lichess ↗',
   },
   moveExplanation: {
     startingPosition: 'Posición inicial.',
