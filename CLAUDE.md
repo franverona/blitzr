@@ -138,7 +138,8 @@ scripts/
 - **`BoardProvider`'s `myColor`** (defaults to `boardOrientation`) is the user's side for Play's
   stops, saved hints, `MoveList` and `LessonQuiz`. Never read `boardOrientation` as "my color" —
   it's only the view, so a flip button can't change whose moves count.
-- **Game replay and lesson Study mode open on ply 1.**
+- **Game replay and lesson Study mode open on ply 1.** A game page's `?ply=` overrides it (Today
+  links a blunder one ply early, so the board shows the position before it).
 - **Game-end badges** (`gameEndBadges()`, `lib/gameEnd.ts`): mate/draw come from the position;
   resignations, timeouts and agreed draws from the per-player result codes, on the final ply only.
 - **Beginner jargon is explained in place** (`<abbr title>` tooltips, `EvalHelp`), not removed.
@@ -264,12 +265,15 @@ section. The trend chart's x-axis is game index, not date, because sessions are 
 
 `getTodaySummary()` feeds `/`, the landing page (the games list is `/games`). "Recent" means the
 last 7 days throughout; the pure parts live in `lib/today.ts`. The due count goes through the same
-`reconcileDrillCards()` as `getDrillDeck()`, so it matches `/drill`, and is shown against the session
-size. Ratings change per time class (`recentResults()`; Chess.com never mixes them). The weak spot
-is the top opening from `buildBlunderStats()` over recent games, linking to `/drill?opening=` only if
-the deck has a card for it. The drill streak reads `drill_review_days` (one row per local day with
-an answer, recorded by `submitDrillAnswer()`): `drill_cards.last_reviewed_at` keeps only the latest
-review, so the table was seeded once from it and undercounts older history.
+`reconcileDrillCards()` as `getDrillDeck()`, so it matches `/drill`, and is shown against the
+session size. Ratings change per time class (`recentResults()`; Chess.com never mixes them). The
+weak spot is the top opening from `buildBlunderStats()` over recent games, linking to
+`/drill?opening=` only if the deck has a card for it. Focus also lists the week's worst blunder
+(`buildBlunderStats().worst[0]`), how the week's games were lost (`lossReasons()`, from the user's
+own result code) and the opening lesson those games reached most (`suggestLesson()`, exact SAN
+prefix like `countGamesReachingLine()`). The drill streak reads `drill_review_days` (one row per
+local day with an answer, recorded by `submitDrillAnswer()`): `drill_cards.last_reviewed_at` keeps
+only the latest review, so the table was seeded once from it and undercounts older history.
 
 ## Puzzles
 

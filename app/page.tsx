@@ -112,7 +112,7 @@ export default async function TodayPage() {
             <p className="text-sm">{s.today.record(results.wins, results.losses, results.draws)}</p>
           )}
           {results.ratings.map((r) => (
-            <p key={r.timeClass} className="flex items-center gap-1.5 text-sm">
+            <p key={r.timeClass} className="text-sm">
               {s.common.timeClass[r.timeClass as keyof typeof s.common.timeClass] ?? r.timeClass}{' '}
               {r.rating}{' '}
               <span
@@ -125,7 +125,6 @@ export default async function TodayPage() {
                 ({r.change >= 0 ? '+' : ''}
                 {r.change})
               </span>
-              <Sparkline points={today.ratingHistory[r.timeClass] ?? []} up={r.change >= 0} />
             </p>
           ))}
         </Card>
@@ -274,43 +273,6 @@ export default async function TodayPage() {
         </Card>
       </div>
     </div>
-  )
-}
-
-/** Hand-rolled SVG (like AccuracyTrendChart), oldest to newest; nothing under 2 points. */
-function Sparkline({ points, up }: { points: number[]; up: boolean }) {
-  const s = getStrings()
-  if (points.length < 2) return null
-  const width = 64
-  const height = 16
-  const min = Math.min(...points)
-  const range = Math.max(...points) - min || 1
-  const coords = points
-    .map((p, i) => {
-      const x = (i / (points.length - 1)) * width
-      const y = height - 1 - ((p - min) / range) * (height - 2)
-      return `${x.toFixed(1)},${y.toFixed(1)}`
-    })
-    .join(' ')
-  return (
-    <svg
-      width={width}
-      height={height}
-      viewBox={`0 0 ${width} ${height}`}
-      role="img"
-      aria-label={s.today.ratingTrend}
-      className={up ? 'text-emerald-500' : 'text-rose-500'}
-    >
-      <title>{s.today.ratingTrend}</title>
-      <polyline
-        points={coords}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={1.5}
-        strokeLinejoin="round"
-        strokeLinecap="round"
-      />
-    </svg>
   )
 }
 

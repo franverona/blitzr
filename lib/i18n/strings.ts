@@ -65,7 +65,6 @@ const en = {
     lessonSuggestion: (name: string, n: number) =>
       `You reached the ${name} in ${n} game${n === 1 ? '' : 's'} this week.`,
     studyLesson: 'Study the lesson',
-    ratingTrend: 'Rating over the last 30 days',
     noWeakSpot: 'No blunders in analyzed games this week.',
     repertoireDeviations: (deviated: number, considered: number) =>
       `You left your repertoire in ${deviated} of your last ${considered} games.`,
@@ -632,7 +631,6 @@ const es: Strings = {
     lessonSuggestion: (name: string, n: number) =>
       `Llegaste a «${name}» en ${n} ${n === 1 ? 'partida' : 'partidas'} esta semana.`,
     studyLesson: 'Estudia la lección',
-    ratingTrend: 'Puntuación en los últimos 30 días',
     noWeakSpot: 'Ningún error en las partidas analizadas esta semana.',
     repertoireDeviations: (deviated: number, considered: number) =>
       `Te saliste de tu repertorio en ${deviated} de tus últimas ${considered} partidas.`,

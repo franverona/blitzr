@@ -160,15 +160,3 @@ export function suggestLesson(
   }
   return best
 }
-
-/** Each time class's ratings over the last `days` days, oldest first (rated games only). */
-export function ratingHistory(games: Game[], now: Date, days = 30): Map<string, number[]> {
-  const since = now.getTime() / 1000 - days * DAY_SECONDS
-  const history = new Map<string, number[]>()
-  for (const game of [...games].sort((a, b) => a.endTime - b.endTime)) {
-    const rating = game.myColor === 'white' ? game.whiteRating : game.blackRating
-    if (!game.rated || rating === null || game.endTime < since) continue
-    history.set(game.timeClass, [...(history.get(game.timeClass) ?? []), rating])
-  }
-  return history
-}

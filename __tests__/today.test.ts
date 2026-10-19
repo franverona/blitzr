@@ -4,7 +4,6 @@ import {
   drillWeek,
   localDay,
   lossReasons,
-  ratingHistory,
   suggestLesson,
   recentResults,
   repertoireDeviations,
@@ -176,20 +175,5 @@ describe('suggestLesson', () => {
       games: 2,
     })
     expect(suggestLesson(games, [lesson('c4', ['c4'])])).toBeNull()
-  })
-})
-
-describe('ratingHistory', () => {
-  it('lists rated ratings per time class in the last 30 days, oldest first', () => {
-    const history = ratingHistory(
-      [
-        game({ endTime: daysAgo(2), whiteRating: 1210 }),
-        game({ endTime: daysAgo(40), whiteRating: 1100 }),
-        game({ endTime: daysAgo(5), whiteRating: 1200 }),
-        game({ endTime: daysAgo(3), rated: false, whiteRating: 900 }),
-      ],
-      now,
-    )
-    expect(history.get('blitz')).toEqual([1200, 1210])
   })
 })

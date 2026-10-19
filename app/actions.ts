@@ -37,7 +37,6 @@ import {
   gameReview,
   localDay,
   lossReasons,
-  ratingHistory,
   recentResults,
   repertoireDeviations,
   suggestLesson,
@@ -450,8 +449,6 @@ export async function getTodaySummary(): Promise<{
   worstBlunder: { gameId: string; ply: number; moveSan: string; label: string; why: string } | null
   losses: ReturnType<typeof lossReasons>
   lesson: { slug: string; name: string; games: number } | null
-  /** Per time class, the last 30 days' ratings, oldest first. */
-  ratingHistory: Record<string, number[]>
   lastGame: {
     id: string
     opponent: string
@@ -573,7 +570,6 @@ export async function getTodaySummary(): Promise<{
           games: suggested.games,
         }
       : null,
-    ratingHistory: Object.fromEntries(ratingHistory(games, now)),
     syncIsFresh:
       syncedAts.length > 0 && now.getTime() - Date.parse(syncedAts.at(-1)!) < 60 * 60 * 1000,
   }

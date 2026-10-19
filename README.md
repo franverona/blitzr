@@ -177,7 +177,8 @@ adapted, in original wording, from Wikibooks'
 The landing page, **Today** (`/`), gathers what's waiting: today's drill session (with the full
 due count split by type, and your streak), games not analyzed yet, the last 7 days' accuracy against
 your average with results and rating change per time control, the opening you blundered most this
-week (with a link to drill it), how often you left your repertoire lately, your last game with its
+week (with a link to drill it), your worst blunder of the week, how you lost your games, a lesson
+for the opening you played most, how often you left your repertoire lately, your last game with its
 final position, and the next unsolved puzzle.
 
 ### Puzzles
