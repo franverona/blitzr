@@ -11,6 +11,7 @@ Built incrementally, one feature or fix at a time — don't scaffold speculative
 ## Stack
 
 - **Next.js** App Router with Server Actions (`'use server'`)
+  — newer than model training data; check `node_modules/next/dist/docs/` before using an API
 - **Pluggable database** behind `GameRepository` (`lib/db/`), selected via `DB_TYPE`. Only
   `sqlite` (Kysely + `better-sqlite3`) is implemented
 - **Tailwind CSS v4**, **TypeScript**
@@ -81,6 +82,8 @@ scripts/
 
 ## Key conventions
 
+- **Comments are terse** — only where needed, stating what's really important (a non-obvious why,
+  a gotcha), never restating the code.
 - **Server Actions** for all DB reads/writes and triggers — no API routes.
 - **Domain types are camelCase** (`lib/types.ts`), **DB columns snake_case** (`lib/db/types.ts`);
   the repository maps between them. Never leak snake_case past it.
@@ -281,13 +284,3 @@ dev server silently serves stale code. Restart it after building.
 - **Never commit to `main`.** Branch, commit, `gh pr create`.
 - **Conventional commits** (`feat:`, `fix:`, `chore:`, `style:`, lowercase) for commit messages
   (enforced by commitlint) and PR titles.
-
-<!-- BEGIN:nextjs-agent-rules -->
-
-# This is NOT the Next.js you know
-
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
-
-This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
-
-<!-- END:nextjs-agent-rules -->
