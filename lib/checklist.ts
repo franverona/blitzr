@@ -1,7 +1,7 @@
 import type { Color, PieceSymbol, Square } from 'chess.js'
 import { getLocale } from './i18n/locale'
 import type { Locale } from './i18n/locale'
-import { hangingSquares } from './hangingPiece'
+import { hangingReason, hangingSquares } from './hangingPiece'
 import { PIECE_VALUES } from './material'
 import { pieceWithArticle } from './san'
 import { forkers, pinnedPieces, skewers, targetList } from './tactics'
@@ -37,9 +37,9 @@ function buildSideFindings(fen: string, side: MyColor): ChecklistFinding[] {
 
   const findings: ChecklistFinding[] = []
 
-  for (const [square, piece] of hangingSquares(fen, color)) {
+  for (const [square, hanging] of hangingSquares(fen, color)) {
     if (explainedSquares.has(square)) continue
-    findings.push({ side, reason: { kind: 'hanging-piece', piece, square } })
+    findings.push({ side, reason: hangingReason(square, hanging) })
   }
   for (const f of forks) {
     findings.push({
@@ -102,6 +102,12 @@ export function describeChecklistFinding(
 
   if (reason.kind === 'hanging-piece') {
     const piece = capitalize(pieceWithArticle(reason.piece as PieceSymbol, locale))
+    if (reason.attacker) {
+      const attacker = pieceWithArticle(reason.attacker.piece as PieceSymbol, locale)
+      return es
+        ? `${piece} en ${reason.square} está atacada por ${attacker} en ${reason.attacker.square}, que vale menos.`
+        : `${piece} on ${reason.square} is attacked by ${attacker} on ${reason.attacker.square}, which is worth less.`
+    }
     return es
       ? `${piece} en ${reason.square} está colgando — se puede capturar gratis.`
       : `${piece} on ${reason.square} is hanging — it can be captured for free.`
@@ -148,8 +154,12 @@ export interface FindingMarks {
 
 export function findingMarks(reason: BlunderReason): FindingMarks {
   if (reason.kind === 'hanging-piece') {
-    // No attacker square is tracked for a hanging piece.
-    return { squares: [reason.square], arrows: [] }
+    // An undefended piece has no single attacker worth drawing; a cheaper one does.
+    if (!reason.attacker) return { squares: [reason.square], arrows: [] }
+    return {
+      squares: [reason.attacker.square, reason.square],
+      arrows: [[reason.attacker.square, reason.square]],
+    }
   }
   if (reason.kind === 'fork') {
     return {

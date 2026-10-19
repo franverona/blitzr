@@ -232,6 +232,10 @@ a prepared move. An opponent's unprepared move or the tree running out doesn't c
 - Tactical explanations (`lib/tactics.ts`, `lib/hangingPiece.ts`) are deliberately narrow:
   one-ply lookback, no exchange evaluation, absolute pins only. `detectBlunderReason()` is the
   entry point; `describeBetterMove()` explains the engine's move and appends its plan.
+  `hangingSquares()` flags a piece that's undefended, or defended but attacked by a cheaper piece
+  (`HangingPieceReason.attacker`). That second case ranks after forks and skewers, in both
+  `detectBlunderReason()` and `explainBestMove()`: a forking knight is also a cheaper attacker of
+  each target, and the fork is the better explanation.
 - `lib/moveQuality.ts` tiers each move (its blunder cutoff matches `findBlunders()`) and scores
   accuracy with the Lichess formula. No Brilliant/Great/Book tiers.
 

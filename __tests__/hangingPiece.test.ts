@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { describeHangingPieceReason, detectHangingPiece } from '@/lib/hangingPiece'
+import { describeHangingPieceReason, detectHangingPiece, hangingSquares } from '@/lib/hangingPiece'
 
 describe('detectHangingPiece', () => {
   it('flags a piece that moved onto an attacked, undefended square', () => {
@@ -48,6 +48,35 @@ describe('detectHangingPiece', () => {
     })
   })
 
+  it('flags a defended piece attacked by a cheaper one', () => {
+    // The queen goes to d4: the c3 pawn defends it, but the e5 pawn attacks it.
+    const before = 'k7/8/8/4p3/8/2P5/8/3QK3 w - - 0 1'
+    const after = 'k7/8/8/4p3/3Q4/2P5/8/4K3 w - - 0 1'
+    expect(detectHangingPiece(before, after, 'white')).toEqual({
+      kind: 'hanging-piece',
+      piece: 'q',
+      square: 'd4',
+      attacker: { piece: 'p', square: 'e5' },
+    })
+  })
+
+  it('does not flag a defended piece attacked by one of equal value', () => {
+    // Knight c4, defended by the b3 pawn, attacked by the b5 bishop: a fair trade.
+    expect(hangingSquares('k7/8/8/1b6/2N5/1P6/8/4K3 w - - 0 1', 'w').size).toBe(0)
+  })
+
+  it('flags a piece that goes from attacked-by-cheaper to undefended', () => {
+    // The rook on d4 is already attacked by the cheaper a1 bishop; the knight leaving c2
+    // takes away its defender, so it's now free.
+    const before = '6k1/8/8/8/3R4/8/2N5/b5K1 w - - 0 1'
+    const after = '6k1/8/8/8/3R4/4N3/8/b5K1 w - - 0 1'
+    expect(detectHangingPiece(before, after, 'white')).toMatchObject({
+      piece: 'r',
+      square: 'd4',
+    })
+    expect(detectHangingPiece(before, after, 'white')?.attacker).toBeUndefined()
+  })
+
   it('never reports the king itself as hanging', () => {
     const fen = '4r2k/8/8/8/8/8/8/4K3 w - - 0 1'
     expect(detectHangingPiece(fen, fen, 'white')).toBeNull()
@@ -61,6 +90,21 @@ describe('describeHangingPieceReason', () => {
     )
     expect(describeHangingPieceReason({ kind: 'hanging-piece', piece: 'q', square: 'd5' })).toBe(
       'This leaves the queen on d5 hanging — it can be captured for free.',
+    )
+  })
+
+  it('says a defended piece loses material to a cheaper attacker', () => {
+    const reason = {
+      kind: 'hanging-piece' as const,
+      piece: 'q',
+      square: 'd4',
+      attacker: { piece: 'p', square: 'e5' },
+    }
+    expect(describeHangingPieceReason(reason)).toBe(
+      "This leaves the queen on d4 attacked by the pawn on e5, which is worth less — it loses material even though it's defended.",
+    )
+    expect(describeHangingPieceReason(reason, 'es')).toBe(
+      'Esto deja la dama en d4 atacada por el peón en e5, que vale menos — se pierde material aunque esté defendida.',
     )
   })
 
