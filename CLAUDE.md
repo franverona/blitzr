@@ -25,6 +25,7 @@ app/
   actions.ts                # all DB reads/writes + sync/analysis triggers (Server Actions)
   page.tsx                  # games list (paginated, filterable)
   layout.tsx                # sidebar nav + main content, reads settings cookies
+  error.tsx / not-found.tsx / loading.tsx  # root fallbacks; loading streams, so `notFound()` returns 200
   games/[id]/page.tsx       # single game — replay, repertoire diff, analysis
   openings/page.tsx         # ECO family aggregation
   learn/page.tsx            # lesson index
