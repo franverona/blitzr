@@ -32,6 +32,7 @@ implies endorsement.
 - Cross-game blunder stats with an accuracy-over-time chart and date filter
 - Opening and endgame lessons with study and quiz modes
 - Mate-in-N puzzles you solve move by move
+- A Today page: cards due, games left to analyze, last week's accuracy and the next puzzle
 - Settings: light/dark theme, board colors, analysis strength, hide engine hints, coordinates,
   move sounds, lesson/puzzle board orientation, auto-play speed, drill session size, and a
   database backup download
@@ -170,6 +171,11 @@ automatically. Opening lessons show how many of your own games reached that line
 adapted, in original wording, from Wikibooks'
 [Chess Opening Theory](https://en.wikibooks.org/wiki/Chess_Opening_Theory/1._e4) and
 [Chess/The Endgame](https://en.wikibooks.org/wiki/Chess/The_Endgame) (CC BY-SA).
+
+### Today
+
+`/today` gathers what's waiting: drill cards due, games not analyzed yet (with **Analyze all**),
+your accuracy over the last 7 days against your overall average, and the next unsolved puzzle.
 
 ### Puzzles
 

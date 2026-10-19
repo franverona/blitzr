@@ -36,6 +36,7 @@ app/
   blunders/page.tsx         # cross-game blunder aggregate + accuracy trend
   puzzles/page.tsx          # mate-in-N puzzle list
   puzzles/[id]/page.tsx     # one puzzle
+  today/page.tsx            # due cards, unanalyzed games, recent accuracy, next puzzle
 components/
   Board.tsx                 # BoardProvider/BoardView/BoardNavControls/LiveAnalysisProvider
   LiveAnalysisPanel.tsx     # live MultiPV engine lines
@@ -257,6 +258,13 @@ schedules) whose ply no longer qualifies. Accepted, not a bug.
 `buildBlunderStats()` and `buildAccuracyTrend()` are pure aggregations merged by
 `getBlunderStats()`, which applies the `?from=&to=` date range (local calendar days) to every
 section. The trend chart's x-axis is game index, not date, because sessions are bursty.
+
+## Today
+
+`getTodaySummary()` feeds `/today` (first in the nav): the due count goes through the same
+`reconcileDrillCards()` as `getDrillDeck()`, so it matches `/drill`; accuracy is
+`recentAccuracy()` (last 7 days against every analyzed game); the next puzzle is the first unsolved
+one in `MATE_PROBLEMS` order.
 
 ## Puzzles
 
