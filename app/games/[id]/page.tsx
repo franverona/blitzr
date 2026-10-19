@@ -127,6 +127,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
       initialFen={game.initialFen}
       movesSan={game.movesSan}
       boardOrientation={game.myColor}
+      myColor={game.myColor}
       result={pgnResult(game.myColor, game.myResult)}
       evals={analysis?.evals}
       initialPly={1}
@@ -243,8 +244,8 @@ function RepertoireDiff({
       <p className="text-sm text-amber-600 dark:text-amber-400">
         <abbr title={s.gamePage.inBookTooltip}>{s.gamePage.inBook}</abbr>{' '}
         {s.gamePage.inBookFor(diff.inBookPlies)}{' '}
-        <abbr title={s.gamePage.deviatedTooltip}>{s.gamePage.deviated}</abbr> on{' '}
-        {plyLabel(diff.deviationPly)} — {s.gamePage.played}{' '}
+        <abbr title={s.gamePage.deviatedTooltip}>{s.gamePage.deviated}</abbr>{' '}
+        {s.gamePage.deviatedOn} {plyLabel(diff.deviationPly)} — {s.gamePage.played}{' '}
         <span className="font-medium">{diff.deviationMove}</span>, {s.gamePage.repertoireHas}{' '}
         <span className="font-medium">{diff.expectedMoves?.join(` ${s.drill.or} `)}</span>.
       </p>

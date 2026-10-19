@@ -81,3 +81,11 @@ describe('SqliteGameRepository.saveGameAnalysis', () => {
     expect(await repo.getGameAnalysis('1')).toMatchObject({ analyzedAt: 'b', movetimeMs: 1000 })
   })
 })
+
+describe('SqliteGameRepository.upsertGames', () => {
+  it('inserts a month too big for one statement and counts only new rows', async () => {
+    const month = Array.from({ length: 1500 }, (_, i) => game(`big-${i}`, 'fverona', 'x', 'white'))
+    expect(await repo.upsertGames(month)).toBe(1500)
+    expect(await repo.upsertGames(month)).toBe(0)
+  })
+})

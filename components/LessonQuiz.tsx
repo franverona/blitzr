@@ -23,11 +23,11 @@ function revealArrow(fen: string, san: string) {
   }
 }
 
-/** Play a lesson's line from memory. Only your side (`boardOrientation`) is
+/** Play a lesson's line from memory. Only your side (`myColor`) is
  *  quizzed; the opponent's replies auto-play. Progress is BoardProvider's
  *  `ply`, so MoveExplanation follows along without extra wiring. */
 export function LessonQuiz({ sidebarExtra }: { sidebarExtra?: React.ReactNode }) {
-  const { ply, setPly, positions, lastPly, boardOrientation, movesSan } = useBoardContext()
+  const { ply, setPly, positions, lastPly, myColor, boardOrientation, movesSan } = useBoardContext()
   const s = getStrings()
   const boardColors = useSettings()
   const [feedback, setFeedback] = useState<'incorrect' | null>(null)
@@ -46,7 +46,7 @@ export function LessonQuiz({ sidebarExtra }: { sidebarExtra?: React.ReactNode })
     () => new Map(legalMoves.map((m) => [m.to, m.isCapture])),
     [legalMoves],
   )
-  const isMyTurn = ply < lastPly && (whiteToMove(ply + 1) ? 'white' : 'black') === boardOrientation
+  const isMyTurn = ply < lastPly && (whiteToMove(ply + 1) ? 'white' : 'black') === myColor
   const isComplete = ply >= lastPly
 
   // Auto-play the opponent's move after a short delay.
@@ -135,7 +135,7 @@ export function LessonQuiz({ sidebarExtra }: { sidebarExtra?: React.ReactNode })
   }
 
   const arrows = revealed ? revealArrow(fen, movesSan[ply]) : []
-  const colorLabel = s.common.color[boardOrientation]
+  const colorLabel = s.common.color[myColor]
 
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-center">

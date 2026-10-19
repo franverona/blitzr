@@ -27,6 +27,16 @@ export interface ChesscomGame {
   eco?: string
 }
 
+/** Carries the HTTP status so callers can show a localized reason. */
+export class ChesscomApiError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+  ) {
+    super(message)
+  }
+}
+
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
@@ -36,7 +46,10 @@ async function getJson<T>(url: string, attempt = 1): Promise<T> {
 
   if (res.status === 429) {
     if (attempt > 5) {
-      throw new Error(`Chess.com API rate-limited too many times, giving up: ${url}`)
+      throw new ChesscomApiError(
+        `Chess.com API rate-limited too many times, giving up: ${url}`,
+        429,
+      )
     }
     const retryAfterSeconds = Number(res.headers.get('retry-after')) || 5
     await sleep(retryAfterSeconds * 1000)
@@ -44,7 +57,10 @@ async function getJson<T>(url: string, attempt = 1): Promise<T> {
   }
 
   if (!res.ok) {
-    throw new Error(`Chess.com API request failed (${res.status} ${res.statusText}): ${url}`)
+    throw new ChesscomApiError(
+      `Chess.com API request failed (${res.status} ${res.statusText}): ${url}`,
+      res.status,
+    )
   }
 
   return res.json() as Promise<T>
