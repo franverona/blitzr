@@ -236,3 +236,19 @@ describe('describeChecklistFinding', () => {
     })
   })
 })
+
+describe('cheaper-attacker findings', () => {
+  // White queen d4, defended by the c3 pawn, attacked by the e5 pawn.
+  const fen = 'k7/8/8/4p3/3Q4/2P5/8/4K3 b - - 0 1'
+
+  it('lists the piece with its attacker, described and drawn as an arrow', () => {
+    const finding = buildPositionChecklist(fen).find(
+      (f) => f.side === 'white' && f.reason.kind === 'hanging-piece',
+    )!
+    expect(finding.reason).toMatchObject({ square: 'd4', attacker: { square: 'e5' } })
+    expect(describeChecklistFinding(finding)).toBe(
+      'The queen on d4 is attacked by the pawn on e5, which is worth less.',
+    )
+    expect(findingMarks(finding.reason).arrows).toEqual([['e5', 'd4']])
+  })
+})

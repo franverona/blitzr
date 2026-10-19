@@ -171,6 +171,9 @@ export interface HangingPieceReason {
   kind: 'hanging-piece'
   piece: string
   square: string
+  /** Set when the piece is defended but attacked by a cheaper piece (the cheapest one); absent
+   *  when it's simply undefended. */
+  attacker?: { piece: string; square: string }
 }
 
 export interface ForkReason {

@@ -317,16 +317,22 @@ export function describeSkewerReason(reason: SkewerReason, locale: Locale = getL
     : `This skewers ${front} on ${reason.frontSquare} — if it moves, ${attacker} on ${reason.attackerSquare} captures ${back} on ${reason.backSquare}.`
 }
 
-/** Ordered by concreteness: hanging piece, fork, skewer, then pin. */
+/**
+ * Ordered by concreteness: an undefended piece, fork, skewer, a piece attacked by a cheaper one,
+ * then pin. The cheaper-attacker case comes after fork and skewer because a forking knight is
+ * also a cheaper piece attacking each target, and the fork is the better explanation.
+ */
 export function detectBlunderReason(
   fenBefore: string,
   fenAfter: string,
   moverColor: MyColor,
 ): BlunderReason | null {
+  const hanging = detectHangingPiece(fenBefore, fenAfter, moverColor)
   return (
-    detectHangingPiece(fenBefore, fenAfter, moverColor) ??
+    (hanging && !hanging.attacker ? hanging : null) ??
     detectFork(fenBefore, fenAfter, moverColor) ??
     detectSkewer(fenBefore, fenAfter, moverColor) ??
+    hanging ??
     detectPin(fenBefore, fenAfter, moverColor)
   )
 }
@@ -358,8 +364,9 @@ export function explainBestMove(
   const opponent: MyColor = moverColor === 'white' ? 'black' : 'white'
   const es = locale === 'es'
 
+  // A cheaper attacker comes after forks and skewers, as in detectBlunderReason().
   const saved = detectHangingPiece(fenAfter, fenBefore, moverColor)
-  if (saved) {
+  if (saved && !saved.attacker) {
     const piece = pieceWithArticle(saved.piece as PieceSymbol, locale)
     return es
       ? `Salva ${piece} en ${saved.square}, que estaba colgando.`
@@ -380,6 +387,14 @@ export function explainBestMove(
       : `Gets ${piece} on ${unskewered.frontSquare} out of the skewer.`
   }
 
+  if (saved?.attacker) {
+    const piece = pieceWithArticle(saved.piece as PieceSymbol, locale)
+    const attacker = pieceWithArticle(saved.attacker.piece as PieceSymbol, locale)
+    return es
+      ? `Salva ${piece} en ${saved.square} del ataque de ${attacker}, que vale menos.`
+      : `Saves ${piece} on ${saved.square} from ${attacker}, which is worth less.`
+  }
+
   const unpinned = detectPin(fenAfter, fenBefore, moverColor)
   if (unpinned) {
     const piece = pieceWithArticle(unpinned.pinnedPiece as PieceSymbol, locale)
@@ -389,7 +404,7 @@ export function explainBestMove(
   }
 
   const wins = detectHangingPiece(fenBefore, fenAfter, opponent)
-  if (wins) {
+  if (wins && !wins.attacker) {
     return es
       ? `Deja colgando ${pieceWithArticle(wins.piece as PieceSymbol, locale)} del rival en ${wins.square}.`
       : `Leaves the opponent's ${pieceName(wins.piece as PieceSymbol, locale).toLowerCase()} on ${wins.square} hanging.`
@@ -407,6 +422,12 @@ export function explainBestMove(
     return es
       ? `Enfila ${pieceWithArticle(skewers.frontPiece as PieceSymbol, locale)} del rival en ${skewers.frontSquare}, con ${back} detrás en ${skewers.backSquare}.`
       : `Skewers the opponent's ${pieceName(skewers.frontPiece as PieceSymbol, locale).toLowerCase()} on ${skewers.frontSquare}, with ${back} behind it on ${skewers.backSquare}.`
+  }
+
+  if (wins?.attacker) {
+    return es
+      ? `Ataca ${pieceWithArticle(wins.piece as PieceSymbol, locale)} del rival en ${wins.square} con una pieza que vale menos.`
+      : `Attacks the opponent's ${pieceName(wins.piece as PieceSymbol, locale).toLowerCase()} on ${wins.square} with a cheaper piece.`
   }
 
   const pins = detectPin(fenBefore, fenAfter, opponent)
