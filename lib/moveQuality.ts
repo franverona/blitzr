@@ -1,4 +1,10 @@
-import { BLUNDER_THRESHOLD_CP, evalBarPercent, moveSwingCp, whiteToMove } from './analysis'
+import {
+  BLUNDER_THRESHOLD_WIN_DROP,
+  evalBarPercent,
+  moveWinDrop,
+  whiteToMove,
+  winDropFromEqual,
+} from './analysis'
 import type { PositionEval } from './types'
 
 export type MoveQualityTier = 'best' | 'excellent' | 'good' | 'inaccuracy' | 'mistake' | 'blunder'
@@ -12,16 +18,20 @@ export const MOVE_QUALITY_TIERS: readonly MoveQualityTier[] = [
   'blunder',
 ]
 
+const EXCELLENT_WIN_DROP = winDropFromEqual(10)
+const GOOD_WIN_DROP = winDropFromEqual(30)
+const INACCURACY_WIN_DROP = winDropFromEqual(60)
+
 /**
- * Chess.com-style tier for a move's swing. The blunder cutoff matches
+ * Chess.com-style tier for a move's win-% drop. The blunder cutoff matches
  * findBlunders(); the lower bands are our own.
  */
-export function classifyMoveQuality(swingCp: number): MoveQualityTier {
-  if (swingCp <= 0) return 'best'
-  if (swingCp < 10) return 'excellent'
-  if (swingCp < 30) return 'good'
-  if (swingCp < 60) return 'inaccuracy'
-  if (swingCp < BLUNDER_THRESHOLD_CP) return 'mistake'
+export function classifyMoveQuality(winDrop: number): MoveQualityTier {
+  if (winDrop <= 0) return 'best'
+  if (winDrop < EXCELLENT_WIN_DROP) return 'excellent'
+  if (winDrop < GOOD_WIN_DROP) return 'good'
+  if (winDrop < INACCURACY_WIN_DROP) return 'inaccuracy'
+  if (winDrop < BLUNDER_THRESHOLD_WIN_DROP) return 'mistake'
   return 'blunder'
 }
 
@@ -75,7 +85,7 @@ export function summarizeMoveQuality(
     const winAfter = whiteMoved ? evalBarPercent(after) : 100 - evalBarPercent(after)
 
     perMoveAccuracy[side].push(moveAccuracy(winBefore, winAfter))
-    counts[side][classifyMoveQuality(moveSwingCp(before, after, whiteMoved))]++
+    counts[side][classifyMoveQuality(moveWinDrop(before, after, whiteMoved))]++
   }
 
   return {

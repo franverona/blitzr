@@ -175,8 +175,9 @@ a prepared move. An opponent's unprepared move or the tree running out doesn't c
 ## Engine analysis
 
 - Stockfish runs **client-side only**; Server Actions only persist results. Evals are normalized
-  to White's perspective. `findBlunders()` flags 200cp+ swings; `blunderSeverity()` splits them
-  into Mistake (200–399) and Blunder (400+).
+  to White's perspective. `findBlunders()` flags win-% drops (`moveWinDrop()`, the eval bar's
+  curve) at least as large as 200cp from equal; `blunderSeverity()` splits Mistake/Blunder at 400cp
+  from equal. `swingCp` is display-only.
 - Bulk "Analyze all" state lives in `BulkAnalysisProvider` (root layout) so a run survives
   navigation. Cancel is checked between games, so an in-flight game always finishes and saves.
 - The games list's accuracy/error columns come from `getGameAccuracyById()` (not a `Game` field);
