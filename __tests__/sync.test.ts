@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { fetchArchiveMonth, fetchArchives } from '@/lib/chesscom/client'
 import {
+  isSyncStale,
   listPendingArchives,
   oldestOpenArchiveYm,
   pendingArchiveYms,
@@ -21,6 +22,19 @@ vi.mock('@/lib/chesscom/normalize', () => ({
     archiveYm,
   }),
 }))
+
+describe('isSyncStale', () => {
+  const now = new Date('2026-09-15T12:00:00Z')
+
+  it('is stale once the newest sync is over an hour old', () => {
+    expect(isSyncStale(['2026-09-15T10:00:00Z', '2026-09-15T10:30:00Z'], now)).toBe(true)
+    expect(isSyncStale(['2026-09-15T10:00:00Z', '2026-09-15T11:30:00Z'], now)).toBe(false)
+  })
+
+  it('never auto-syncs before a first sync', () => {
+    expect(isSyncStale([], now)).toBe(false)
+  })
+})
 
 describe('oldestOpenArchiveYm', () => {
   it('is the current UTC month mid-month', () => {
