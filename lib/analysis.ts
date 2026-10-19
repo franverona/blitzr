@@ -2,20 +2,25 @@ import { getLocale } from './i18n/locale'
 import type { Locale } from './i18n/locale'
 import type { Blunder, PositionEval } from './types'
 
-// Mover-perspective swing (centipawns) that counts as a blunder.
-export const BLUNDER_THRESHOLD_CP = 200
-
 export type BlunderSeverity = 'mistake' | 'blunder'
 
-// Display-only split of blunders into mistake/blunder.
-const SEVERE_BLUNDER_THRESHOLD_CP = 400
-
-export function blunderSeverity(swingCp: number): BlunderSeverity {
-  return swingCp >= SEVERE_BLUNDER_THRESHOLD_CP ? 'blunder' : 'mistake'
+/** Mover's win % lost by dropping `cp` from an equal position. Thresholds are
+ *  win-% based so the same cp loss in a won position counts for far less. */
+export function winDropFromEqual(cp: number): number {
+  return evalBarPercent({ cp, mate: null, bestMove: null }) - 50
 }
 
-// Mate is mapped to a large value so any swing into/out of mate crosses the
-// blunder threshold while keeping the winning side.
+export const BLUNDER_THRESHOLD_WIN_DROP = winDropFromEqual(200)
+
+// Display-only split of blunders into mistake/blunder.
+const SEVERE_BLUNDER_THRESHOLD_WIN_DROP = winDropFromEqual(400)
+
+export function blunderSeverity(winDrop: number): BlunderSeverity {
+  return winDrop >= SEVERE_BLUNDER_THRESHOLD_WIN_DROP ? 'blunder' : 'mistake'
+}
+
+// Mate is mapped to a large value so swings keep the winning side; only used
+// for display, never for thresholds.
 function evalToCp(evaluation: PositionEval): number {
   if (evaluation.mate !== null) return evaluation.mate > 0 ? 100_000 : -100_000
   return evaluation.cp ?? 0
@@ -30,6 +35,16 @@ export function moveSwingCp(
   const moverBefore = whiteToMove ? evalToCp(before) : -evalToCp(before)
   const moverAfter = whiteToMove ? evalToCp(after) : -evalToCp(after)
   return moverBefore - moverAfter
+}
+
+/** Win % (0-100) the mover lost with this move (positive = worse for them). */
+export function moveWinDrop(
+  before: PositionEval,
+  after: PositionEval,
+  whiteToMove: boolean,
+): number {
+  const drop = evalBarPercent(before) - evalBarPercent(after)
+  return whiteToMove ? drop : -drop
 }
 
 /**
@@ -54,15 +69,17 @@ export function findBlunders(
     const after = evals[i + 1]
     if (!before || !after) continue
 
-    const swingCp = moveSwingCp(before, after, whiteToMove(i + 1, initialFen))
+    const whiteMoved = whiteToMove(i + 1, initialFen)
+    const winDrop = moveWinDrop(before, after, whiteMoved)
 
-    if (swingCp >= BLUNDER_THRESHOLD_CP) {
+    if (winDrop >= BLUNDER_THRESHOLD_WIN_DROP) {
       blunders.push({
         ply: i + 1,
         moveSan: movesSan[i],
         evalBefore: before,
         evalAfter: after,
-        swingCp,
+        swingCp: moveSwingCp(before, after, whiteMoved),
+        winDrop,
       })
     }
   }
@@ -72,7 +89,7 @@ export function findBlunders(
 
 export function biggestBlunder(blunders: Blunder[]): Blunder | null {
   if (blunders.length === 0) return null
-  return blunders.reduce((worst, b) => (b.swingCp > worst.swingCp ? b : worst))
+  return blunders.reduce((worst, b) => (b.winDrop > worst.winDrop ? b : worst))
 }
 
 /** Formats an eval for display, e.g. "+1.4", "-0.3", "M3", "-M2". */
