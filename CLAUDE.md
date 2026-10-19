@@ -121,6 +121,9 @@ scripts/
 - **`BoardNavControls`** binds ←/→, Space (play) and `0` (start) globally, ignoring modifier keys,
   form fields, and `<dialog>`s that don't set `data-board-shortcuts`.
 - **Play** auto-advances every `PLAY_INTERVAL_MS`, stopping on the user's own blunders.
+- **`BoardProvider`'s `myColor`** (defaults to `boardOrientation`) is the user's side for Play's
+  stops, saved hints, `MoveList` and `LessonQuiz`. Never read `boardOrientation` as "my color" —
+  it's only the view, so a flip button can't change whose moves count.
 - **Game replay and lesson Study mode open on ply 1.**
 - **Beginner jargon is explained in place** (`<abbr title>` tooltips, `EvalHelp`), not removed.
 - **A component seeding state from props (`useState(initialX)`) needs `key={id}`** wherever it can
