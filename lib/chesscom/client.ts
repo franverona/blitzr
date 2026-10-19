@@ -68,16 +68,38 @@ export async function fetchArchiveMonth(
   return data.games
 }
 
-/** Decorative, so any failure returns null. */
+const AVATAR_TIMEOUT_MS = 2000
+const AVATAR_TTL_MS = 60 * 60 * 1000
+const AVATAR_FAILURE_TTL_MS = 5 * 60 * 1000
+const AVATAR_CACHE_MAX = 1000
+const avatarCache = new Map<string, { url: string | null; expires: number }>()
+
+/** Decorative, so no retries and any failure returns null. */
 export async function fetchPlayerAvatar(username: string): Promise<string | null> {
+  const key = username.toLowerCase()
+  const cached = avatarCache.get(key)
+  if (cached && cached.expires > Date.now()) return cached.url
+
+  let url: string | null = null
+  let ok = false
   try {
-    const data = await getJson<{ avatar?: string }>(
-      `${BASE_URL}/player/${encodeURIComponent(username)}`,
-    )
-    return data.avatar ?? null
+    const res = await fetch(`${BASE_URL}/player/${encodeURIComponent(username)}`, {
+      headers: { 'User-Agent': USER_AGENT },
+      signal: AbortSignal.timeout(AVATAR_TIMEOUT_MS),
+    })
+    ok = res.ok || res.status === 404
+    if (res.ok) url = ((await res.json()) as { avatar?: string }).avatar ?? null
   } catch {
-    return null
+    ok = false
   }
+  // Map keeps insertion order, so delete-then-set makes the first key the oldest.
+  avatarCache.delete(key)
+  avatarCache.set(key, {
+    url,
+    expires: Date.now() + (ok ? AVATAR_TTL_MS : AVATAR_FAILURE_TTL_MS),
+  })
+  if (avatarCache.size > AVATAR_CACHE_MAX) avatarCache.delete(avatarCache.keys().next().value!)
+  return url
 }
 
 /** Bot display names (e.g. "Hans") can match unrelated real users, so try

@@ -145,7 +145,8 @@ scripts/
 - Ingestion is unfiltered (variants, daily, everything). Filtering happens in `app/actions.ts`:
   engine features need `isStandardChess()`; opening features also need
   `startsFromStandardPosition()`.
-- Avatars aren't stored — fetched live, failing soft to an initial-letter badge.
+- Avatars aren't stored — fetched live (2s timeout, no 429 retries, cached in memory per
+  username), failing soft to an initial-letter badge.
 
 ### API quirks
 
