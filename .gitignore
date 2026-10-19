@@ -50,6 +50,9 @@ next-env.d.ts
 /data/*.db-shm
 /data/*.db-wal
 /data/backups/
+# Polgár's book is copyrighted: the source PGN and its import stay local
+/polgar.pgn
+/data/polgar-mates.json
 
 # Stockfish engine assets — copied from node_modules by scripts/setup-stockfish.js
 /public/stockfish/

@@ -69,7 +69,10 @@ lib/
   repertoire.ts             # diffGameAgainstRepertoire()
   positions.ts              # buildPositions(), isStandardChess()
   openingTheory.ts / endgameTheory.ts  # hand-authored lessons
-  mateProblems.ts           # MATE_PROBLEMS + isForcedMate()
+  mateProblems.ts           # MateProblem type + client-safe helpers (no puzzle data)
+  puzzleSet.ts              # server-only: real games + Lichess + local Polgár, getMateProblem()
+  realGameMates.ts / lichessMates.json  # the bundled puzzles
+  forcedMate.ts             # isForcedMate(), shared with the import scripts
   manualGame.ts             # pasted PGN -> Game
   sync.ts                   # listPendingArchives(), syncArchive()
   validate.ts               # checks on Server Action payloads the client builds
@@ -80,7 +83,8 @@ lib/
 scripts/
   setup-stockfish.mjs       # postinstall — copies engine files into public/stockfish/
   backup-db.mjs             # `pnpm backup` — online backup into data/backups/
-  import-polgar-mates.mjs   # one-off puzzle import (not idempotent)
+  import-lichess-mates.mjs  # Lichess puzzle DB -> lib/lichessMates.json (re-runnable)
+  import-polgar-mates.mjs   # polgar.pgn -> data/polgar-mates.json, local only (re-runnable)
 ```
 
 `data/blitzr.db`, `data/backups/` and `public/stockfish/` are created at install/runtime and gitignored.
@@ -285,8 +289,20 @@ only the latest review, so the table was seeded once from it and undercounts old
 
 ## Puzzles
 
-`MATE_PROBLEMS` is hardcoded: real games plus Polgár puzzles (imported via
-`scripts/import-polgar-mates.mjs`). Every line was verified to mate; mate-in-2/3 also with
+`lib/puzzleSet.ts` (server only) merges three sets, in this order and id range:
+
+- **Real games** (`lib/realGameMates.ts`, ids 1–221).
+- **Polgár** (ids 222–2427), **local only**: the book is copyrighted, so
+  `scripts/import-polgar-mates.mjs` writes it to the gitignored `data/polgar-mates.json`, read once
+  per server process when present.
+- **Lichess** (`lib/lichessMates.json`, ids 10001+), CC0, picked by
+  `scripts/import-lichess-mates.mjs`: 600/900/500 mate-in-1/2/3, popular and settled, spread across
+  ratings and sorted easy to hard. Puzzles whose last move has a second mate are skipped, since the
+  board accepts only the listed line.
+
+Ids key `puzzle_progress`, so both scripts keep an existing puzzle's id when re-run. Client code
+imports only `lib/mateProblems.ts` (type and helpers) so the puzzles never ship to the browser; a
+page passes the one it shows as a prop. Every line was verified to mate; mate-in-2/3 also with
 `isForcedMate()`, which the tests re-check on a random sample (a full pass takes hours). Side to
 move is read from each FEN (about a third are Black). `PuzzleBoard` makes the user play every ply,
 both sides; wrong moves retry, "Reveal" doesn't count as solved, and promotions show a piece picker

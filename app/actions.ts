@@ -26,7 +26,7 @@ import type { DrillCandidate } from '@/lib/drill'
 import { parseManualGame, type ManualGameSide } from '@/lib/manualGame'
 import { summarizeMoveQuality } from '@/lib/moveQuality'
 import { buildOpeningFamilies, ecoFamilyLabel, unknownOpeningLabel } from '@/lib/openings'
-import { MATE_PROBLEMS } from '@/lib/mateProblems'
+import { allMateProblems } from '@/lib/puzzleSet'
 import { OPENING_LESSONS, countGamesReachingLine } from '@/lib/openingTheory'
 import { buildPositions, isStandardChess, startsFromStandardPosition } from '@/lib/positions'
 import { isSyncStale, listPendingArchives, syncArchive } from '@/lib/sync'
@@ -504,6 +504,7 @@ export async function getTodaySummary(): Promise<{
 
   const last = newestFirst[0]
   const solvedIds = new Set(solved)
+  const problems = allMateProblems()
   const syncedAts = syncStatus.map((a) => a.syncedAt).sort()
 
   return {
@@ -541,9 +542,10 @@ export async function getTodaySummary(): Promise<{
       repertoireByColor,
     ),
     puzzles: {
-      nextId: MATE_PROBLEMS.find((p) => !solvedIds.has(p.id))?.id ?? null,
-      solved: solvedIds.size,
-      total: MATE_PROBLEMS.length,
+      nextId: problems.find((p) => !solvedIds.has(p.id))?.id ?? null,
+      // Only puzzles in this set: progress can include ones missing from it (local Polgár).
+      solved: problems.filter((p) => solvedIds.has(p.id)).length,
+      total: problems.length,
     },
     lastSyncedAt: syncedAts.at(-1) ?? null,
     worstBlunder: worst
