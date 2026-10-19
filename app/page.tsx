@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { getTodaySummary } from './actions'
 import { BulkAnalyzeButton } from '@/components/BulkAnalyzeButton'
 import { MiniBoard } from '@/components/MiniBoard'
+import { RefreshCwIcon } from '@/components/NavIcons'
+import { formatDateTime } from '@/lib/dates'
 import { getLocale } from '@/lib/i18n/locale'
 import { getStrings } from '@/lib/i18n/strings'
 import { getMateProblem, puzzleColorToMove } from '@/lib/mateProblems'
@@ -45,7 +47,7 @@ export default async function TodayPage() {
             </>
           )}
           {today.lastSyncedAt && (
-            <p className={mutedClassName}>{s.today.lastSynced(timeAgo(today.lastSyncedAt))}</p>
+            <SyncBadge syncedAt={today.lastSyncedAt} fresh={today.syncIsFresh} />
           )}
         </div>
       </div>
@@ -230,6 +232,23 @@ export default async function TodayPage() {
         </Card>
       </div>
     </div>
+  )
+}
+
+function SyncBadge({ syncedAt, fresh }: { syncedAt: string; fresh: boolean }) {
+  const s = getStrings()
+  return (
+    <p
+      title={formatDateTime(Date.parse(syncedAt) / 1000)}
+      className="flex items-center gap-1.5 rounded-full border border-zinc-200 bg-zinc-50 px-2.5 py-1 text-xs text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400"
+    >
+      <span
+        aria-hidden
+        className={`size-1.5 rounded-full ${fresh ? 'bg-emerald-500' : 'bg-amber-500'}`}
+      />
+      <RefreshCwIcon className="size-3.5 shrink-0" />
+      {s.today.lastSynced(timeAgo(syncedAt))}
+    </p>
   )
 }
 

@@ -446,6 +446,8 @@ export async function getTodaySummary(): Promise<{
   repertoire: ReturnType<typeof repertoireDeviations>
   puzzles: { nextId: number | null; solved: number; total: number }
   lastSyncedAt: string | null
+  /** Under an hour old, auto-sync's threshold. */
+  syncIsFresh: boolean
 }> {
   const repo = getRepository()
   const [
@@ -528,6 +530,8 @@ export async function getTodaySummary(): Promise<{
       total: MATE_PROBLEMS.length,
     },
     lastSyncedAt: syncedAts.at(-1) ?? null,
+    syncIsFresh:
+      syncedAts.length > 0 && now.getTime() - Date.parse(syncedAts.at(-1)!) < 60 * 60 * 1000,
   }
 }
 
