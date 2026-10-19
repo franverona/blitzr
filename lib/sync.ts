@@ -2,7 +2,6 @@ import { fetchArchiveMonth, fetchArchives } from './chesscom/client'
 import { normalizeGame } from './chesscom/normalize'
 import { getChesscomUsername } from './config'
 import { getRepository } from './db'
-import type { SyncResult } from './types'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -22,40 +21,41 @@ function archiveYmFromUrl(url: string): string | null {
 }
 
 /**
- * Fetches every archive not marked complete, plus any still-open month.
- * Serial, since Chess.com throttles parallel requests.
+ * Archive months to fetch, oldest first: every one not marked complete, plus
+ * any still-open month. The client syncs them one call at a time so it can
+ * show progress.
  */
-export async function syncAllArchives(): Promise<SyncResult> {
+export async function listPendingArchives(): Promise<string[]> {
+  const archiveUrls = await fetchArchives(getChesscomUsername())
+  const syncedStatus = new Map(
+    (await getRepository().getArchiveSyncStatus()).map((s) => [s.archiveYm, s.status]),
+  )
+  return pendingArchiveYms(archiveUrls, syncedStatus, oldestOpenArchiveYm())
+}
+
+export function pendingArchiveYms(
+  archiveUrls: string[],
+  syncedStatus: Map<string, string>,
+  oldestOpen: string,
+): string[] {
+  return archiveUrls
+    .map(archiveYmFromUrl)
+    .filter((ym): ym is string => ym !== null)
+    .filter((ym) => syncedStatus.get(ym) !== 'complete' || ym >= oldestOpen)
+}
+
+/** Fetches and stores one archive month. Returns how many games were new. */
+export async function syncArchive(archiveYm: string): Promise<number> {
   const username = getChesscomUsername()
   const repo = getRepository()
+  // "YYYY-MM" strings sort chronologically.
+  const isOpen = archiveYm >= oldestOpenArchiveYm()
 
-  const archiveUrls = await fetchArchives(username)
-  const syncedStatus = new Map(
-    (await repo.getArchiveSyncStatus()).map((s) => [s.archiveYm, s.status]),
-  )
-  const oldestOpen = oldestOpenArchiveYm()
+  const [year, month] = archiveYm.split('-')
+  const rawGames = await fetchArchiveMonth(username, year, month)
+  const games = rawGames.map((raw) => normalizeGame(raw, username, archiveYm))
 
-  let archivesSynced = 0
-  let gamesUpserted = 0
-
-  for (const url of archiveUrls) {
-    const archiveYm = archiveYmFromUrl(url)
-    if (!archiveYm) continue
-
-    // "YYYY-MM" strings sort chronologically.
-    const isOpen = archiveYm >= oldestOpen
-    if (syncedStatus.get(archiveYm) === 'complete' && !isOpen) continue
-
-    const [year, month] = archiveYm.split('-')
-    const rawGames = await fetchArchiveMonth(username, year, month)
-    const games = rawGames.map((raw) => normalizeGame(raw, username, archiveYm))
-
-    const upserted = await repo.upsertGames(games)
-    await repo.markArchiveSynced(archiveYm, isOpen ? 'partial' : 'complete', games.length)
-
-    archivesSynced++
-    gamesUpserted += upserted
-  }
-
-  return { archivesSynced, gamesUpserted }
+  const upserted = await repo.upsertGames(games)
+  await repo.markArchiveSynced(archiveYm, isOpen ? 'partial' : 'complete', games.length)
+  return upserted
 }

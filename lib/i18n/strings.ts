@@ -76,6 +76,7 @@ const en = {
   },
   gameList: {
     empty: 'No games synced yet. Click "Sync games" to fetch your Chess.com history.',
+    noMatches: 'No games match these filters.',
     headers: {
       date: 'Date',
       color: 'Color',
@@ -236,6 +237,7 @@ const en = {
   sync: {
     button: 'Sync games',
     syncing: 'Syncing…',
+    progress: (done: number, total: number) => `Syncing ${done}/${total} months…`,
     failed: 'Sync failed.',
     rateLimited: 'Chess.com is rate-limiting requests — try again in a few minutes.',
     userNotFound: (username: string) => `Chess.com has no player named "${username}".`,
@@ -542,6 +544,7 @@ const es: Strings = {
   gameList: {
     empty:
       'Aún no hay partidas sincronizadas. Haz clic en "Sincronizar partidas" para traer tu historial de Chess.com.',
+    noMatches: 'Ninguna partida coincide con estos filtros.',
     headers: {
       date: 'Fecha',
       color: 'Color',
@@ -703,6 +706,7 @@ const es: Strings = {
   sync: {
     button: 'Sincronizar partidas',
     syncing: 'Sincronizando…',
+    progress: (done: number, total: number) => `Sincronizando ${done}/${total} meses…`,
     failed: 'Error al sincronizar.',
     rateLimited: 'Chess.com está limitando las peticiones — inténtalo de nuevo en unos minutos.',
     userNotFound: (username: string) => `Chess.com no tiene ningún jugador llamado "${username}".`,

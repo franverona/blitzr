@@ -63,11 +63,6 @@ export interface OpeningFamily {
   lines: OpeningLine[]
 }
 
-export interface SyncResult {
-  archivesSynced: number
-  gamesUpserted: number
-}
-
 export interface LessonMove {
   san: string
   explanation: Record<Locale, string>
