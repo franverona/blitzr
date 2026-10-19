@@ -218,7 +218,8 @@ export default async function TodayPage() {
         </Card>
 
         <Card title={s.today.focusTitle} className="sm:col-span-2">
-          <ul className="flex flex-col divide-y divide-zinc-200 dark:divide-zinc-800">
+          {/* Two columns so Focus stays about as tall as the board cards beside it. */}
+          <ul className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
             <FocusRow
               icon={<TargetIcon className="size-4" />}
               tone="amber"
@@ -355,7 +356,7 @@ function FocusRow({
   children: React.ReactNode
 }) {
   return (
-    <li className="flex items-start gap-3 py-2.5 first:pt-0 last:pb-0">
+    <li className="flex min-w-0 items-start gap-3">
       <span
         className={`flex size-8 shrink-0 items-center justify-center rounded-md ${FOCUS_TONE_CLASS[tone]}`}
       >
@@ -366,15 +367,15 @@ function FocusRow({
           {label}
         </p>
         {children}
+        {action && (
+          <Link
+            href={action.href}
+            className="mt-1 inline-block text-xs font-medium text-blue-600 hover:underline dark:text-blue-400"
+          >
+            {action.label} →
+          </Link>
+        )}
       </div>
-      {action && (
-        <Link
-          href={action.href}
-          className="shrink-0 self-center text-sm font-medium whitespace-nowrap text-blue-600 hover:underline dark:text-blue-400"
-        >
-          {action.label} →
-        </Link>
-      )}
     </li>
   )
 }
