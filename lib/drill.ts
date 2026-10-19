@@ -148,6 +148,46 @@ export function selectSessionCards(
   return [...dueCards].sort((a, b) => a.dueAt.localeCompare(b.dueAt)).slice(0, max)
 }
 
+function cardKey(c: DrillCandidate): string {
+  return `${c.gameId}:${c.sourceType}:${c.ply}`
+}
+
+/** Matches stored cards to today's candidates: cards whose ply no longer
+ *  qualifies are stale, unseen candidates are added with a fresh schedule. */
+export function reconcileDrillDeck(
+  existing: DrillCard[],
+  candidates: DrillCandidate[],
+  now: Date,
+): { live: DrillCard[]; stale: DrillCard[]; added: DrillCard[] } {
+  const candidateKeys = new Set(candidates.map(cardKey))
+  const existingKeys = new Set(existing.map(cardKey))
+  const added = candidates
+    .filter((c) => !existingKeys.has(cardKey(c)))
+    .map((c) => ({ ...c, ...newCardSchedule(now), createdAt: now.toISOString() }))
+  return {
+    live: [...existing.filter((c) => candidateKeys.has(cardKey(c))), ...added],
+    stale: existing.filter((c) => !candidateKeys.has(cardKey(c))),
+    added,
+  }
+}
+
+/** Cards due by `now` that pass the /drill filters. `openingOf` returns
+ *  undefined for a card whose game is gone, which fails an opening filter. */
+export function dueDrillCards(
+  cards: DrillCard[],
+  now: Date,
+  filters: { sourceType?: DrillSourceType; opening?: string } | undefined,
+  openingOf: (gameId: string) => string | undefined,
+): DrillCard[] {
+  const nowIso = now.toISOString()
+  return cards.filter(
+    (c) =>
+      c.dueAt <= nowIso &&
+      (!filters?.sourceType || c.sourceType === filters.sourceType) &&
+      (!filters?.opening || openingOf(c.gameId) === filters.opening),
+  )
+}
+
 export function newCardSchedule(
   now: Date,
 ): Pick<DrillCard, 'dueAt' | 'intervalDays' | 'easeFactor' | 'repetitions' | 'lastReviewedAt'> {

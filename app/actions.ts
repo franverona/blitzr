@@ -14,8 +14,9 @@ import type { GameRepository } from '@/lib/db/types'
 import {
   buildDrillPrompt,
   findBlunderCandidates,
+  dueDrillCards,
   findDeviationCandidates,
-  newCardSchedule,
+  reconcileDrillDeck,
   scheduleReview,
   getSessionSize,
   selectSessionCards,
@@ -30,7 +31,6 @@ import { listPendingArchives, syncArchive } from '@/lib/sync'
 import type {
   ArchiveSyncStatus,
   BlunderStats,
-  DrillCard,
   DrillPrompt,
   DrillSourceType,
   Game,
@@ -262,10 +262,6 @@ export async function getGameAccuracyById(): Promise<Record<string, GameAccuracy
   return result
 }
 
-function cardKey(c: { gameId: string; sourceType: DrillSourceType; ply: number }): string {
-  return `${c.gameId}:${c.sourceType}:${c.ply}`
-}
-
 function openingLabel(game: Game): string {
   return game.ecoName ? ecoFamilyLabel(game.ecoName) : unknownOpeningLabel()
 }
@@ -305,32 +301,18 @@ export async function getDrillDeck(filters?: {
     ...findDeviationCandidates(standardStartGames, repertoireByColor),
     ...findBlunderCandidates(games, analysesByGameId),
   ]
-  const candidateKeys = new Set(candidates.map(cardKey))
-  const existingByKey = new Map(existingCards.map((c) => [cardKey(c), c]))
-
-  const stale = existingCards.filter((c) => !candidateKeys.has(cardKey(c)))
   const now = new Date()
-  const newCards: DrillCard[] = candidates
-    .filter((c) => !existingByKey.has(cardKey(c)))
-    .map((c) => ({ ...c, ...newCardSchedule(now), createdAt: now.toISOString() }))
+  const { live: liveCards, stale, added } = reconcileDrillDeck(existingCards, candidates, now)
 
   await Promise.all([
     ...(stale.length > 0 ? [repo.deleteDrillCards(stale)] : []),
-    ...newCards.map((c) => repo.upsertDrillCard(c)),
+    ...added.map((c) => repo.upsertDrillCard(c)),
   ])
 
-  const liveCards = [...existingCards.filter((c) => candidateKeys.has(cardKey(c))), ...newCards]
-  const dueCardsAll = liveCards.filter((c) => c.dueAt <= now.toISOString())
-
-  const matchesFilters = (card: DrillCard) => {
-    if (filters?.sourceType && card.sourceType !== filters.sourceType) return false
-    if (filters?.opening) {
-      const game = gamesById.get(card.gameId)
-      if (!game || openingLabel(game) !== filters.opening) return false
-    }
-    return true
-  }
-  const filteredDue = dueCardsAll.filter(matchesFilters)
+  const filteredDue = dueDrillCards(liveCards, now, filters, (gameId) => {
+    const game = gamesById.get(gameId)
+    return game && openingLabel(game)
+  })
   const sessionSize = getSessionSize((await cookies()).get('blitzr-drill-session-size')?.value)
   const sessionCards = selectSessionCards(filteredDue, sessionSize)
 
