@@ -4,12 +4,14 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { getLocale } from '@/lib/i18n/locale'
 import { getStrings } from '@/lib/i18n/strings'
+import { resolveOrientation } from '@/lib/theme'
 import type { Lesson, LessonGameStats as LessonGameStatsData } from '@/lib/types'
 import { AboutOpeningButton } from './AboutOpeningButton'
 import { BoardNavControls, BoardProvider, BoardView } from './Board'
 import { FlipBoardButton } from './FlipBoardButton'
 import { LessonQuiz } from './LessonQuiz'
 import { MoveExplanation } from './MoveExplanation'
+import { useSettings } from './SettingsProvider'
 
 type Mode = 'study' | 'quiz'
 
@@ -26,13 +28,15 @@ export function LessonPractice({
   const s = getStrings()
   const locale = getLocale()
   const movesSan = lesson.moves.map((move) => move.san)
+  const { trainingOrientation } = useSettings()
 
   return (
     <BoardProvider
       key={mode}
       initialFen={lesson.initialFen}
       movesSan={movesSan}
-      boardOrientation={lesson.primaryColor}
+      boardOrientation={resolveOrientation(trainingOrientation, lesson.primaryColor)}
+      myColor={lesson.primaryColor}
       initialPly={mode === 'study' ? 1 : 0}
     >
       <div className="flex flex-col gap-3">

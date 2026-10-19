@@ -7,7 +7,7 @@ import {
   DEFAULT_ANALYSIS_STRENGTH,
 } from '@/lib/stockfish/analyze'
 import { type MoveSound, moveSoundFor } from '@/lib/moveSound'
-import { getBoardColorPreset } from '@/lib/theme'
+import { getBoardColorPreset, type TrainingOrientation } from '@/lib/theme'
 
 // Duplicated in app/layout.tsx on purpose: a constant exported from a
 // 'use client' module reads as undefined in a Server Component.
@@ -17,6 +17,7 @@ const ANALYSIS_STRENGTH_COOKIE = 'blitzr-analysis-strength'
 const HIDE_ENGINE_HINTS_COOKIE = 'blitzr-hide-engine-hints'
 const SHOW_COORDINATES_COOKIE = 'blitzr-show-coordinates'
 const MOVE_SOUNDS_COOKIE = 'blitzr-move-sounds'
+const TRAINING_ORIENTATION_COOKIE = 'blitzr-training-orientation'
 
 function setCookie(name: string, value: string) {
   document.cookie = `${name}=${value}; path=/; max-age=31536000; samesite=lax`
@@ -38,6 +39,8 @@ interface SettingsContextValue {
   setShowCoordinates: (show: boolean) => void
   moveSounds: boolean
   setMoveSounds: (on: boolean) => void
+  trainingOrientation: TrainingOrientation
+  setTrainingOrientation: (orientation: TrainingOrientation) => void
 }
 
 const SettingsContext = createContext<SettingsContextValue | null>(null)
@@ -57,6 +60,7 @@ export function SettingsProvider({
   initialHideEngineHints,
   initialShowCoordinates,
   initialMoveSounds,
+  initialTrainingOrientation,
   children,
 }: {
   initialTheme: 'light' | 'dark'
@@ -65,10 +69,12 @@ export function SettingsProvider({
   initialHideEngineHints: boolean
   initialShowCoordinates: boolean
   initialMoveSounds: boolean
+  initialTrainingOrientation: TrainingOrientation
   children: React.ReactNode
 }) {
   const [theme, setThemeState] = useState(initialTheme)
   const [moveSounds, setMoveSoundsState] = useState(initialMoveSounds)
+  const [trainingOrientation, setTrainingOrientationState] = useState(initialTrainingOrientation)
   const [showCoordinates, setShowCoordinatesState] = useState(initialShowCoordinates)
   const [hideEngineHints, setHideEngineHintsState] = useState(initialHideEngineHints)
   const [presetId, setPresetId] = useState(initialPresetId)
@@ -113,6 +119,11 @@ export function SettingsProvider({
     setCookie(MOVE_SOUNDS_COOKIE, on ? '1' : '0')
   }
 
+  function setTrainingOrientation(orientation: TrainingOrientation) {
+    setTrainingOrientationState(orientation)
+    setCookie(TRAINING_ORIENTATION_COOKIE, orientation)
+  }
+
   return (
     <SettingsContext.Provider
       value={{
@@ -130,6 +141,8 @@ export function SettingsProvider({
         setShowCoordinates,
         moveSounds,
         setMoveSounds,
+        trainingOrientation,
+        setTrainingOrientation,
       }}
     >
       {children}

@@ -35,3 +35,18 @@ export const GAME_END_SQUARE_COLORS = {
   win: 'rgba(16, 185, 129, 0.35)',
   draw: 'rgba(161, 161, 170, 0.35)',
 }
+
+/** Board orientation for lessons and puzzles; 'auto' is the side that plays. */
+export type TrainingOrientation = 'auto' | 'white' | 'black'
+export const TRAINING_ORIENTATIONS: TrainingOrientation[] = ['auto', 'white', 'black']
+
+export function getTrainingOrientation(raw: string | undefined): TrainingOrientation {
+  return raw === 'white' || raw === 'black' ? raw : 'auto'
+}
+
+export function resolveOrientation(
+  setting: TrainingOrientation,
+  sideToPlay: 'white' | 'black',
+): 'white' | 'black' {
+  return setting === 'auto' ? sideToPlay : setting
+}
