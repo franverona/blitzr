@@ -475,6 +475,8 @@ const en = {
     moveProgress: (current: number, total: number) => `move ${current} of ${total}`,
     incorrect: 'Not quite — try again.',
     solved: 'Solved!',
+    saveFailed: "Couldn't save your progress, so this puzzle will show as unsolved after a reload.",
+    retrySave: 'Try again',
     revealedTitle: 'Solution',
     reveal: 'Reveal solution',
     solvedBadge: 'Solved',
@@ -1060,6 +1062,9 @@ const es: Strings = {
     moveProgress: (current: number, total: number) => `jugada ${current} de ${total}`,
     incorrect: 'No exactamente — inténtalo de nuevo.',
     solved: '¡Resuelto!',
+    saveFailed:
+      'No se pudo guardar tu progreso, así que este problema aparecerá sin resolver al recargar.',
+    retrySave: 'Reintentar',
     revealedTitle: 'Solución',
     reveal: 'Ver solución',
     solvedBadge: 'Resuelto',
