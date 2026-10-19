@@ -95,8 +95,8 @@ pnpm format          # Prettier (write); pnpm format:check to check
 
 ### Sync
 
-Requests send a descriptive `User-Agent`, archives are fetched serially, and 429s are retried
-with backoff. Games Chess.com's API never exposes (e.g. "Play Bots" games) can be added with
+Requests send a descriptive `User-Agent`, archives are fetched serially (the button shows
+month-by-month progress, and games appear as each month lands), and 429s are retried with backoff. Games Chess.com's API never exposes (e.g. "Play Bots" games) can be added with
 **Add game by PGN**; they get their own id, so a later sync never touches them. Pick which side
 you played, or **Not me** for a game you only want to study: it can still be replayed and
 analyzed, but stays out of your openings, blunders, accuracy and drills. Pasted games can be

@@ -5,15 +5,22 @@ import { GameRow } from './GameRow'
 export function GameList({
   games,
   accuracyByGameId,
+  filtered,
 }: {
   games: Game[]
+  /** Any filter is active, so an empty list means "no matches", not "no games". */
+  filtered: boolean
   /** Own-side accuracy per analyzed game. */
   accuracyByGameId: Record<string, GameAccuracy>
 }) {
   const s = getStrings()
 
   if (games.length === 0) {
-    return <p className="text-sm text-zinc-500 dark:text-zinc-400">{s.gameList.empty}</p>
+    return (
+      <p className="text-sm text-zinc-500 dark:text-zinc-400">
+        {filtered ? s.gameList.noMatches : s.gameList.empty}
+      </p>
+    )
   }
 
   return (

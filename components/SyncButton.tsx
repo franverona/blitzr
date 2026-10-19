@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useTransition } from 'react'
-import { syncGames } from '@/app/actions'
+import { listArchivesToSync, syncArchiveMonth } from '@/app/actions'
 import { getStrings } from '@/lib/i18n/strings'
 import { RefreshCwIcon } from './NavIcons'
 
@@ -10,6 +10,7 @@ const TOAST_DURATION_MS = 4000
 export function SyncButton() {
   const [isPending, startTransition] = useTransition()
   const [toast, setToast] = useState<{ text: string; isError: boolean } | null>(null)
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null)
   const s = getStrings()
 
   useEffect(() => {
@@ -22,17 +23,27 @@ export function SyncButton() {
     setToast(null)
     startTransition(async () => {
       try {
-        const response = await syncGames()
-        setToast(
-          response.ok
-            ? {
-                text: s.sync.synced(response.result.archivesSynced, response.result.gamesUpserted),
-                isError: false,
-              }
-            : { text: response.error, isError: true },
-        )
+        const pending = await listArchivesToSync()
+        if (!pending.ok) {
+          setToast({ text: pending.error, isError: true })
+          return
+        }
+        let gamesUpserted = 0
+        for (const [i, archiveYm] of pending.archives.entries()) {
+          setProgress({ done: i, total: pending.archives.length })
+          const month = await syncArchiveMonth(archiveYm)
+          if (!month.ok) {
+            // Months already synced stay saved; the next sync resumes.
+            setToast({ text: month.error, isError: true })
+            return
+          }
+          gamesUpserted += month.gamesUpserted
+        }
+        setToast({ text: s.sync.synced(pending.archives.length, gamesUpserted), isError: false })
       } catch {
         setToast({ text: s.sync.failed, isError: true })
+      } finally {
+        setProgress(null)
       }
     })
   }
@@ -45,7 +56,11 @@ export function SyncButton() {
         className="flex items-center gap-1.5 rounded-md border border-zinc-300 px-2.5 py-1 text-sm font-medium text-zinc-900 hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-100 dark:hover:bg-zinc-800"
       >
         <RefreshCwIcon className={`size-4 shrink-0 ${isPending ? 'animate-spin' : ''}`} />
-        {isPending ? s.sync.syncing : s.sync.button}
+        {progress
+          ? s.sync.progress(progress.done, progress.total)
+          : isPending
+            ? s.sync.syncing
+            : s.sync.button}
       </button>
       {toast && (
         <div
