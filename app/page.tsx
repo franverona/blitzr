@@ -51,6 +51,7 @@ export default async function TodayPage() {
         </p>
       )}
 
+      {/* xl: text cards fill the left half in two rows; the board cards span both on the right. */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Card title={s.today.drillTitle}>
           <p className="text-3xl font-semibold">{Math.min(drill.due, drill.sessionSize)}</p>
@@ -68,12 +69,6 @@ export default async function TodayPage() {
               {s.today.startDrill}
             </Link>
           )}
-        </Card>
-
-        <Card title={s.today.analysisTitle}>
-          <p className="text-3xl font-semibold">{today.unanalyzedGames}</p>
-          <p className={mutedClassName}>{s.today.unanalyzed(today.unanalyzedGames)}</p>
-          {today.unanalyzedGames > 0 && <BulkAnalyzeButton hasUnanalyzedGames />}
         </Card>
 
         <Card title={s.today.accuracyTitle}>
@@ -122,45 +117,10 @@ export default async function TodayPage() {
           ))}
         </Card>
 
-        <Card title={s.today.focusTitle}>
-          {weakSpot ? (
-            <p className="text-sm">
-              {s.today.weakSpot(weakSpot.opening, weakSpot.blunders)}{' '}
-              <Link
-                href={
-                  weakSpot.drillable
-                    ? `/drill?opening=${encodeURIComponent(weakSpot.opening)}`
-                    : '/blunders'
-                }
-                className={inlineLinkClassName}
-              >
-                {weakSpot.drillable ? s.today.drillOpening : s.today.seeBlunders}
-              </Link>
-            </p>
-          ) : (
-            <p className={mutedClassName}>{s.today.noWeakSpot}</p>
-          )}
-          {repertoire.considered > 0 ? (
-            <p className="text-sm">
-              {s.today.repertoireDeviations(repertoire.deviated, repertoire.considered)}
-            </p>
-          ) : (
-            <p className={mutedClassName}>
-              {s.today.noRepertoire}{' '}
-              <Link href="/repertoire" className={inlineLinkClassName}>
-                {s.today.buildRepertoire}
-              </Link>
-            </p>
-          )}
-        </Card>
-      </div>
-
-      {/* Board cards get their own row so the boards don't stretch the text cards. */}
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Card title={s.today.lastGameTitle}>
+        <Card title={s.today.lastGameTitle} className="xl:row-span-2">
           {lastGame ? (
             <div className="flex flex-col gap-2">
-              <Link href={`/games/${lastGame.id}`} className="w-44">
+              <Link href={`/games/${lastGame.id}`} className="w-full max-w-xs">
                 <MiniBoard fen={lastGame.fen} boardOrientation={lastGame.myColor} />
               </Link>
               <div className="flex min-w-0 flex-col gap-0.5">
@@ -196,10 +156,10 @@ export default async function TodayPage() {
           )}
         </Card>
 
-        <Card title={s.today.puzzleTitle}>
+        <Card title={s.today.puzzleTitle} className="xl:row-span-2">
           {puzzle ? (
             <Link href={`/puzzles/${puzzle.id}`} className="group flex min-w-0 flex-col gap-2">
-              <div className="w-44">
+              <div className="w-full max-w-xs">
                 <MiniBoard
                   fen={puzzle.fen}
                   boardOrientation={resolveOrientation(orientation, puzzleColorToMove(puzzle))}
@@ -228,6 +188,44 @@ export default async function TodayPage() {
             </div>
           )}
         </Card>
+
+        <Card title={s.today.analysisTitle}>
+          <p className="text-3xl font-semibold">{today.unanalyzedGames}</p>
+          <p className={mutedClassName}>{s.today.unanalyzed(today.unanalyzedGames)}</p>
+          {today.unanalyzedGames > 0 && <BulkAnalyzeButton hasUnanalyzedGames />}
+        </Card>
+
+        <Card title={s.today.focusTitle}>
+          {weakSpot ? (
+            <p className="text-sm">
+              {s.today.weakSpot(weakSpot.opening, weakSpot.blunders)}{' '}
+              <Link
+                href={
+                  weakSpot.drillable
+                    ? `/drill?opening=${encodeURIComponent(weakSpot.opening)}`
+                    : '/blunders'
+                }
+                className={inlineLinkClassName}
+              >
+                {weakSpot.drillable ? s.today.drillOpening : s.today.seeBlunders}
+              </Link>
+            </p>
+          ) : (
+            <p className={mutedClassName}>{s.today.noWeakSpot}</p>
+          )}
+          {repertoire.considered > 0 ? (
+            <p className="text-sm">
+              {s.today.repertoireDeviations(repertoire.deviated, repertoire.considered)}
+            </p>
+          ) : (
+            <p className={mutedClassName}>
+              {s.today.noRepertoire}{' '}
+              <Link href="/repertoire" className={inlineLinkClassName}>
+                {s.today.buildRepertoire}
+              </Link>
+            </p>
+          )}
+        </Card>
       </div>
     </div>
   )
@@ -241,9 +239,19 @@ function timeAgo(iso: string): string {
   return format.format(Math.round(minutes / (60 * 24)), 'day')
 }
 
-function Card({ title, children }: { title: string; children: React.ReactNode }) {
+function Card({
+  title,
+  className = '',
+  children,
+}: {
+  title: string
+  className?: string
+  children: React.ReactNode
+}) {
   return (
-    <section className="flex flex-col gap-2 rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900">
+    <section
+      className={`flex flex-col gap-2 rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900 ${className}`}
+    >
       <h2 className="text-xs font-semibold tracking-wide text-zinc-500 uppercase dark:text-zinc-400">
         {title}
       </h2>
