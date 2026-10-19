@@ -326,6 +326,7 @@ const en = {
     missingPlayers: 'PGN is missing White/Black player headers.',
     badMovetext: 'Could not parse this PGN — check the move text is valid.',
     noMoves: 'PGN has no moves — paste the full game, not just its headers.',
+    duplicate: 'This game is already in Blitzr.',
     notInGame: (username: string) =>
       `Neither player is ${username} — pick the side you played, or "Not me" to keep it out of your stats.`,
   },
@@ -912,6 +913,7 @@ const es: Strings = {
     missingPlayers: 'Al PGN le faltan las cabeceras de jugadores White/Black.',
     badMovetext: 'No se pudo interpretar este PGN — revisa que las jugadas sean válidas.',
     noMoves: 'El PGN no tiene jugadas — pega la partida completa, no solo sus cabeceras.',
+    duplicate: 'Esta partida ya está en Blitzr.',
     notInGame: (username: string) =>
       `Ninguno de los jugadores es ${username} — elige con qué color jugaste, o "No soy yo" para dejarla fuera de tus estadísticas.`,
   },

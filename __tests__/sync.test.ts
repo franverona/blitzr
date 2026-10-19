@@ -12,14 +12,19 @@ const repo = vi.hoisted(() => ({
   upsertGames: vi.fn(async (games: unknown[]) => games.length - 1),
   markArchiveSynced: vi.fn(async () => {}),
   getArchiveSyncStatus: vi.fn(async () => [{ archiveYm: '2026-07', status: 'complete' }]),
+  listAllGames: vi.fn(async (): Promise<unknown[]> => []),
 }))
 vi.mock('@/lib/db', () => ({ getRepository: () => repo }))
 vi.mock('@/lib/config', () => ({ getChesscomUsername: () => 'me' }))
 vi.mock('@/lib/chesscom/client', () => ({ fetchArchives: vi.fn(), fetchArchiveMonth: vi.fn() }))
 vi.mock('@/lib/chesscom/normalize', () => ({
-  normalizeGame: (raw: { uuid: string }, _username: string, archiveYm: string) => ({
+  normalizeGame: (raw: { uuid: string; url?: string }, _username: string, archiveYm: string) => ({
     id: raw.uuid,
     archiveYm,
+    url: raw.url ?? '',
+    whiteUsername: 'me',
+    blackUsername: 'them',
+    movesSan: [raw.uuid],
   }),
 }))
 
@@ -83,10 +88,29 @@ describe('syncArchive', () => {
     expect(await syncArchive('2026-08')).toBe(1)
     expect(fetchArchiveMonth).toHaveBeenCalledWith('me', '2026', '08')
     expect(repo.upsertGames).toHaveBeenCalledWith([
-      { id: 'a', archiveYm: '2026-08' },
-      { id: 'b', archiveYm: '2026-08' },
+      expect.objectContaining({ id: 'a', archiveYm: '2026-08' }),
+      expect.objectContaining({ id: 'b', archiveYm: '2026-08' }),
     ])
     expect(repo.markArchiveSynced).toHaveBeenCalledWith('2026-08', 'complete', 2)
+  })
+
+  it('skips a game already pasted in, keeping the pasted copy', async () => {
+    vi.mocked(fetchArchiveMonth).mockResolvedValue([
+      { uuid: 'a', url: 'https://www.chess.com/game/live/1' },
+      { uuid: 'b', url: 'https://www.chess.com/game/live/2' },
+    ] as never)
+    repo.listAllGames.mockResolvedValueOnce([
+      {
+        id: 'pasted',
+        archiveYm: 'manual',
+        url: 'https://www.chess.com/game/live/2?move=0',
+        whiteUsername: 'me',
+        blackUsername: 'them',
+        movesSan: ['other'],
+      },
+    ])
+    await syncArchive('2026-08')
+    expect(repo.upsertGames).toHaveBeenCalledWith([expect.objectContaining({ id: 'a' })])
   })
 
   it('marks a still-open month partial', async () => {

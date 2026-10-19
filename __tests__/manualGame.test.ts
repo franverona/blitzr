@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { parseManualGame } from '@/lib/manualGame'
+import { findDuplicateGame, parseManualGame } from '@/lib/manualGame'
 
 // Exact PGN from issue #62 — a "Play vs Bot" game, the case the public
 // Chess.com API never exposes at all.
@@ -122,5 +122,34 @@ describe('parseManualGame', () => {
     } finally {
       vi.unstubAllEnvs()
     }
+  })
+})
+
+describe('findDuplicateGame', () => {
+  const pasted = parseManualGame(BOT_GAME_PGN, 'fverona')
+
+  it('matches the same Chess.com game whatever the URL form', () => {
+    const synced = {
+      ...pasted,
+      id: 'synced',
+      movesSan: ['e4'],
+      url: 'https://www.chess.com/analysis/game/computer/1917991614/analysis?move=0',
+    }
+    expect(findDuplicateGame(pasted, [synced])).toBe(synced)
+  })
+
+  it('matches the same players and moves without a link', () => {
+    const again = { ...pasted, id: 'again', url: '' }
+    expect(findDuplicateGame({ ...pasted, url: '' }, [again])).toBe(again)
+  })
+
+  it('tells different games apart', () => {
+    const other = {
+      ...pasted,
+      id: 'other',
+      movesSan: ['d4'],
+      url: 'https://www.chess.com/game/computer/1',
+    }
+    expect(findDuplicateGame(pasted, [other])).toBeUndefined()
   })
 })

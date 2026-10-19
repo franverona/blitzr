@@ -23,7 +23,7 @@ import {
   selectSessionCards,
 } from '@/lib/drill'
 import type { DrillCandidate } from '@/lib/drill'
-import { parseManualGame, type ManualGameSide } from '@/lib/manualGame'
+import { findDuplicateGame, parseManualGame, type ManualGameSide } from '@/lib/manualGame'
 import { summarizeMoveQuality } from '@/lib/moveQuality'
 import { buildOpeningFamilies, ecoFamilyLabel, unknownOpeningLabel } from '@/lib/openings'
 import { allMateProblems } from '@/lib/puzzleSet'
@@ -179,6 +179,9 @@ export async function addManualGame(
     game = parseManualGame(pgn, getChesscomUsername(), side)
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : '' }
+  }
+  if (findDuplicateGame(game, await cachedListAllGames())) {
+    return { ok: false, error: getStrings().manualGame.duplicate }
   }
   await getRepository().upsertGames([game])
   revalidatePath('/games')
