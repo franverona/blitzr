@@ -118,8 +118,9 @@ scripts/
   while they're on.
 - **Move sounds** are hotlinked from chess.com's CDN (not redistributed), via `useMoveSound(fen)`.
 - **`BOARD_ANIMATION_DURATION_MS`** (150ms) is shared by every board and the keyboard nav throttle.
-- **`BoardNavControls`** binds ←/→, Space (play) and `0` (start) globally, ignoring modifier keys,
-  form fields, and `<dialog>`s that don't set `data-board-shortcuts`.
+- **`BoardNavControls`** binds ←/→, Space (play), Home/↑/`0` (start), End/↓ (end) and `F` (flip)
+  globally, ignoring modifier keys, form fields, and `<dialog>`s that don't set
+  `data-board-shortcuts`.
 - **Play** auto-advances every `PLAY_INTERVAL_MS`, stopping on the user's own blunders.
 - **`BoardProvider`'s `myColor`** (defaults to `boardOrientation`) is the user's side for Play's
   stops, saved hints, `MoveList` and `LessonQuiz`. Never read `boardOrientation` as "my color" —
