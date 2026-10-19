@@ -184,15 +184,15 @@ export default async function TodayPage() {
             <p className={mutedClassName}>{s.today.allPuzzlesSolved}</p>
           )}
           {puzzles.total > 0 && (
-            // Same bar as the /puzzles header.
-            <div className="flex max-w-xs items-center gap-2">
-              <div className="h-1.5 min-w-8 flex-1 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800">
+            // Same bar as the /puzzles header, stacked above its label.
+            <div className="flex max-w-xs flex-col gap-1.5">
+              <div className="h-1.5 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800">
                 <div
                   className="h-full rounded-full bg-emerald-500"
                   style={{ width: `${(puzzles.solved / puzzles.total) * 100}%` }}
                 />
               </div>
-              <span className={`shrink-0 ${mutedClassName}`}>
+              <span className={mutedClassName}>
                 {s.puzzlesPage.solvedCount(puzzles.solved, puzzles.total)}
               </span>
             </div>
