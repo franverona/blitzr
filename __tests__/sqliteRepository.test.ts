@@ -125,3 +125,18 @@ describe('SqliteGameRepository.upsertGames', () => {
     expect(await repo.upsertGames(month)).toBe(0)
   })
 })
+
+describe('SqliteGameRepository.exportBackup', () => {
+  it('returns a SQLite file holding the same data', async () => {
+    const data = await repo.exportBackup()
+    expect(Buffer.from(data.subarray(0, 15)).toString()).toBe('SQLite format 3')
+
+    const restored = new Database(Buffer.from(data))
+    const { count } = restored.prepare('SELECT count(*) AS count FROM games').get() as {
+      count: number
+    }
+    expect(count).toBeGreaterThan(0)
+    expect(count).toBe((await repo.listAllGames()).length)
+    restored.close()
+  })
+})

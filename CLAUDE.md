@@ -145,6 +145,9 @@ scripts/
 - `DB_TYPE` selects the backend (default `sqlite`); `lib/db/factory.ts` throws for anything else.
   To add one, implement `GameRepository` in `lib/db/<backend>/` and register it in the factory.
 - SQLite lives at `./data/blitzr.db`, created on first run. Delete it and re-sync to reset.
+- **Backup** (Settings → Data): `exportDatabaseBackup()` returns `GameRepository.exportBackup()`'s
+  bytes to the client, which saves them as a file. SQLite makes it with `VACUUM INTO` a temp file,
+  so the copy is consistent and includes the WAL.
 - Tables: `games`, `sync_state`, `repertoire_moves` (tree per color, `ON DELETE CASCADE` to the
   subtree — needs the `foreign_keys` pragma), `game_analysis` (one row per game), `drill_cards`
   (schedule only, keyed by `(game_id, source_type, ply)`), `puzzle_progress` (solved puzzle ids;

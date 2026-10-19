@@ -136,4 +136,7 @@ export interface GameRepository {
   listSolvedPuzzleIds(): Promise<number[]>
   /** No-op if already solved, keeping the original solved_at. */
   markPuzzleSolved(puzzleId: number): Promise<void>
+
+  /** A consistent snapshot of the whole database, in the backend's file format. */
+  exportBackup(): Promise<Uint8Array<ArrayBuffer>>
 }
