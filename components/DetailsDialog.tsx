@@ -2,17 +2,22 @@
 
 import { useRef } from 'react'
 import { getStrings } from '@/lib/i18n/strings'
+import { useLiveAnalysisContext } from './Board'
 
 /** Trigger + dialog for the game page's secondary panels, so the move list
  *  can fill the sidebar. */
 export function DetailsDialogTrigger({ children }: { children: React.ReactNode }) {
   const dialogRef = useRef<HTMLDialogElement>(null)
+  const { setPanelVisible } = useLiveAnalysisContext()
   const s = getStrings()
 
   return (
     <>
       <button
-        onClick={() => dialogRef.current?.showModal()}
+        onClick={() => {
+          dialogRef.current?.showModal()
+          setPanelVisible(true)
+        }}
         className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium whitespace-nowrap hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
       >
         {s.gamePage.viewDetails}
@@ -21,6 +26,7 @@ export function DetailsDialogTrigger({ children }: { children: React.ReactNode }
         ref={dialogRef}
         // Opts in to BoardNavControls' keyboard shortcuts.
         data-board-shortcuts
+        onClose={() => setPanelVisible(false)}
         onClick={(e) => {
           if (e.target === e.currentTarget) dialogRef.current?.close()
         }}
