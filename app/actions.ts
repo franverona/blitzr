@@ -222,8 +222,10 @@ export async function getUnanalyzedGames(): Promise<UnanalyzedGame[]> {
   const [games, analyses] = await Promise.all([cachedStandardGames(), cachedListAllGameAnalyses()])
   const analyzedIds = new Set(analyses.map((a) => a.gameId))
 
+  // Newest first; `filter()` copies, so sorting can't mutate the cache.
   return games
     .filter((g) => g.movesSan && !analyzedIds.has(g.id))
+    .sort((a, b) => b.endTime - a.endTime)
     .map((g) => {
       const opponent = g.myColor === 'white' ? g.blackUsername : g.whiteUsername
       return {

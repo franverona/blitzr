@@ -61,7 +61,9 @@ For a Spanish UI, set `NEXT_PUBLIC_LOCALE=es` in `.env.local` and rebuild.
 
 ## Running as a background service (pm2)
 
-Production runs on port **9877** to avoid clashing with other projects on 3000.
+Production runs on port **9877** to avoid clashing with other projects on 3000. `pnpm start` binds
+to `127.0.0.1` only: Server Actions edit your data with no auth, so it must not be reachable from
+the local network.
 
 ```bash
 npm install -g pm2
@@ -109,8 +111,8 @@ opponent's unprepared move doesn't count.
 ### Engine analysis
 
 **Analyze with Stockfish** on a game page evaluates every position in your browser and saves the
-result. **Analyze all** on the games page does this for every unanalyzed game, saving as it goes,
-and keeps running while you browse other pages.
+result. **Analyze all** on the games page does this for every unanalyzed game, newest first,
+saving as it goes, and keeps running while you browse other pages.
 
 A blunder is a move that drops the mover's winning chances as much as a 200+ centipawn loss from
 an equal position would, tagged **Mistake** (200–399 equivalent) or **Blunder** (400+). Measuring
