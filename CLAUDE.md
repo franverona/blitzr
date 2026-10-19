@@ -247,8 +247,8 @@ section. The trend chart's x-axis is game index, not date, because sessions are 
 `isForcedMate()`, which the tests re-check on a random sample (a full pass takes hours). Side to
 move is read from each FEN (about a third are Black). `PuzzleBoard` makes the user play every ply,
 both sides; wrong moves retry, "Reveal" doesn't count as solved, and promotions show a piece picker
-(some puzzles need underpromotion). `PromotionPicker` is shared with `DrillSession`, since an engine
-best move can be an underpromotion too.
+(some puzzles need underpromotion). `PromotionPicker` is shared with `DrillSession` (an engine best move
+can be an underpromotion too) and explore mode.
 
 ## Lessons
 
