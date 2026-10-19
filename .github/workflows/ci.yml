@@ -31,3 +31,12 @@ jobs:
       - run: pnpm test
 
       - run: pnpm build
+
+      # Catches runtime crashes the build misses, against an empty database.
+      - name: Smoke test
+        run: |
+          pnpm start -p 9878 &
+          curl -fsS -o /dev/null --retry 30 --retry-connrefused --retry-delay 1 http://127.0.0.1:9878/
+          for route in / /openings /learn /settings /repertoire /drill /blunders /puzzles /puzzles/1; do
+            curl -fsS -o /dev/null "http://127.0.0.1:9878$route" || { echo "::error::$route failed"; exit 1; }
+          done
