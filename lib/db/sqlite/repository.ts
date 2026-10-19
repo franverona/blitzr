@@ -1,3 +1,7 @@
+import { randomUUID } from 'crypto'
+import fs from 'fs/promises'
+import os from 'os'
+import path from 'path'
 import { Kysely, sql, type ExpressionBuilder } from 'kysely'
 import type {
   DbSchema,
@@ -383,5 +387,17 @@ export class SqliteGameRepository implements GameRepository {
       .values({ puzzle_id: puzzleId, solved_at: new Date().toISOString() })
       .onConflict((oc) => oc.column('puzzle_id').doNothing())
       .execute()
+  }
+
+  async exportBackup(): Promise<Uint8Array<ArrayBuffer>> {
+    const db = await this.ready()
+    // VACUUM INTO writes a consistent copy that includes the WAL.
+    const file = path.join(os.tmpdir(), `blitzr-backup-${randomUUID()}.db`)
+    try {
+      await sql`VACUUM INTO ${file}`.execute(db)
+      return new Uint8Array(await fs.readFile(file))
+    } finally {
+      await fs.rm(file, { force: true })
+    }
   }
 }
