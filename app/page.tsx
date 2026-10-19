@@ -37,9 +37,17 @@ export default async function TodayPage() {
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-zinc-200 pb-4 dark:border-zinc-800">
         <h1 className="text-xl font-semibold">{s.today.title}</h1>
-        {today.lastSyncedAt && (
-          <p className={mutedClassName}>{s.today.lastSynced(timeAgo(today.lastSyncedAt))}</p>
-        )}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+          {today.unanalyzedGames > 0 && (
+            <>
+              <p className={mutedClassName}>{s.today.unanalyzed(today.unanalyzedGames)}</p>
+              <BulkAnalyzeButton hasUnanalyzedGames />
+            </>
+          )}
+          {today.lastSyncedAt && (
+            <p className={mutedClassName}>{s.today.lastSynced(timeAgo(today.lastSyncedAt))}</p>
+          )}
+        </div>
       </div>
 
       {!today.hasGames && (
@@ -189,13 +197,7 @@ export default async function TodayPage() {
           )}
         </Card>
 
-        <Card title={s.today.analysisTitle}>
-          <p className="text-3xl font-semibold">{today.unanalyzedGames}</p>
-          <p className={mutedClassName}>{s.today.unanalyzed(today.unanalyzedGames)}</p>
-          {today.unanalyzedGames > 0 && <BulkAnalyzeButton hasUnanalyzedGames />}
-        </Card>
-
-        <Card title={s.today.focusTitle}>
+        <Card title={s.today.focusTitle} className="sm:col-span-2">
           {weakSpot ? (
             <p className="text-sm">
               {s.today.weakSpot(weakSpot.opening, weakSpot.blunders)}{' '}

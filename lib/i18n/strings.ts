@@ -29,6 +29,7 @@ const en = {
   },
   today: {
     title: 'Today',
+    unanalyzed: (n: number) => `${n} game${n === 1 ? '' : 's'} not analyzed yet`,
     noGames: 'No games yet — sync your Chess.com history to fill this page.',
     goToGames: 'Go to Games',
     drillTitle: 'Drill',
@@ -38,9 +39,6 @@ const en = {
       `${due} due: ${deviations} repertoire, ${blunders} blunder`,
     streak: (days: number) => `Drilled ${days} day${days === 1 ? '' : 's'} in a row`,
     startDrill: 'Start drilling',
-    analysisTitle: 'Analysis',
-    unanalyzed: (n: number): string =>
-      n === 1 ? 'game not analyzed yet' : 'games not analyzed yet',
     accuracyTitle: 'Last 7 days',
     accuracyVsAverage: (games: number, overall: number) =>
       `Accuracy over ${games} game${games === 1 ? '' : 's'}, against ${overall}% on average`,
@@ -581,6 +579,7 @@ const es: Strings = {
   },
   today: {
     title: 'Hoy',
+    unanalyzed: (n: number) => `${n} ${n === 1 ? 'partida sin analizar' : 'partidas sin analizar'}`,
     noGames: 'Aún no hay partidas — sincroniza tu historial de Chess.com para llenar esta página.',
     goToGames: 'Ir a Partidas',
     drillTitle: 'Entrenar',
@@ -590,8 +589,6 @@ const es: Strings = {
       `${due} pendientes: ${deviations} de repertorio, ${blunders} de errores`,
     streak: (days: number) => `${days} ${days === 1 ? 'día' : 'días'} seguidos entrenando`,
     startDrill: 'Empezar a entrenar',
-    analysisTitle: 'Análisis',
-    unanalyzed: (n: number): string => (n === 1 ? 'partida sin analizar' : 'partidas sin analizar'),
     accuracyTitle: 'Últimos 7 días',
     accuracyVsAverage: (games: number, overall: number) =>
       `Precisión en ${games} ${games === 1 ? 'partida' : 'partidas'}, frente a un ${overall}% de media`,
