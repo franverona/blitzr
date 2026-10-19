@@ -8,7 +8,7 @@ import { markPuzzleSolved } from '@/app/actions'
 import { getStrings } from '@/lib/i18n/strings'
 import { legalDestinations } from '@/lib/legalMoves'
 import { puzzleColorToMove, type MateProblem } from '@/lib/mateProblems'
-import { BOARD_ANIMATION_DURATION_MS } from '@/lib/theme'
+import { BOARD_ANIMATION_DURATION_MS, resolveOrientation } from '@/lib/theme'
 import { useSettings, useMoveSound } from './SettingsProvider'
 import { LegalMoveSquare } from './LegalMoveSquare'
 import { MoveSequence } from './MoveSequence'
@@ -32,7 +32,10 @@ export function PuzzleBoard({ problem }: { problem: MateProblem }) {
 
   const solved = ply >= problem.moves.length
   const finished = solved || revealed
-  const orientation = puzzleColorToMove(problem)
+  const orientation = resolveOrientation(
+    boardColors.trainingOrientation,
+    puzzleColorToMove(problem),
+  )
   const maxViewPly = revealed ? problem.moves.length : ply
 
   const positions = useMemo(() => {

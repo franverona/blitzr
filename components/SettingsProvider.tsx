@@ -8,7 +8,7 @@ import {
 } from '@/lib/stockfish/analyze'
 import { type MoveSound, moveSoundFor } from '@/lib/moveSound'
 import type { SessionSize } from '@/lib/drill'
-import { getBoardColorPreset } from '@/lib/theme'
+import { getBoardColorPreset, type PlaySpeed, type TrainingOrientation } from '@/lib/theme'
 
 // Duplicated in app/layout.tsx on purpose: a constant exported from a
 // 'use client' module reads as undefined in a Server Component.
@@ -18,6 +18,8 @@ const ANALYSIS_STRENGTH_COOKIE = 'blitzr-analysis-strength'
 const HIDE_ENGINE_HINTS_COOKIE = 'blitzr-hide-engine-hints'
 const SHOW_COORDINATES_COOKIE = 'blitzr-show-coordinates'
 const MOVE_SOUNDS_COOKIE = 'blitzr-move-sounds'
+const TRAINING_ORIENTATION_COOKIE = 'blitzr-training-orientation'
+const PLAY_SPEED_COOKIE = 'blitzr-play-speed'
 const DRILL_SESSION_SIZE_COOKIE = 'blitzr-drill-session-size'
 
 function setCookie(name: string, value: string) {
@@ -40,6 +42,10 @@ interface SettingsContextValue {
   setShowCoordinates: (show: boolean) => void
   moveSounds: boolean
   setMoveSounds: (on: boolean) => void
+  trainingOrientation: TrainingOrientation
+  setTrainingOrientation: (orientation: TrainingOrientation) => void
+  playSpeed: PlaySpeed
+  setPlaySpeed: (speed: PlaySpeed) => void
   drillSessionSize: SessionSize
   setDrillSessionSize: (size: SessionSize) => void
 }
@@ -61,6 +67,8 @@ export function SettingsProvider({
   initialHideEngineHints,
   initialShowCoordinates,
   initialMoveSounds,
+  initialTrainingOrientation,
+  initialPlaySpeed,
   initialDrillSessionSize,
   children,
 }: {
@@ -70,11 +78,15 @@ export function SettingsProvider({
   initialHideEngineHints: boolean
   initialShowCoordinates: boolean
   initialMoveSounds: boolean
+  initialTrainingOrientation: TrainingOrientation
+  initialPlaySpeed: PlaySpeed
   initialDrillSessionSize: SessionSize
   children: React.ReactNode
 }) {
   const [theme, setThemeState] = useState(initialTheme)
   const [moveSounds, setMoveSoundsState] = useState(initialMoveSounds)
+  const [trainingOrientation, setTrainingOrientationState] = useState(initialTrainingOrientation)
+  const [playSpeed, setPlaySpeedState] = useState(initialPlaySpeed)
   const [drillSessionSize, setDrillSessionSizeState] = useState(initialDrillSessionSize)
   const [showCoordinates, setShowCoordinatesState] = useState(initialShowCoordinates)
   const [hideEngineHints, setHideEngineHintsState] = useState(initialHideEngineHints)
@@ -120,6 +132,16 @@ export function SettingsProvider({
     setCookie(MOVE_SOUNDS_COOKIE, on ? '1' : '0')
   }
 
+  function setTrainingOrientation(orientation: TrainingOrientation) {
+    setTrainingOrientationState(orientation)
+    setCookie(TRAINING_ORIENTATION_COOKIE, orientation)
+  }
+
+  function setPlaySpeed(speed: PlaySpeed) {
+    setPlaySpeedState(speed)
+    setCookie(PLAY_SPEED_COOKIE, speed)
+  }
+
   // Read server-side by getDrillDeck(); applies from the next /drill load.
   function setDrillSessionSize(size: SessionSize) {
     setDrillSessionSizeState(size)
@@ -143,6 +165,10 @@ export function SettingsProvider({
         setShowCoordinates,
         moveSounds,
         setMoveSounds,
+        trainingOrientation,
+        setTrainingOrientation,
+        playSpeed,
+        setPlaySpeed,
         drillSessionSize,
         setDrillSessionSize,
       }}

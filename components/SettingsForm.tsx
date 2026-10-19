@@ -2,10 +2,16 @@
 
 import { Chessboard } from 'react-chessboard'
 import { BoardCoordinates } from './BoardCoordinates'
-import { SESSION_SIZES } from '@/lib/drill'
+import { SESSION_SIZES, type SessionSize } from '@/lib/drill'
 import { getStrings } from '@/lib/i18n/strings'
 import { ANALYSIS_STRENGTHS, type AnalysisStrength } from '@/lib/stockfish/analyze'
-import { BOARD_COLOR_PRESETS, REVEAL_ARROW_COLOR } from '@/lib/theme'
+import {
+  BOARD_COLOR_PRESETS,
+  PLAY_SPEEDS,
+  type PlaySpeed,
+  REVEAL_ARROW_COLOR,
+  TRAINING_ORIENTATIONS,
+} from '@/lib/theme'
 import { EvalBar } from './EvalBar'
 import { playMoveSound, useSettings } from './SettingsProvider'
 
@@ -70,29 +76,37 @@ export function SettingsForm() {
             />
             <p className="text-xs text-zinc-500">{s.settings.moveSoundsCredit}</p>
           </div>
+          <div className="flex flex-col gap-2 text-sm">
+            <span>{s.settings.trainingOrientation}</span>
+            <Segmented
+              options={TRAINING_ORIENTATIONS}
+              value={settings.trainingOrientation}
+              onChange={settings.setTrainingOrientation}
+              label={(orientation) => s.settings.trainingOrientations[orientation]}
+            />
+          </div>
+          <div className="flex flex-col gap-2 text-sm">
+            <span>{s.settings.playSpeed}</span>
+            <Segmented
+              options={Object.keys(PLAY_SPEEDS) as PlaySpeed[]}
+              value={settings.playSpeed}
+              onChange={settings.setPlaySpeed}
+              label={(speed) => s.settings.playSpeeds[speed]}
+              title={(speed) => s.settings.playSpeedTitle(PLAY_SPEEDS[speed])}
+            />
+          </div>
         </Section>
 
         <Section title={s.settings.sections.analysis}>
           <div className="flex flex-col gap-2 text-sm">
             <span>{s.settings.analysisStrength}</span>
-            <div className="flex overflow-hidden rounded-md border border-zinc-300 dark:border-zinc-700">
-              {(Object.keys(ANALYSIS_STRENGTHS) as AnalysisStrength[]).map((strength) => (
-                <button
-                  key={strength}
-                  type="button"
-                  onClick={() => settings.setAnalysisStrength(strength)}
-                  aria-pressed={settings.analysisStrength === strength}
-                  title={`${ANALYSIS_STRENGTHS[strength]}ms`}
-                  className={`flex-1 px-2 py-1 ${
-                    settings.analysisStrength === strength
-                      ? 'bg-accent text-white'
-                      : 'hover:bg-zinc-200 dark:hover:bg-zinc-800'
-                  }`}
-                >
-                  {s.settings.analysisStrengths[strength]}
-                </button>
-              ))}
-            </div>
+            <Segmented
+              options={Object.keys(ANALYSIS_STRENGTHS) as AnalysisStrength[]}
+              value={settings.analysisStrength}
+              onChange={settings.setAnalysisStrength}
+              label={(strength) => s.settings.analysisStrengths[strength]}
+              title={(strength) => `${ANALYSIS_STRENGTHS[strength]}ms`}
+            />
             <p className="text-xs text-zinc-500">{s.settings.analysisStrengthHint}</p>
           </div>
           <div className="flex flex-col gap-1">
@@ -108,23 +122,12 @@ export function SettingsForm() {
         <Section title={s.settings.sections.training}>
           <div className="flex flex-col gap-2 text-sm">
             <span>{s.settings.drillSessionSize}</span>
-            <div className="flex overflow-hidden rounded-md border border-zinc-300 dark:border-zinc-700">
-              {SESSION_SIZES.map((size) => (
-                <button
-                  key={size}
-                  type="button"
-                  onClick={() => settings.setDrillSessionSize(size)}
-                  aria-pressed={settings.drillSessionSize === size}
-                  className={`flex-1 px-2 py-1 tabular-nums ${
-                    settings.drillSessionSize === size
-                      ? 'bg-accent text-white'
-                      : 'hover:bg-zinc-200 dark:hover:bg-zinc-800'
-                  }`}
-                >
-                  {size}
-                </button>
-              ))}
-            </div>
+            <Segmented
+              options={SESSION_SIZES.map(String)}
+              value={String(settings.drillSessionSize)}
+              onChange={(size) => settings.setDrillSessionSize(Number(size) as SessionSize)}
+              label={(size) => size}
+            />
             <p className="text-xs text-zinc-500">{s.settings.drillSessionSizeHint}</p>
           </div>
         </Section>
@@ -194,5 +197,38 @@ function Toggle({
         <span className="absolute left-1 h-4 w-4 rounded-full bg-white transition-transform peer-checked:translate-x-5" />
       </span>
     </label>
+  )
+}
+
+function Segmented<T extends string>({
+  options,
+  value,
+  onChange,
+  label,
+  title,
+}: {
+  options: readonly T[]
+  value: T
+  onChange: (value: T) => void
+  label: (option: T) => string
+  title?: (option: T) => string
+}) {
+  return (
+    <div className="flex overflow-hidden rounded-md border border-zinc-300 dark:border-zinc-700">
+      {options.map((option) => (
+        <button
+          key={option}
+          type="button"
+          onClick={() => onChange(option)}
+          aria-pressed={value === option}
+          title={title?.(option)}
+          className={`flex-1 px-2 py-1 ${
+            value === option ? 'bg-accent text-white' : 'hover:bg-zinc-200 dark:hover:bg-zinc-800'
+          }`}
+        >
+          {label(option)}
+        </button>
+      ))}
+    </div>
   )
 }

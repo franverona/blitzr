@@ -35,3 +35,26 @@ export const GAME_END_SQUARE_COLORS = {
   win: 'rgba(16, 185, 129, 0.35)',
   draw: 'rgba(161, 161, 170, 0.35)',
 }
+
+/** Board orientation for lessons and puzzles; 'auto' is the side that plays. */
+export type TrainingOrientation = 'auto' | 'white' | 'black'
+export const TRAINING_ORIENTATIONS: TrainingOrientation[] = ['auto', 'white', 'black']
+
+export function getTrainingOrientation(raw: string | undefined): TrainingOrientation {
+  return raw === 'white' || raw === 'black' ? raw : 'auto'
+}
+
+export function resolveOrientation(
+  setting: TrainingOrientation,
+  sideToPlay: 'white' | 'black',
+): 'white' | 'black' {
+  return setting === 'auto' ? sideToPlay : setting
+}
+
+/** Auto-play step interval (ms). Fast stays above BOARD_ANIMATION_DURATION_MS. */
+export const PLAY_SPEEDS = { slow: 1000, normal: 500, fast: 250 } as const
+export type PlaySpeed = keyof typeof PLAY_SPEEDS
+
+export function getPlaySpeed(raw: string | undefined): PlaySpeed {
+  return raw && raw in PLAY_SPEEDS ? (raw as PlaySpeed) : 'normal'
+}

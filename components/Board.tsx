@@ -27,6 +27,7 @@ import {
   CHECKLIST_ARROW_COLOR,
   CHECKLIST_SQUARE_COLOR,
   GAME_END_SQUARE_COLORS,
+  PLAY_SPEEDS,
   REVEAL_ARROW_COLOR,
 } from '@/lib/theme'
 import type { EngineLine, PositionEval } from '@/lib/types'
@@ -83,8 +84,6 @@ interface BoardContextValue {
 }
 
 const BoardContext = createContext<BoardContextValue | null>(null)
-
-const PLAY_INTERVAL_MS = 500
 
 export function useBoardContext(): BoardContextValue {
   const ctx = useContext(BoardContext)
@@ -387,6 +386,7 @@ export function BoardNavControls() {
     setBoardOrientation,
   } = useBoardContext()
   const s = getStrings()
+  const { playSpeed } = useSettings()
   const [isPlaying, setIsPlaying] = useState(false)
 
   // Refs let the interval/keydown callbacks read fresh values without
@@ -502,9 +502,9 @@ export function BoardNavControls() {
       const next = Math.min(plyRef.current + 1, lastPly)
       setPly(next)
       if (next === lastPly || blunderPlies?.has(next)) setIsPlaying(false)
-    }, PLAY_INTERVAL_MS)
+    }, PLAY_SPEEDS[playSpeed])
     return () => clearInterval(interval)
-  }, [isPlaying, lastPly, blunderPlies, setPly])
+  }, [isPlaying, lastPly, blunderPlies, setPly, playSpeed])
 
   return (
     <div className="flex items-center gap-2">
