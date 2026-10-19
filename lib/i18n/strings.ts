@@ -281,6 +281,7 @@ const en = {
     noUsername: 'CHESSCOM_USERNAME is not set. Copy .env.example to .env.local and fill it in.',
     synced: (archives: number, games: number) =>
       `Synced ${archives} archive${archives === 1 ? '' : 's'}, ${games} game${games === 1 ? '' : 's'} added.`,
+    analyzeNew: 'Analyze them',
   },
   addPgn: {
     button: 'Add game by PGN',
@@ -801,6 +802,7 @@ const es: Strings = {
       'CHESSCOM_USERNAME no está configurado. Copia .env.example a .env.local y rellénalo.',
     synced: (archives: number, games: number) =>
       `${archives} ${archives === 1 ? 'archivo sincronizado' : 'archivos sincronizados'}, ${games} ${games === 1 ? 'partida añadida' : 'partidas añadidas'}.`,
+    analyzeNew: 'Analizarlas',
   },
   addPgn: {
     button: 'Añadir partida por PGN',

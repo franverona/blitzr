@@ -4,6 +4,13 @@ import { getChesscomUsername } from './config'
 import { getRepository } from './db'
 
 const DAY_MS = 24 * 60 * 60 * 1000
+const AUTO_SYNC_AFTER_MS = 60 * 60 * 1000
+
+/** Opening the app syncs once the last sync is over an hour old, but never before a first manual one. */
+export function isSyncStale(syncedAts: string[], now: Date = new Date()): boolean {
+  if (syncedAts.length === 0) return false
+  return now.getTime() - Math.max(...syncedAts.map(Date.parse)) > AUTO_SYNC_AFTER_MS
+}
 
 /**
  * The oldest archive month ("YYYY-MM") that may still gain games. Looks one
