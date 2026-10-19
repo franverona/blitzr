@@ -90,7 +90,9 @@ scripts/
 - **Domain types are camelCase** (`lib/types.ts`), **DB columns snake_case** (`lib/db/types.ts`);
   the repository maps between them. Never leak snake_case past it.
 - **Migrations** run idempotently in `ensureSchema()` (`lib/db/sqlite/migrate.ts`) — no version
-  table. New columns are added after a `PRAGMA table_info` check.
+  table. New columns are added after a `PRAGMA table_info` check, through `alter()`, which first
+  copies an existing database to `data/backups/pre-migration-<time>.db`. Once per server process,
+  so a migration that keeps failing and retrying doesn't pile up copies.
 - **`moves_san` and `game_analysis.evals` are JSON array columns**, walked in app code.
 - **Aggregations, repertoire diffing and blunder detection are pure functions**, not repository
   methods — backend-agnostic and unit-testable.

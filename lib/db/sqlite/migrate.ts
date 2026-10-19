@@ -6,6 +6,8 @@ import type { DbSchema } from '../types'
 // Caches the in-flight promise so concurrent first calls share one run;
 // cleared on failure so the next call retries.
 let _migration: Promise<void> | null = null
+// Survives failed runs, so a migration that keeps failing copies once, not per retry.
+let _backedUp = false
 
 export function ensureSchema(db: Kysely<DbSchema>): Promise<void> {
   if (!_migration) {
@@ -20,11 +22,11 @@ export function ensureSchema(db: Kysely<DbSchema>): Promise<void> {
 async function runMigrations(db: Kysely<DbSchema>): Promise<void> {
   // A fresh database has nothing to lose, so only an existing one is copied.
   const existing = await sql`SELECT 1 FROM sqlite_master WHERE name = 'games'`.execute(db)
-  let backedUp = existing.rows.length === 0
+  const fresh = existing.rows.length === 0
   async function alter(statement: ReturnType<typeof sql>) {
-    if (!backedUp) {
+    if (!fresh && !_backedUp) {
       await backupBeforeMigration(db)
-      backedUp = true
+      _backedUp = true
     }
     await statement.execute(db)
   }
