@@ -289,13 +289,14 @@ since Next redacts thrown messages in production.
 ## Before considering a feature or fix done
 
 ```bash
+pnpm format:check
 pnpm exec tsc --noEmit
 pnpm lint
 pnpm test
 pnpm build
 ```
 
-CI (`.github/workflows/ci.yml`) runs the same four on pushes to `main` and on PRs, then
+CI (`.github/workflows/ci.yml`) runs the same five on pushes to `main` and on PRs, then
 smoke-tests `pnpm start`: the main routes must return 2xx against an empty database.
 
 ## Running
@@ -312,4 +313,4 @@ dev server silently serves stale code. Restart it after building.
 
 - **Never commit to `main`.** Branch, commit, `gh pr create`.
 - **Conventional commits** (`feat:`, `fix:`, `chore:`, `style:`, lowercase) for commit messages
-  (enforced by commitlint) and PR titles.
+  (enforced by commitlint) and PR titles (linted by `pr-title.yml`, since squash merges use them).
