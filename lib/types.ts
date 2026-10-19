@@ -163,8 +163,10 @@ export interface Blunder {
   moveSan: string
   evalBefore: PositionEval
   evalAfter: PositionEval
-  /** Centipawns lost by the mover (always positive). */
+  /** Centipawns lost by the mover; display only. */
   swingCp: number
+  /** Win % (0-100) lost by the mover; drives detection and severity. */
+  winDrop: number
 }
 
 export interface HangingPieceReason {
@@ -239,6 +241,7 @@ export interface WorstBlunder {
   ply: number
   moveSan: string
   swingCp: number
+  winDrop: number
   evalBefore: PositionEval
   evalAfter: PositionEval
   moveDescription: string
