@@ -204,7 +204,10 @@ scripts/
 `parseManualGame()` builds a `Game` from a pasted PGN's headers and throws on bad movetext or
 missing players (a manual game exists to be analyzed). It gets a fresh `crypto.randomUUID()` and
 `archiveYm: 'manual'`; since `upsertGames()` is `ON CONFLICT (id) DO NOTHING`, sync can never
-overwrite it. The dialog's side picker defaults to matching the username (an error if neither
+overwrite it. The random id also defeats `ON CONFLICT` as a duplicate check, so `findDuplicateGame()`
+matches on the Chess.com game id in the URL (any of its forms) or on players plus moves: a paste
+that matches an existing game is rejected, and sync skips a game that matches a pasted one,
+keeping the pasted copy (with its analysis and drill cards). The dialog's side picker defaults to matching the username (an error if neither
 player matches). **"Not me"** stores `isMine: false` (`myColor` is then only the board
 orientation): such games are skipped by every stat in `app/actions.ts` (`cachedMyStandardGames`,
 `cachedStandardStartGames`), by the repertoire diff, and by the games list's result/color filters.

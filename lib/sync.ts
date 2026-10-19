@@ -2,6 +2,7 @@ import { fetchArchiveMonth, fetchArchives } from './chesscom/client'
 import { normalizeGame } from './chesscom/normalize'
 import { getChesscomUsername } from './config'
 import { getRepository } from './db'
+import { findDuplicateGame } from './manualGame'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 const AUTO_SYNC_AFTER_MS = 60 * 60 * 1000
@@ -61,8 +62,11 @@ export async function syncArchive(archiveYm: string): Promise<number> {
   const [year, month] = archiveYm.split('-')
   const rawGames = await fetchArchiveMonth(username, year, month)
   const games = rawGames.map((raw) => normalizeGame(raw, username, archiveYm))
+  // A game already pasted in keeps that copy, with its analysis and drill cards.
+  const manual = (await repo.listAllGames()).filter((g) => g.archiveYm === 'manual')
+  const fresh = manual.length ? games.filter((g) => !findDuplicateGame(g, manual)) : games
 
-  const upserted = await repo.upsertGames(games)
+  const upserted = await repo.upsertGames(fresh)
   await repo.markArchiveSynced(archiveYm, isOpen ? 'partial' : 'complete', games.length)
   return upserted
 }
