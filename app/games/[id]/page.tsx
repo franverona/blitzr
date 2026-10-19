@@ -35,8 +35,17 @@ function pgnResult(color: MyColor, result: MyResult): string {
   return whiteWon ? '1-0' : '0-1'
 }
 
-export default async function GamePage({ params }: { params: Promise<{ id: string }> }) {
+export default async function GamePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>
+  searchParams: Promise<{ ply?: string }>
+}) {
   const { id } = await params
+  // `?ply=` deep-links a position (e.g. from Today's worst blunder); BoardProvider clamps it.
+  const plyParam = Number((await searchParams).ply)
+  const initialPly = Number.isInteger(plyParam) && plyParam >= 0 ? plyParam : 1
   const game = await getGame(id)
   if (!game) notFound()
 
@@ -135,7 +144,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
       result={pgnResult(game.myColor, game.myResult)}
       finalResults={{ white: game.whiteResult, black: game.blackResult }}
       evals={analysis?.evals}
-      initialPly={1}
+      initialPly={initialPly}
     >
       <GameAnalysisProvider
         key={game.id}

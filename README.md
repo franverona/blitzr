@@ -32,6 +32,7 @@ implies endorsement.
 - Cross-game blunder stats with an accuracy-over-time chart and date filter
 - Opening and endgame lessons with study and quiz modes
 - Mate-in-N puzzles you solve move by move
+- A Today page: cards due, games left to analyze, last week's accuracy and the next puzzle
 - Settings: light/dark theme, board colors, analysis strength, hide engine hints, coordinates,
   move sounds, lesson/puzzle board orientation, auto-play speed, drill session size, and a
   database backup download
@@ -55,9 +56,9 @@ cp .env.example .env.local   # set CHESSCOM_USERNAME
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) and click **Sync games**. Later syncs only
-fetch months that aren't complete yet, and run on their own when you open Blitzr more than an hour
-after the last one. A sync that adds games offers to analyze them.
+Open [http://localhost:3000](http://localhost:3000), go to **Games** and click **Sync games**. Later
+syncs only fetch months that aren't complete yet, and run on their own when you open Blitzr more
+than an hour after the last one. A sync that adds games offers to analyze them.
 
 The database is created at `./data/blitzr.db` on first run. To reset, delete it and re-sync.
 
@@ -171,6 +172,15 @@ automatically. Opening lessons show how many of your own games reached that line
 adapted, in original wording, from Wikibooks'
 [Chess Opening Theory](https://en.wikibooks.org/wiki/Chess_Opening_Theory/1._e4) and
 [Chess/The Endgame](https://en.wikibooks.org/wiki/Chess/The_Endgame) (CC BY-SA).
+
+### Today
+
+The landing page, **Today** (`/`), gathers what's waiting: today's drill session (with the full
+due count split by type, and your streak), games not analyzed yet, the last 7 days' accuracy against
+your average with results and rating change per time control, the opening you blundered most this
+week (with a link to drill it), your worst blunder of the week, how you lost your games, a lesson
+for the opening you played most, how often you left your repertoire lately, your last game with its
+final position, and the next unsolved puzzle.
 
 ### Puzzles
 

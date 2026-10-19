@@ -49,6 +49,6 @@ jobs:
         run: |
           pnpm start -p 9878 &
           curl -fsS -o /dev/null --retry 30 --retry-connrefused --retry-delay 1 http://127.0.0.1:9878/
-          for route in / /openings /learn /settings /repertoire /drill /blunders /puzzles /puzzles/1; do
+          for route in / /games /openings /learn /settings /repertoire /drill /blunders /puzzles /puzzles/1; do
             curl -fsS -o /dev/null "http://127.0.0.1:9878$route" || { echo "::error::$route failed"; exit 1; }
           done

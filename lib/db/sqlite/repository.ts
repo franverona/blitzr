@@ -374,6 +374,21 @@ export class SqliteGameRepository implements GameRepository {
     }
   }
 
+  async listDrillReviewDays(): Promise<string[]> {
+    const db = await this.ready()
+    const rows = await db.selectFrom('drill_review_days').select('day').execute()
+    return rows.map((r) => r.day)
+  }
+
+  async recordDrillReviewDay(day: string): Promise<void> {
+    const db = await this.ready()
+    await db
+      .insertInto('drill_review_days')
+      .values({ day })
+      .onConflict((oc) => oc.column('day').doNothing())
+      .execute()
+  }
+
   async listSolvedPuzzleIds(): Promise<number[]> {
     const db = await this.ready()
     const rows = await db.selectFrom('puzzle_progress').select('puzzle_id').execute()

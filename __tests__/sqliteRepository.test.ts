@@ -126,6 +126,15 @@ describe('SqliteGameRepository.upsertGames', () => {
   })
 })
 
+describe('SqliteGameRepository drill review days', () => {
+  it('records each day once', async () => {
+    await repo.recordDrillReviewDay('2026-10-18')
+    await repo.recordDrillReviewDay('2026-10-19')
+    await repo.recordDrillReviewDay('2026-10-19')
+    expect((await repo.listDrillReviewDays()).sort()).toEqual(['2026-10-18', '2026-10-19'])
+  })
+})
+
 describe('SqliteGameRepository.exportBackup', () => {
   it('returns a SQLite file holding the same data', async () => {
     const data = await repo.exportBackup()

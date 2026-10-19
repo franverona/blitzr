@@ -51,3 +51,22 @@ export function rollingAverageAccuracy(
 
   return out
 }
+
+const DAY_SECONDS = 24 * 60 * 60
+
+/** Mean accuracy of the last `days` days against all of `points`; null with no games. */
+export function recentAccuracy(
+  points: AccuracyTrendPoint[],
+  now: Date = new Date(),
+  days = 7,
+): { recent: number | null; recentGames: number; overall: number | null } {
+  const since = now.getTime() / 1000 - days * DAY_SECONDS
+  const recent = points.filter((p) => p.endTime >= since)
+  return { recent: mean(recent), recentGames: recent.length, overall: mean(points) }
+}
+
+function mean(points: AccuracyTrendPoint[]): number | null {
+  if (points.length === 0) return null
+  const sum = points.reduce((acc, p) => acc + p.accuracy, 0)
+  return Math.round((sum / points.length) * 10) / 10
+}

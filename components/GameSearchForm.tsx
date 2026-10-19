@@ -77,7 +77,7 @@ export function GameSearchForm({
     }
     setPushedQ(merged.q)
     const query = params.toString()
-    router.push(query ? `/?${query}` : '/')
+    router.push(query ? `/games?${query}` : '/games')
   }
 
   function debouncedNavigate(next: Parameters<typeof navigate>[0]) {
