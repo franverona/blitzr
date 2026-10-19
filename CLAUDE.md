@@ -213,7 +213,9 @@ and the slider are debounced (400ms); selects navigate immediately.
 `drill_cards` stores only the SM-2 schedule (binary grading); prompts are re-derived by
 `buildDrillPrompt()` from deviations and own-move blunders. The deck re-syncs on every `/drill`
 load and serves the 15 most-overdue cards. `DrillSession` snapshots its prompts so revalidation
-can't reshuffle an active session.
+can't reshuffle an active session. A blunder card also accepts a non-engine move when a one-off
+client-side eval rates it good or better (`isNearBestMove()`); if the engine fails, only the
+engine's move counts.
 
 ## Blunders page
 
