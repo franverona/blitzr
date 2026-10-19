@@ -1,13 +1,16 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Chess } from 'chess.js'
+import { Chess, type Move } from 'chess.js'
 import { Chessboard } from 'react-chessboard'
 import { BoardCoordinates } from './BoardCoordinates'
 import { submitDrillAnswer } from '@/app/actions'
+import { isNearBestMove } from '@/lib/drill'
 import { getStrings } from '@/lib/i18n/strings'
 import { legalDestinations } from '@/lib/legalMoves'
 import { hintPieceName } from '@/lib/san'
+import { StockfishEngine } from '@/lib/stockfish/client'
+import { terminalEval } from '@/lib/stockfish/analyze'
 import { describeBlunderReason, detectBlunderReason } from '@/lib/tactics'
 import { REVEAL_ARROW_COLOR } from '@/lib/theme'
 import type { BlunderReason, DrillPrompt } from '@/lib/types'
@@ -15,7 +18,9 @@ import { useSettings, useMoveSound } from './SettingsProvider'
 import { LegalMoveSquare } from './LegalMoveSquare'
 import { PlayerAvatar } from './PlayerAvatar'
 
-type Feedback = 'correct' | 'incorrect' | null
+type Feedback = 'correct' | 'alternative' | 'incorrect' | null
+
+const ALTERNATIVE_CHECK_MOVETIME_MS = 300
 
 function revealArrows(
   prompt: DrillPrompt,
@@ -73,8 +78,13 @@ export function DrillSession({
   // the reveal arrow is drawn from `prompt.fen`, so the board stays there.
   const [committedFen, setCommittedFen] = useState<string | null>(null)
 
+  const [checking, setChecking] = useState(false)
+
   // A ref, not state, so a move can't be graded twice within the same tick.
   const answeredRef = useRef(false)
+  // Created on the first non-engine answer to a blunder card.
+  const engineRef = useRef<StockfishEngine | null>(null)
+  useEffect(() => () => engineRef.current?.terminate(), [])
 
   // Undefined on the session-complete screen; keeps the hooks unconditional.
   const prompt = sessionPrompts[index] as DrillPrompt | undefined
@@ -182,9 +192,37 @@ export function DrillSession({
     if (!move) return false
 
     answeredRef.current = true
-    const correct = activePrompt.correctMoves.includes(move.san)
-    setFeedback(correct ? 'correct' : 'incorrect')
-    if (correct) setCommittedFen(move.after)
+    if (activePrompt.correctMoves.includes(move.san)) {
+      grade(move, 'correct')
+    } else if (activePrompt.evalBefore) {
+      checkAlternative(move, activePrompt.evalBefore)
+    } else {
+      grade(move, 'incorrect')
+    }
+    return true
+  }
+
+  async function checkAlternative(move: Move, evalBefore: NonNullable<DrillPrompt['evalBefore']>) {
+    setChecking(true)
+    setCommittedFen(move.after)
+    let accepted = false
+    try {
+      engineRef.current ??= new StockfishEngine()
+      const evalAfter =
+        terminalEval(move.after) ??
+        (await engineRef.current.evaluate(move.after, ALTERNATIVE_CHECK_MOVETIME_MS))
+      accepted = isNearBestMove(move.before, evalBefore, evalAfter)
+    } catch {
+      // Engine unavailable: fall back to engine-move-only grading.
+    }
+    setChecking(false)
+    grade(move, accepted ? 'alternative' : 'incorrect')
+  }
+
+  function grade(move: Move, result: Exclude<Feedback, null>) {
+    const correct = result !== 'incorrect'
+    setFeedback(result)
+    setCommittedFen(correct ? move.after : null)
     setHangingReason(
       detectBlunderReason(move.before, move.after, move.color === 'w' ? 'white' : 'black'),
     )
@@ -197,7 +235,6 @@ export function DrillSession({
       activePrompt.ply,
       correct,
     ).catch(() => {})
-    return true
   }
 
   function handleDrop({
@@ -212,7 +249,7 @@ export function DrillSession({
   }
 
   function handleSquareClick({ square, piece }: { square: string; piece: unknown | null }) {
-    if (feedback) return
+    if (feedback || checking) return
     if (selectedSquare) {
       if (selectedSquare === square) {
         setSelectedSquare(null)
@@ -244,7 +281,7 @@ export function DrillSession({
         {/* `invisible`, not unmounted, so the row height doesn't shift. */}
         <button
           onClick={handleHint}
-          disabled={hintLevel >= 3 || !!feedback}
+          disabled={hintLevel >= 3 || !!feedback || checking}
           className={`shrink-0 rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium hover:bg-zinc-100 disabled:opacity-40 dark:border-zinc-700 dark:hover:bg-zinc-800 ${feedback ? 'invisible' : ''}`}
         >
           {s.drill.hint}
@@ -261,7 +298,7 @@ export function DrillSession({
             options={{
               position: committedFen ?? prompt.fen,
               boardOrientation: prompt.color,
-              allowDragging: !feedback,
+              allowDragging: !feedback && !checking,
               onPieceDrop: handleDrop,
               onSquareClick: handleSquareClick,
               squareRenderer: ({ square, children }) => (
@@ -293,15 +330,21 @@ export function DrillSession({
         </p>
       )}
 
+      {checking && (
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">{s.drill.checkingMove}</p>
+      )}
+
       {feedback && (
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-3">
             <p
-              className={`text-sm ${feedback === 'correct' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
+              className={`text-sm ${feedback === 'incorrect' ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}
             >
               {feedback === 'correct'
                 ? s.drill.correct
-                : s.drill.notQuite(prompt.correctMoves.join(` ${s.drill.or} `))}
+                : feedback === 'alternative'
+                  ? s.drill.alsoGood(prompt.correctMoves.join(` ${s.drill.or} `))
+                  : s.drill.notQuite(prompt.correctMoves.join(` ${s.drill.or} `))}
             </p>
             <button
               onClick={handleNext}
