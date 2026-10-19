@@ -125,6 +125,8 @@ function drillCardToRow(card: DrillCard): DrillCardsTable {
   }
 }
 
+const UPSERT_CHUNK_SIZE = 500
+
 export class SqliteGameRepository implements GameRepository {
   constructor(private readonly db: Kysely<DbSchema>) {}
 
@@ -136,13 +138,20 @@ export class SqliteGameRepository implements GameRepository {
   async upsertGames(games: Game[]): Promise<number> {
     if (games.length === 0) return 0
     const db = await this.ready()
-    const results = await db
-      .insertInto('games')
-      .values(games.map(gameToRow))
-      .onConflict((oc) => oc.doNothing())
-      .execute()
-    // Count actual inserts, not attempts (ON CONFLICT DO NOTHING skips most).
-    return results.reduce((sum, r) => sum + Number(r.numInsertedOrUpdatedRows ?? 0), 0)
+    return db.transaction().execute(async (trx) => {
+      let inserted = 0
+      // Chunked: one statement for a heavy month exceeds SQLite's 32,766-parameter limit.
+      for (let i = 0; i < games.length; i += UPSERT_CHUNK_SIZE) {
+        const results = await trx
+          .insertInto('games')
+          .values(games.slice(i, i + UPSERT_CHUNK_SIZE).map(gameToRow))
+          .onConflict((oc) => oc.doNothing())
+          .execute()
+        // Count actual inserts, not attempts (ON CONFLICT DO NOTHING skips most).
+        inserted += results.reduce((sum, r) => sum + Number(r.numInsertedOrUpdatedRows ?? 0), 0)
+      }
+      return inserted
+    })
   }
 
   async listGames(

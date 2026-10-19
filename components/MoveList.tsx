@@ -61,7 +61,7 @@ function BlunderDetail({
   return (
     <li className="bg-accent/10 flex flex-col gap-3 border-t border-zinc-200 px-3 py-4 dark:border-zinc-800">
       <div className="flex flex-wrap items-center gap-2">
-        <BlunderSeverityBadge swingCp={blunder.swingCp} />
+        <BlunderSeverityBadge winDrop={blunder.winDrop} />
         <span className="text-xs text-zinc-500 dark:text-zinc-400">
           {formatEval(blunder.evalBefore)} → {formatEval(blunder.evalAfter)} ({formatSwing(blunder)}
           )
@@ -176,7 +176,7 @@ export function MoveList({
                       }`}
                     >
                       <PieceMoveLabel san={move.san} color={side} />
-                      {blunder && <BlunderSeverityBadge swingCp={blunder.swingCp} />}
+                      {blunder && <BlunderSeverityBadge winDrop={blunder.winDrop} />}
                     </button>
                   )
                 })}
