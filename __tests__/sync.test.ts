@@ -1,5 +1,26 @@
-import { describe, expect, it } from 'vitest'
-import { oldestOpenArchiveYm, pendingArchiveYms } from '@/lib/sync'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { fetchArchiveMonth, fetchArchives } from '@/lib/chesscom/client'
+import {
+  listPendingArchives,
+  oldestOpenArchiveYm,
+  pendingArchiveYms,
+  syncArchive,
+} from '@/lib/sync'
+
+const repo = vi.hoisted(() => ({
+  upsertGames: vi.fn(async (games: unknown[]) => games.length - 1),
+  markArchiveSynced: vi.fn(async () => {}),
+  getArchiveSyncStatus: vi.fn(async () => [{ archiveYm: '2026-07', status: 'complete' }]),
+}))
+vi.mock('@/lib/db', () => ({ getRepository: () => repo }))
+vi.mock('@/lib/config', () => ({ getChesscomUsername: () => 'me' }))
+vi.mock('@/lib/chesscom/client', () => ({ fetchArchives: vi.fn(), fetchArchiveMonth: vi.fn() }))
+vi.mock('@/lib/chesscom/normalize', () => ({
+  normalizeGame: (raw: { uuid: string }, _username: string, archiveYm: string) => ({
+    id: raw.uuid,
+    archiveYm,
+  }),
+}))
 
 describe('oldestOpenArchiveYm', () => {
   it('is the current UTC month mid-month', () => {
@@ -33,5 +54,49 @@ describe('pendingArchiveYms', () => {
 
   it('ignores URLs without a year/month suffix', () => {
     expect(pendingArchiveYms(['https://example.com/nope'], new Map(), '2026-09')).toEqual([])
+  })
+})
+
+describe('syncArchive', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ now: new Date('2026-09-15T12:00:00Z') })
+    vi.clearAllMocks()
+    vi.mocked(fetchArchiveMonth).mockResolvedValue([{ uuid: 'a' }, { uuid: 'b' }] as never)
+  })
+  afterEach(() => vi.useRealTimers())
+
+  it('stores a closed month and marks it complete', async () => {
+    expect(await syncArchive('2026-08')).toBe(1)
+    expect(fetchArchiveMonth).toHaveBeenCalledWith('me', '2026', '08')
+    expect(repo.upsertGames).toHaveBeenCalledWith([
+      { id: 'a', archiveYm: '2026-08' },
+      { id: 'b', archiveYm: '2026-08' },
+    ])
+    expect(repo.markArchiveSynced).toHaveBeenCalledWith('2026-08', 'complete', 2)
+  })
+
+  it('marks a still-open month partial', async () => {
+    await syncArchive('2026-09')
+    expect(repo.markArchiveSynced).toHaveBeenCalledWith('2026-09', 'partial', 2)
+  })
+
+  it('fails without marking the month when the fetch fails', async () => {
+    vi.mocked(fetchArchiveMonth).mockRejectedValue(new Error('429'))
+    await expect(syncArchive('2026-08')).rejects.toThrow('429')
+    expect(repo.markArchiveSynced).not.toHaveBeenCalled()
+  })
+})
+
+describe('listPendingArchives', () => {
+  it("skips the user's complete months", async () => {
+    vi.useFakeTimers({ now: new Date('2026-09-15T12:00:00Z') })
+    vi.mocked(fetchArchives).mockResolvedValue(
+      ['2026-07', '2026-08'].map(
+        (ym) => `https://api.chess.com/pub/player/me/games/${ym.replace('-', '/')}`,
+      ),
+    )
+    expect(await listPendingArchives()).toEqual(['2026-08'])
+    expect(fetchArchives).toHaveBeenCalledWith('me')
+    vi.useRealTimers()
   })
 })
