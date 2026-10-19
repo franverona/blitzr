@@ -70,6 +70,7 @@ lib/
   mateProblems.ts           # MATE_PROBLEMS + isForcedMate()
   manualGame.ts             # pasted PGN -> Game
   sync.ts                   # listPendingArchives(), syncArchive()
+  validate.ts               # checks on Server Action payloads the client builds
   i18n/                     # locale + string dictionary
   chesscom/                 # API client + normalization
   stockfish/                # UCI wrapper + batch analysis
@@ -85,7 +86,10 @@ scripts/
 
 - **Comments are terse** — only where needed, stating what's really important (a non-obvious why,
   a gotcha), never restating the code.
-- **Server Actions** for all DB reads/writes and triggers — no API routes.
+- **Server Actions** for all DB reads/writes and triggers — no API routes. They're plain POST
+  endpoints, so an action storing a client-built payload checks it first (`lib/validate.ts`):
+  `saveGameAnalysis()` wants one well-formed eval per position, and `addRepertoireMove()` replays
+  the move from its parent and stores the server's own SAN/FEN.
 - **Domain types are camelCase** (`lib/types.ts`), **DB columns snake_case** (`lib/db/types.ts`);
   the repository maps between them. Never leak snake_case past it.
 - **Migrations** run idempotently in `ensureSchema()` (`lib/db/sqlite/migrate.ts`) — no version
