@@ -488,6 +488,16 @@ const en = {
     lineQueued: 'Queued — step through it with ◀/▶',
     resetLine: 'Clear this line — back to where you started exploring',
   },
+  routeStatus: {
+    errorTitle: 'Something went wrong',
+    errorBody:
+      'This page failed to load. It may be temporary: Chess.com down, or the database busy.',
+    retry: 'Retry',
+    notFoundTitle: 'Not found',
+    notFoundBody: "This page doesn't exist, or the game was deleted.",
+    backToGames: 'Back to games',
+    loading: 'Loading…',
+  },
   metadata: {
     title: 'Blitzr',
     description:
@@ -995,6 +1005,16 @@ const es: Strings = {
     playLine: 'Reproducir esta línea en el tablero',
     lineQueued: 'En cola — recórrela con ◀/▶',
     resetLine: 'Borrar esta línea — volver a donde empezaste a explorar',
+  },
+  routeStatus: {
+    errorTitle: 'Algo salió mal',
+    errorBody:
+      'No se pudo cargar esta página. Puede ser temporal: Chess.com caído o la base de datos ocupada.',
+    retry: 'Reintentar',
+    notFoundTitle: 'No encontrado',
+    notFoundBody: 'Esta página no existe, o la partida se eliminó.',
+    backToGames: 'Volver a las partidas',
+    loading: 'Cargando…',
   },
   metadata: {
     title: 'Blitzr',
