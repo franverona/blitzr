@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { getTrainingOrientation, resolveOrientation } from '@/lib/theme'
+import {
+  BOARD_ANIMATION_DURATION_MS,
+  getPlaySpeed,
+  getTrainingOrientation,
+  PLAY_SPEEDS,
+  resolveOrientation,
+} from '@/lib/theme'
 
 describe('training orientation', () => {
   it('parses the cookie, defaulting to auto', () => {
@@ -11,5 +17,17 @@ describe('training orientation', () => {
   it('uses the side to play only on auto', () => {
     expect(resolveOrientation('auto', 'black')).toBe('black')
     expect(resolveOrientation('white', 'black')).toBe('white')
+  })
+})
+
+describe('play speed', () => {
+  it('parses the cookie, defaulting to normal', () => {
+    expect(getPlaySpeed('fast')).toBe('fast')
+    expect(getPlaySpeed(undefined)).toBe('normal')
+    expect(getPlaySpeed('ludicrous')).toBe('normal')
+  })
+
+  it('never steps faster than a move animates', () => {
+    expect(Math.min(...Object.values(PLAY_SPEEDS))).toBeGreaterThan(BOARD_ANIMATION_DURATION_MS)
   })
 })

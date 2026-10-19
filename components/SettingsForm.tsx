@@ -4,7 +4,13 @@ import { Chessboard } from 'react-chessboard'
 import { BoardCoordinates } from './BoardCoordinates'
 import { getStrings } from '@/lib/i18n/strings'
 import { ANALYSIS_STRENGTHS, type AnalysisStrength } from '@/lib/stockfish/analyze'
-import { BOARD_COLOR_PRESETS, REVEAL_ARROW_COLOR, TRAINING_ORIENTATIONS } from '@/lib/theme'
+import {
+  BOARD_COLOR_PRESETS,
+  PLAY_SPEEDS,
+  type PlaySpeed,
+  REVEAL_ARROW_COLOR,
+  TRAINING_ORIENTATIONS,
+} from '@/lib/theme'
 import { EvalBar } from './EvalBar'
 import { playMoveSound, useSettings } from './SettingsProvider'
 
@@ -76,6 +82,16 @@ export function SettingsForm() {
               value={settings.trainingOrientation}
               onChange={settings.setTrainingOrientation}
               label={(orientation) => s.settings.trainingOrientations[orientation]}
+            />
+          </div>
+          <div className="flex flex-col gap-2 text-sm">
+            <span>{s.settings.playSpeed}</span>
+            <Segmented
+              options={Object.keys(PLAY_SPEEDS) as PlaySpeed[]}
+              value={settings.playSpeed}
+              onChange={settings.setPlaySpeed}
+              label={(speed) => s.settings.playSpeeds[speed]}
+              title={(speed) => s.settings.playSpeedTitle(PLAY_SPEEDS[speed])}
             />
           </div>
         </Section>

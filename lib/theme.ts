@@ -50,3 +50,11 @@ export function resolveOrientation(
 ): 'white' | 'black' {
   return setting === 'auto' ? sideToPlay : setting
 }
+
+/** Auto-play step interval (ms). Fast stays above BOARD_ANIMATION_DURATION_MS. */
+export const PLAY_SPEEDS = { slow: 1000, normal: 500, fast: 250 } as const
+export type PlaySpeed = keyof typeof PLAY_SPEEDS
+
+export function getPlaySpeed(raw: string | undefined): PlaySpeed {
+  return raw && raw in PLAY_SPEEDS ? (raw as PlaySpeed) : 'normal'
+}
