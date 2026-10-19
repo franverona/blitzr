@@ -311,4 +311,4 @@ dev server silently serves stale code. Restart it after building.
 
 - **Never commit to `main`.** Branch, commit, `gh pr create`.
 - **Conventional commits** (`feat:`, `fix:`, `chore:`, `style:`, lowercase) for commit messages
-  (enforced by commitlint) and PR titles.
+  (enforced by commitlint) and PR titles (linted by `pr-title.yml`, since squash merges use them).
