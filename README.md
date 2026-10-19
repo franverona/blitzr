@@ -61,7 +61,9 @@ For a Spanish UI, set `NEXT_PUBLIC_LOCALE=es` in `.env.local` and rebuild.
 
 ## Running as a background service (pm2)
 
-Production runs on port **9877** to avoid clashing with other projects on 3000.
+Production runs on port **9877** to avoid clashing with other projects on 3000. `pnpm start` binds
+to `127.0.0.1` only: Server Actions edit your data with no auth, so it must not be reachable from
+the local network.
 
 ```bash
 npm install -g pm2
