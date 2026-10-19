@@ -385,6 +385,7 @@ export function BoardNavControls() {
     explorePath,
     explorePly,
     setExplorePly,
+    setBoardOrientation,
   } = useBoardContext()
   const s = getStrings()
   const [isPlaying, setIsPlaying] = useState(false)
@@ -434,7 +435,7 @@ export function BoardNavControls() {
     setIsPlaying(true)
   }, [lastPly, setPly, exploring])
 
-  // Arrow keys step, Space plays/pauses, 0 jumps to start.
+  // ←/→ step, Home/↑/0 and End/↓ jump, Space plays/pauses, F flips.
   const lastNavAtRef = useRef(0)
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -455,8 +456,18 @@ export function BoardNavControls() {
         togglePlaying()
         return
       }
-      if (e.key === '0') {
+      if (e.key === '0' || e.key === 'Home' || e.key === 'ArrowUp') {
+        e.preventDefault()
         goToStart()
+        return
+      }
+      if (e.key === 'End' || e.key === 'ArrowDown') {
+        e.preventDefault()
+        goToEnd()
+        return
+      }
+      if (e.key.toLowerCase() === 'f') {
+        setBoardOrientation((o) => (o === 'white' ? 'black' : 'white'))
         return
       }
       if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
@@ -471,7 +482,7 @@ export function BoardNavControls() {
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [goToPrevious, goToNext, goToStart, togglePlaying])
+  }, [goToPrevious, goToNext, goToStart, goToEnd, togglePlaying, setBoardOrientation])
 
   // Auto-play stops on the user's own blunders.
   const blunderPlies = useMemo(
