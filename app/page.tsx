@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { getGameAccuracyById, getUnanalyzedGames, listGames } from './actions'
 import { AddPgnButton } from '@/components/AddPgnButton'
 import { BulkAnalyzeButton } from '@/components/BulkAnalyzeButton'
@@ -54,8 +55,10 @@ export default async function GamesPage({
     gameIds,
   })
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
-  const s = getStrings()
   const filters = { q, result, color, rated, accOp, accValue }
+  // A stale or hand-typed page past the end would otherwise show "no games".
+  if (page > totalPages) redirect(pageHref(totalPages, filters))
+  const s = getStrings()
 
   return (
     <div className="flex flex-col gap-4">
@@ -102,6 +105,14 @@ export default async function GamesPage({
   )
 }
 
+function pageHref(page: number, filters: Omit<GamesSearchParams, 'page'>): string {
+  const params = new URLSearchParams({ page: String(page) })
+  for (const [key, value] of Object.entries(filters)) {
+    if (value) params.set(key, value)
+  }
+  return `/?${params}`
+}
+
 function PageLink({
   page,
   filters,
@@ -116,12 +127,8 @@ function PageLink({
   if (disabled) {
     return <span className="text-zinc-300 dark:text-zinc-700">{children}</span>
   }
-  const params = new URLSearchParams({ page: String(page) })
-  for (const [key, value] of Object.entries(filters)) {
-    if (value) params.set(key, value)
-  }
   return (
-    <Link href={`/?${params}`} className="hover:underline">
+    <Link href={pageHref(page, filters)} className="hover:underline">
       {children}
     </Link>
   )
