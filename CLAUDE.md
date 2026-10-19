@@ -68,7 +68,7 @@ lib/
   openingTheory.ts / endgameTheory.ts  # hand-authored lessons
   mateProblems.ts           # MATE_PROBLEMS + isForcedMate()
   manualGame.ts             # pasted PGN -> Game
-  sync.ts                   # syncAllArchives()
+  sync.ts                   # listPendingArchives(), syncArchive()
   i18n/                     # locale + string dictionary
   chesscom/                 # API client + normalization
   stockfish/                # UCI wrapper + batch analysis
@@ -145,7 +145,9 @@ scripts/
 ## Chess.com ingestion
 
 - `https://api.chess.com/pub`, no API key. Always send a descriptive `User-Agent`.
-- Archives are fetched **serially**; 429s retry with backoff honoring `Retry-After`.
+- Archives are fetched **serially**; 429s retry with backoff honoring `Retry-After`. The client
+  drives a sync (`listArchivesToSync()`, then `syncArchiveMonth()` per month) so `SyncButton` can
+  show progress; each month revalidates `/`, and a failed month leaves earlier ones saved.
 - Incremental: `sync_state` marks months `complete`/`partial`. The current month, and the previous
   one until a full UTC day has passed (`oldestOpenArchiveYm()`), are always re-fetched.
 - Ingestion is unfiltered (variants, daily, everything). Filtering happens in `app/actions.ts`:

@@ -79,7 +79,11 @@ export default async function GamesPage({
         accValue={accValue}
       />
 
-      <GameList games={games} accuracyByGameId={accuracyByGameId} />
+      <GameList
+        games={games}
+        accuracyByGameId={accuracyByGameId}
+        filtered={Object.values(filters).some((v) => v !== undefined && v !== '')}
+      />
 
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-4 text-sm">

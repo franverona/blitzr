@@ -24,7 +24,7 @@ import { summarizeMoveQuality } from '@/lib/moveQuality'
 import { buildOpeningFamilies, ecoFamilyLabel, unknownOpeningLabel } from '@/lib/openings'
 import { countGamesReachingLine } from '@/lib/openingTheory'
 import { isStandardChess, startsFromStandardPosition } from '@/lib/positions'
-import { syncAllArchives } from '@/lib/sync'
+import { listPendingArchives, syncArchive } from '@/lib/sync'
 import type {
   ArchiveSyncStatus,
   BlunderStats,
@@ -39,7 +39,6 @@ import type {
   PositionEval,
   RepertoireColor,
   RepertoireNode,
-  SyncResult,
   UnanalyzedGame,
 } from '@/lib/types'
 
@@ -109,31 +108,52 @@ export async function getArchiveSyncStatus(): Promise<ArchiveSyncStatus[]> {
   return getRepository().getArchiveSyncStatus()
 }
 
-/** Errors are returned, not thrown, for the same reason as addManualGame(). */
-export async function syncGames(): Promise<
-  { ok: true; result: SyncResult } | { ok: false; error: string }
-> {
+type SyncError = { ok: false; error: string }
+
+function syncError(err: unknown): SyncError {
+  console.error(err)
   const s = getStrings()
-  let username: string
-  try {
-    username = getChesscomUsername()
-  } catch {
-    return { ok: false, error: s.sync.noUsername }
+  if (err instanceof ChesscomApiError && err.status === 429) {
+    return { ok: false, error: s.sync.rateLimited }
   }
+  if (err instanceof ChesscomApiError && err.status === 404) {
+    return { ok: false, error: s.sync.userNotFound(getChesscomUsername()) }
+  }
+  return { ok: false, error: s.sync.failed }
+}
+
+function hasUsername(): boolean {
   try {
-    const result = await syncAllArchives()
+    getChesscomUsername()
+    return true
+  } catch {
+    return false
+  }
+}
+
+/** Step 1 of a sync; the client then calls syncArchiveMonth() per month to
+ *  show progress. Errors are returned, not thrown, as in addManualGame(). */
+export async function listArchivesToSync(): Promise<{ ok: true; archives: string[] } | SyncError> {
+  if (!hasUsername()) return { ok: false, error: getStrings().sync.noUsername }
+  try {
+    return { ok: true, archives: await listPendingArchives() }
+  } catch (err) {
+    return syncError(err)
+  }
+}
+
+export async function syncArchiveMonth(
+  archiveYm: string,
+): Promise<{ ok: true; gamesUpserted: number } | SyncError> {
+  if (!/^\d{4}-\d{2}$/.test(archiveYm)) return { ok: false, error: getStrings().sync.failed }
+  try {
+    const gamesUpserted = await syncArchive(archiveYm)
+    // Per month, so a first sync fills the list as it goes.
     revalidatePath('/')
     revalidatePath('/openings')
-    return { ok: true, result }
+    return { ok: true, gamesUpserted }
   } catch (err) {
-    console.error(err)
-    if (err instanceof ChesscomApiError && err.status === 429) {
-      return { ok: false, error: s.sync.rateLimited }
-    }
-    if (err instanceof ChesscomApiError && err.status === 404) {
-      return { ok: false, error: s.sync.userNotFound(username) }
-    }
-    return { ok: false, error: s.sync.failed }
+    return syncError(err)
   }
 }
 
