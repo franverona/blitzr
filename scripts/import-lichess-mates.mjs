@@ -159,5 +159,5 @@ for (const mateIn of [1, 2, 3]) {
   )
 }
 
-fs.writeFileSync(outPath, JSON.stringify(problems) + '\n')
+fs.writeFileSync(outPath, JSON.stringify(problems, null, 2) + '\n')
 console.log(`Wrote ${problems.length} puzzles to ${path.relative(process.cwd(), outPath)}`)
