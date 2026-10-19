@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useMemo, useRef, useState } from 'react'
+import { createContext, useContext, useId, useMemo, useRef, useState } from 'react'
 import { saveGameAnalysis } from '@/app/actions'
 import { biggestBlunder, blunderSeverity, findBlunders } from '@/lib/analysis'
 import { whiteToMove } from '@/lib/drill'
@@ -212,6 +212,7 @@ function MoveQualityDialog({
 }) {
   const { analysis, movesSan, myColor, positions } = useAnalysisContext()
   const s = getStrings()
+  const titleId = useId()
   if (!analysis) return null
 
   const summary = summarizeMoveQuality(analysis.evals, movesSan, positions[0])
@@ -221,6 +222,7 @@ function MoveQualityDialog({
   return (
     <dialog
       ref={dialogRef}
+      aria-labelledby={titleId}
       onClick={(e) => {
         if (e.target === e.currentTarget) dialogRef.current?.close()
       }}
@@ -228,7 +230,9 @@ function MoveQualityDialog({
     >
       <div className="flex flex-col gap-4 p-6">
         <div className="flex items-center justify-between gap-4">
-          <h2 className="text-base font-semibold">{s.analysisPanel.moveQualityLink}</h2>
+          <h2 id={titleId} className="text-base font-semibold">
+            {s.analysisPanel.moveQualityLink}
+          </h2>
           <button
             onClick={() => dialogRef.current?.close()}
             aria-label={s.common.close}

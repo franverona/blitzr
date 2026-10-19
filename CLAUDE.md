@@ -147,6 +147,8 @@ scripts/
 - **A component seeding state from props (`useState(initialX)`) needs `key={id}`** wherever it can
   receive a different record. Exception: a filter that must survive its own navigation (the
   accuracy popover, the search text) stays out of the key and re-syncs from props during render.
+- **Every `<dialog>` is named by its visible `<h2>`:** `aria-labelledby` on the dialog, pointing at
+  an `id` from `useId()` (some dialogs render more than once per page).
 - **react-chessboard needs a unique `options.id` (`useId()`) when two boards share a page**, and
   keys arrows by start/end square only — dedupe arrows before passing them.
 

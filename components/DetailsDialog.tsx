@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef } from 'react'
+import { useId, useRef } from 'react'
 import { getStrings } from '@/lib/i18n/strings'
 import { useLiveAnalysisContext } from './Board'
 
@@ -8,6 +8,7 @@ import { useLiveAnalysisContext } from './Board'
  *  can fill the sidebar. */
 export function DetailsDialogTrigger({ children }: { children: React.ReactNode }) {
   const dialogRef = useRef<HTMLDialogElement>(null)
+  const titleId = useId()
   const { setPanelVisible } = useLiveAnalysisContext()
   const s = getStrings()
 
@@ -24,6 +25,7 @@ export function DetailsDialogTrigger({ children }: { children: React.ReactNode }
       </button>
       <dialog
         ref={dialogRef}
+        aria-labelledby={titleId}
         // Opts in to BoardNavControls' keyboard shortcuts.
         data-board-shortcuts
         onClose={() => setPanelVisible(false)}
@@ -34,7 +36,9 @@ export function DetailsDialogTrigger({ children }: { children: React.ReactNode }
       >
         <div className="flex flex-col gap-4 p-6">
           <div className="flex items-center justify-between gap-4">
-            <h2 className="text-base font-semibold">{s.gamePage.gameDetails}</h2>
+            <h2 id={titleId} className="text-base font-semibold">
+              {s.gamePage.gameDetails}
+            </h2>
             <button
               onClick={() => dialogRef.current?.close()}
               aria-label={s.common.close}

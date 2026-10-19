@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef } from 'react'
+import { useId, useRef } from 'react'
 import { getStrings } from '@/lib/i18n/strings'
 
 // Used for both opening and endgame lessons.
@@ -14,6 +14,7 @@ export function AboutOpeningButton({
   sourceUrl: string
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null)
+  const titleId = useId()
   const s = getStrings()
 
   return (
@@ -27,6 +28,7 @@ export function AboutOpeningButton({
       </button>
       <dialog
         ref={dialogRef}
+        aria-labelledby={titleId}
         onClick={(e) => {
           if (e.target === e.currentTarget) dialogRef.current?.close()
         }}
@@ -34,7 +36,9 @@ export function AboutOpeningButton({
       >
         <div className="flex flex-col gap-3 p-5">
           <div className="flex items-center justify-between gap-4">
-            <h2 className="text-sm font-semibold">{s.aboutOpening.about(name)}</h2>
+            <h2 id={titleId} className="text-sm font-semibold">
+              {s.aboutOpening.about(name)}
+            </h2>
             <button
               onClick={() => dialogRef.current?.close()}
               aria-label={s.common.close}

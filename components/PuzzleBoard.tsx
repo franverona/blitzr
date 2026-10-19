@@ -26,6 +26,8 @@ export function PuzzleBoard({ problem }: { problem: MateProblem }) {
   // The ply on screen; ◀/▶ can move it back from the live tip (`ply`).
   const [viewPly, setViewPly] = useState(0)
   const [revealed, setRevealed] = useState(false)
+  // The board already shows it solved, so a failed save would otherwise only surface on reload.
+  const [saveFailed, setSaveFailed] = useState(false)
   const [pendingPromotion, setPendingPromotion] = useState<{ from: string; to: string } | null>(
     null,
   )
@@ -115,12 +117,20 @@ export function PuzzleBoard({ problem }: { problem: MateProblem }) {
       setPly(nextPly)
       setViewPly(nextPly)
       if (nextPly >= problem.moves.length) {
-        markPuzzleSolved(problem.id).catch(() => {})
+        saveSolved()
       }
     } else {
       setFeedback('incorrect')
     }
     return true
+  }
+
+  function saveSolved() {
+    setSaveFailed(false)
+    markPuzzleSolved(problem.id).catch((err) => {
+      console.error(err)
+      setSaveFailed(true)
+    })
   }
 
   function handleDrop({
@@ -243,6 +253,15 @@ export function PuzzleBoard({ problem }: { problem: MateProblem }) {
           >
             {s.puzzles.reveal}
           </button>
+        )}
+
+        {saveFailed && (
+          <p role="alert" className="text-sm text-rose-600 dark:text-rose-400">
+            {s.puzzles.saveFailed}{' '}
+            <button onClick={saveSolved} className="font-medium underline">
+              {s.puzzles.retrySave}
+            </button>
+          </p>
         )}
       </div>
 
