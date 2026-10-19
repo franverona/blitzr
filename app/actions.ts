@@ -7,7 +7,7 @@ import { buildAccuracyTrend } from '@/lib/accuracyTrend'
 import { buildBlunderStats } from '@/lib/blunders'
 import { ChesscomApiError, fetchPlayerAvatar } from '@/lib/chesscom/client'
 import { endOfDaySeconds, formatDate, startOfDaySeconds } from '@/lib/dates'
-import { getChesscomUsername } from '@/lib/config'
+import { getChesscomUsername, hasChesscomUsername } from '@/lib/config'
 import { getRepository } from '@/lib/db'
 import { getStrings } from '@/lib/i18n/strings'
 import type { GameRepository } from '@/lib/db/types'
@@ -125,19 +125,10 @@ function syncError(err: unknown): SyncError {
   return { ok: false, error: s.sync.failed }
 }
 
-function hasUsername(): boolean {
-  try {
-    getChesscomUsername()
-    return true
-  } catch {
-    return false
-  }
-}
-
 /** Step 1 of a sync; the client then calls syncArchiveMonth() per month to
  *  show progress. Errors are returned, not thrown, as in addManualGame(). */
 export async function listArchivesToSync(): Promise<{ ok: true; archives: string[] } | SyncError> {
-  if (!hasUsername()) return { ok: false, error: getStrings().sync.noUsername }
+  if (!hasChesscomUsername()) return { ok: false, error: getStrings().sync.noUsername }
   try {
     return { ok: true, archives: await listPendingArchives() }
   } catch (err) {
