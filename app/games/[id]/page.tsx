@@ -18,6 +18,7 @@ import {
 } from '@/components/GameAnalysisPanel'
 import { LiveAnalysisPanel } from '@/components/LiveAnalysisPanel'
 import { PlayerAvatar } from '@/components/PlayerAvatar'
+import { PositionActions } from '@/components/PositionActions'
 import { PositionChecklist } from '@/components/PositionChecklist'
 import { fetchBotAvatar, fetchPlayerAvatar } from '@/lib/chesscom/client'
 import { isBareBotNameEvent, parsePgnHeaders } from '@/lib/chesscom/normalize'
@@ -103,8 +104,9 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
           boardMaxWidthClassName="max-w-160 lg:max-w-[min(40rem,calc(100dvh-16rem))] xl:max-w-[min(43rem,calc(100dvh-16rem))] 2xl:max-w-[min(46rem,calc(100dvh-16rem))]"
           sidebarMaxWidthClassName="lg:max-w-xs xl:max-w-sm"
           sidebarExtra={
-            <div className="shrink-0">
+            <div className="flex shrink-0 flex-col gap-3">
               <BoardNavControls />
+              <PositionActions pgn={game.pgn} />
             </div>
           }
         />
