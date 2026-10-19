@@ -33,7 +33,8 @@ implies endorsement.
 - Opening and endgame lessons with study and quiz modes
 - Mate-in-N puzzles you solve move by move
 - Settings: light/dark theme, board colors, analysis strength, hide engine hints, coordinates,
-  move sounds, lesson/puzzle board orientation, auto-play speed, drill session size
+  move sounds, lesson/puzzle board orientation, auto-play speed, drill session size, and a
+  database backup download
 - English and Spanish UI
 
 ## Stack
@@ -58,6 +59,11 @@ Open [http://localhost:3000](http://localhost:3000) and click **Sync games**. La
 fetch months that aren't complete yet.
 
 The database is created at `./data/blitzr.db` on first run. To reset, delete it and re-sync.
+
+Settings → Data → **Download backup** saves a copy of it. Your repertoire, drill schedules and
+puzzle progress can't be rebuilt by re-syncing, so take one before updating. To restore, stop
+Blitzr, delete `data/blitzr.db-wal` and `data/blitzr.db-shm` if present, and replace
+`data/blitzr.db` with the backup.
 
 For a Spanish UI, set `NEXT_PUBLIC_LOCALE=es` in `.env.local` and rebuild.
 
