@@ -471,7 +471,6 @@ const en = {
     toMove: (color: 'white' | 'black'): string =>
       color === 'white' ? 'White to move' : 'Black to move',
     mateIn: (n: number) => `Mate in ${n}`,
-    moveProgress: (current: number, total: number) => `move ${current} of ${total}`,
     incorrect: 'Not quite — try again.',
     solved: 'Solved!',
     saveFailed: "Couldn't save your progress, so this puzzle will show as unsolved after a reload.",
@@ -490,8 +489,8 @@ const en = {
     solvedCount: (solved: number, total: number) => `${solved} of ${total} solved`,
     empty: 'No puzzles loaded yet.',
     noneMatch: 'No puzzles match these filters.',
-    previous: '◀ Previous',
-    next: 'Next ▶',
+    previous: 'Previous puzzle',
+    next: 'Next puzzle',
     nextUnsolved: 'Next unsolved ▶',
     backToList: 'All puzzles',
     pagePrevious: 'Previous',
@@ -1033,7 +1032,6 @@ const es: Strings = {
     toMove: (color: 'white' | 'black') =>
       color === 'white' ? 'Juegan las blancas' : 'Juegan las negras',
     mateIn: (n: number) => `Mate en ${n}`,
-    moveProgress: (current: number, total: number) => `jugada ${current} de ${total}`,
     incorrect: 'No exactamente — inténtalo de nuevo.',
     solved: '¡Resuelto!',
     saveFailed:
@@ -1054,8 +1052,8 @@ const es: Strings = {
     solvedCount: (solved: number, total: number) => `${solved} de ${total} resueltos`,
     empty: 'Aún no hay problemas cargados.',
     noneMatch: 'Ningún problema coincide con estos filtros.',
-    previous: '◀ Anterior',
-    next: 'Siguiente ▶',
+    previous: 'Problema anterior',
+    next: 'Problema siguiente',
     nextUnsolved: 'Siguiente sin resolver ▶',
     backToList: 'Todos los problemas',
     pagePrevious: 'Anterior',
