@@ -194,10 +194,12 @@ each linked back to Lichess. You play the whole line yourself, both sides. Wrong
 retried, and **Reveal solution** doesn't count as solving. Solved puzzles are tracked, and the
 list filters by status, side to move, type and mate length.
 
-Defence puzzles flip it around: about 900 more Lichess positions, taken one move before a mate in 1 or
-2, where your opponent threatens mate and only one or two moves stop it. Any of those moves
+Defence puzzles flip it around: about 500 more Lichess positions, taken one move before a mate in 1
+or 2, where your opponent threatens mate and only one or two moves stop it, and at least one of
+them escapes mate altogether rather than just delaying it. Any of those moves
 solves the puzzle; afterwards you see every saving move and how the game actually went.
-`scripts/import-lichess-defenses.mjs` picks them (see its header for how to run it).
+`scripts/import-lichess-defenses.mjs` picks them and `scripts/check-defenses.mjs` re-checks them;
+both need a native Stockfish (`brew install stockfish`).
 
 László Polgár's _5334 Problems, Combinations, and Games_ is copyrighted, so its mates stay out of
 the published puzzle set and live in the gitignored `data/polgar-mates.json` instead, joining the

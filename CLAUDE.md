@@ -87,6 +87,8 @@ scripts/
   backup-db.mjs             # `pnpm backup` — online backup into data/backups/
   import-lichess-mates.mjs  # Lichess puzzle DB -> lib/lichessMates.json (re-runnable)
   import-lichess-defenses.mjs  # Lichess puzzle DB -> lib/lichessDefenses.json (re-runnable)
+  check-defenses.mjs        # re-checks lib/lichessDefenses.json with native Stockfish
+  stockfish.mjs             # native Stockfish pool for the two scripts above
   import-polgar-mates.mjs   # polgar.pgn -> data/polgar-mates.json, local only (re-runnable)
 ```
 
@@ -329,12 +331,14 @@ only the latest review, so the table was seeded once from it and undercounts old
   board accepts only the listed line.
 - **Lichess defences** (`lib/lichessDefenses.json`, ids 20001+), picked by
   `scripts/import-lichess-defenses.mjs` from the position one move before a Lichess mate-in-1/2
-  (up to 500 each; the last run kept 500/431): the defender to move, already threatened (in check, or passing would allow mate),
-  with only 1–2 moves that stop mate in `mateIn` or fewer (`saves`) and at least 3 that don't. A
-  move that only delays mate past `mateIn` counts as a save. Proving a move safe uses
-  `forcedMateWithin()`, which returns `undefined` when the search budget runs out; any such
-  position is dropped, so a losing move never passes as a save. `moves` holds the game's losing
-  move and the mate that followed, shown after solving.
+  (up to 500 each; currently 258/239): the defender to move, already threatened (in check, or
+  passing would allow mate), with only 1–2 moves that stop mate in `mateIn` or fewer (`saves`) and
+  at least 3 that don't. Proving a move safe uses `forcedMateWithin()`, which returns `undefined`
+  when the search budget runs out; any such position is dropped, so a losing move never passes as
+  a save. A save that only delays mate past `mateIn` still counts, but a native Stockfish
+  (`scripts/stockfish.mjs`, `brew install stockfish`) drops puzzles where every save does. `moves`
+  holds the game's losing move and the mate that followed, shown after solving.
+  `scripts/check-defenses.mjs` re-checks every legal move against Stockfish.
 
 Ids key `puzzle_progress`, so the scripts keep an existing puzzle's id when re-run. Client code
 imports only `lib/mateProblems.ts` (type and helpers) so the puzzles never ship to the browser; a

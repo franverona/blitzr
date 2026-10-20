@@ -1,13 +1,15 @@
 // Picks "stop the mate" puzzles from the Lichess puzzle database (CC0,
 // https://database.lichess.org/#puzzles) into lib/lichessDefenses.json:
 //
+//   brew install stockfish
 //   curl -s https://database.lichess.org/lichess_db_puzzle.csv.zst | zstd -dc |
 //     node scripts/import-lichess-defenses.mjs
 //
 // A Lichess mate puzzle starts one move early, before the opponent's mistake
 // that allowed the mate. That earlier position, seen from the side that made
 // the mistake, is the defence puzzle: kept when the mate was already
-// threatened and only one or two moves stop it.
+// threatened, only one or two moves stop it, and Stockfish finds that at
+// least one of them escapes mate altogether (not just delays it).
 //
 // Re-running is safe: it rewrites the file, and a puzzle already in it keeps
 // its id, so solved progress (puzzle_progress, keyed by id) survives.
@@ -20,11 +22,15 @@ import { fileURLToPath } from 'node:url'
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads'
 import { Chess } from 'chess.js'
 import { forcedMateWithin } from '../lib/forcedMate.ts'
+import { mateScores } from './stockfish.mjs'
 
 // More saving moves than this and the puzzle is too easy to stumble into.
 const MAX_SAVES = 2
 // Fewer losing moves than this and there's little to find.
 const MIN_LOSING_MOVES = 3
+// Per position, for the "does any save escape mate" check. Shorter misses long mates
+// (200ms let through 54 lost puzzles that 1-3s caught).
+const STOCKFISH_MOVETIME_MS = 3000
 
 /** The moves that stop mate in `mateIn` or fewer, or null if the position doesn't make a puzzle. */
 function savingMoves(fen, mateIn) {
@@ -130,6 +136,24 @@ function gameLine(c, mateIn) {
   }
 }
 
+/** Drops puzzles where every save still loses to a (slower) forced mate. */
+async function escapingMate(items) {
+  const afterSaves = items.flatMap(({ c, saves }) =>
+    saves.map((san) => {
+      const chess = new Chess(c.fen)
+      chess.move(san)
+      return chess.isGameOver() ? null : chess.fen()
+    }),
+  )
+  const mates = await mateScores(afterSaves, STOCKFISH_MOVETIME_MS)
+  let i = 0
+  return items.filter(({ saves }) => {
+    // A positive score is the attacker mating.
+    const escapes = saves.map(() => !(mates[i++] > 0))
+    return escapes.some(Boolean)
+  })
+}
+
 function formatSolution(moves, sideToMove) {
   const parts = []
   moves.forEach((san, i) => {
@@ -153,7 +177,8 @@ for (const mateIn of [1, 2]) {
     .map((c) => ({ c, moves: gameLine(c, mateIn) }))
     .filter((x) => x.moves)
   const saves = await savingMovesInParallel(withLine.map(({ c }) => ({ fen: c.fen, mateIn })))
-  const valid = withLine.map((x, i) => ({ ...x, saves: saves[i] })).filter((x) => x.saves)
+  const withSaves = withLine.map((x, i) => ({ ...x, saves: saves[i] })).filter((x) => x.saves)
+  const valid = await escapingMate(withSaves)
   for (const { c, moves, saves } of spread(valid, QUOTA[mateIn])) {
     problems.push({
       id: idByPuzzleId.get(c.puzzleId) ?? nextId++,
