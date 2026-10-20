@@ -1,10 +1,7 @@
 import type { Color, PieceSymbol, Square } from 'chess.js'
-import { getLocale } from './i18n/locale'
-import type { Locale } from './i18n/locale'
 import { hangingReason, hangingSquares } from './hangingPiece'
 import { PIECE_VALUES } from './material'
-import { pieceWithArticle } from './san'
-import { forkers, pinnedPieces, skewers, targetList } from './tactics'
+import { forkers, pinnedPieces, skewers } from './tactics'
 import type { BlunderReason, ChecklistFinding, MyColor } from './types'
 
 function toColor(color: MyColor): Color {
@@ -88,63 +85,6 @@ function buildSideFindings(fen: string, side: MyColor): ChecklistFinding[] {
  *  `detect*()` functions, which diff a move's before/after FEN. */
 export function buildPositionChecklist(fen: string): ChecklistFinding[] {
   return [...buildSideFindings(fen, 'white'), ...buildSideFindings(fen, 'black')]
-}
-
-/** Subject-led wording ("The queen on d5 is hanging"), since a checklist
- *  isn't tied to a move like `describeBlunderReason()` is. */
-export function describeChecklistFinding(
-  finding: ChecklistFinding,
-  locale: Locale = getLocale(),
-): string {
-  const { reason } = finding
-  const es = locale === 'es'
-  const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
-
-  if (reason.kind === 'hanging-piece') {
-    const piece = capitalize(pieceWithArticle(reason.piece as PieceSymbol, locale))
-    if (reason.attacker) {
-      const attacker = pieceWithArticle(reason.attacker.piece as PieceSymbol, locale)
-      return es
-        ? `${piece} en ${reason.square} está atacada por ${attacker} en ${reason.attacker.square}, que vale menos.`
-        : `${piece} on ${reason.square} is attacked by ${attacker} on ${reason.attacker.square}, which is worth less.`
-    }
-    return es
-      ? `${piece} en ${reason.square} está colgando — se puede capturar gratis.`
-      : `${piece} on ${reason.square} is hanging — it can be captured for free.`
-  }
-
-  if (reason.kind === 'fork') {
-    const attacker = capitalize(pieceWithArticle(reason.attackerPiece as PieceSymbol, locale))
-    const targets = targetList(reason.targets, locale)
-    return es
-      ? `${attacker} en ${reason.attackerSquare} ataca ${targets} a la vez.`
-      : `${attacker} on ${reason.attackerSquare} attacks ${targets} at once.`
-  }
-
-  if (reason.kind === 'skewer') {
-    const attacker = capitalize(pieceWithArticle(reason.attackerPiece as PieceSymbol, locale))
-    const front = pieceWithArticle(reason.frontPiece as PieceSymbol, locale)
-    const back = pieceWithArticle(reason.backPiece as PieceSymbol, locale)
-    return es
-      ? `${attacker} en ${reason.attackerSquare} enfila ${front} en ${reason.frontSquare}, con ${back} detrás en ${reason.backSquare}.`
-      : `${attacker} on ${reason.attackerSquare} skewers ${front} on ${reason.frontSquare}, with ${back} behind it on ${reason.backSquare}.`
-  }
-
-  const pinner = capitalize(pieceWithArticle(reason.pinnerPiece as PieceSymbol, locale))
-  const pinned = pieceWithArticle(reason.pinnedPiece as PieceSymbol, locale)
-  return es
-    ? `${pinner} en ${reason.pinnerSquare} clava ${pinned} en ${reason.pinnedSquare} al rey.`
-    : `${pinner} on ${reason.pinnerSquare} pins ${pinned} on ${reason.pinnedSquare} to the king.`
-}
-
-/** Stable across re-renders (findings get re-sorted), so hide toggles persist. */
-export function findingKey(finding: ChecklistFinding): string {
-  const { side, reason } = finding
-  if (reason.kind === 'hanging-piece') return `${side}-hanging-${reason.square}`
-  if (reason.kind === 'fork') return `${side}-fork-${reason.attackerSquare}`
-  if (reason.kind === 'skewer')
-    return `${side}-skewer-${reason.attackerSquare}-${reason.backSquare}`
-  return `${side}-pin-${reason.pinnedSquare}`
 }
 
 export interface FindingMarks {

@@ -27,7 +27,7 @@ app/
   games/page.tsx            # games list (paginated, filterable)
   layout.tsx                # sidebar nav + main content, reads settings cookies
   error.tsx / not-found.tsx / loading.tsx  # root fallbacks; loading streams, so `notFound()` returns 200
-  games/[id]/page.tsx       # single game — replay, repertoire diff, analysis
+  games/[id]/page.tsx       # single game — replay, analysis
   openings/page.tsx         # ECO family aggregation
   learn/page.tsx            # lesson index
   learn/[slug]/page.tsx     # one lesson
@@ -47,7 +47,6 @@ components/
   DrillSession.tsx          # one drill card at a time
   PuzzleBoard.tsx           # manual, multi-ply mate-puzzle solving
   LessonPractice.tsx        # Study/Quiz toggle for a lesson; LessonQuiz.tsx is quiz mode
-  PositionChecklist.tsx     # live hanging-piece/fork/pin/skewer scan
   SettingsProvider.tsx      # per-viewer settings context (cookie-seeded)
   BulkAnalysisProvider.tsx  # "Analyze all" run state, mounted in the root layout
   SyncProvider.tsx          # sync run state + auto-sync on open, mounted in the root layout
@@ -109,8 +108,9 @@ scripts/
 - **Layout:** page content sits in a `max-w-7xl` wrapper. Every board is capped by viewport height
   at `lg+` (`max-w-[min(<width>,calc(100dvh-<N>rem))]`, `N` = that page's chrome) so it fits a 13"
   laptop without scrolling — adding content above/below a board means re-measuring `N`.
-- **Long unbreakable text (opening names) gets its own full-width row**; button rows that share
-  space with variable-width (localized) labels need `flex-wrap`.
+- **Long text (opening names) beside a button row needs room to wrap**: the game header's column
+  is `flex-1 basis-64` so the name wraps there; button rows that share space with variable-width
+  (localized) labels need `flex-wrap`.
 - **Page headers** (the `<h1>` row) get `border-b border-zinc-200 dark:border-zinc-800 pb-4`.
 - **Light/dark theme:** manual toggle stored in a `blitzr-theme` cookie (default `dark`), read in
   `app/layout.tsx` to set `.dark` on `<html>` before first paint. Every component needs an
@@ -338,8 +338,7 @@ can be an underpromotion too) and explore mode.
 
 `buildPositionChecklist(fen)` scans a static position for both sides (unlike the diff-based
 `detect*()` functions), capped at 3 findings per side, skipping hanging pieces already explained
-by a fork/skewer. Findings are drawn on the board with per-finding hide toggles; the board overlay
-is off while exploring, the text panel isn't.
+by a fork/skewer. Findings are only drawn on the board (no text panel), and not while exploring.
 
 ## i18n
 

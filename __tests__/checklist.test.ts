@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import {
-  buildPositionChecklist,
-  describeChecklistFinding,
-  findingKey,
-  findingMarks,
-} from '@/lib/checklist'
+import { buildPositionChecklist, findingMarks } from '@/lib/checklist'
 import type { ChecklistFinding } from '@/lib/types'
 
 describe('buildPositionChecklist', () => {
@@ -111,7 +106,7 @@ describe('buildPositionChecklist', () => {
   })
 })
 
-describe('describeChecklistFinding', () => {
+describe('findingMarks', () => {
   const hangingPiece: ChecklistFinding = {
     side: 'white',
     reason: { kind: 'hanging-piece', piece: 'n', square: 'b5' },
@@ -151,63 +146,6 @@ describe('describeChecklistFinding', () => {
     },
   }
 
-  it('formats a hanging-piece finding', () => {
-    expect(describeChecklistFinding(hangingPiece)).toBe(
-      'The knight on b5 is hanging — it can be captured for free.',
-    )
-  })
-
-  it('formats a fork finding', () => {
-    expect(describeChecklistFinding(fork)).toBe(
-      'The knight on b5 attacks the queen on c7 and the rook on a7 at once.',
-    )
-  })
-
-  it('formats a pin finding', () => {
-    expect(describeChecklistFinding(pin)).toBe(
-      'The bishop on c4 pins the knight on e6 to the king.',
-    )
-  })
-
-  it('formats a skewer finding', () => {
-    expect(describeChecklistFinding(skewer)).toBe(
-      'The bishop on c4 skewers the queen on d5, with the rook behind it on g8.',
-    )
-  })
-
-  it('formats a hanging-piece finding in Spanish', () => {
-    expect(describeChecklistFinding(hangingPiece, 'es')).toBe(
-      'El caballo en b5 está colgando — se puede capturar gratis.',
-    )
-  })
-
-  it('formats a fork finding in Spanish', () => {
-    expect(describeChecklistFinding(fork, 'es')).toBe(
-      'El caballo en b5 ataca la dama en c7 y la torre en a7 a la vez.',
-    )
-  })
-
-  it('formats a pin finding in Spanish', () => {
-    expect(describeChecklistFinding(pin, 'es')).toBe(
-      'El alfil en c4 clava el caballo en e6 al rey.',
-    )
-  })
-
-  it('formats a skewer finding in Spanish', () => {
-    expect(describeChecklistFinding(skewer, 'es')).toBe(
-      'El alfil en c4 enfila la dama en d5, con la torre detrás en g8.',
-    )
-  })
-
-  it('gives distinct, stable keys per finding', () => {
-    expect(findingKey(hangingPiece)).toBe('white-hanging-b5')
-    expect(findingKey(fork)).toBe('black-fork-b5')
-    expect(findingKey(pin)).toBe('black-pin-e6')
-    expect(findingKey(skewer)).toBe('black-skewer-c4-g8')
-    const keys = [hangingPiece, fork, pin, skewer].map(findingKey)
-    expect(new Set(keys).size).toBe(keys.length)
-  })
-
   it('marks a hanging-piece finding with a highlight only, no arrow', () => {
     expect(findingMarks(hangingPiece.reason)).toEqual({ squares: ['b5'], arrows: [] })
   })
@@ -241,14 +179,11 @@ describe('cheaper-attacker findings', () => {
   // White queen d4, defended by the c3 pawn, attacked by the e5 pawn.
   const fen = 'k7/8/8/4p3/3Q4/2P5/8/4K3 b - - 0 1'
 
-  it('lists the piece with its attacker, described and drawn as an arrow', () => {
+  it('lists the piece with its attacker, drawn as an arrow', () => {
     const finding = buildPositionChecklist(fen).find(
       (f) => f.side === 'white' && f.reason.kind === 'hanging-piece',
     )!
     expect(finding.reason).toMatchObject({ square: 'd4', attacker: { square: 'e5' } })
-    expect(describeChecklistFinding(finding)).toBe(
-      'The queen on d4 is attacked by the pawn on e5, which is worth less.',
-    )
     expect(findingMarks(finding.reason).arrows).toEqual([['e5', 'd4']])
   })
 })
