@@ -142,12 +142,12 @@ A game page also has:
 
 - **Play** (or Space), which auto-advances and pauses on your blunders. ←/→ step, Home/↑/`0` jump
   to the start, End/↓ to the end, and `F` flips the board.
-- A **Move quality** table with Chess.com-style accuracy and move tiers for both sides.
+- Your **accuracy** in the header; click it for a **Move quality** table with Chess.com-style
+  accuracy and move tiers for both sides.
 - **Engine lines**: the top 3 live lines for the current position. ▶ plays a line onto the board.
 - **Explore moves**: try your own moves from any point, with the engine following along.
   Nothing is saved.
-- A **Position checklist** of hanging pieces, forks, pins and skewers in the current position,
-  also drawn on the board.
+- Hanging pieces, forks, pins and skewers in the current position, marked on the board.
 
 ### Drilling
 

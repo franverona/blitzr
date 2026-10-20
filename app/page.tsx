@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { getTodaySummary } from './actions'
 import { BulkAnalyzeButton } from '@/components/BulkAnalyzeButton'
 import { MiniBoard } from '@/components/MiniBoard'
+import { ResultBadge } from '@/components/ResultBadge'
 import {
   FlagIcon,
   FlameIcon,
@@ -20,18 +21,11 @@ import { getMateProblem } from '@/lib/puzzleSet'
 import { plyLabel } from '@/lib/san'
 import { getTrainingOrientation, resolveOrientation } from '@/lib/theme'
 import type { LossReason } from '@/lib/today'
-import type { MyResult } from '@/lib/types'
 
 const linkClassName =
   'self-start rounded-md border border-zinc-300 px-2.5 py-1 text-sm font-medium text-zinc-900 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-100 dark:hover:bg-zinc-800'
 const mutedClassName = 'text-sm text-zinc-500 dark:text-zinc-400'
 const inlineLinkClassName = 'text-blue-600 hover:underline dark:text-blue-400'
-const RESULT_BADGE_CLASS: Record<MyResult, string> = {
-  win: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300',
-  loss: 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300',
-  draw: 'bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
-}
-
 export default async function TodayPage() {
   const s = getStrings()
   const today = await getTodaySummary()
@@ -158,11 +152,7 @@ export default async function TodayPage() {
                   >
                     {s.today.lastGameVs(lastGame.opponent)}
                   </Link>
-                  <span
-                    className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${RESULT_BADGE_CLASS[lastGame.result]}`}
-                  >
-                    {s.common.result[lastGame.result]}
-                  </span>
+                  <ResultBadge result={lastGame.result} className="shrink-0" />
                 </p>
                 {lastGame.accuracy === null ? (
                   <p className={mutedClassName}>{s.today.notAnalyzed}</p>

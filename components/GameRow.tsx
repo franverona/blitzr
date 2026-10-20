@@ -6,18 +6,7 @@ import { getStrings } from '@/lib/i18n/strings'
 import type { Game, GameAccuracy } from '@/lib/types'
 import { accuracyPillClass } from './GameAnalysisPanel'
 import { KnightIcon } from './KnightIcon'
-
-const RESULT_BADGE_STYLES: Record<Game['myResult'], string> = {
-  win: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400',
-  draw: 'bg-zinc-200 text-zinc-700 dark:bg-zinc-700/50 dark:text-zinc-300',
-  loss: 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-400',
-}
-
-const RESULT_BADGE_GLYPHS: Record<Game['myResult'], string> = {
-  win: '▲',
-  draw: '●',
-  loss: '▼',
-}
+import { ResultBadge } from './ResultBadge'
 
 export function GameRow({ game, accuracy }: { game: Game; accuracy: GameAccuracy | undefined }) {
   const s = getStrings()
@@ -39,12 +28,7 @@ export function GameRow({ game, accuracy }: { game: Game; accuracy: GameAccuracy
       </Cell>
       <Cell href={href}>
         {game.isMine ? (
-          <span
-            className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium ${RESULT_BADGE_STYLES[game.myResult]}`}
-          >
-            <span aria-hidden="true">{RESULT_BADGE_GLYPHS[game.myResult]}</span>
-            {s.common.result[game.myResult]}
-          </span>
+          <ResultBadge result={game.myResult} />
         ) : (
           <span className="rounded bg-zinc-200 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
             {s.gameRow.notMine}
