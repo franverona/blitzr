@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { Chess, type Move } from 'chess.js'
 import { Chessboard } from 'react-chessboard'
 import { BoardCoordinates } from './BoardCoordinates'
@@ -22,6 +22,19 @@ import { PromotionPicker, type PromotionPiece } from './PromotionPicker'
 type Feedback = 'correct' | 'alternative' | 'incorrect' | null
 
 const ALTERNATIVE_CHECK_MOVETIME_MS = 300
+// Long enough to see the move land and read the feedback.
+const AUTO_ADVANCE_DELAY_MS = 1200
+// Per tab, so a reload resumes the session instead of drawing a new one.
+const SESSION_STORAGE_KEY = 'blitzr-drill-session'
+
+interface StoredSession {
+  deckKey: string
+  prompts: DrillPrompt[]
+  /** The next unanswered card. */
+  index: number
+  tally: { correct: number; incorrect: number }
+  dueCount: number
+}
 
 function revealArrows(
   prompt: DrillPrompt,
@@ -49,46 +62,99 @@ function shuffle<T>(items: T[]): T[] {
   return result
 }
 
-export function DrillSession({
+function readStoredSession(): string | null {
+  try {
+    return sessionStorage.getItem(SESSION_STORAGE_KEY)
+  } catch {
+    return null
+  }
+}
+
+/** Resumes this tab's session if it's for the same filters and unfinished, so
+ *  a reload after it draws the next due cards. */
+function parseStoredSession(raw: string | null, deckKey: string): StoredSession | null {
+  try {
+    const saved = JSON.parse(raw ?? 'null') as StoredSession | null
+    return saved?.deckKey === deckKey && saved.index < saved.prompts.length ? saved : null
+  } catch {
+    return null
+  }
+}
+
+const noSubscribe = () => () => {}
+
+export function DrillSession(props: Omit<Parameters<typeof DrillDeck>[0], 'resumed'>) {
+  // undefined during SSR and hydration (no sessionStorage); rendering nothing
+  // until it's read keeps the server's fresh deck from flashing first.
+  const raw = useSyncExternalStore(noSubscribe, readStoredSession, () => undefined)
+  if (raw === undefined) return null
+  return <DrillDeck {...props} resumed={parseStoredSession(raw, props.deckKey)} />
+}
+
+function DrillDeck({
+  resumed,
+  deckKey,
   prompts,
   totalCards,
   dueCount,
   filtered,
+  initialAutoAdvance,
 }: {
+  resumed: StoredSession | null
+  /** The active filters; a stored session only resumes under the same ones. */
+  deckKey: string
   prompts: DrillPrompt[]
   totalCards: number
   /** Due cards matching the filter, before the session cap. */
   dueCount: number
   filtered: boolean
+  initialAutoAdvance: boolean
 }) {
   // Snapshotted from the first render: submitDrillAnswer revalidates /drill,
   // and fresh props would reshuffle the active session (or jump to the empty
   // state after the last card). The setter is only for "Shuffle and restart".
   const s = getStrings()
   const boardColors = useSettings()
-  const [sessionPrompts, setSessionPrompts] = useState(prompts)
+  const [sessionPrompts, setSessionPrompts] = useState(resumed?.prompts ?? prompts)
   const [sessionTotalCards] = useState(totalCards)
-  const [sessionDueCount] = useState(dueCount)
-  const [index, setIndex] = useState(0)
+  const [sessionDueCount] = useState(resumed?.dueCount ?? dueCount)
+  const [index, setIndex] = useState(resumed?.index ?? 0)
   const [feedback, setFeedback] = useState<Feedback>(null)
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null)
-  const [tally, setTally] = useState({ correct: 0, incorrect: 0 })
+  const [tally, setTally] = useState(resumed?.tally ?? { correct: 0, incorrect: 0 })
   const [hangingReason, setHangingReason] = useState<BlunderReason | null>(null)
   const [hintLevel, setHintLevel] = useState(0)
-  // Set only on a correct answer so the move visibly lands. On a wrong answer
-  // the reveal arrow is drawn from `prompt.fen`, so the board stays there.
+  // The played move stays on the board, right or wrong; a wrong one gets the
+  // reveal arrow on top to compare against.
   const [committedFen, setCommittedFen] = useState<string | null>(null)
   const [pendingPromotion, setPendingPromotion] = useState<{ from: string; to: string } | null>(
     null,
   )
 
   const [checking, setChecking] = useState(false)
+  const [autoAdvance, setAutoAdvance] = useState(initialAutoAdvance)
 
   // A ref, not state, so a move can't be graded twice within the same tick.
   const answeredRef = useRef(false)
   // Created on the first non-engine answer to a blunder card.
   const engineRef = useRef<StockfishEngine | null>(null)
   useEffect(() => () => engineRef.current?.terminate(), [])
+
+  // An answered card counts as done, so a reload before "Next" skips it.
+  useEffect(() => {
+    const saved: StoredSession = {
+      deckKey,
+      prompts: sessionPrompts,
+      index: feedback ? index + 1 : index,
+      tally,
+      dueCount: sessionDueCount,
+    }
+    try {
+      sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(saved))
+    } catch {
+      // Storage full or blocked: the session just won't survive a reload.
+    }
+  }, [deckKey, sessionPrompts, index, feedback, tally, sessionDueCount])
 
   // Undefined on the session-complete screen; keeps the hooks unconditional.
   const prompt = sessionPrompts[index] as DrillPrompt | undefined
@@ -129,6 +195,13 @@ export function DrillSession({
   const handleHint = useCallback(() => {
     setHintLevel((level) => Math.min(3, level + 1))
   }, [])
+
+  // Unchecking during the pause cancels it.
+  useEffect(() => {
+    if (!autoAdvance || !feedback || feedback === 'incorrect') return
+    const timer = setTimeout(handleNext, AUTO_ADVANCE_DELAY_MS)
+    return () => clearTimeout(timer)
+  }, [autoAdvance, feedback, handleNext])
 
   // A focused button already handles Enter/Space natively; avoid firing twice.
   useEffect(() => {
@@ -235,7 +308,7 @@ export function DrillSession({
   function grade(move: Move, result: Exclude<Feedback, null>) {
     const correct = result !== 'incorrect'
     setFeedback(result)
-    setCommittedFen(correct ? move.after : null)
+    setCommittedFen(move.after)
     setHangingReason(
       detectBlunderReason(move.before, move.after, move.color === 'w' ? 'white' : 'black'),
     )
@@ -280,31 +353,12 @@ export function DrillSession({
   const hintOriginSquares = new Set(hintLevel >= 2 ? revealed.map((a) => a.startSquare) : [])
 
   return (
-    // lg+: 18rem ≈ chrome above/below the board.
-    <div className="mx-auto flex w-full max-w-140 flex-col gap-3 lg:max-w-[min(35rem,calc(100dvh-18rem))]">
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <PlayerAvatar username={prompt.opponentUsername} avatarUrl={prompt.opponentAvatarUrl} />
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            {prompt.gameLabel} ·{' '}
-            {prompt.sourceType === 'deviation' ? s.drill.findPreparedMove : s.drill.findBestMove} ·{' '}
-            {s.drill.cardOf(index + 1, sessionPrompts.length)}
-          </p>
-        </div>
-        {/* `invisible`, not unmounted, so the row height doesn't shift. */}
-        <button
-          onClick={handleHint}
-          disabled={hintLevel >= 3 || !!feedback || checking}
-          className={`shrink-0 rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium hover:bg-zinc-100 disabled:opacity-40 dark:border-zinc-700 dark:hover:bg-zinc-800 ${feedback ? 'invisible' : ''}`}
-        >
-          {s.drill.hint}
-        </button>
-      </div>
-
+    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-center">
+      {/* lg+: 12rem ≈ page chrome above/below the board. */}
       <BoardCoordinates
         show={boardColors.showCoordinates}
         orientation={prompt.color}
-        className="w-full"
+        className="mx-auto w-full max-w-140 shrink-0 lg:mx-0 lg:max-w-[min(42rem,calc(100dvh-12rem))]"
       >
         <div className="relative w-full overflow-hidden rounded shadow-lg">
           <Chessboard
@@ -339,23 +393,60 @@ export function DrillSession({
         </div>
       </BoardCoordinates>
 
-      {hintLevel >= 1 && (
-        <p className="text-sm text-zinc-400">
-          {s.drill.hintText(
-            [...new Set(activePrompt.correctMoves.map((san) => hintPieceName(san)))].join(
-              ` ${s.drill.or} `,
-            ),
-          )}
+      <div className="mx-auto flex w-full max-w-140 flex-col gap-3 lg:mx-0 lg:max-w-80">
+        <div className="flex flex-col gap-1.5">
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+            {s.drill.cardOf(index + 1, sessionPrompts.length)}
+          </p>
+          <div className="h-1.5 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800">
+            <div
+              className="bg-accent h-full rounded-full transition-[width]"
+              style={{ width: `${((index + (feedback ? 1 : 0)) / sessionPrompts.length) * 100}%` }}
+            />
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <PlayerAvatar username={prompt.opponentUsername} avatarUrl={prompt.opponentAvatarUrl} />
+          {/* New tab: leaving the page would lose the snapshotted session. */}
+          <a
+            href={`/games/${prompt.gameId}?ply=${prompt.ply - 1}`}
+            target="_blank"
+            rel="noopener"
+            className="text-sm text-blue-600 hover:underline dark:text-blue-400"
+          >
+            {prompt.gameLabel}
+          </a>
+        </div>
+        <p className="font-medium">
+          {prompt.sourceType === 'deviation' ? s.drill.findPreparedMove : s.drill.findBestMove}
         </p>
-      )}
 
-      {checking && (
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">{s.drill.checkingMove}</p>
-      )}
+        {!feedback && (
+          <button
+            onClick={handleHint}
+            disabled={hintLevel >= 3 || checking}
+            className="w-fit rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium hover:bg-zinc-100 disabled:opacity-40 dark:border-zinc-700 dark:hover:bg-zinc-800"
+          >
+            {s.drill.hint}
+          </button>
+        )}
 
-      {feedback && (
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-3">
+        {hintLevel >= 1 && (
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+            {s.drill.hintText(
+              [...new Set(activePrompt.correctMoves.map((san) => hintPieceName(san)))].join(
+                ` ${s.drill.or} `,
+              ),
+            )}
+          </p>
+        )}
+
+        {checking && (
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">{s.drill.checkingMove}</p>
+        )}
+
+        {feedback && (
+          <>
             <p
               className={`text-sm ${feedback === 'incorrect' ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}
             >
@@ -365,22 +456,36 @@ export function DrillSession({
                   ? s.drill.alsoGood(prompt.correctMoves.join(` ${s.drill.or} `))
                   : s.drill.notQuite(prompt.correctMoves.join(` ${s.drill.or} `))}
             </p>
+            {hangingReason && (
+              <p className="text-sm text-amber-600 dark:text-amber-400">
+                {describeBlunderReason(hangingReason)}
+              </p>
+            )}
             <button
               onClick={handleNext}
-              className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
+              className="w-fit rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
             >
               {s.drill.next}
             </button>
-          </div>
-          {hangingReason && (
-            <p className="text-sm text-amber-600 dark:text-amber-400">
-              {describeBlunderReason(hangingReason)}
-            </p>
-          )}
-        </div>
-      )}
+          </>
+        )}
 
-      <p className="text-xs text-zinc-600">{s.drill.keyboardHint}</p>
+        <div className="mt-2 flex flex-col gap-2 border-t border-zinc-200 pt-3 dark:border-zinc-800">
+          <label className="flex items-center gap-1.5 text-sm text-zinc-600 dark:text-zinc-400">
+            <input
+              type="checkbox"
+              checked={autoAdvance}
+              onChange={(e) => {
+                setAutoAdvance(e.target.checked)
+                document.cookie = `blitzr-drill-auto-advance=${e.target.checked ? '1' : '0'}; path=/; max-age=31536000; samesite=lax`
+              }}
+              className="accent-accent"
+            />
+            {s.drill.autoAdvance}
+          </label>
+          <p className="text-xs text-zinc-500 dark:text-zinc-600">{s.drill.keyboardHint}</p>
+        </div>
+      </div>
     </div>
   )
 }
