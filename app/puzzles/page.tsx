@@ -5,10 +5,11 @@ import { MiniBoard } from '@/components/MiniBoard'
 import {
   PuzzleFilters,
   type PuzzleColorFilter,
+  type PuzzleKindFilter,
   type PuzzleStatusFilter,
 } from '@/components/PuzzleFilters'
 import { getStrings } from '@/lib/i18n/strings'
-import { puzzleColorToMove } from '@/lib/mateProblems'
+import { puzzleColorToMove, puzzleKindLabel, type MateProblem } from '@/lib/mateProblems'
 import { allMateProblems } from '@/lib/puzzleSet'
 import { getTrainingOrientation, resolveOrientation } from '@/lib/theme'
 import { Badge } from '@/components/Badge'
@@ -23,6 +24,7 @@ type PuzzlesSearchParams = {
   page?: string
   status?: string
   color?: string
+  kind?: string
   mateIn?: string
 }
 
@@ -35,6 +37,7 @@ export default async function PuzzlesPage({
     page: pageParam,
     status: statusParam,
     color: colorParam,
+    kind: kindParam,
     mateIn: mateInParam,
   } = await searchParams
   const s = getStrings()
@@ -47,6 +50,7 @@ export default async function PuzzlesPage({
     statusParam === 'solved' || statusParam === 'unsolved' ? statusParam : 'all'
   const color: PuzzleColorFilter =
     colorParam === 'white' || colorParam === 'black' ? colorParam : 'all'
+  const kind: PuzzleKindFilter = kindParam === 'mate' || kindParam === 'defend' ? kindParam : 'all'
   const mateIn = mateInParam ? Number(mateInParam) : undefined
 
   const solvedIds = new Set(await getSolvedPuzzleIds())
@@ -55,23 +59,32 @@ export default async function PuzzlesPage({
   const solvedCount = problems.filter((p) => solvedIds.has(p.id)).length
   const availableMateIns = [...new Set(problems.map((p) => p.mateIn))].sort((a, b) => a - b)
 
+  const matchesKind = (problem: MateProblem) =>
+    kind === 'all' || (kind === 'defend') === Boolean(problem.saves)
   const filtered = problems.filter((problem) => {
     if (status === 'solved' && !solvedIds.has(problem.id)) return false
     if (status === 'unsolved' && solvedIds.has(problem.id)) return false
     if (color !== 'all' && puzzleColorToMove(problem) !== color) return false
+    if (!matchesKind(problem)) return false
     if (mateIn !== undefined && problem.mateIn !== mateIn) return false
     return true
   })
-  // Ignores the status filter but honors color/mateIn.
+  // Ignores the status filter but honors color/kind/mateIn.
   const nextUnsolved = problems.find((problem) => {
     if (solvedIds.has(problem.id)) return false
     if (color !== 'all' && puzzleColorToMove(problem) !== color) return false
+    if (!matchesKind(problem)) return false
     if (mateIn !== undefined && problem.mateIn !== mateIn) return false
     return true
   })
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
-  const pageFilters = { status: statusParam, color: colorParam, mateIn: mateInParam }
+  const pageFilters = {
+    status: statusParam,
+    color: colorParam,
+    kind: kindParam,
+    mateIn: mateInParam,
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -109,6 +122,7 @@ export default async function PuzzlesPage({
           <PuzzleFilters
             status={status}
             color={color}
+            kind={kind}
             mateIn={mateIn}
             availableMateIns={availableMateIns}
           />
@@ -144,8 +158,8 @@ export default async function PuzzlesPage({
                             ✓
                           </span>
                         )}
-                        <Badge tone="accent" shape="tag">
-                          {s.puzzles.mateIn(problem.mateIn)}
+                        <Badge tone={problem.saves ? 'amber' : 'accent'} shape="tag">
+                          {puzzleKindLabel(problem)}
                         </Badge>
                       </div>
                     </div>

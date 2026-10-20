@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { getSolvedPuzzleIds } from '@/app/actions'
 import { PuzzleBoard } from '@/components/PuzzleBoard'
 import { getStrings } from '@/lib/i18n/strings'
+import { puzzleKindLabel } from '@/lib/mateProblems'
 import { allMateProblems, getMateProblem } from '@/lib/puzzleSet'
 import { Badge } from '@/components/Badge'
 import { LINK_CLASS } from '@/components/styles'
@@ -32,8 +33,8 @@ export default async function PuzzlePage({ params }: { params: Promise<{ id: str
           <h1 className="text-xl font-semibold">
             #{problem.id} {problem.title}
           </h1>
-          <Badge tone="accent" shape="tag">
-            {s.puzzles.mateIn(problem.mateIn)}
+          <Badge tone={problem.saves ? 'amber' : 'accent'} shape="tag">
+            {puzzleKindLabel(problem)}
           </Badge>
           {solved && (
             <Badge tone="emerald" shape="tag">

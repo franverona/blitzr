@@ -9,16 +9,19 @@ import { chipClass, INPUT_CLASS } from './styles'
 
 export type PuzzleStatusFilter = 'all' | 'solved' | 'unsolved'
 export type PuzzleColorFilter = 'all' | 'white' | 'black'
+export type PuzzleKindFilter = 'all' | 'mate' | 'defend'
 
 /** URL-driven filters; the server page does the filtering. */
 export function PuzzleFilters({
   status,
   color,
+  kind,
   mateIn,
   availableMateIns,
 }: {
   status: PuzzleStatusFilter
   color: PuzzleColorFilter
+  kind: PuzzleKindFilter
   mateIn?: number
   availableMateIns: number[]
 }) {
@@ -36,8 +39,18 @@ export function PuzzleFilters({
     { value: 'white', label: s.common.color.white },
     { value: 'black', label: s.common.color.black },
   ]
+  const KIND_TABS: { value: PuzzleKindFilter; label: string }[] = [
+    { value: 'all', label: s.puzzlesPage.filters.allKinds },
+    { value: 'mate', label: s.puzzlesPage.filters.mateKind },
+    { value: 'defend', label: s.puzzlesPage.filters.defendKind },
+  ]
 
-  function hrefFor(next: { status?: string; color?: string; mateIn?: string }): string {
+  function hrefFor(next: {
+    status?: string
+    color?: string
+    kind?: string
+    mateIn?: string
+  }): string {
     const params = new URLSearchParams(searchParams.toString())
     // Reset paging so the page number can't overrun a narrower result set.
     params.delete('page')
@@ -69,6 +82,18 @@ export function PuzzleFilters({
           <Link
             key={tab.value}
             href={hrefFor({ color: tab.value === 'all' ? undefined : tab.value })}
+            className={chipClass(active)}
+          >
+            {tab.label}
+          </Link>
+        )
+      })}
+      {KIND_TABS.map((tab) => {
+        const active = kind === tab.value
+        return (
+          <Link
+            key={tab.value}
+            href={hrefFor({ kind: tab.value === 'all' ? undefined : tab.value })}
             className={chipClass(active)}
           >
             {tab.label}
