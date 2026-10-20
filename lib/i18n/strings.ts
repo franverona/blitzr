@@ -151,7 +151,7 @@ const en = {
     blunders: 'Blunders',
     blundersTitle:
       'Cards for your own moves that threw away real winning chances, found by Stockfish',
-    allOpenings: 'All openings',
+    clearOpening: 'Show all openings',
   },
   gameList: {
     empty: 'No games synced yet. Click "Sync games" to fetch your Chess.com history.',
@@ -367,9 +367,10 @@ const en = {
     next: 'Next',
     findPreparedMove: 'Find your prepared move',
     findBestMove: 'Find the best move',
-    cardOf: (index: number, total: number) => `card ${index} of ${total}`,
+    cardOf: (index: number, total: number) => `Card ${index} of ${total}`,
     hintText: (pieces: string) => `Hint: it's a ${pieces} move.`,
     keyboardHint: 'Space/Enter → Next · H → Hint',
+    autoAdvance: 'Go to the next card after a correct answer',
     sessionComplete: 'Session complete',
     tally: (correct: number, incorrect: number, total: number) =>
       `${correct} correct, ${incorrect} incorrect out of ${total}.`,
@@ -736,7 +737,7 @@ const es: Strings = {
     blunders: 'Errores',
     blundersTitle:
       'Tarjetas de tus propias jugadas que tiraron opciones reales de ganar, según Stockfish',
-    allOpenings: 'Todas las aperturas',
+    clearOpening: 'Mostrar todas las aperturas',
   },
   gameList: {
     empty:
@@ -955,9 +956,10 @@ const es: Strings = {
     next: 'Siguiente',
     findPreparedMove: 'Encuentra tu jugada preparada',
     findBestMove: 'Encuentra la mejor jugada',
-    cardOf: (index: number, total: number) => `tarjeta ${index} de ${total}`,
+    cardOf: (index: number, total: number) => `Tarjeta ${index} de ${total}`,
     hintText: (pieces: string) => `Pista: es una jugada de ${pieces}.`,
     keyboardHint: 'Espacio/Intro → Siguiente · H → Pista',
+    autoAdvance: 'Pasar a la siguiente tarjeta tras acertar',
     sessionComplete: 'Sesión completa',
     tally: (correct: number, incorrect: number, total: number) =>
       `${correct} correctas, ${incorrect} incorrectas de ${total}.`,
