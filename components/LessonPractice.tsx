@@ -113,7 +113,7 @@ function ModeTab({
   onClick: () => void
 }) {
   return (
-    <button onClick={onClick} className={`text-sm ${chipClass(active)}`}>
+    <button onClick={onClick} className={chipClass(active)}>
       {label}
     </button>
   )

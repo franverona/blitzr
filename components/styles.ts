@@ -55,9 +55,9 @@ export function buttonClass({
   return `border disabled:opacity-40 ${BUTTON_SIZE_CLASS[size]} ${BUTTON_VARIANT_CLASS[variant]}`
 }
 
-/** A filter/mode toggle; `active` is the selected one. */
-export function chipClass(active: boolean, padding = 'px-3 py-1'): string {
-  return `rounded-md border ${padding} ${
+/** A filter/mode toggle; `active` is the selected one. Same height as `INPUT_CLASS`. */
+export function chipClass(active: boolean): string {
+  return `rounded-md border px-3 py-1.5 text-sm ${
     active
       ? 'border-accent bg-accent/20 text-zinc-900 dark:text-white'
       : 'border-zinc-300 text-zinc-500 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800'

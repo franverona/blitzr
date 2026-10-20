@@ -53,8 +53,7 @@ export function DateRangeFilter({ from, to }: { from?: string; to?: string }) {
               key={preset.key}
               type="button"
               onClick={() => navigate({ from: presetFrom, to: today })}
-              // Same padding as INPUT_CLASS, so presets and date inputs line up.
-              className={chipClass(active, 'px-2 py-1.5')}
+              className={chipClass(active)}
             >
               {s.dateRangeFilter.presets[preset.key]}
             </button>

@@ -173,14 +173,14 @@ export function RepertoireBoard({
             <button
               onClick={() => setPath([])}
               disabled={path.length === 0}
-              className={buttonClass({ size: 'sm' })}
+              className={buttonClass()}
             >
               {s.repertoire.start}
             </button>
             <button
               onClick={() => setPath((p) => p.slice(0, -1))}
               disabled={path.length === 0}
-              className={buttonClass({ size: 'sm' })}
+              className={buttonClass()}
             >
               {s.repertoire.back}
             </button>
