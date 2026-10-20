@@ -54,7 +54,10 @@ export function findDeviationCandidates(
   }))
 }
 
-/** Blunders on the user's own plies only. */
+/**
+ * Blunders on the user's own plies only. Missing the same best move on consecutive
+ * own plies (a piece left en prise for several moves) is one card, the first miss.
+ */
 export function findBlunderCandidates(
   games: Game[],
   analysesByGameId: Map<string, GameAnalysis>,
@@ -64,9 +67,14 @@ export function findBlunderCandidates(
     if (!game.movesSan) continue
     const analysis = analysesByGameId.get(game.id)
     if (!analysis) continue
+    let previous: { ply: number; bestSan: string | undefined } | null = null
     for (const blunder of findBlunders(analysis.evals, game.movesSan, game.initialFen)) {
       const isMine = whiteToMove(blunder.ply, game.initialFen) === (game.myColor === 'white')
-      if (isMine) candidates.push({ gameId: game.id, sourceType: 'blunder', ply: blunder.ply })
+      if (!isMine) continue
+      const bestSan = blunder.evalBefore.bestMove?.san
+      const repeat = previous?.ply === blunder.ply - 2 && bestSan && previous.bestSan === bestSan
+      previous = { ply: blunder.ply, bestSan }
+      if (!repeat) candidates.push({ gameId: game.id, sourceType: 'blunder', ply: blunder.ply })
     }
   }
   return candidates
