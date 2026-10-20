@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import Link from 'next/link'
 import { Chess } from 'chess.js'
 import { Chessboard } from 'react-chessboard'
 import { BoardCoordinates } from './BoardCoordinates'
@@ -17,7 +18,15 @@ import { PromotionPicker, type PromotionPiece } from './PromotionPicker'
 type Feedback = 'incorrect' | null
 
 // Fully manual: the solver plays every ply of the line, both sides. No hints.
-export function PuzzleBoard({ problem }: { problem: MateProblem }) {
+export function PuzzleBoard({
+  problem,
+  previousId,
+  nextId,
+}: {
+  problem: MateProblem
+  previousId: number | null
+  nextId: number | null
+}) {
   const s = getStrings()
   const boardColors = useSettings()
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null)
@@ -168,8 +177,8 @@ export function PuzzleBoard({ problem }: { problem: MateProblem }) {
 
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-center">
-      {/* lg+: 19rem ≈ chrome above/below the board. */}
-      <div className="flex w-full max-w-140 shrink-0 flex-col gap-3 lg:max-w-[min(35rem,calc(100dvh-19rem))]">
+      {/* lg+: 12rem ≈ chrome above/below the board. */}
+      <div className="flex w-full max-w-140 shrink-0 flex-col gap-3 lg:max-w-[min(40rem,calc(100dvh-12rem))]">
         <div className="flex items-center justify-between gap-2">
           <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
             {!finished && isLive ? s.puzzles.toMove(turnColor) : ' '}
@@ -183,9 +192,6 @@ export function PuzzleBoard({ problem }: { problem: MateProblem }) {
             >
               ◀
             </button>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              {s.puzzles.moveProgress(viewPly, problem.moves.length)}
-            </p>
             <button
               onClick={() => goToPly(viewPly + 1)}
               disabled={viewPly === maxViewPly || !!pendingPromotion}
@@ -227,42 +233,6 @@ export function PuzzleBoard({ problem }: { problem: MateProblem }) {
             {pendingPromotion && <PromotionPicker color={turnColor} onChoose={choosePromotion} />}
           </div>
         </BoardCoordinates>
-
-        {feedback === 'incorrect' && !finished && isLive && (
-          <p className="text-sm text-rose-600 dark:text-rose-400">{s.puzzles.incorrect}</p>
-        )}
-
-        {finished ? (
-          <p
-            className={
-              solved
-                ? 'text-sm font-medium text-emerald-600 dark:text-emerald-400'
-                : 'text-sm font-medium text-zinc-600 dark:text-zinc-400'
-            }
-          >
-            {solved ? s.puzzles.solved : s.puzzles.revealedTitle}
-          </p>
-        ) : (
-          <button
-            onClick={() => {
-              setPendingPromotion(null)
-              setRevealed(true)
-              setViewPly(problem.moves.length)
-            }}
-            className="w-fit text-sm text-zinc-500 hover:underline dark:text-zinc-400"
-          >
-            {s.puzzles.reveal}
-          </button>
-        )}
-
-        {saveFailed && (
-          <p role="alert" className="text-sm text-rose-600 dark:text-rose-400">
-            {s.puzzles.saveFailed}{' '}
-            <button onClick={saveSolved} className="font-medium underline">
-              {s.puzzles.retrySave}
-            </button>
-          </p>
-        )}
       </div>
 
       <div className="flex w-full flex-col gap-3 lg:max-w-sm lg:flex-1 xl:max-w-md">
@@ -283,7 +253,85 @@ export function PuzzleBoard({ problem }: { problem: MateProblem }) {
             )}
           </div>
         </div>
+
+        {feedback === 'incorrect' && !finished && isLive && (
+          <p className="text-sm text-rose-600 dark:text-rose-400">{s.puzzles.incorrect}</p>
+        )}
+        {finished && (
+          <p
+            className={
+              solved
+                ? 'text-sm font-medium text-emerald-600 dark:text-emerald-400'
+                : 'text-sm font-medium text-zinc-600 dark:text-zinc-400'
+            }
+          >
+            {solved ? s.puzzles.solved : s.puzzles.revealedTitle}
+          </p>
+        )}
+        {saveFailed && (
+          <p role="alert" className="text-sm text-rose-600 dark:text-rose-400">
+            {s.puzzles.saveFailed}{' '}
+            <button onClick={saveSolved} className="font-medium underline">
+              {s.puzzles.retrySave}
+            </button>
+          </p>
+        )}
+
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => {
+              setPendingPromotion(null)
+              setRevealed(true)
+              setViewPly(problem.moves.length)
+            }}
+            disabled={finished}
+            className={NAV_BUTTON_CLASS}
+          >
+            {s.puzzles.reveal}
+          </button>
+          <PuzzleLink id={previousId} label={s.puzzlesPage.previous} d="M15 6l-6 6 6 6" />
+          <PuzzleLink id={nextId} label={s.puzzlesPage.next} d="M9 6l6 6-6 6" />
+        </div>
       </div>
     </div>
+  )
+}
+
+// Matches the game page's BoardNavControls buttons.
+const NAV_BUTTON_CLASS =
+  'flex h-10 flex-1 items-center justify-center rounded-lg border border-zinc-300 bg-zinc-50 px-3 text-sm whitespace-nowrap text-zinc-700 hover:bg-zinc-200 disabled:pointer-events-none disabled:opacity-40 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700'
+
+function PuzzleLink({ id, label, d }: { id: number | null; label: string; d: string }) {
+  const icon = (
+    <svg
+      viewBox="0 0 24 24"
+      className="size-5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={3}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d={d} />
+    </svg>
+  )
+  if (id === null) {
+    return (
+      <span
+        role="link"
+        aria-disabled
+        aria-label={label}
+        title={label}
+        className={`${NAV_BUTTON_CLASS} pointer-events-none opacity-40`}
+      >
+        {icon}
+      </span>
+    )
+  }
+  return (
+    <Link href={`/puzzles/${id}`} aria-label={label} title={label} className={NAV_BUTTON_CLASS}>
+      {icon}
+    </Link>
   )
 }
