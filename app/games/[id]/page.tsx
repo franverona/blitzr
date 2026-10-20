@@ -4,7 +4,6 @@ import {
   BoardNavControls,
   BoardProvider,
   BoardView,
-  ExploreToggleButton,
   LiveAnalysisProvider,
 } from '@/components/Board'
 import { DeleteGameButton } from '@/components/DeleteGameButton'
@@ -74,7 +73,6 @@ export default async function GamePage({
           blackAvatar={blackAvatar}
         />
         <div className="flex flex-wrap items-center justify-end gap-4">
-          {game.movesSan && <ExploreToggleButton />}
           {game.movesSan && isStandardChess(game) && <AnalyzeButton />}
           {game.archiveYm === 'manual' && <DeleteGameButton gameId={game.id} />}
         </div>
@@ -85,6 +83,7 @@ export default async function GamePage({
         <BoardView
           boardMaxWidthClassName="max-w-160 lg:max-w-[min(40rem,calc(100dvh-9.25rem))] xl:max-w-[min(43rem,calc(100dvh-9.25rem))] 2xl:max-w-[min(46rem,calc(100dvh-9.25rem))]"
           sidebarMaxWidthClassName="lg:max-w-xs xl:max-w-sm"
+          autoExplore
           sidebarTop={<LiveAnalysisPanel />}
           sidebarExtra={
             <div className="flex shrink-0 flex-col gap-3">
