@@ -243,8 +243,9 @@ a prepared move. An opponent's unprepared move or the tree running out doesn't c
 
 - `LiveAnalysisProvider` (in `Board.tsx` to avoid a circular import) owns one long-lived engine
   and runs a MultiPV search for `displayFen`, at most one in flight. Its context exposes `lines`,
-  the `fen` they were computed for, and `thinking`. It idles while engine hints are hidden and the
-  details dialog (which holds `LiveAnalysisPanel`) is closed: nothing would show the result.
+  the `fen` they were computed for, and `thinking`. `LiveAnalysisPanel` sits above the game page's
+  move list (`BoardView`'s `sidebarTop`, capped at 60% of the sidebar). Hidden engine hints hide it
+  too, except while exploring; the engine idles exactly when it's hidden.
 - The best-move arrow only draws when `fen === displayFen`; the eval bar shows the latest result
   regardless, to avoid blinking. Saved analysis wins on the recorded game; live is the fallback
   and the only source while exploring.

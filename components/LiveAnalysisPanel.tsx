@@ -5,6 +5,7 @@ import { formatEval } from '@/lib/analysis'
 import { getStrings } from '@/lib/i18n/strings'
 import { useBoardContext, useLiveAnalysisContext } from './Board'
 import { MoveSequence } from './MoveSequence'
+import { useSettings } from './SettingsProvider'
 
 /**
  * Live top-N engine lines for whatever the board shows (recorded ply or
@@ -22,6 +23,7 @@ export function LiveAnalysisPanel() {
     resetExploreLine,
     setExplorePly,
   } = useBoardContext()
+  const { hideEngineHints } = useSettings()
   const s = getStrings()
 
   // Highlights the line just played via ▶. Reset during render when `fen`
@@ -33,8 +35,12 @@ export function LiveAnalysisPanel() {
     setQueuedIndex(null)
   }
 
+  // Exploring is an explicit ask for the engine, so it overrides hidden hints.
+  if (hideEngineHints && !exploring) return null
+
   return (
-    <div className="flex flex-col gap-1 rounded-md border border-zinc-200 bg-zinc-50 text-sm dark:border-zinc-800 dark:bg-zinc-900/50">
+    // Capped so a long explored line can't squeeze out the move list.
+    <div className="flex shrink-0 flex-col gap-1 overflow-y-auto rounded-md border border-zinc-200 bg-zinc-50 text-sm lg:max-h-[60%] dark:border-zinc-800 dark:bg-zinc-900/50">
       <div className="flex items-center justify-between px-3 pt-3">
         <p className="text-xs font-semibold text-zinc-500">{s.liveAnalysis.panelTitle}</p>
         {/* Keeps showing the previous lines while a new search runs. */}
