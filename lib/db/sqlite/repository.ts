@@ -7,7 +7,6 @@ import type {
   DbSchema,
   DrillCardsTable,
   GameAnalysisTable,
-  GameRepository,
   GamesTable,
   RepertoireMovesTable,
 } from '../types'
@@ -17,6 +16,8 @@ import type {
   DrillSourceType,
   Game,
   GameAnalysis,
+  MyColor,
+  MyResult,
   RepertoireColor,
   RepertoireNode,
 } from '../../types'
@@ -133,7 +134,20 @@ function drillCardToRow(card: DrillCard): DrillCardsTable {
 
 const UPSERT_CHUNK_SIZE = 500
 
-export class SqliteGameRepository implements GameRepository {
+/** `opponent` is a case-insensitive substring match on either player.
+ *  `gameIds` restricts to that id set (the accuracy filter, computed in app
+ *  code); an empty array returns nothing without querying. */
+export interface ListGamesParams {
+  limit?: number
+  offset?: number
+  opponent?: string
+  result?: MyResult
+  color?: MyColor
+  rated?: boolean
+  gameIds?: string[]
+}
+
+export class SqliteGameRepository {
   constructor(private readonly db: Kysely<DbSchema>) {}
 
   private async ready(): Promise<Kysely<DbSchema>> {
@@ -141,6 +155,7 @@ export class SqliteGameRepository implements GameRepository {
     return this.db
   }
 
+  /** Inserts games, skipping existing ids. Returns how many were new. */
   async upsertGames(games: Game[]): Promise<number> {
     if (games.length === 0) return 0
     const db = await this.ready()
@@ -160,9 +175,7 @@ export class SqliteGameRepository implements GameRepository {
     })
   }
 
-  async listGames(
-    params: Parameters<GameRepository['listGames']>[0] = {},
-  ): Promise<{ games: Game[]; total: number }> {
+  async listGames(params: ListGamesParams = {}): Promise<{ games: Game[]; total: number }> {
     // SQLite rejects `where id in ()`.
     if (params.gameIds && params.gameIds.length === 0) {
       return { games: [], total: 0 }
@@ -274,6 +287,7 @@ export class SqliteGameRepository implements GameRepository {
     return rows.map(rowToRepertoireNode)
   }
 
+  /** `id` is client-generated so the node can be added optimistically. */
   async addRepertoireNode(node: RepertoireNode): Promise<void> {
     const db = await this.ready()
     const row: RepertoireMovesTable = {
@@ -288,11 +302,13 @@ export class SqliteGameRepository implements GameRepository {
     await db.insertInto('repertoire_moves').values(row).execute()
   }
 
+  /** Cascades to the game's analysis and drill cards. */
   async deleteGame(id: string): Promise<void> {
     const db = await this.ready()
     await db.deleteFrom('games').where('id', '=', id).execute()
   }
 
+  /** Cascades to the node's subtree. */
   async deleteRepertoireNode(id: string): Promise<void> {
     const db = await this.ready()
     await db.deleteFrom('repertoire_moves').where('id', '=', id).execute()
@@ -341,6 +357,7 @@ export class SqliteGameRepository implements GameRepository {
     return rows.map(rowToDrillCard)
   }
 
+  /** Insert or replace, keyed by (gameId, sourceType, ply). */
   async upsertDrillCard(card: DrillCard): Promise<void> {
     const db = await this.ready()
     const row = drillCardToRow(card)
@@ -374,6 +391,7 @@ export class SqliteGameRepository implements GameRepository {
     }
   }
 
+  /** Days ("YYYY-MM-DD", local) with at least one drill answer, for the streak. */
   async listDrillReviewDays(): Promise<string[]> {
     const db = await this.ready()
     const rows = await db.selectFrom('drill_review_days').select('day').execute()
@@ -395,6 +413,7 @@ export class SqliteGameRepository implements GameRepository {
     return rows.map((r) => r.puzzle_id)
   }
 
+  /** No-op if already solved, keeping the original solved_at. */
   async markPuzzleSolved(puzzleId: number): Promise<void> {
     const db = await this.ready()
     await db
@@ -404,6 +423,7 @@ export class SqliteGameRepository implements GameRepository {
       .execute()
   }
 
+  /** A consistent snapshot of the whole database. */
   async exportBackup(): Promise<Uint8Array<ArrayBuffer>> {
     const db = await this.ready()
     // VACUUM INTO writes a consistent copy that includes the WAL.

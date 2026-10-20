@@ -11,7 +11,7 @@ import { getChesscomUsername, hasChesscomUsername } from '@/lib/config'
 import { getRepository } from '@/lib/db'
 import { getLocale } from '@/lib/i18n/locale'
 import { getStrings } from '@/lib/i18n/strings'
-import type { GameRepository } from '@/lib/db/types'
+import type { ListGamesParams } from '@/lib/db/sqlite/repository'
 import {
   buildDrillPrompt,
   findBlunderCandidates,
@@ -87,7 +87,7 @@ function filterByDateRange(games: Game[], filters?: { from?: string; to?: string
 }
 
 export async function listGames(
-  params: Parameters<GameRepository['listGames']>[0] = {},
+  params: ListGamesParams = {},
 ): Promise<{ games: Game[]; total: number }> {
   return getRepository().listGames(params)
 }
