@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { getSolvedPuzzleIds } from '@/app/actions'
 import { PuzzleBoard } from '@/components/PuzzleBoard'
 import { getStrings } from '@/lib/i18n/strings'
 import { allMateProblems, getMateProblem } from '@/lib/puzzleSet'
@@ -10,6 +11,7 @@ export default async function PuzzlePage({ params }: { params: Promise<{ id: str
   if (!problem) notFound()
 
   const s = getStrings()
+  const solved = (await getSolvedPuzzleIds()).includes(problem.id)
   const problems = allMateProblems()
   const index = problems.findIndex((p) => p.id === problem.id)
   const previous = index > 0 ? problems[index - 1] : null
@@ -31,6 +33,11 @@ export default async function PuzzlePage({ params }: { params: Promise<{ id: str
           <span className="bg-accent/20 rounded px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-zinc-700 uppercase dark:text-zinc-300">
             {s.puzzles.mateIn(problem.mateIn)}
           </span>
+          {solved && (
+            <span className="rounded bg-emerald-600/15 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-emerald-700 uppercase dark:bg-emerald-400/15 dark:text-emerald-400">
+              ✓ {s.puzzles.solvedBadge}
+            </span>
+          )}
         </div>
         <p className="text-sm text-zinc-500 dark:text-zinc-400">
           {[
@@ -57,30 +64,12 @@ export default async function PuzzlePage({ params }: { params: Promise<{ id: str
         </p>
       </div>
 
-      <PuzzleBoard problem={problem} />
-
-      <div className="mx-auto flex w-full max-w-140 items-center justify-between">
-        {previous ? (
-          <Link
-            href={`/puzzles/${previous.id}`}
-            className="text-sm text-zinc-500 hover:underline dark:text-zinc-400"
-          >
-            {s.puzzlesPage.previous}
-          </Link>
-        ) : (
-          <span />
-        )}
-        {next ? (
-          <Link
-            href={`/puzzles/${next.id}`}
-            className="text-sm text-zinc-500 hover:underline dark:text-zinc-400"
-          >
-            {s.puzzlesPage.next}
-          </Link>
-        ) : (
-          <span />
-        )}
-      </div>
+      <PuzzleBoard
+        key={problem.id}
+        problem={problem}
+        previousId={previous?.id ?? null}
+        nextId={next?.id ?? null}
+      />
     </div>
   )
 }
