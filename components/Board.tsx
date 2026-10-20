@@ -14,7 +14,7 @@ import { Chess } from 'chess.js'
 import { Chessboard } from 'react-chessboard'
 import { BoardCoordinates } from './BoardCoordinates'
 import { describeEval, findBlunders, formatEval } from '@/lib/analysis'
-import { buildPositionChecklist, findingKey, findingMarks } from '@/lib/checklist'
+import { buildPositionChecklist, findingMarks } from '@/lib/checklist'
 import { whiteToMove } from '@/lib/drill'
 import { gameEndBadges, type GameEndVariant } from '@/lib/gameEnd'
 import { getStrings } from '@/lib/i18n/strings'
@@ -55,9 +55,6 @@ interface BoardContextValue {
   finalResults?: { white: string; black: string }
   movesSan: string[]
   evals?: PositionEval[]
-  /** Checklist findings the user has hidden from the board (`findingKey()`). */
-  hiddenFindingKeys: Set<string>
-  toggleFindingVisibility: (key: string) => void
   /** Free-move exploration branch, kept separate from the recorded game's
    *  `ply`/`positions` — it never persists and is discarded on exit. */
   exploring: boolean
@@ -119,15 +116,6 @@ export function BoardProvider({
   // Clamped: a synced game can have zero parsed moves.
   const [ply, setPly] = useState(Math.min(initialPly ?? lastPly, lastPly))
   const [boardOrientation, setBoardOrientation] = useState(initialBoardOrientation)
-  const [hiddenFindingKeys, setHiddenFindingKeys] = useState<Set<string>>(new Set())
-  const toggleFindingVisibility = useCallback((key: string) => {
-    setHiddenFindingKeys((prev) => {
-      const next = new Set(prev)
-      if (next.has(key)) next.delete(key)
-      else next.add(key)
-      return next
-    })
-  }, [])
 
   const [exploring, setExploring] = useState(false)
   const [exploreBaseFen, setExploreBaseFen] = useState<string | null>(null)
@@ -246,8 +234,6 @@ export function BoardProvider({
         finalResults,
         movesSan,
         evals,
-        hiddenFindingKeys,
-        toggleFindingVisibility,
         exploring,
         explorePath,
         explorePly,
@@ -695,7 +681,6 @@ export function BoardView({
     movesSan,
     evals,
     setPly,
-    hiddenFindingKeys,
     exploring,
     explorePly,
     displayFen,
@@ -780,9 +765,7 @@ export function BoardView({
   }
 
   const checklistSquareStyles = useMemo(() => {
-    const findings = buildPositionChecklist(positions[ply]).filter(
-      (f) => !hiddenFindingKeys.has(findingKey(f)),
-    )
+    const findings = buildPositionChecklist(positions[ply])
     const styles: Record<string, React.CSSProperties> = {}
     // react-chessboard keys arrows by start/end square, so dedupe.
     const arrowsByKey = new Map<string, { startSquare: string; endSquare: string; color: string }>()
@@ -800,7 +783,7 @@ export function BoardView({
       }
     }
     return { styles, arrows: [...arrowsByKey.values()] }
-  }, [positions, ply, hiddenFindingKeys])
+  }, [positions, ply])
   // Same dedupe as above. The live arrow wins over the saved one on collision.
   const boardArrows = useMemo(() => {
     const arrows = new Map<string, { startSquare: string; endSquare: string; color: string }>()

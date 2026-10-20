@@ -2,16 +2,11 @@
 
 import { createContext, useContext, useId, useMemo, useRef, useState } from 'react'
 import { saveGameAnalysis } from '@/app/actions'
-import { biggestBlunder, blunderSeverity, findBlunders } from '@/lib/analysis'
-import { whiteToMove } from '@/lib/drill'
 import { getStrings } from '@/lib/i18n/strings'
 import { MOVE_QUALITY_TIERS, summarizeMoveQuality } from '@/lib/moveQuality'
 import { buildPositions } from '@/lib/positions'
-import { describeMove, plyLabel } from '@/lib/san'
 import { ANALYSIS_STRENGTHS, type AnalysisStrength, analyzeGame } from '@/lib/stockfish/analyze'
-import { describeBlunderReason, detectBlunderReason } from '@/lib/tactics'
 import type { GameAnalysis, MyColor } from '@/lib/types'
-import { useBoardContext } from './Board'
 import { Select } from './Select'
 import { useSettings } from './SettingsProvider'
 
@@ -133,50 +128,30 @@ export function AnalyzeButton() {
   )
 }
 
-/** One-line recap of the user's own biggest blunder. Renders nothing until
- *  the game is analyzed. */
-export function GameSummary() {
-  const { analysis, movesSan, myColor, positions } = useAnalysisContext()
-  const { setPly } = useBoardContext()
-  const s = getStrings()
-  if (!analysis) return null
+const ACCURACY_TEXT_CLASS = {
+  good: 'text-emerald-700 dark:text-emerald-400',
+  ok: 'text-amber-700 dark:text-amber-400',
+  poor: 'text-rose-700 dark:text-rose-400',
+}
 
-  const myBlunders = findBlunders(analysis.evals, movesSan, positions[0]).filter(
-    (b) => whiteToMove(b.ply, positions[0]) === (myColor === 'white'),
-  )
-  const worst = biggestBlunder(myBlunders)
-  if (!worst) {
-    return (
-      <p className="text-sm text-zinc-500 dark:text-zinc-400">
-        {s.analysisPanel.cleanGameNoBlunders}
-      </p>
-    )
-  }
+const ACCURACY_BG_CLASS = {
+  good: 'bg-emerald-100 dark:bg-emerald-900/40',
+  ok: 'bg-amber-100 dark:bg-amber-900/40',
+  poor: 'bg-rose-100 dark:bg-rose-900/40',
+}
 
-  const reason = detectBlunderReason(positions[worst.ply - 1], positions[worst.ply], myColor)
-  const isBlunder = blunderSeverity(worst.winDrop) === 'blunder'
-  return (
-    <p className="text-sm text-zinc-500 dark:text-zinc-400">
-      {s.analysisPanel.biggestMoment(isBlunder)}{' '}
-      <button
-        onClick={() => setPly(worst.ply)}
-        className="font-medium text-blue-600 hover:underline dark:text-blue-400"
-      >
-        {plyLabel(worst.ply)} {worst.moveSan}
-      </button>{' '}
-      ({describeMove(positions[worst.ply - 1], worst.moveSan)}).{' '}
-      {reason && describeBlunderReason(reason)}
-    </p>
-  )
+function accuracyBand(accuracy: number): keyof typeof ACCURACY_TEXT_CLASS {
+  if (accuracy >= 90) return 'good'
+  if (accuracy >= 70) return 'ok'
+  return 'poor'
 }
 
 export function accuracyPillClass(accuracy: number): string {
-  if (accuracy >= 90)
-    return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400'
-  if (accuracy >= 70) return 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400'
-  return 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-400'
+  const band = accuracyBand(accuracy)
+  return `${ACCURACY_BG_CLASS[band]} ${ACCURACY_TEXT_CLASS[band]}`
 }
 
+/** Inline " · Accuracy 87" for the game header; opens the move-quality breakdown. */
 export function MoveQualityLink() {
   const { analysis, movesSan, myColor, positions } = useAnalysisContext()
   const dialogRef = useRef<HTMLDialogElement>(null)
@@ -187,21 +162,23 @@ export function MoveQualityLink() {
   const mine = myColor === 'white' ? summary.white : summary.black
 
   return (
-    <div className="flex items-center gap-2 self-start text-sm">
-      <span className="text-zinc-500 dark:text-zinc-400">{s.analysisPanel.accuracy}</span>
-      <span
-        className={`rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums ${accuracyPillClass(mine.accuracy)}`}
-      >
-        {mine.accuracy}
-      </span>
+    <>
+      {' · '}
       <button
         onClick={() => dialogRef.current?.showModal()}
-        className="text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+        aria-haspopup="dialog"
+        title={s.analysisPanel.moveQualityLink}
+        className="cursor-pointer text-blue-600 hover:underline dark:text-blue-400"
       >
-        {s.analysisPanel.moveQualityLink}
+        {s.analysisPanel.accuracy}{' '}
+        <span
+          className={`font-semibold tabular-nums ${ACCURACY_TEXT_CLASS[accuracyBand(mine.accuracy)]}`}
+        >
+          {mine.accuracy}
+        </span>
       </button>
       <MoveQualityDialog dialogRef={dialogRef} />
-    </div>
+    </>
   )
 }
 

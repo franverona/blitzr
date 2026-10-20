@@ -291,9 +291,6 @@ const en = {
     reanalyze: 'Re-analyze',
     savedAtStrength: (strength: string) => `Saved analysis: ${strength}`,
     analysisFailed: 'Analysis failed.',
-    cleanGameNoBlunders: 'Clean game — no significant blunders from you.',
-    biggestMoment: (isBlunder: boolean) =>
-      `Biggest moment: you ${isBlunder ? 'blundered' : 'made a mistake'} on`,
     moveQualityLink: 'Move quality',
     accuracy: 'Accuracy',
     you: 'You',
@@ -524,36 +521,10 @@ const en = {
       'ECO code — a standard reference number for this opening, used to group games by opening regardless of the exact move order',
     learnMoreAboutOpening: 'Learn more about this opening',
     viewOnChessCom: 'View on Chess.com',
-    viewDetails: 'Details',
-    gameDetails: 'Game details',
     unparsedMoves: `This game's moves couldn't be parsed (likely a non-standard variant) — showing the raw PGN instead.`,
-    playing: (color: string) => `playing ${color}`,
     notMine: 'not your game — kept out of your stats',
     deleteGame: 'Delete game',
     deleteGameConfirm: 'Delete this pasted game, its analysis and its drill cards?',
-    noRepertoireYet: (color: string) => `No ${color} repertoire defined yet —`,
-    buildOne: 'build one',
-    inBookTooltip: 'Still following your prepared moves up to this point',
-    inBook: 'In book',
-    deviatedTooltip: 'Played a different move than the one saved in your repertoire at this point',
-    deviated: 'deviated',
-    deviatedOn: 'on',
-    inBookFor: (n: number) => `for ${n} ${n === 1 ? 'move' : 'moves'}, then`,
-    played: 'played',
-    repertoireHas: 'repertoire has',
-    followedRepertoire: (n: number) =>
-      `Followed your repertoire the entire game (${n} ${n === 1 ? 'move' : 'moves'}).`,
-    checklist: {
-      summary: (n: number) =>
-        n === 0
-          ? 'Position checklist — nothing to flag right now'
-          : `Position checklist — ${n} to check`,
-      yourPieces: 'Your pieces',
-      opponentPieces: "Opponent's pieces",
-      clean: 'Nothing spotted here.',
-      hide: 'Hide on board',
-      show: 'Show on board',
-    },
   },
   liveAnalysis: {
     explore: '♟ Explore moves',
@@ -879,9 +850,6 @@ const es: Strings = {
     reanalyze: 'Reanalizar',
     savedAtStrength: (strength: string) => `Análisis guardado: ${strength}`,
     analysisFailed: 'Error al analizar.',
-    cleanGameNoBlunders: 'Partida limpia — sin errores importantes tuyos.',
-    biggestMoment: (isBlunder: boolean) =>
-      `Momento clave: cometiste ${isBlunder ? 'un error grave' : 'un error'} en`,
     moveQualityLink: 'Calidad de jugadas',
     accuracy: 'Precisión',
     you: 'Tú',
@@ -1118,38 +1086,12 @@ const es: Strings = {
       'Código ECO — un número de referencia estándar para esta apertura, usado para agrupar partidas por apertura sin importar el orden exacto de jugadas',
     learnMoreAboutOpening: 'Aprender más sobre esta apertura',
     viewOnChessCom: 'Ver en Chess.com',
-    viewDetails: 'Detalles',
-    gameDetails: 'Detalles de la partida',
     unparsedMoves:
       'No se pudieron interpretar las jugadas de esta partida (probablemente una variante no estándar) — mostrando el PGN sin procesar en su lugar.',
-    playing: (color: string) => `jugando con ${color}`,
     notMine: 'no es tu partida — fuera de tus estadísticas',
     deleteGame: 'Eliminar partida',
     deleteGameConfirm:
       '¿Eliminar esta partida pegada, su análisis y sus tarjetas de entrenamiento?',
-    noRepertoireYet: (color: string) => `Aún no hay repertorio de ${color} definido —`,
-    buildOne: 'crea uno',
-    inBookTooltip: 'Todavía siguiendo tus jugadas preparadas hasta este punto',
-    inBook: 'En libro',
-    deviatedTooltip: 'Jugaste una jugada distinta a la guardada en tu repertorio en este punto',
-    deviated: 'te saliste',
-    deviatedOn: 'en',
-    inBookFor: (n: number) => `durante ${n} ${n === 1 ? 'jugada' : 'jugadas'}, luego`,
-    played: 'jugaste',
-    repertoireHas: 'el repertorio tiene',
-    followedRepertoire: (n: number) =>
-      `Seguiste tu repertorio toda la partida (${n} ${n === 1 ? 'jugada' : 'jugadas'}).`,
-    checklist: {
-      summary: (n: number) =>
-        n === 0
-          ? 'Lista de comprobación — nada que señalar por ahora'
-          : `Lista de comprobación — ${n} para revisar`,
-      yourPieces: 'Tus piezas',
-      opponentPieces: 'Piezas del rival',
-      clean: 'Nada que destacar aquí.',
-      hide: 'Ocultar en el tablero',
-      show: 'Mostrar en el tablero',
-    },
   },
   liveAnalysis: {
     explore: '♟ Explorar jugadas',

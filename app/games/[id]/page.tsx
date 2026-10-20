@@ -1,6 +1,5 @@
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { getGame, getGameAnalysis, listRepertoire } from '../../actions'
+import { getGame, getGameAnalysis } from '../../actions'
 import {
   BoardNavControls,
   BoardProvider,
@@ -9,25 +8,21 @@ import {
   LiveAnalysisProvider,
 } from '@/components/Board'
 import { DeleteGameButton } from '@/components/DeleteGameButton'
-import { DetailsDialogTrigger } from '@/components/DetailsDialog'
 import {
   AnalyzeButton,
   GameAnalysisProvider,
-  GameSummary,
   MoveQualityLink,
 } from '@/components/GameAnalysisPanel'
 import { LiveAnalysisPanel } from '@/components/LiveAnalysisPanel'
 import { PlayerAvatar } from '@/components/PlayerAvatar'
 import { PositionActions } from '@/components/PositionActions'
-import { PositionChecklist } from '@/components/PositionChecklist'
+import { ResultBadge } from '@/components/ResultBadge'
 import { fetchBotAvatar, fetchPlayerAvatar } from '@/lib/chesscom/client'
 import { isBareBotNameEvent, parsePgnHeaders } from '@/lib/chesscom/normalize'
 import { formatDateTime } from '@/lib/dates'
 import { getStrings } from '@/lib/i18n/strings'
-import { isStandardChess, startsFromStandardPosition } from '@/lib/positions'
-import { diffGameAgainstRepertoire } from '@/lib/repertoire'
-import { plyLabel } from '@/lib/san'
-import type { Game, MyColor, MyResult, RepertoireDiffResult } from '@/lib/types'
+import { isStandardChess } from '@/lib/positions'
+import type { Game, MyColor, MyResult } from '@/lib/types'
 
 function pgnResult(color: MyColor, result: MyResult): string {
   if (result === 'draw') return '1/2-1/2'
@@ -58,11 +53,6 @@ export default async function GamePage({
       ? 'black'
       : 'white'
     : null
-  const repertoireNodes = await listRepertoire(game.myColor)
-  const diff =
-    game.isMine && game.movesSan && startsFromStandardPosition(game)
-      ? diffGameAgainstRepertoire(game.movesSan, game.myColor, repertoireNodes)
-      : null
   const analysis = (await getGameAnalysis(id)) ?? null
   const [whiteAvatar, blackAvatar] = await Promise.all([
     botColor === 'white'
@@ -84,32 +74,15 @@ export default async function GamePage({
         />
         <div className="flex flex-wrap items-center justify-end gap-4">
           {game.movesSan && <ExploreToggleButton />}
-          {game.movesSan && (
-            <DetailsDialogTrigger>
-              <MoveQualityLink />
-              {diff && (
-                <RepertoireDiff
-                  diff={diff}
-                  color={game.myColor}
-                  hasRepertoire={repertoireNodes.length > 0}
-                  totalPlies={game.movesSan.length}
-                />
-              )}
-              <GameSummary />
-              <PositionChecklist myColor={game.myColor} />
-            </DetailsDialogTrigger>
-          )}
           {game.movesSan && isStandardChess(game) && <AnalyzeButton />}
           {game.archiveYm === 'manual' && <DeleteGameButton gameId={game.id} />}
         </div>
       </div>
 
-      <OpeningLine game={game} />
-
       {game.movesSan ? (
-        // lg+: 11.5rem ≈ chrome above/below the board.
+        // lg+: 10.5rem ≈ chrome above/below the board.
         <BoardView
-          boardMaxWidthClassName="max-w-160 lg:max-w-[min(40rem,calc(100dvh-11.5rem))] xl:max-w-[min(43rem,calc(100dvh-11.5rem))] 2xl:max-w-[min(46rem,calc(100dvh-11.5rem))]"
+          boardMaxWidthClassName="max-w-160 lg:max-w-[min(40rem,calc(100dvh-10.5rem))] xl:max-w-[min(43rem,calc(100dvh-10.5rem))] 2xl:max-w-[min(46rem,calc(100dvh-10.5rem))]"
           sidebarMaxWidthClassName="lg:max-w-xs xl:max-w-sm"
           sidebarTop={<LiveAnalysisPanel />}
           sidebarExtra={
@@ -160,28 +133,28 @@ export default async function GamePage({
   )
 }
 
-/** Own full-width row: a long opening name in the header row overflowed it. */
 function OpeningLine({ game }: { game: Game }) {
   const s = getStrings()
   if (!game.ecoName) return null
   return (
-    <p className="text-xs text-zinc-500 dark:text-zinc-400">
-      {game.ecoName} (
-      {game.ecoCode ? <abbr title={s.gamePage.ecoTooltip}>{game.ecoCode}</abbr> : s.gamePage.noEco})
-      {game.ecoUrl && (
-        <>
-          {' · '}
-          <a
-            href={game.ecoUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 hover:underline dark:text-blue-400"
-          >
-            {s.gamePage.learnMoreAboutOpening}
-          </a>
-        </>
-      )}
-    </p>
+    <>
+      {' · '}
+      {game.ecoUrl ? (
+        <a
+          href={game.ecoUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={s.gamePage.learnMoreAboutOpening}
+          className="text-blue-600 hover:underline dark:text-blue-400"
+        >
+          {game.ecoName}
+        </a>
+      ) : (
+        game.ecoName
+      )}{' '}
+      ({game.ecoCode ? <abbr title={s.gamePage.ecoTooltip}>{game.ecoCode}</abbr> : s.gamePage.noEco}
+      )
+    </>
   )
 }
 
@@ -200,20 +173,23 @@ function GameHeader({
   const timeClassLabel =
     s.common.timeClass[game.timeClass as keyof typeof s.common.timeClass] ?? game.timeClass
   return (
-    <div className="flex flex-col gap-1.5">
+    // flex-1 + basis: a long opening name wraps here instead of overflowing the button row.
+    <div className="flex flex-1 basis-64 flex-col gap-1.5">
       <h1 className="flex items-center gap-2 text-xl font-semibold">
         <PlayerAvatar username={game.whiteUsername} avatarUrl={whiteAvatar} />
         {game.whiteUsername}
         <span className="text-sm font-normal text-zinc-500">{s.common.vs}</span>
         <PlayerAvatar username={game.blackUsername} avatarUrl={blackAvatar} />
         {game.blackUsername}
+        {game.isMine && <ResultBadge result={game.myResult} />}
       </h1>
-      <p className="text-xs text-zinc-500 dark:text-zinc-400">
-        {formatDateTime(game.endTime)} · {timeClassLabel} ·{' '}
-        {game.isMine
-          ? `${s.gamePage.playing(s.common.color[game.myColor])} · ${s.common.result[game.myResult]}`
-          : s.gamePage.notMine}
-      </p>
+      {/* A div, not a <p>: MoveQualityLink renders a <dialog>. */}
+      <div className="text-xs text-zinc-500 dark:text-zinc-400">
+        {formatDateTime(game.endTime)} · {timeClassLabel}
+        {!game.isMine && ` · ${s.gamePage.notMine}`}
+        <OpeningLine game={game} />
+        {game.movesSan && <MoveQualityLink />}
+      </div>
       {!isBotGame && game.url && (
         <a
           href={game.url}
@@ -226,56 +202,4 @@ function GameHeader({
       )}
     </div>
   )
-}
-
-function RepertoireDiff({
-  diff,
-  color,
-  hasRepertoire,
-  totalPlies,
-}: {
-  diff: RepertoireDiffResult
-  color: MyColor
-  hasRepertoire: boolean
-  totalPlies: number
-}) {
-  const s = getStrings()
-  if (!hasRepertoire) {
-    return (
-      <p className="text-sm text-zinc-500 dark:text-zinc-400">
-        {s.gamePage.noRepertoireYet(s.common.color[color])}{' '}
-        <Link
-          href={`/repertoire?color=${color}`}
-          className="text-blue-600 hover:underline dark:text-blue-400"
-        >
-          {s.gamePage.buildOne}
-        </Link>
-        .
-      </p>
-    )
-  }
-
-  if (diff.deviationPly !== null) {
-    return (
-      <p className="text-sm text-amber-600 dark:text-amber-400">
-        <abbr title={s.gamePage.inBookTooltip}>{s.gamePage.inBook}</abbr>{' '}
-        {s.gamePage.inBookFor(diff.inBookPlies)}{' '}
-        <abbr title={s.gamePage.deviatedTooltip}>{s.gamePage.deviated}</abbr>{' '}
-        {s.gamePage.deviatedOn} {plyLabel(diff.deviationPly)} — {s.gamePage.played}{' '}
-        <span className="font-medium">{diff.deviationMove}</span>, {s.gamePage.repertoireHas}{' '}
-        <span className="font-medium">{diff.expectedMoves?.join(` ${s.drill.or} `)}</span>.
-      </p>
-    )
-  }
-
-  if (diff.inBookPlies === totalPlies && totalPlies > 0) {
-    return (
-      <p className="text-sm text-emerald-600 dark:text-emerald-400">
-        {s.gamePage.followedRepertoire(diff.inBookPlies)}
-      </p>
-    )
-  }
-
-  // Ran out of repertoire without deviating — nothing worth showing.
-  return null
 }
