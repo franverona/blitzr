@@ -1,6 +1,6 @@
 import { Chess } from 'chess.js'
 import { describe, expect, it } from 'vitest'
-import { isForcedMate } from '@/lib/forcedMate'
+import { forcedMateWithin, isForcedMate } from '@/lib/forcedMate'
 import { puzzleColorToMove } from '@/lib/mateProblems'
 import { BUNDLED_MATES, getMateProblem } from '@/lib/puzzleSet'
 
@@ -55,21 +55,47 @@ describe('bundled puzzle content', () => {
   })
 
   // Ids key solved progress, so they must never collide or shift: real games are 1-221, the
-  // local Polgár set 222-2427, Lichess 10001 and up.
+  // local Polgár set 222-2427, Lichess mates 10001-20000, Lichess defences 20001 and up.
   it('has unique ids in each set’s range', () => {
     const ids = BUNDLED_MATES.map((p) => p.id)
     expect(new Set(ids).size).toBe(ids.length)
     for (const p of BUNDLED_MATES) {
-      if (p.url) expect(p.id, p.title).toBeGreaterThanOrEqual(10001)
+      if (p.saves) expect(p.id, p.title).toBeGreaterThanOrEqual(20001)
+      else if (p.url) expect(p.id, p.title).toBeGreaterThanOrEqual(10001)
       else expect(p.id, p.title).toBeLessThanOrEqual(221)
+      if (p.url && !p.saves) expect(p.id, p.title).toBeLessThanOrEqual(20000)
     }
   })
+
+  it('every defence puzzle’s saves are legal, and the game’s losing move isn’t one', () => {
+    for (const problem of BUNDLED_MATES.filter((p) => p.saves)) {
+      const legal = new Chess(problem.fen).moves()
+      expect(problem.saves!.length, `#${problem.id}`).toBeGreaterThan(0)
+      for (const san of problem.saves!) expect(legal, `#${problem.id}`).toContain(san)
+      expect(problem.saves, `#${problem.id}`).not.toContain(problem.moves[0])
+    }
+  })
+
+  it('a random sample of defence puzzles: every save stops the mate', () => {
+    const candidates = BUNDLED_MATES.filter((p) => p.saves)
+    const sample = [...candidates].sort(() => Math.random() - 0.5).slice(0, 8)
+    console.info(`Defence sample: ${sample.map((p) => `#${p.id}`).join(', ')}`)
+
+    for (const problem of sample) {
+      for (const san of problem.saves!) {
+        const chess = new Chess(problem.fen)
+        chess.move(san)
+        expect(forcedMateWithin(chess.fen(), problem.mateIn), `#${problem.id}: ${san}`).toBe(false)
+      }
+    }
+  }, 60_000)
 
   // Checking all 2,000+ entries takes hours, so sample a few per run.
   const FORCED_MATE_SAMPLE_SIZE = 8
 
   it(`a random sample of ${FORCED_MATE_SAMPLE_SIZE} mate-in-2/3 problems are forced against every legal reply`, () => {
-    const candidates = BUNDLED_MATES.filter((p) => p.mateIn > 1)
+    // A defence puzzle's FEN is the defender's move, so there's no mate to find from it.
+    const candidates = BUNDLED_MATES.filter((p) => p.mateIn > 1 && !p.saves)
     const sample = [...candidates].sort(() => Math.random() - 0.5).slice(0, FORCED_MATE_SAMPLE_SIZE)
     // Unseeded, so log the sample to make a failure reproducible.
     console.info(`Forced-mate sample: ${sample.map((p) => `#${p.id}`).join(', ')}`)

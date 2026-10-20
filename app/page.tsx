@@ -16,7 +16,7 @@ import {
 import { formatDateTime } from '@/lib/dates'
 import { getLocale } from '@/lib/i18n/locale'
 import { getStrings } from '@/lib/i18n/strings'
-import { puzzleColorToMove } from '@/lib/mateProblems'
+import { puzzleColorToMove, puzzleKindLabel } from '@/lib/mateProblems'
 import { getMateProblem } from '@/lib/puzzleSet'
 import { plyLabel } from '@/lib/san'
 import { getTrainingOrientation, resolveOrientation } from '@/lib/theme'
@@ -201,7 +201,9 @@ export default async function TodayPage() {
               {puzzle && (
                 <Link href={`/puzzles/${puzzle.id}`} className="min-w-0 hover:underline">
                   <p className="truncate text-sm font-medium">{puzzle.title}</p>
-                  <p className={mutedClassName}>{s.today.puzzleLabel(puzzle.id, puzzle.mateIn)}</p>
+                  <p className={mutedClassName}>
+                    {s.today.puzzleLabel(puzzle.id, puzzleKindLabel(puzzle))}
+                  </p>
                 </Link>
               )}
               {puzzles.total > 0 && (

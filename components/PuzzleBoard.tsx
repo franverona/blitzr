@@ -20,6 +20,7 @@ import { buttonClass, navButtonClass } from './styles'
 type Feedback = 'incorrect' | null
 
 // Fully manual: the solver plays every ply of the line, both sides. No hints.
+// A defence puzzle is one ply: any of `problem.saves` solves it.
 export function PuzzleBoard({
   problem,
   previousId,
@@ -43,23 +44,30 @@ export function PuzzleBoard({
     null,
   )
 
-  const solved = ply >= problem.moves.length
+  const [playedSave, setPlayedSave] = useState<string | null>(null)
+  const { saves } = problem
+  const line = useMemo(
+    () => (saves ? [playedSave ?? saves[0]] : problem.moves),
+    [saves, playedSave, problem.moves],
+  )
+
+  const solved = ply >= line.length
   const finished = solved || revealed
   const orientation = resolveOrientation(
     boardColors.trainingOrientation,
     puzzleColorToMove(problem),
   )
-  const maxViewPly = revealed ? problem.moves.length : ply
+  const maxViewPly = revealed ? line.length : ply
 
   const positions = useMemo(() => {
     const chess = new Chess(problem.fen)
     const arr = [chess.fen()]
-    for (const san of problem.moves.slice(0, maxViewPly)) {
+    for (const san of line.slice(0, maxViewPly)) {
       chess.move(san)
       arr.push(chess.fen())
     }
     return arr
-  }, [problem.fen, problem.moves, maxViewPly])
+  }, [problem.fen, line, maxViewPly])
 
   const fen = positions[viewPly]
   useMoveSound(fen)
@@ -122,12 +130,13 @@ export function PuzzleBoard({
     if (!move) return false
 
     setPendingPromotion(null)
-    if (move.san === problem.moves[ply]) {
+    if (saves ? saves.includes(move.san) : move.san === line[ply]) {
       setFeedback(null)
+      if (saves) setPlayedSave(move.san)
       const nextPly = ply + 1
       setPly(nextPly)
       setViewPly(nextPly)
-      if (nextPly >= problem.moves.length) {
+      if (nextPly >= line.length) {
         saveSolved()
       }
     } else {
@@ -175,7 +184,7 @@ export function PuzzleBoard({
   }
 
   // Don't spoil moves not yet reached.
-  const shownMoves = problem.moves.slice(0, maxViewPly)
+  const shownMoves = line.slice(0, maxViewPly)
 
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-center">
@@ -256,8 +265,11 @@ export function PuzzleBoard({
           </div>
         </div>
 
+        {saves && !finished && (
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">{s.puzzles.defendPrompt}</p>
+        )}
         {feedback === 'incorrect' && !finished && isLive && (
-          <ErrorText>{s.puzzles.incorrect}</ErrorText>
+          <ErrorText>{saves ? s.puzzles.allowsMate : s.puzzles.incorrect}</ErrorText>
         )}
         {finished && (
           <p
@@ -269,6 +281,18 @@ export function PuzzleBoard({
           >
             {solved ? s.puzzles.solved : s.puzzles.revealedTitle}
           </p>
+        )}
+        {saves && finished && (
+          <div className="flex flex-col gap-2 text-sm">
+            <p>
+              <span className="text-zinc-500 dark:text-zinc-400">{s.puzzles.savesLabel}: </span>
+              {saves.join(', ')}
+            </p>
+            <div>
+              <p className="text-zinc-500 dark:text-zinc-400">{s.puzzles.inTheGameLabel}:</p>
+              <MoveSequence fen={problem.fen} moves={problem.moves} />
+            </div>
+          </div>
         )}
         {saveFailed && (
           <ErrorText>
@@ -284,7 +308,7 @@ export function PuzzleBoard({
             onClick={() => {
               setPendingPromotion(null)
               setRevealed(true)
-              setViewPly(problem.moves.length)
+              setViewPly(line.length)
             }}
             disabled={finished}
             className={NAV_BUTTON_CLASS}

@@ -2,14 +2,16 @@
 // puzzle through props instead.
 import fs from 'fs'
 import path from 'path'
+import LICHESS_DEFENSES from './lichessDefenses.json'
 import LICHESS_MATES from './lichessMates.json'
 import type { MateProblem } from './mateProblems'
 import { REAL_GAME_MATES } from './realGameMates'
 
-/** Shipped in the repo: real games plus Lichess (CC0). */
+/** Shipped in the repo: real games plus Lichess (CC0), mates then defences. */
 export const BUNDLED_MATES: MateProblem[] = [
   ...REAL_GAME_MATES,
   ...(LICHESS_MATES as MateProblem[]),
+  ...(LICHESS_DEFENSES as MateProblem[]),
 ]
 
 // Polgár's book is copyrighted, so its puzzles stay out of the public repo:
@@ -18,10 +20,15 @@ const LOCAL_POLGAR_PATH = path.join(process.cwd(), 'data', 'polgar-mates.json')
 
 let cached: MateProblem[] | null = null
 
-/** Every puzzle in display order: real games, local Polgár (if present), Lichess. */
+/** Every puzzle in display order: real games, local Polgár (if present), Lichess, defences. */
 export function allMateProblems(): MateProblem[] {
   if (!cached) {
-    cached = [...REAL_GAME_MATES, ...readLocalPolgar(), ...(LICHESS_MATES as MateProblem[])]
+    cached = [
+      ...REAL_GAME_MATES,
+      ...readLocalPolgar(),
+      ...(LICHESS_MATES as MateProblem[]),
+      ...(LICHESS_DEFENSES as MateProblem[]),
+    ]
   }
   return cached
 }
