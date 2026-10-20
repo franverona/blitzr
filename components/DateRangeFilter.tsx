@@ -2,12 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { getStrings } from '@/lib/i18n/strings'
-
-// Shared so the preset buttons and date inputs have the same height.
-const INPUT_CLASS =
-  'rounded-md border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900'
-const PRESET_BUTTON_CLASS =
-  'rounded-md border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-700'
+import { chipClass, INPUT_CLASS } from '@/components/styles'
 
 function toDateInputValue(d: Date): string {
   const y = d.getFullYear()
@@ -58,11 +53,7 @@ export function DateRangeFilter({ from, to }: { from?: string; to?: string }) {
               key={preset.key}
               type="button"
               onClick={() => navigate({ from: presetFrom, to: today })}
-              className={`${PRESET_BUTTON_CLASS} ${
-                active
-                  ? 'bg-accent/20 font-medium text-zinc-900 dark:text-white'
-                  : 'text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800'
-              }`}
+              className={chipClass(active)}
             >
               {s.dateRangeFilter.presets[preset.key]}
             </button>

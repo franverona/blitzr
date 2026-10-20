@@ -6,6 +6,7 @@ import { getStrings } from '@/lib/i18n/strings'
 import { useBoardContext, useLiveAnalysisContext } from './Board'
 import { MoveSequence } from './MoveSequence'
 import { useSettings } from './SettingsProvider'
+import { Spinner } from './Spinner'
 
 /**
  * Live top-N engine lines for whatever the board shows (recorded ply or
@@ -45,11 +46,11 @@ export function LiveAnalysisPanel() {
         <p className="text-xs font-semibold text-zinc-500">{s.liveAnalysis.panelTitle}</p>
         {/* Keeps showing the previous lines while a new search runs. */}
         {thinking && (
-          <div
+          <Spinner
             role="status"
             aria-label={s.liveAnalysis.thinking}
             title={s.liveAnalysis.thinking}
-            className="h-3 w-3 shrink-0 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-600 dark:border-zinc-700 dark:border-t-zinc-400"
+            className="size-3"
           />
         )}
       </div>

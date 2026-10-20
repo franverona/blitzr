@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { getStrings } from '@/lib/i18n/strings'
 import type { DrillSourceType } from '@/lib/types'
+import { chipClass } from './styles'
 
 /** URL-driven so `DrillSession` (keyed on these values) remounts with a
  *  fresh session. */
@@ -40,11 +41,7 @@ export function DrillFilters({
           <Link
             key={tab.value}
             href={hrefFor({ type: tab.value === 'all' ? undefined : tab.value })}
-            className={`rounded-md border px-3 py-1 ${
-              active
-                ? 'border-accent bg-accent/20 text-zinc-900 dark:text-white'
-                : 'border-zinc-300 text-zinc-500 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800'
-            }`}
+            className={chipClass(active)}
           >
             {tab.title ? <abbr title={tab.title}>{tab.label}</abbr> : tab.label}
           </Link>
@@ -55,7 +52,7 @@ export function DrillFilters({
         <Link
           href={hrefFor({ opening: undefined })}
           title={s.drillFilters.clearOpening}
-          className="border-accent bg-accent/20 rounded-md border px-3 py-1 text-zinc-900 dark:text-white"
+          className={chipClass(true)}
         >
           {opening} ✕
         </Link>

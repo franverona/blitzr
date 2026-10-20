@@ -12,6 +12,8 @@ import { FlipBoardButton } from './FlipBoardButton'
 import { LessonQuiz } from './LessonQuiz'
 import { MoveExplanation } from './MoveExplanation'
 import { useSettings } from './SettingsProvider'
+import { PageHeader } from './PageHeader'
+import { chipClass, LINK_CLASS } from './styles'
 
 type Mode = 'study' | 'quiz'
 
@@ -40,28 +42,30 @@ export function LessonPractice({
       initialPly={mode === 'study' ? 1 : 0}
     >
       <div className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-200 pb-4 dark:border-zinc-800">
-          <h1 className="text-xl font-semibold">{lesson.name[locale]}</h1>
-          <div className="flex items-center gap-2">
-            <ModeTab
-              label={s.lessonPractice.study}
-              active={mode === 'study'}
-              onClick={() => setMode('study')}
-            />
-            <ModeTab
-              label={s.lessonPractice.quiz}
-              active={mode === 'quiz'}
-              onClick={() => setMode('quiz')}
-            />
-            <span className="mx-1 h-4 w-px bg-zinc-300 dark:bg-zinc-700" />
-            <FlipBoardButton />
-            <AboutOpeningButton
-              name={lesson.name[locale]}
-              summary={lesson.summary[locale]}
-              sourceUrl={lesson.sourceUrl}
-            />
-          </div>
-        </div>
+        <PageHeader
+          title={lesson.name[locale]}
+          actions={
+            <div className="flex items-center gap-2">
+              <ModeTab
+                label={s.lessonPractice.study}
+                active={mode === 'study'}
+                onClick={() => setMode('study')}
+              />
+              <ModeTab
+                label={s.lessonPractice.quiz}
+                active={mode === 'quiz'}
+                onClick={() => setMode('quiz')}
+              />
+              <span className="mx-1 h-4 w-px bg-zinc-300 dark:bg-zinc-700" />
+              <FlipBoardButton />
+              <AboutOpeningButton
+                name={lesson.name[locale]}
+                summary={lesson.summary[locale]}
+                sourceUrl={lesson.sourceUrl}
+              />
+            </div>
+          }
+        />
         {gameStats && <LessonGameStats stats={gameStats} />}
         {mode === 'study' ? (
           <BoardView
@@ -91,7 +95,7 @@ function LessonGameStats({ stats }: { stats: LessonGameStatsData }) {
         ? s.lessonPractice.playedGames(stats.games, stats.wins, stats.draws, stats.losses)
         : s.lessonPractice.neverPlayed}
       {' — '}
-      <Link href="/openings" className="text-blue-600 hover:underline dark:text-blue-400">
+      <Link href="/openings" className={LINK_CLASS}>
         {s.lessonPractice.seeOpeningStats}
       </Link>
       .
@@ -109,14 +113,7 @@ function ModeTab({
   onClick: () => void
 }) {
   return (
-    <button
-      onClick={onClick}
-      className={`rounded-md border px-3 py-1 text-sm ${
-        active
-          ? 'border-accent bg-accent/20 text-zinc-900 dark:text-white'
-          : 'border-zinc-300 text-zinc-500 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800'
-      }`}
-    >
+    <button onClick={onClick} className={chipClass(active)}>
       {label}
     </button>
   )

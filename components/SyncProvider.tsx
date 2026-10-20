@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useRef, useState, useTransition }
 import { listArchivesToSync, syncArchiveMonth } from '@/app/actions'
 import { getStrings } from '@/lib/i18n/strings'
 import { useBulkAnalysis } from './BulkAnalysisProvider'
+import { buttonClass } from './styles'
 
 const TOAST_DURATION_MS = 4000
 // Long enough to reach the "Analyze them" button.
@@ -108,10 +109,7 @@ export function SyncProvider({
         >
           {toast.text}
           {toast.offerAnalysis && bulk.progress === null && (
-            <button
-              onClick={bulk.start}
-              className="rounded-md border border-zinc-300 px-2.5 py-1 text-sm font-medium hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
-            >
+            <button onClick={bulk.start} className={buttonClass({ size: 'sm' })}>
               {s.sync.analyzeNew}
             </button>
           )}

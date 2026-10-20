@@ -3,6 +3,8 @@
 import { useState, useTransition } from 'react'
 import { exportDatabaseBackup } from '@/app/actions'
 import { getStrings } from '@/lib/i18n/strings'
+import { ErrorText } from './ErrorText'
+import { buttonClass } from './styles'
 
 export function BackupButton() {
   const s = getStrings()
@@ -28,14 +30,10 @@ export function BackupButton() {
 
   return (
     <div className="flex flex-col items-start gap-2">
-      <button
-        onClick={handleClick}
-        disabled={isPending}
-        className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:hover:bg-zinc-800"
-      >
+      <button onClick={handleClick} disabled={isPending} className={buttonClass()}>
         {isPending ? s.settings.backupPreparing : s.settings.backup}
       </button>
-      {error && <p className="text-xs text-rose-600 dark:text-rose-400">{error}</p>}
+      {error && <ErrorText className="text-xs">{error}</ErrorText>}
     </div>
   )
 }

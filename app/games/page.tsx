@@ -9,6 +9,7 @@ import { SyncButton } from '@/components/SyncButton'
 import { hasChesscomUsername } from '@/lib/config'
 import { getStrings } from '@/lib/i18n/strings'
 import type { MyColor, MyResult } from '@/lib/types'
+import { PageHeader } from '@/components/PageHeader'
 
 const PAGE_SIZE = 50
 
@@ -64,14 +65,16 @@ export default async function GamesPage({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-200 pb-4 dark:border-zinc-800">
-        <h1 className="text-xl font-semibold">{s.gamesPage.title}</h1>
-        <div className="flex flex-wrap items-center gap-2">
-          <BulkAnalyzeButton hasUnanalyzedGames={unanalyzedGames.length > 0} />
-          <SyncButton />
-          <AddPgnButton />
-        </div>
-      </div>
+      <PageHeader
+        title={s.gamesPage.title}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <BulkAnalyzeButton hasUnanalyzedGames={unanalyzedGames.length > 0} />
+            <SyncButton />
+            <AddPgnButton />
+          </div>
+        }
+      />
 
       <SetupNotice
         hasUsername={hasChesscomUsername()}

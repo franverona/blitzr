@@ -9,6 +9,8 @@ import { getStrings } from '@/lib/i18n/strings'
 import { OPENING_LESSONS } from '@/lib/openingTheory'
 import { buildPositions } from '@/lib/positions'
 import type { Lesson } from '@/lib/types'
+import { PageHeader } from '@/components/PageHeader'
+import { chipClass } from '@/components/styles'
 
 type Category = 'openings' | 'endgames'
 
@@ -46,14 +48,7 @@ function CategoryTab({
   onClick: () => void
 }) {
   return (
-    <button
-      onClick={onClick}
-      className={`rounded-md border px-3 py-1 text-sm ${
-        active
-          ? 'border-accent bg-accent/20 text-zinc-900 dark:text-white'
-          : 'border-zinc-300 text-zinc-500 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800'
-      }`}
-    >
+    <button onClick={onClick} className={chipClass(active)}>
       {label}
     </button>
   )
@@ -65,10 +60,10 @@ export default function LearnPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1 border-b border-zinc-200 pb-4 dark:border-zinc-800">
-        <h1 className="text-xl font-semibold">{s.learnPage.title}</h1>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">{s.learnPage.intro}</p>
-      </div>
+      <PageHeader
+        title={s.learnPage.title}
+        subtitle={<p className="text-sm text-zinc-500 dark:text-zinc-400">{s.learnPage.intro}</p>}
+      />
 
       <div className="flex items-center gap-2">
         <CategoryTab

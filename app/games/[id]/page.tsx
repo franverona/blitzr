@@ -23,6 +23,7 @@ import { formatDateTime } from '@/lib/dates'
 import { getStrings } from '@/lib/i18n/strings'
 import { isStandardChess } from '@/lib/positions'
 import type { Game, MyColor, MyResult } from '@/lib/types'
+import { LINK_CLASS } from '@/components/styles'
 
 function pgnResult(color: MyColor, result: MyResult): string {
   if (result === 'draw') return '1/2-1/2'
@@ -145,7 +146,7 @@ function OpeningLine({ game }: { game: Game }) {
           target="_blank"
           rel="noopener noreferrer"
           title={s.gamePage.learnMoreAboutOpening}
-          className="text-blue-600 hover:underline dark:text-blue-400"
+          className={LINK_CLASS}
         >
           {game.ecoName}
         </a>
@@ -192,12 +193,7 @@ function GameHeader({
         {!isBotGame && game.url && (
           <>
             {' · '}
-            <a
-              href={game.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:underline dark:text-blue-400"
-            >
+            <a href={game.url} target="_blank" rel="noopener noreferrer" className={LINK_CLASS}>
               {s.gamePage.viewOnChessCom}
             </a>
           </>

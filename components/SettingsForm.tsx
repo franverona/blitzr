@@ -15,6 +15,7 @@ import {
 } from '@/lib/theme'
 import { EvalBar } from './EvalBar'
 import { playMoveSound, useSettings } from './SettingsProvider'
+import { Card, SectionLabel } from './Card'
 
 // Static preview with an obvious engine move (Ng5) for the hide-hints toggle.
 const PREVIEW_FEN = 'r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4'
@@ -143,9 +144,7 @@ export function SettingsForm() {
       </div>
 
       <div className="flex w-full max-w-sm flex-col gap-2 lg:sticky lg:top-0">
-        <span className="text-xs font-medium tracking-wide text-zinc-500 uppercase">
-          {s.settings.preview}
-        </span>
+        <SectionLabel>{s.settings.preview}</SectionLabel>
         <div className="flex items-stretch gap-2">
           {!settings.hideEngineHints && (
             <EvalBar
@@ -181,9 +180,9 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   return (
     <section className="flex flex-col gap-3">
       <h2 className="text-sm font-semibold">{title}</h2>
-      <div className="flex flex-col gap-4 rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900">
-        {children}
-      </div>
+      <Card>
+        <div className="flex flex-col gap-4">{children}</div>
+      </Card>
     </section>
   )
 }

@@ -5,6 +5,7 @@ import { ROLLING_AVERAGE_WINDOW, rollingAverageAccuracy } from '@/lib/accuracyTr
 import { formatDate } from '@/lib/dates'
 import { getStrings } from '@/lib/i18n/strings'
 import type { AccuracyTrendPoint } from '@/lib/types'
+import { SectionLabel } from './Card'
 
 const WIDTH = 640
 const HEIGHT = 200
@@ -92,9 +93,7 @@ export function AccuracyTrendChart({ points }: { points: AccuracyTrendPoint[] })
 
   return (
     <section className="flex flex-col gap-2">
-      <h2 className="text-xs font-semibold tracking-wide text-zinc-500 uppercase dark:text-zinc-400">
-        {s.accuracyTrend.title}
-      </h2>
+      <SectionLabel>{s.accuracyTrend.title}</SectionLabel>
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-xs text-zinc-500 dark:text-zinc-500">

@@ -54,6 +54,10 @@ components/
   AccuracyTrendChart.tsx    # hand-rolled SVG chart on /blunders
   BoardCoordinates.tsx      # rank/file labels outside the board
   Select.tsx                # native <select> + chevron — use for every dropdown
+  Dialog.tsx                # modal shell: title, ✕, backdrop click, aria-labelledby
+  PageHeader.tsx / Card.tsx / TableShell.tsx  # page <h1> row, surface + SectionLabel, table frame
+  Badge.tsx / IconButton.tsx / ErrorText.tsx / Spinner.tsx  # small shared primitives
+  styles.ts                 # class helpers: buttonClass(), chipClass(), navButtonClass(), tones
   ...                       # smaller presentational components
 lib/
   types.ts                  # domain types (camelCase)
@@ -110,7 +114,12 @@ scripts/
 - **Long text (opening names) beside a button row needs room to wrap**: the game header's column
   is `flex-1 basis-64` so the name wraps there; button rows that share space with variable-width
   (localized) labels need `flex-wrap`.
-- **Page headers** (the `<h1>` row) get `border-b border-zinc-200 dark:border-zinc-800 pb-4`.
+- **Page headers** (the `<h1>` row) are `PageHeader` (`title`, `subtitle`, `actions`).
+- **Shared UI before new class strings:** `Dialog`, `Badge` (tones from `styles.ts`), `Card` /
+  `SectionLabel`, `TableShell`, `IconButton`, `ErrorText`, `Spinner`. Things rendered as a `<Link>`
+  in one place and a `<button>` in another are class helpers in `components/styles.ts`
+  (`buttonClass()`, `chipClass()` for filter/mode toggles, `navButtonClass()`, `LINK_CLASS`,
+  `INPUT_CLASS`); it has no `'use client'`, so Server Components can import it.
 - **Light/dark theme:** manual toggle stored in a `blitzr-theme` cookie (default `dark`), read in
   `app/layout.tsx` to set `.dark` on `<html>` before first paint. Every component needs an
   explicit light class alongside its `dark:` one. Light palette is muted: canvas `bg-zinc-100`,
@@ -150,8 +159,9 @@ scripts/
 - **A component seeding state from props (`useState(initialX)`) needs `key={id}`** wherever it can
   receive a different record. Exception: a filter that must survive its own navigation (the
   accuracy popover, the search text) stays out of the key and re-syncs from props during render.
-- **Every `<dialog>` is named by its visible `<h2>`:** `aria-labelledby` on the dialog, pointing at
-  an `id` from `useId()` (some dialogs render more than once per page).
+- **Every `<dialog>` is a `Dialog`**, which names it by its visible `<h2>` (`aria-labelledby` to a
+  `useId()`, since some dialogs render more than once per page). The caller owns the `ref` and
+  `showModal()`; with `onSubmit` the body is a `<form>`.
 - **react-chessboard needs a unique `options.id` (`useId()`) when two boards share a page**, and
   keys arrows by start/end square only — dedupe arrows before passing them.
 

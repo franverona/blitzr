@@ -11,6 +11,9 @@ import { getStrings } from '@/lib/i18n/strings'
 import { puzzleColorToMove } from '@/lib/mateProblems'
 import { allMateProblems } from '@/lib/puzzleSet'
 import { getTrainingOrientation, resolveOrientation } from '@/lib/theme'
+import { Badge } from '@/components/Badge'
+import { PageHeader } from '@/components/PageHeader'
+import { buttonClass } from '@/components/styles'
 
 // Each card is a live react-chessboard; rendering 200+ at once hit
 // "Maximum update depth exceeded".
@@ -72,10 +75,11 @@ export default async function PuzzlesPage({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1 border-b border-zinc-200 pb-4 dark:border-zinc-800">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-xl font-semibold">{s.puzzlesPage.title}</h1>
-          {problems.length > 0 && (
+      <PageHeader
+        title={s.puzzlesPage.title}
+        subtitle={<p className="text-sm text-zinc-500 dark:text-zinc-400">{s.puzzlesPage.intro}</p>}
+        actions={
+          problems.length > 0 && (
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
                 <div className="h-1.5 w-24 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800">
@@ -89,18 +93,14 @@ export default async function PuzzlesPage({
                 </span>
               </div>
               {nextUnsolved && (
-                <Link
-                  href={`/puzzles/${nextUnsolved.id}`}
-                  className="rounded-md border border-zinc-300 px-2.5 py-1 text-sm font-medium text-zinc-900 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-100 dark:hover:bg-zinc-800"
-                >
+                <Link href={`/puzzles/${nextUnsolved.id}`} className={buttonClass({ size: 'sm' })}>
                   {s.puzzlesPage.nextUnsolved}
                 </Link>
               )}
             </div>
-          )}
-        </div>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">{s.puzzlesPage.intro}</p>
-      </div>
+          )
+        }
+      />
 
       {problems.length === 0 ? (
         <p className="text-sm text-zinc-500 dark:text-zinc-400">{s.puzzlesPage.empty}</p>
@@ -144,9 +144,9 @@ export default async function PuzzlesPage({
                             ✓
                           </span>
                         )}
-                        <span className="bg-accent/20 rounded px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-zinc-700 uppercase dark:text-zinc-300">
+                        <Badge tone="accent" shape="tag">
                           {s.puzzles.mateIn(problem.mateIn)}
-                        </span>
+                        </Badge>
                       </div>
                     </div>
                     <p className="text-sm font-medium">{problem.title}</p>
