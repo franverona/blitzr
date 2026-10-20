@@ -59,7 +59,7 @@ interface BoardContextValue {
   /** Free-move exploration branch, kept separate from the recorded game's
    *  `ply`/`positions` — it never persists and is discarded on exit. */
   exploring: boolean
-  /** SAN moves played since `startExploring()`. */
+  /** SAN moves played since entering explore mode. */
   explorePath: string[]
   explorePly: number
   /** `explorePositions[0]` is the branch point, before `explorePath[0]`. */
@@ -67,11 +67,11 @@ interface BoardContextValue {
   /** The FEN the board renders: `positions[ply]`, or the explore step while
    *  exploring. Read this instead of `positions[ply]` to draw a position. */
   displayFen: string
-  startExploring: () => void
   exitExploring: () => void
   setExplorePly: (updater: number | ((ply: number) => number)) => void
   /** Promotes to `promotion` (default queen). Truncates any explored moves
-   *  past the current explore ply. Returns whether the move was legal. */
+   *  past the current explore ply, or enters explore mode from the current
+   *  ply. Returns whether the move was legal. */
   attemptExploreMove: (from: string, to: string, promotion?: PromotionPiece) => boolean
   /** Appends a SAN line to the explore branch (entering explore mode if
    *  needed) without moving `explorePly`, so ◀/▶ can step through it. Stops at
@@ -143,13 +143,6 @@ export function BoardProvider({
   )
   const displayFen = exploring ? (explorePositions[explorePly] ?? exploreBaseFen!) : positions[ply]
 
-  const startExploring = useCallback(() => {
-    setExploreBaseFen(positions[ply])
-    setExplorePath([])
-    setExplorePly(0)
-    setExploring(true)
-  }, [positions, ply])
-
   const exitExploring = useCallback(() => {
     setExploring(false)
     setExploreBaseFen(null)
@@ -159,10 +152,10 @@ export function BoardProvider({
 
   const attemptExploreMove = useCallback(
     (from: string, to: string, promotion: PromotionPiece = 'q'): boolean => {
-      const currentPly = explorePlyRef.current
-      const fen = (exploreBaseFen ? buildPositions(exploreBaseFen, explorePathRef.current) : [])[
-        currentPly
-      ]
+      const currentPly = exploring ? explorePlyRef.current : 0
+      const fen = exploring
+        ? (exploreBaseFen ? buildPositions(exploreBaseFen, explorePathRef.current) : [])[currentPly]
+        : positions[ply]
       if (!fen) return false
       const chess = new Chess(fen)
       let move
@@ -172,11 +165,17 @@ export function BoardProvider({
         return false
       }
       if (!move) return false
-      setExplorePath((prev) => [...prev.slice(0, currentPly), move.san])
+      if (exploring) {
+        setExplorePath((prev) => [...prev.slice(0, currentPly), move.san])
+      } else {
+        setExploreBaseFen(positions[ply])
+        setExplorePath([move.san])
+        setExploring(true)
+      }
       setExplorePly(currentPly + 1)
       return true
     },
-    [exploreBaseFen],
+    [exploring, exploreBaseFen, positions, ply],
   )
 
   const playExploreLine = useCallback(
@@ -240,7 +239,6 @@ export function BoardProvider({
         explorePly,
         explorePositions,
         displayFen,
-        startExploring,
         exitExploring,
         setExplorePly,
         attemptExploreMove,
@@ -348,23 +346,6 @@ export function LiveAnalysisProvider({ children }: { children: React.ReactNode }
   return <LiveAnalysisContext.Provider value={state}>{children}</LiveAnalysisContext.Provider>
 }
 
-export function ExploreToggleButton() {
-  const { exploring, startExploring, exitExploring } = useBoardContext()
-  const s = getStrings()
-  return (
-    <button
-      onClick={exploring ? exitExploring : startExploring}
-      className={`rounded-md border px-3 py-1.5 text-sm font-medium whitespace-nowrap ${
-        exploring
-          ? 'border-accent bg-accent/20 text-zinc-900 dark:text-white'
-          : 'border-zinc-300 hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800'
-      }`}
-    >
-      {exploring ? s.liveAnalysis.exitExplore : s.liveAnalysis.explore}
-    </button>
-  )
-}
-
 export function BoardNavControls() {
   const {
     ply,
@@ -378,6 +359,7 @@ export function BoardNavControls() {
     explorePath,
     explorePly,
     setExplorePly,
+    exitExploring,
     setBoardOrientation,
   } = useBoardContext()
   const s = getStrings()
@@ -429,7 +411,8 @@ export function BoardNavControls() {
     setIsPlaying(true)
   }, [lastPly, setPly, exploring])
 
-  // ←/→ step, Home/↑/0 and End/↓ jump, Space plays/pauses, F flips.
+  // ←/→ step, Home/↑/0 and End/↓ jump, Space plays/pauses, F flips, Esc
+  // leaves explore mode.
   const lastNavAtRef = useRef(0)
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -460,6 +443,10 @@ export function BoardNavControls() {
         goToEnd()
         return
       }
+      if (e.key === 'Escape') {
+        if (exploring) exitExploring()
+        return
+      }
       if (e.key.toLowerCase() === 'f') {
         setBoardOrientation((o) => (o === 'white' ? 'black' : 'white'))
         return
@@ -476,7 +463,16 @@ export function BoardNavControls() {
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [goToPrevious, goToNext, goToStart, goToEnd, togglePlaying, setBoardOrientation])
+  }, [
+    goToPrevious,
+    goToNext,
+    goToStart,
+    goToEnd,
+    togglePlaying,
+    setBoardOrientation,
+    exploring,
+    exitExploring,
+  ])
 
   // Auto-play stops on the user's own blunders.
   const blunderPlies = useMemo(
@@ -662,8 +658,11 @@ export function BoardView({
   sidebarMaxWidthClassName = 'lg:max-w-sm xl:max-w-md',
   sidebarExtra,
   sidebarTop,
+  autoExplore = false,
 }: {
   boardMaxWidthClassName?: string
+  /** Moving a piece on the recorded game enters explore mode. */
+  autoExplore?: boolean
   /** The game page narrows it so its nav controls span the whole row. */
   sidebarMaxWidthClassName?: string
   /** Content below the move list. Keep it short — the move list fills the
@@ -715,10 +714,18 @@ export function BoardView({
       : undefined
 
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null)
+  const canMove = exploring || autoExplore
   const legalMoves = useMemo(
-    () => (exploring && selectedSquare ? legalDestinations(displayFen, selectedSquare) : []),
-    [exploring, selectedSquare, displayFen],
+    () => (canMove && selectedSquare ? legalDestinations(displayFen, selectedSquare) : []),
+    [canMove, selectedSquare, displayFen],
   )
+  // Dropped on navigation, so a stale selection can't hide the board's marks.
+  const [selectionFen, setSelectionFen] = useState(displayFen)
+  if (selectionFen !== displayFen) {
+    setSelectionFen(displayFen)
+    setSelectedSquare(null)
+  }
+  const showLegalMoves = exploring || selectedSquare !== null
   const legalMoveMap = useMemo(
     () => new Map(legalMoves.map((m) => [m.to, m.isCapture])),
     [legalMoves],
@@ -895,11 +902,12 @@ export function BoardView({
                     id: boardId,
                     position: displayFen,
                     boardOrientation,
-                    allowDragging: exploring,
-                    onPieceDrop: exploring ? handleExploreDrop : undefined,
-                    onSquareClick: exploring ? handleExploreSquareClick : undefined,
-                    // squareRenderer overrides squareStyles, so only use it while exploring.
-                    squareRenderer: exploring
+                    allowDragging: canMove,
+                    onPieceDrop: canMove ? handleExploreDrop : undefined,
+                    onSquareClick: canMove ? handleExploreSquareClick : undefined,
+                    // squareRenderer overrides squareStyles, so only use it while
+                    // exploring or picking a move.
+                    squareRenderer: showLegalMoves
                       ? ({ square, children }) => (
                           <LegalMoveSquare
                             isSelected={square === selectedSquare}
@@ -915,12 +923,12 @@ export function BoardView({
                     darkSquareStyle: { backgroundColor: boardColors.dark },
                     lightSquareStyle: { backgroundColor: boardColors.light },
                     showNotation: false,
-                    squareStyles: exploring ? undefined : boardSquareStyles,
+                    squareStyles: showLegalMoves ? undefined : boardSquareStyles,
                     arrows: boardArrows,
                   }}
                 />
               </div>
-              {exploring && activePromotion && (
+              {canMove && activePromotion && (
                 <PromotionPicker
                   color={displayFen.split(' ')[1] === 'b' ? 'black' : 'white'}
                   onChoose={(piece) => {
@@ -941,15 +949,31 @@ export function BoardView({
             </div>
           </BoardCoordinates>
         </div>
-        <p className="text-xs text-zinc-400">
-          {s.board.material} {formatMaterialDiff(materialDiff(displayFen))}
-          {barEval && (
-            <>
-              {' '}
-              · {describeEval(barEval)} ({formatEval(barEval)})
-            </>
+        <div className="flex flex-wrap items-center justify-between gap-x-3 text-xs text-zinc-400">
+          <p>
+            {s.board.material} {formatMaterialDiff(materialDiff(displayFen))}
+            {barEval && (
+              <>
+                {' '}
+                · {describeEval(barEval)} ({formatEval(barEval)})
+              </>
+            )}
+          </p>
+          {exploring && (
+            <p className="flex items-center gap-1.5">
+              <span className="text-accent font-medium">{s.board.exploring}</span>·
+              <button
+                onClick={exitExploring}
+                className="underline hover:text-zinc-900 dark:hover:text-white"
+              >
+                {s.board.backToGame}
+              </button>
+              <kbd className="rounded border border-zinc-300 px-1 font-sans dark:border-zinc-700">
+                Esc
+              </kbd>
+            </p>
           )}
-        </p>
+        </div>
       </div>
 
       <div
