@@ -80,9 +80,9 @@ export default async function GamePage({
       </div>
 
       {game.movesSan ? (
-        // lg+: 10.5rem ≈ chrome above/below the board.
+        // lg+: 9.25rem ≈ chrome above/below the board.
         <BoardView
-          boardMaxWidthClassName="max-w-160 lg:max-w-[min(40rem,calc(100dvh-10.5rem))] xl:max-w-[min(43rem,calc(100dvh-10.5rem))] 2xl:max-w-[min(46rem,calc(100dvh-10.5rem))]"
+          boardMaxWidthClassName="max-w-160 lg:max-w-[min(40rem,calc(100dvh-9.25rem))] xl:max-w-[min(43rem,calc(100dvh-9.25rem))] 2xl:max-w-[min(46rem,calc(100dvh-9.25rem))]"
           sidebarMaxWidthClassName="lg:max-w-xs xl:max-w-sm"
           sidebarTop={<LiveAnalysisPanel />}
           sidebarExtra={
@@ -189,17 +189,20 @@ function GameHeader({
         {!game.isMine && ` · ${s.gamePage.notMine}`}
         <OpeningLine game={game} />
         {game.movesSan && <MoveQualityLink />}
+        {!isBotGame && game.url && (
+          <>
+            {' · '}
+            <a
+              href={game.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline dark:text-blue-400"
+            >
+              {s.gamePage.viewOnChessCom}
+            </a>
+          </>
+        )}
       </div>
-      {!isBotGame && game.url && (
-        <a
-          href={game.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-xs text-blue-600 hover:underline dark:text-blue-400"
-        >
-          {s.gamePage.viewOnChessCom}
-        </a>
-      )}
     </div>
   )
 }
