@@ -9,7 +9,27 @@ const FORCED_MATE_NODE_BUDGET = 3_000
 /** Whether the side to move forces mate within `mateIn` moves against every
  *  legal reply. */
 export function isForcedMate(fen: string, mateIn: number): boolean {
-  return canForceMate(new Chess(fen), mateIn, { remaining: FORCED_MATE_NODE_BUDGET })
+  return searchForcedMate(fen, mateIn) === true
+}
+
+/** Like isForcedMate(), but undefined when the node budget ran out before a
+ *  "no" was proven (a false negative there would pass a losing move as safe). */
+export function searchForcedMate(fen: string, mateIn: number): boolean | undefined {
+  const budget = { remaining: FORCED_MATE_NODE_BUDGET }
+  if (canForceMate(new Chess(fen), mateIn, budget)) return true
+  return budget.remaining > 0 ? false : undefined
+}
+
+/** Whether the side to move forces mate in `maxMoves` moves or fewer;
+ *  undefined if any depth's search ran out of budget. */
+export function forcedMateWithin(fen: string, maxMoves: number): boolean | undefined {
+  let unknown = false
+  for (let mateIn = 1; mateIn <= maxMoves; mateIn++) {
+    const result = searchForcedMate(fen, mateIn)
+    if (result) return true
+    if (result === undefined) unknown = true
+  }
+  return unknown ? undefined : false
 }
 
 function canForceMate(chess: Chess, mateIn: number, budget: { remaining: number }): boolean {

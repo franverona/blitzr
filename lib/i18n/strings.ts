@@ -81,7 +81,7 @@ const en = {
     noLastGame: 'No games yet.',
     lastSynced: (ago: string) => `Last synced ${ago}`,
     puzzleTitle: 'Next puzzle',
-    puzzleLabel: (id: number, mateIn: number) => `#${id} · Mate in ${mateIn}`,
+    puzzleLabel: (id: number, kind: string) => `#${id} · ${kind}`,
     allPuzzlesSolved: 'Every puzzle is solved.',
   },
   settings: {
@@ -473,6 +473,11 @@ const en = {
     toMove: (color: 'white' | 'black'): string =>
       color === 'white' ? 'White to move' : 'Black to move',
     mateIn: (n: number) => `Mate in ${n}`,
+    defendMateIn: (n: number) => `Stop mate in ${n}`,
+    defendPrompt: 'Your opponent threatens mate. Find the move that stops it.',
+    allowsMate: 'That allows mate — try again.',
+    savesLabel: 'Moves that stop the mate',
+    inTheGameLabel: 'What happened in the game',
     incorrect: 'Not quite — try again.',
     solved: 'Solved!',
     saveFailed: "Couldn't save your progress, so this puzzle will show as unsolved after a reload.",
@@ -487,7 +492,8 @@ const en = {
   },
   puzzlesPage: {
     title: 'Puzzles',
-    intro: 'Forced-mate puzzles — play out the winning line yourself. No hints, no engine.',
+    intro:
+      'Forced-mate puzzles — play out the winning line yourself, or find the move that stops one. No hints, no engine.',
     solvedCount: (solved: number, total: number) => `${solved} of ${total} solved`,
     empty: 'No puzzles loaded yet.',
     noneMatch: 'No puzzles match these filters.',
@@ -504,6 +510,9 @@ const en = {
       unsolvedOnly: 'Unsolved',
       allColors: 'Any color',
       allMateIn: 'Any length',
+      allKinds: 'Mate or defend',
+      mateKind: 'Give mate',
+      defendKind: 'Stop mate',
     },
   },
   learnPage: {
@@ -631,7 +640,7 @@ const es: Strings = {
     noLastGame: 'Aún no hay partidas.',
     lastSynced: (ago: string) => `Última sincronización ${ago}`,
     puzzleTitle: 'Siguiente problema',
-    puzzleLabel: (id: number, mateIn: number) => `#${id} · Mate en ${mateIn}`,
+    puzzleLabel: (id: number, kind: string) => `#${id} · ${kind}`,
     allPuzzlesSolved: 'Todos los problemas están resueltos.',
   },
   settings: {
@@ -1034,6 +1043,11 @@ const es: Strings = {
     toMove: (color: 'white' | 'black') =>
       color === 'white' ? 'Juegan las blancas' : 'Juegan las negras',
     mateIn: (n: number) => `Mate en ${n}`,
+    defendMateIn: (n: number) => `Evita el mate en ${n}`,
+    defendPrompt: 'Tu rival amenaza mate. Encuentra la jugada que lo evita.',
+    allowsMate: 'Eso permite el mate — inténtalo de nuevo.',
+    savesLabel: 'Jugadas que evitan el mate',
+    inTheGameLabel: 'Lo que pasó en la partida',
     incorrect: 'No exactamente — inténtalo de nuevo.',
     solved: '¡Resuelto!',
     saveFailed:
@@ -1050,7 +1064,7 @@ const es: Strings = {
   puzzlesPage: {
     title: 'Problemas',
     intro:
-      'Problemas de mate forzado — juega tú mismo la línea ganadora completa. Sin pistas ni motor.',
+      'Problemas de mate forzado — juega tú mismo la línea ganadora completa, o encuentra la jugada que lo evita. Sin pistas ni motor.',
     solvedCount: (solved: number, total: number) => `${solved} de ${total} resueltos`,
     empty: 'Aún no hay problemas cargados.',
     noneMatch: 'Ningún problema coincide con estos filtros.',
@@ -1067,6 +1081,9 @@ const es: Strings = {
       unsolvedOnly: 'Sin resolver',
       allColors: 'Cualquier color',
       allMateIn: 'Cualquier longitud',
+      allKinds: 'Dar o evitar mate',
+      mateKind: 'Dar mate',
+      defendKind: 'Evitar mate',
     },
   },
   learnPage: {
