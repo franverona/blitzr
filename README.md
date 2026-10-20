@@ -152,7 +152,7 @@ A game page also has:
 ### Drilling
 
 `/drill` turns every repertoire deviation and every one of your blunders into a card: find the move
-you should have played. Games that left your repertoire at the same position share one card. On a
+you should have played. Games that left your repertoire at the same position share one card, and missing the same move several turns in a row is one card. On a
 blunder card, a move other than the engine's still counts if a quick Stockfish check rates it good
 or better. Scheduling is SM-2: right answers come back later, wrong ones tomorrow. Sessions hold 15 cards by default (10 or 25 in settings), the most overdue first.
 **Hint** reveals progressively more, and cards can be filtered by type and opening. Shortcuts:

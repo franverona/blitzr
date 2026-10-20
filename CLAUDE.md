@@ -266,7 +266,8 @@ and the slider are debounced (400ms); selects navigate immediately.
 
 `drill_cards` stores only the SM-2 schedule (binary grading); prompts are re-derived by
 `buildDrillPrompt()` from deviations and own-move blunders. Deviations are one card per position
-(the oldest game that left the tree there), not per game. The deck re-syncs on every `/drill` load
+(the oldest game that left the tree there), not per game; a blunder whose best move repeats the
+previous own ply's (same piece left en prise) is folded into that first card. The deck re-syncs on every `/drill` load
 (`reconcileDrillDeck()`, pure) and serves the most-overdue cards (`blitzr-drill-session-size`
 cookie: 10/15/25, default 15, read by `getDrillDeck()` itself). `DrillSession` snapshots its prompts
 so revalidation can't reshuffle an active session. A blunder card also accepts a non-engine move
