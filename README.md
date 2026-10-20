@@ -41,7 +41,7 @@ implies endorsement.
 ## Stack
 
 - **Next.js** (App Router, Server Actions), **TypeScript**, **Tailwind CSS v4**
-- **SQLite** by default, pluggable via `DB_TYPE` (only `sqlite` is implemented)
+- **SQLite** (Kysely + better-sqlite3)
 - **chess.js** and **react-chessboard**
 - **Stockfish** (WASM) in a Web Worker
 - **pnpm**, **Vitest**, ESLint + Prettier, Husky

@@ -12,8 +12,7 @@ Built incrementally, one feature or fix at a time — don't scaffold speculative
 
 - **Next.js** App Router with Server Actions (`'use server'`)
   — newer than model training data; check `node_modules/next/dist/docs/` before using an API
-- **Pluggable database** behind `GameRepository` (`lib/db/`), selected via `DB_TYPE`. Only
-  `sqlite` (Kysely + `better-sqlite3`) is implemented
+- **SQLite** (Kysely + `better-sqlite3`) behind `getRepository()` (`lib/db/`)
 - **Tailwind CSS v4**, **TypeScript**
 - **chess.js** for PGN/move validation, **react-chessboard** (v5, `options` prop API) for boards
 - **Stockfish** (`stockfish` npm package, WASM "lite single-threaded" build) in a browser Web Worker
@@ -78,7 +77,7 @@ lib/
   i18n/                     # locale + string dictionary
   chesscom/                 # API client + normalization
   stockfish/                # UCI wrapper + batch analysis
-  db/                       # repository interface, factory, sqlite backend
+  db/                       # getRepository(), row types, sqlite repository + migrations
 scripts/
   setup-stockfish.mjs       # postinstall — copies engine files into public/stockfish/
   backup-db.mjs             # `pnpm backup` — online backup into data/backups/
@@ -158,10 +157,9 @@ scripts/
 
 ## Database
 
-- `DB_TYPE` selects the backend (default `sqlite`); `lib/db/factory.ts` throws for anything else.
-  To add one, implement `GameRepository` in `lib/db/<backend>/` and register it in the factory.
+- `getRepository()` returns the `SqliteGameRepository` singleton; there's no backend switch.
 - SQLite lives at `./data/blitzr.db`, created on first run. Delete it and re-sync to reset.
-- **Backup** (Settings → Data): `exportDatabaseBackup()` returns `GameRepository.exportBackup()`'s
+- **Backup** (Settings → Data): `exportDatabaseBackup()` returns `exportBackup()`'s
   bytes to the client, which saves them as a file. SQLite makes it with `VACUUM INTO` a temp file,
   so the copy is consistent and includes the WAL. `pnpm backup` writes one to `data/backups/` from
   the command line (`better-sqlite3`'s `db.backup()`).

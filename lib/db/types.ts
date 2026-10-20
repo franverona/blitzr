@@ -1,15 +1,3 @@
-import type {
-  ArchiveSyncStatus,
-  DrillCard,
-  DrillSourceType,
-  Game,
-  GameAnalysis,
-  MyColor,
-  MyResult,
-  RepertoireColor,
-  RepertoireNode,
-} from '../types'
-
 export interface GamesTable {
   id: string
   url: string
@@ -92,61 +80,4 @@ export interface DbSchema {
   drill_cards: DrillCardsTable
   puzzle_progress: PuzzleProgressTable
   drill_review_days: DrillReviewDaysTable
-}
-
-export type DbType = 'sqlite'
-
-export interface GameRepository {
-  /** Inserts games, skipping existing ids. Returns how many were new. */
-  upsertGames(games: Game[]): Promise<number>
-  /** `opponent` is a case-insensitive substring match on either player.
-   *  `gameIds` restricts to that id set (the accuracy filter, computed in app
-   *  code); an empty array returns nothing without querying. */
-  listGames(params?: {
-    limit?: number
-    offset?: number
-    opponent?: string
-    result?: MyResult
-    color?: MyColor
-    rated?: boolean
-    gameIds?: string[]
-  }): Promise<{ games: Game[]; total: number }>
-  listAllGames(): Promise<Game[]>
-  getGame(id: string): Promise<Game | undefined>
-  /** Cascades to the game's analysis and drill cards. */
-  deleteGame(id: string): Promise<void>
-  getArchiveSyncStatus(): Promise<ArchiveSyncStatus[]>
-  markArchiveSynced(
-    archiveYm: string,
-    status: 'complete' | 'partial',
-    gameCount: number,
-  ): Promise<void>
-
-  listRepertoireNodes(color: RepertoireColor): Promise<RepertoireNode[]>
-  /** `id` is client-generated so the node can be added optimistically. */
-  addRepertoireNode(node: RepertoireNode): Promise<void>
-  /** Cascades to the node's subtree. */
-  deleteRepertoireNode(id: string): Promise<void>
-
-  getGameAnalysis(gameId: string): Promise<GameAnalysis | undefined>
-  saveGameAnalysis(analysis: GameAnalysis): Promise<void>
-  listAllGameAnalyses(): Promise<GameAnalysis[]>
-
-  listDrillCards(): Promise<DrillCard[]>
-  /** Insert or replace, keyed by (gameId, sourceType, ply). */
-  upsertDrillCard(card: DrillCard): Promise<void>
-  deleteDrillCards(
-    keys: { gameId: string; sourceType: DrillSourceType; ply: number }[],
-  ): Promise<void>
-
-  /** Days ("YYYY-MM-DD", local) with at least one drill answer, for the streak. */
-  listDrillReviewDays(): Promise<string[]>
-  recordDrillReviewDay(day: string): Promise<void>
-
-  listSolvedPuzzleIds(): Promise<number[]>
-  /** No-op if already solved, keeping the original solved_at. */
-  markPuzzleSolved(puzzleId: number): Promise<void>
-
-  /** A consistent snapshot of the whole database, in the backend's file format. */
-  exportBackup(): Promise<Uint8Array<ArrayBuffer>>
 }

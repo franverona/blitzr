@@ -9,7 +9,7 @@ const globalForDb = globalThis as typeof globalThis & {
   sqliteDb?: Kysely<DbSchema>
 }
 
-export function getSqliteRaw(): Database.Database {
+function getSqliteRaw(): Database.Database {
   if (!globalForDb.sqliteRaw) {
     const dataDir = path.join(process.cwd(), 'data')
     if (!fs.existsSync(dataDir)) {
