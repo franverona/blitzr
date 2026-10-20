@@ -1,20 +1,15 @@
 import { blunderSeverity } from '@/lib/analysis'
 import { getStrings } from '@/lib/i18n/strings'
-
-const STYLES = {
-  mistake: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400',
-  blunder: 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-400',
-} as const
+import { Badge } from './Badge'
 
 export function BlunderSeverityBadge({ winDrop }: { winDrop: number }) {
   const s = getStrings()
   const severity = blunderSeverity(winDrop)
   return (
-    <abbr
-      title={s.blunderBadge.titles[severity]}
-      className={`rounded px-1.5 py-0.5 text-[10px] font-semibold tracking-wide uppercase no-underline ${STYLES[severity]}`}
-    >
-      {s.blunderBadge.labels[severity]}
+    <abbr title={s.blunderBadge.titles[severity]} className="no-underline">
+      <Badge tone={severity === 'blunder' ? 'rose' : 'amber'} shape="tag">
+        {s.blunderBadge.labels[severity]}
+      </Badge>
     </abbr>
   )
 }

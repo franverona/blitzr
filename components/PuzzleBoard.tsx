@@ -14,6 +14,8 @@ import { useSettings, useMoveSound } from './SettingsProvider'
 import { LegalMoveSquare } from './LegalMoveSquare'
 import { MoveSequence } from './MoveSequence'
 import { PromotionPicker, type PromotionPiece } from './PromotionPicker'
+import { ErrorText } from './ErrorText'
+import { buttonClass, navButtonClass } from './styles'
 
 type Feedback = 'incorrect' | null
 
@@ -188,7 +190,7 @@ export function PuzzleBoard({
               onClick={() => goToPly(viewPly - 1)}
               disabled={viewPly === 0 || !!pendingPromotion}
               aria-label={s.board.navLabels.previous}
-              className="rounded border border-zinc-300 px-1.5 py-0.5 text-xs hover:bg-zinc-100 disabled:opacity-40 dark:border-zinc-700 dark:hover:bg-zinc-800"
+              className={buttonClass({ size: 'xs' })}
             >
               ◀
             </button>
@@ -196,7 +198,7 @@ export function PuzzleBoard({
               onClick={() => goToPly(viewPly + 1)}
               disabled={viewPly === maxViewPly || !!pendingPromotion}
               aria-label={s.board.navLabels.next}
-              className="rounded border border-zinc-300 px-1.5 py-0.5 text-xs hover:bg-zinc-100 disabled:opacity-40 dark:border-zinc-700 dark:hover:bg-zinc-800"
+              className={buttonClass({ size: 'xs' })}
             >
               ▶
             </button>
@@ -255,7 +257,7 @@ export function PuzzleBoard({
         </div>
 
         {feedback === 'incorrect' && !finished && isLive && (
-          <p className="text-sm text-rose-600 dark:text-rose-400">{s.puzzles.incorrect}</p>
+          <ErrorText>{s.puzzles.incorrect}</ErrorText>
         )}
         {finished && (
           <p
@@ -269,12 +271,12 @@ export function PuzzleBoard({
           </p>
         )}
         {saveFailed && (
-          <p role="alert" className="text-sm text-rose-600 dark:text-rose-400">
+          <ErrorText>
             {s.puzzles.saveFailed}{' '}
             <button onClick={saveSolved} className="font-medium underline">
               {s.puzzles.retrySave}
             </button>
-          </p>
+          </ErrorText>
         )}
 
         <div className="flex flex-wrap gap-2">
@@ -297,9 +299,7 @@ export function PuzzleBoard({
   )
 }
 
-// Matches the game page's BoardNavControls buttons.
-const NAV_BUTTON_CLASS =
-  'flex h-10 flex-1 items-center justify-center rounded-lg border border-zinc-300 bg-zinc-50 px-3 text-sm whitespace-nowrap text-zinc-700 hover:bg-zinc-200 disabled:pointer-events-none disabled:opacity-40 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700'
+const NAV_BUTTON_CLASS = `px-3 text-sm whitespace-nowrap disabled:pointer-events-none ${navButtonClass(false)}`
 
 function PuzzleLink({ id, label, d }: { id: number | null; label: string; d: string }) {
   const icon = (

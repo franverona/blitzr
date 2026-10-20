@@ -4,6 +4,8 @@ import { getSolvedPuzzleIds } from '@/app/actions'
 import { PuzzleBoard } from '@/components/PuzzleBoard'
 import { getStrings } from '@/lib/i18n/strings'
 import { allMateProblems, getMateProblem } from '@/lib/puzzleSet'
+import { Badge } from '@/components/Badge'
+import { LINK_CLASS } from '@/components/styles'
 
 export default async function PuzzlePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -30,13 +32,13 @@ export default async function PuzzlePage({ params }: { params: Promise<{ id: str
           <h1 className="text-xl font-semibold">
             #{problem.id} {problem.title}
           </h1>
-          <span className="bg-accent/20 rounded px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-zinc-700 uppercase dark:text-zinc-300">
+          <Badge tone="accent" shape="tag">
             {s.puzzles.mateIn(problem.mateIn)}
-          </span>
+          </Badge>
           {solved && (
-            <span className="rounded bg-emerald-600/15 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-emerald-700 uppercase dark:bg-emerald-400/15 dark:text-emerald-400">
+            <Badge tone="emerald" shape="tag">
               ✓ {s.puzzles.solvedBadge}
-            </span>
+            </Badge>
           )}
         </div>
         <p className="text-sm text-zinc-500 dark:text-zinc-400">
@@ -55,7 +57,7 @@ export default async function PuzzlePage({ params }: { params: Promise<{ id: str
                 href={problem.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline dark:text-blue-400"
+                className={LINK_CLASS}
               >
                 {s.puzzles.viewOnLichess}
               </a>

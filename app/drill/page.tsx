@@ -4,6 +4,7 @@ import { DrillFilters } from '@/components/DrillFilters'
 import { DrillSession } from '@/components/DrillSession'
 import { getStrings } from '@/lib/i18n/strings'
 import type { DrillSourceType } from '@/lib/types'
+import { PageHeader } from '@/components/PageHeader'
 
 export default async function DrillPage({
   searchParams,
@@ -22,9 +23,7 @@ export default async function DrillPage({
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="border-b border-zinc-200 pb-4 text-xl font-semibold dark:border-zinc-800">
-        {getStrings().drillPage.title}
-      </h1>
+      <PageHeader title={getStrings().drillPage.title} />
       <DrillFilters sourceType={sourceType} opening={opening} />
       <DrillSession
         key={deckKey}

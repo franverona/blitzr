@@ -18,6 +18,7 @@ import { useSettings, useMoveSound } from './SettingsProvider'
 import { LegalMoveSquare } from './LegalMoveSquare'
 import { PlayerAvatar } from './PlayerAvatar'
 import { PromotionPicker, type PromotionPiece } from './PromotionPicker'
+import { buttonClass, LINK_CLASS } from './styles'
 
 type Feedback = 'correct' | 'alternative' | 'incorrect' | null
 
@@ -237,15 +238,12 @@ function DrillDeck({
           {s.drill.tally(tally.correct, tally.incorrect, sessionPrompts.length)}
         </p>
         <div className="flex flex-wrap items-center gap-3">
-          <button
-            onClick={handleRestart}
-            className="w-fit rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
-          >
+          <button onClick={handleRestart} className={`w-fit ${buttonClass()}`}>
             {s.drill.shuffleAndRestart}
           </button>
           {moreDue > 0 && (
             // Plain <a>: a full reload is needed so the snapshotted session resets.
-            <a href="/drill" className="text-sm text-blue-600 hover:underline dark:text-blue-400">
+            <a href="/drill" className={`text-sm ${LINK_CLASS}`}>
               {s.drill.moreDue(moreDue)}
             </a>
           )}
@@ -412,7 +410,7 @@ function DrillDeck({
             href={`/games/${prompt.gameId}?ply=${prompt.ply - 1}`}
             target="_blank"
             rel="noopener"
-            className="text-sm text-blue-600 hover:underline dark:text-blue-400"
+            className={`text-sm ${LINK_CLASS}`}
           >
             {prompt.gameLabel}
           </a>
@@ -425,7 +423,7 @@ function DrillDeck({
           <button
             onClick={handleHint}
             disabled={hintLevel >= 3 || checking}
-            className="w-fit rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium hover:bg-zinc-100 disabled:opacity-40 dark:border-zinc-700 dark:hover:bg-zinc-800"
+            className={`w-fit ${buttonClass()}`}
           >
             {s.drill.hint}
           </button>
@@ -461,10 +459,7 @@ function DrillDeck({
                 {describeBlunderReason(hangingReason)}
               </p>
             )}
-            <button
-              onClick={handleNext}
-              className="w-fit rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
-            >
+            <button onClick={handleNext} className={`w-fit ${buttonClass()}`}>
               {s.drill.next}
             </button>
           </>

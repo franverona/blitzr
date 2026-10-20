@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { getStrings } from '@/lib/i18n/strings'
 import { startRouteProgress } from './RouteProgressBar'
 import { Select } from './Select'
+import { chipClass } from './styles'
 
 export type PuzzleStatusFilter = 'all' | 'solved' | 'unsolved'
 export type PuzzleColorFilter = 'all' | 'white' | 'black'
@@ -56,11 +57,7 @@ export function PuzzleFilters({
           <Link
             key={tab.value}
             href={hrefFor({ status: tab.value === 'all' ? undefined : tab.value })}
-            className={`rounded-md border px-3 py-1 ${
-              active
-                ? 'border-accent bg-accent/20 text-zinc-900 dark:text-white'
-                : 'border-zinc-300 text-zinc-500 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800'
-            }`}
+            className={chipClass(active)}
           >
             {tab.label}
           </Link>
@@ -72,11 +69,7 @@ export function PuzzleFilters({
           <Link
             key={tab.value}
             href={hrefFor({ color: tab.value === 'all' ? undefined : tab.value })}
-            className={`rounded-md border px-3 py-1 ${
-              active
-                ? 'border-accent bg-accent/20 text-zinc-900 dark:text-white'
-                : 'border-zinc-300 text-zinc-500 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800'
-            }`}
+            className={chipClass(active)}
           >
             {tab.label}
           </Link>

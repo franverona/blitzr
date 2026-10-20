@@ -11,6 +11,8 @@ import { REVEAL_ARROW_COLOR } from '@/lib/theme'
 import { useBoardContext } from './Board'
 import { useSettings, useMoveSound } from './SettingsProvider'
 import { LegalMoveSquare } from './LegalMoveSquare'
+import { ErrorText } from './ErrorText'
+import { buttonClass } from './styles'
 
 const OPPONENT_MOVE_DELAY_MS = 500
 
@@ -153,17 +155,14 @@ export function LessonQuiz({ sidebarExtra }: { sidebarExtra?: React.ReactNode })
             </p>
           )}
           <div className="flex shrink-0 items-center gap-2">
-            <button
-              onClick={handleRestart}
-              className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
-            >
+            <button onClick={handleRestart} className={buttonClass()}>
               {s.lessonQuiz.restart}
             </button>
             {!isComplete && (
               <button
                 onClick={handleHint}
                 disabled={revealed || !isMyTurn}
-                className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium hover:bg-zinc-100 disabled:opacity-40 dark:border-zinc-700 dark:hover:bg-zinc-800"
+                className={buttonClass()}
               >
                 {s.lessonQuiz.showMove}
               </button>
@@ -209,11 +208,7 @@ export function LessonQuiz({ sidebarExtra }: { sidebarExtra?: React.ReactNode })
               : s.lessonQuiz.summary(mistakes, hintsUsed)}
           </p>
         ) : (
-          feedback === 'incorrect' && (
-            <p className="text-sm text-rose-600 dark:text-rose-400">
-              {s.lessonQuiz.notQuiteTryAgain}
-            </p>
-          )
+          feedback === 'incorrect' && <ErrorText>{s.lessonQuiz.notQuiteTryAgain}</ErrorText>
         )}
 
         <p className="text-xs text-zinc-600">{s.lessonQuiz.keyboardHint}</p>

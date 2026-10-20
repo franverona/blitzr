@@ -4,9 +4,10 @@ import Link from 'next/link'
 import { formatDate } from '@/lib/dates'
 import { getStrings } from '@/lib/i18n/strings'
 import type { Game, GameAccuracy } from '@/lib/types'
-import { accuracyPillClass } from './GameAnalysisPanel'
+import { Badge } from './Badge'
 import { KnightIcon } from './KnightIcon'
 import { ResultBadge } from './ResultBadge'
+import { accuracyTone } from './styles'
 
 export function GameRow({ game, accuracy }: { game: Game; accuracy: GameAccuracy | undefined }) {
   const s = getStrings()
@@ -30,9 +31,7 @@ export function GameRow({ game, accuracy }: { game: Game; accuracy: GameAccuracy
         {game.isMine ? (
           <ResultBadge result={game.myResult} />
         ) : (
-          <span className="rounded bg-zinc-200 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
-            {s.gameRow.notMine}
-          </span>
+          <Badge tone="zinc">{s.gameRow.notMine}</Badge>
         )}
       </Cell>
       <Cell href={href} className="justify-end text-zinc-400 tabular-nums">
@@ -41,11 +40,9 @@ export function GameRow({ game, accuracy }: { game: Game; accuracy: GameAccuracy
       </Cell>
       <Cell href={href} className="justify-center">
         {accuracy ? (
-          <span
-            className={`rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums ${accuracyPillClass(accuracy.accuracy)}`}
-          >
+          <Badge tone={accuracyTone(accuracy.accuracy)} shape="pill" className="tabular-nums">
             {accuracy.accuracy}
-          </span>
+          </Badge>
         ) : (
           <span className="text-zinc-300 dark:text-zinc-700">—</span>
         )}

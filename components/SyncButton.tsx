@@ -3,6 +3,7 @@
 import { getStrings } from '@/lib/i18n/strings'
 import { RefreshCwIcon } from './NavIcons'
 import { useSync } from './SyncProvider'
+import { buttonClass } from './styles'
 
 export function SyncButton() {
   const { isPending, progress, sync } = useSync()
@@ -12,7 +13,7 @@ export function SyncButton() {
     <button
       onClick={sync}
       disabled={isPending}
-      className="flex items-center gap-1.5 rounded-md border border-zinc-300 px-2.5 py-1 text-sm font-medium text-zinc-900 hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-100 dark:hover:bg-zinc-800"
+      className={`flex items-center gap-1.5 ${buttonClass({ size: 'sm' })}`}
     >
       <RefreshCwIcon className={`size-4 shrink-0 ${isPending ? 'animate-spin' : ''}`} />
       {progress

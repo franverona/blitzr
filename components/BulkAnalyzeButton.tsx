@@ -3,6 +3,8 @@
 import { getStrings } from '@/lib/i18n/strings'
 import { useBulkAnalysis } from './BulkAnalysisProvider'
 import { CpuIcon } from './NavIcons'
+import { Spinner } from './Spinner'
+import { buttonClass } from './styles'
 
 export function BulkAnalyzeButton({ hasUnanalyzedGames }: { hasUnanalyzedGames: boolean }) {
   const { progress, start, cancel } = useBulkAnalysis()
@@ -18,13 +20,9 @@ export function BulkAnalyzeButton({ hasUnanalyzedGames }: { hasUnanalyzedGames: 
         title={
           !hasUnanalyzedGames && progress === null ? s.bulkAnalyze.nothingToAnalyze : undefined
         }
-        className="flex items-center gap-1.5 rounded-md border border-zinc-300 px-2.5 py-1 text-sm font-medium whitespace-nowrap hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:hover:bg-zinc-800"
+        className={`flex items-center gap-1.5 whitespace-nowrap ${buttonClass({ size: 'sm' })}`}
       >
-        {progress ? (
-          <span className="size-4 shrink-0 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-600 dark:border-zinc-600 dark:border-t-zinc-300" />
-        ) : (
-          <CpuIcon className="size-4 shrink-0" />
-        )}
+        {progress ? <Spinner /> : <CpuIcon className="size-4 shrink-0" />}
         {progress ? (
           <>
             {s.bulkAnalyze.analyzingProgress(progress.gamesDone + 1, progress.gamesTotal)}
