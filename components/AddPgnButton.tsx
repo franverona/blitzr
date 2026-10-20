@@ -20,9 +20,8 @@ export function AddPgnButton() {
   const router = useRouter()
   const s = getStrings()
 
+  // The draft survives closing (a stray backdrop click); it's cleared once a game is added.
   function open() {
-    setPgn('')
-    setSide('auto')
     setError(null)
     dialogRef.current?.showModal()
   }
@@ -37,6 +36,8 @@ export function AddPgnButton() {
           setError(result.error || s.addPgn.genericError)
           return
         }
+        setPgn('')
+        setSide('auto')
         dialogRef.current?.close()
         startRouteProgress()
         router.push(`/games/${result.gameId}`)
