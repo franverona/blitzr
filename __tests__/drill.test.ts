@@ -129,6 +129,22 @@ describe('findBlunderCandidates', () => {
     const game = makeGame({})
     expect(findBlunderCandidates([game], new Map())).toEqual([])
   })
+
+  it('makes one card for the same best move missed on consecutive own plies', () => {
+    const game = makeGame({ movesSan: ['a3', 'h6', 'b3', 'g6', 'c3', 'f6'], myColor: 'white' })
+    const best = (san: string): PositionEval => ({
+      cp: 0,
+      mate: null,
+      bestMove: { from: 'a1', to: 'a2', san, bestLine: [] },
+    })
+    // Own plies 1, 3 and 5 all blunder; 1 and 3 miss the same move, 5 a different one.
+    const evals = [best('Qxd5'), cp(-300), best('Qxd5'), cp(-600), best('Nf3'), cp(-900), cp(-900)]
+    const analysesByGameId = new Map<string, GameAnalysis>([
+      ['g1', { gameId: 'g1', evals, analyzedAt: '' }],
+    ])
+
+    expect(findBlunderCandidates([game], analysesByGameId).map((c) => c.ply)).toEqual([1, 5])
+  })
 })
 
 describe('buildDrillPrompt', () => {
