@@ -4,11 +4,11 @@ import { useEffect, useState } from 'react'
 import { getStrings } from '@/lib/i18n/strings'
 import { lichessAnalysisUrl, linePgn } from '@/lib/share'
 import { useBoardContext } from './Board'
+import { buttonClass } from './styles'
 
 const COPIED_FEEDBACK_MS = 1500
 
-const BUTTON_CLASS =
-  'rounded-md border border-zinc-300 px-2 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800'
+const BUTTON_CLASS = buttonClass({ size: 'xs' })
 
 /** Copy FEN/PGN and open in Lichess for the position on screen. While
  *  exploring, the PGN is the explored line instead of the recorded game. */

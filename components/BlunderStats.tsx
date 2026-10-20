@@ -8,6 +8,9 @@ import type { SanPiece } from '@/lib/san'
 import { describeBlunderReason } from '@/lib/tactics'
 import type { BlunderStats as BlunderStatsData } from '@/lib/types'
 import { BlunderSeverityBadge } from './BlunderSeverityBadge'
+import { SectionLabel } from './Card'
+import { LINK_CLASS } from './styles'
+import { TableShell } from './TableShell'
 import { useSettings } from './SettingsProvider'
 import { EvalHelp } from './EvalHelp'
 import { PieceGlyph } from './PieceGlyph'
@@ -34,39 +37,32 @@ export function BlunderStats({ stats }: { stats: BlunderStatsData }) {
   return (
     <div className="flex flex-col gap-6">
       <section className="flex flex-col gap-2">
-        <h2 className="text-xs font-semibold tracking-wide text-zinc-500 uppercase dark:text-zinc-400">
-          {s.blunderStats.byOpening}
-        </h2>
-        <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
-          <table className="w-full text-sm">
-            <thead className="bg-zinc-100 text-left text-xs tracking-wide text-zinc-500 uppercase dark:bg-zinc-900 dark:text-zinc-400">
-              <tr>
-                <th className="px-3 py-2">{s.openingsTable.headers.opening}</th>
-                <th className="px-3 py-2">{s.nav.blunders}</th>
-                <th className="px-3 py-2">
-                  <abbr title={s.blunderStats.avgSwingTooltip}>{s.blunderStats.avgSwing}</abbr>
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-              {stats.byOpening.map((group) => (
-                <tr key={group.key}>
-                  <td className="px-3 py-2 font-medium">{group.label}</td>
-                  <td className="px-3 py-2">{group.count}</td>
-                  <td className="px-3 py-2 text-zinc-600 dark:text-zinc-400">
-                    {group.avgSwingCp !== null ? s.common.pawns(group.avgSwingCp / 100) : '—'}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <SectionLabel>{s.blunderStats.byOpening}</SectionLabel>
+        <TableShell
+          head={
+            <>
+              <th className="px-3 py-2">{s.openingsTable.headers.opening}</th>
+              <th className="px-3 py-2">{s.nav.blunders}</th>
+              <th className="px-3 py-2">
+                <abbr title={s.blunderStats.avgSwingTooltip}>{s.blunderStats.avgSwing}</abbr>
+              </th>
+            </>
+          }
+        >
+          {stats.byOpening.map((group) => (
+            <tr key={group.key}>
+              <td className="px-3 py-2 font-medium">{group.label}</td>
+              <td className="px-3 py-2">{group.count}</td>
+              <td className="px-3 py-2 text-zinc-600 dark:text-zinc-400">
+                {group.avgSwingCp !== null ? s.common.pawns(group.avgSwingCp / 100) : '—'}
+              </td>
+            </tr>
+          ))}
+        </TableShell>
       </section>
 
       <section className="flex flex-col gap-2">
-        <h2 className="text-xs font-semibold tracking-wide text-zinc-500 uppercase dark:text-zinc-400">
-          {s.blunderStats.byPiece}
-        </h2>
+        <SectionLabel>{s.blunderStats.byPiece}</SectionLabel>
         <div className="flex flex-wrap gap-2">
           {stats.byPiece.map((group) => (
             <div
@@ -89,17 +85,12 @@ export function BlunderStats({ stats }: { stats: BlunderStatsData }) {
       </section>
 
       <section className="flex flex-col gap-2">
-        <h2 className="text-xs font-semibold tracking-wide text-zinc-500 uppercase dark:text-zinc-400">
-          {s.blunderStats.worstBlunders}
-        </h2>
+        <SectionLabel>{s.blunderStats.worstBlunders}</SectionLabel>
         <ul className="flex flex-col gap-1.5 text-sm">
           {stats.worst.map((b) => (
             <li key={`${b.gameId}-${b.ply}`}>
               <div className="flex flex-wrap items-center gap-1.5">
-                <Link
-                  href={`/games/${b.gameId}`}
-                  className="text-blue-600 hover:underline dark:text-blue-400"
-                >
+                <Link href={`/games/${b.gameId}`} className={LINK_CLASS}>
                   {b.gameLabel}
                 </Link>
                 <BlunderSeverityBadge winDrop={b.winDrop} />

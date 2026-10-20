@@ -36,6 +36,7 @@ import { EvalBar } from './EvalBar'
 import { LegalMoveSquare } from './LegalMoveSquare'
 import { MoveList } from './MoveList'
 import { PromotionPicker, type PromotionPiece } from './PromotionPicker'
+import { navButtonClass } from './styles'
 
 interface BoardContextValue {
   ply: number
@@ -994,11 +995,7 @@ function NavButton({
       disabled={disabled}
       aria-label={label}
       title={label}
-      className={`flex h-10 min-w-14 flex-1 items-center justify-center rounded-lg border disabled:opacity-40 ${
-        active
-          ? 'border-accent bg-accent/20 text-zinc-900 dark:text-white'
-          : 'border-zinc-300 bg-zinc-50 text-zinc-700 hover:bg-zinc-200 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700'
-      }`}
+      className={`min-w-14 ${navButtonClass(active)}`}
     >
       {children}
     </button>

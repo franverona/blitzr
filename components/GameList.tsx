@@ -1,6 +1,7 @@
 import { getStrings } from '@/lib/i18n/strings'
 import type { Game, GameAccuracy } from '@/lib/types'
 import { GameRow } from './GameRow'
+import { TableShell } from './TableShell'
 
 export function GameList({
   games,
@@ -24,26 +25,23 @@ export function GameList({
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
-      <table className="w-full text-sm">
-        <thead className="bg-zinc-100 text-left text-xs tracking-wide text-zinc-500 uppercase dark:bg-zinc-900 dark:text-zinc-400">
-          <tr>
-            <th className="px-3 py-2">{s.gameList.headers.date}</th>
-            <th className="px-3 py-2">{s.gameList.headers.color}</th>
-            <th className="px-3 py-2">{s.gameList.headers.opponent}</th>
-            <th className="px-3 py-2">{s.gameList.headers.result}</th>
-            <th className="px-3 py-2 text-right">{s.gameList.headers.rating}</th>
-            <th className="px-3 py-2 text-center">{s.gameList.headers.accuracy}</th>
-            <th className="px-3 py-2 text-center">{s.gameList.headers.errors}</th>
-            <th className="px-3 py-2">{s.gameList.headers.timeClass}</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-          {games.map((game) => (
-            <GameRow key={game.id} game={game} accuracy={accuracyByGameId[game.id]} />
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <TableShell
+      head={
+        <>
+          <th className="px-3 py-2">{s.gameList.headers.date}</th>
+          <th className="px-3 py-2">{s.gameList.headers.color}</th>
+          <th className="px-3 py-2">{s.gameList.headers.opponent}</th>
+          <th className="px-3 py-2">{s.gameList.headers.result}</th>
+          <th className="px-3 py-2 text-right">{s.gameList.headers.rating}</th>
+          <th className="px-3 py-2 text-center">{s.gameList.headers.accuracy}</th>
+          <th className="px-3 py-2 text-center">{s.gameList.headers.errors}</th>
+          <th className="px-3 py-2">{s.gameList.headers.timeClass}</th>
+        </>
+      }
+    >
+      {games.map((game) => (
+        <GameRow key={game.id} game={game} accuracy={accuracyByGameId[game.id]} />
+      ))}
+    </TableShell>
   )
 }

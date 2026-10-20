@@ -21,11 +21,12 @@ import { getMateProblem } from '@/lib/puzzleSet'
 import { plyLabel } from '@/lib/san'
 import { getTrainingOrientation, resolveOrientation } from '@/lib/theme'
 import type { LossReason } from '@/lib/today'
+import { Badge } from '@/components/Badge'
+import { Card } from '@/components/Card'
+import { PageHeader } from '@/components/PageHeader'
+import { buttonClass, LINK_CLASS, toneClass, type Tone } from '@/components/styles'
 
-const linkClassName =
-  'self-start rounded-md border border-zinc-300 px-2.5 py-1 text-sm font-medium text-zinc-900 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-100 dark:hover:bg-zinc-800'
 const mutedClassName = 'text-sm text-zinc-500 dark:text-zinc-400'
-const inlineLinkClassName = 'text-blue-600 hover:underline dark:text-blue-400'
 export default async function TodayPage() {
   const s = getStrings()
   const today = await getTodaySummary()
@@ -43,26 +44,28 @@ export default async function TodayPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-zinc-200 pb-4 dark:border-zinc-800">
-        <h1 className="text-xl font-semibold">{s.today.title}</h1>
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-          {today.unanalyzedGames > 0 && (
-            <>
-              <p className={mutedClassName}>{s.today.unanalyzed(today.unanalyzedGames)}</p>
-              <BulkAnalyzeButton hasUnanalyzedGames />
-            </>
-          )}
-          {today.lastSyncedAt && (
-            <SyncBadge syncedAt={today.lastSyncedAt} fresh={today.syncIsFresh} />
-          )}
-        </div>
-      </div>
+      <PageHeader
+        title={s.today.title}
+        actions={
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+            {today.unanalyzedGames > 0 && (
+              <>
+                <p className={mutedClassName}>{s.today.unanalyzed(today.unanalyzedGames)}</p>
+                <BulkAnalyzeButton hasUnanalyzedGames />
+              </>
+            )}
+            {today.lastSyncedAt && (
+              <SyncBadge syncedAt={today.lastSyncedAt} fresh={today.syncIsFresh} />
+            )}
+          </div>
+        }
+      />
 
       {!today.hasGames && (
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
           {/* Without a username, syncing can't work yet, so say how to set it first. */}
           {today.hasUsername ? s.today.noGames : s.gamesPage.setupUsername}{' '}
-          <Link href="/games" className={inlineLinkClassName}>
+          <Link href="/games" className={LINK_CLASS}>
             {s.today.goToGames}
           </Link>
         </p>
@@ -84,7 +87,7 @@ export default async function TodayPage() {
           )}
           <StreakBadge streak={drill.streak} week={drill.week} />
           {drill.due > 0 && (
-            <Link href="/drill" className={linkClassName}>
+            <Link href="/drill" className={`self-start ${buttonClass({ size: 'sm' })}`}>
               {s.today.startDrill}
             </Link>
           )}
@@ -148,7 +151,7 @@ export default async function TodayPage() {
                 <p className="flex min-w-0 items-center gap-2">
                   <Link
                     href={`/games/${lastGame.id}`}
-                    className={`truncate text-sm font-medium ${inlineLinkClassName}`}
+                    className={`truncate text-sm font-medium ${LINK_CLASS}`}
                   >
                     {s.today.lastGameVs(lastGame.opponent)}
                   </Link>
@@ -278,12 +281,9 @@ export default async function TodayPage() {
               >
                 <div className="mt-0.5 flex flex-wrap gap-1.5">
                   {today.losses.map((l) => (
-                    <span
-                      key={l.reason}
-                      className={`rounded-full px-2 py-0.5 text-xs font-medium ${LOSS_CHIP_CLASS[l.reason]}`}
-                    >
+                    <Badge key={l.reason} tone={LOSS_TONES[l.reason]} shape="pill">
                       {l.count} {s.today.lossReasons[l.reason]}
-                    </span>
+                    </Badge>
                   ))}
                 </div>
               </FocusRow>
@@ -327,20 +327,12 @@ export default async function TodayPage() {
   )
 }
 
-const FOCUS_TONE_CLASS = {
-  amber: 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400',
-  rose: 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-400',
-  zinc: 'bg-zinc-200 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400',
-  blue: 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400',
-  emerald: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400',
-}
-
-const LOSS_CHIP_CLASS: Record<LossReason, string> = {
-  timeout: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300',
-  checkmate: 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300',
-  resigned: 'bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
-  abandoned: 'bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
-  other: 'bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
+const LOSS_TONES: Record<LossReason, Tone> = {
+  timeout: 'amber',
+  checkmate: 'rose',
+  resigned: 'zinc',
+  abandoned: 'zinc',
+  other: 'zinc',
 }
 
 // Both board cards reserve the same text height under the board at xl, so their boards,
@@ -367,7 +359,7 @@ function FocusRow({
   children,
 }: {
   icon: React.ReactNode
-  tone: keyof typeof FOCUS_TONE_CLASS
+  tone: Tone
   label: string
   action?: { href: string; label: string } | null | false
   children: React.ReactNode
@@ -375,7 +367,7 @@ function FocusRow({
   return (
     <li className="flex min-w-0 items-start gap-3">
       <span
-        className={`flex size-8 shrink-0 items-center justify-center rounded-md ${FOCUS_TONE_CLASS[tone]}`}
+        className={`flex size-8 shrink-0 items-center justify-center rounded-md ${toneClass(tone)}`}
       >
         {icon}
       </span>
@@ -387,7 +379,7 @@ function FocusRow({
         {action && (
           <Link
             href={action.href}
-            className="mt-1 inline-block text-xs font-medium text-blue-600 hover:underline dark:text-blue-400"
+            className={`mt-1 inline-block text-xs font-medium ${LINK_CLASS}`}
           >
             {action.label} →
           </Link>
@@ -455,25 +447,4 @@ function timeAgo(iso: string): string {
   if (Math.abs(minutes) < 60) return format.format(minutes, 'minute')
   if (Math.abs(minutes) < 60 * 24) return format.format(Math.round(minutes / 60), 'hour')
   return format.format(Math.round(minutes / (60 * 24)), 'day')
-}
-
-function Card({
-  title,
-  className = '',
-  children,
-}: {
-  title: string
-  className?: string
-  children: React.ReactNode
-}) {
-  return (
-    <section
-      className={`flex flex-col gap-2 rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900 ${className}`}
-    >
-      <h2 className="text-xs font-semibold tracking-wide text-zinc-500 uppercase dark:text-zinc-400">
-        {title}
-      </h2>
-      {children}
-    </section>
-  )
 }

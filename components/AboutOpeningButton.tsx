@@ -1,7 +1,10 @@
 'use client'
 
-import { useId, useRef } from 'react'
+import { useRef } from 'react'
 import { getStrings } from '@/lib/i18n/strings'
+import { Dialog } from './Dialog'
+import { IconButton } from './IconButton'
+import { LINK_CLASS } from './styles'
 
 // Used for both opening and endgame lessons.
 export function AboutOpeningButton({
@@ -14,50 +17,27 @@ export function AboutOpeningButton({
   sourceUrl: string
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null)
-  const titleId = useId()
   const s = getStrings()
 
   return (
     <>
-      <button
+      <IconButton
         onClick={() => dialogRef.current?.showModal()}
         aria-label={s.aboutOpening.about(name)}
-        className="flex h-7 w-7 items-center justify-center rounded-full border border-zinc-300 text-xs text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
       >
         ?
-      </button>
-      <dialog
-        ref={dialogRef}
-        aria-labelledby={titleId}
-        onClick={(e) => {
-          if (e.target === e.currentTarget) dialogRef.current?.close()
-        }}
-        className="fixed top-1/2 left-1/2 m-0 max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-lg border border-zinc-200 bg-zinc-50 p-0 text-left text-zinc-900 backdrop:bg-black/60 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
-      >
-        <div className="flex flex-col gap-3 p-5">
-          <div className="flex items-center justify-between gap-4">
-            <h2 id={titleId} className="text-sm font-semibold">
-              {s.aboutOpening.about(name)}
-            </h2>
-            <button
-              onClick={() => dialogRef.current?.close()}
-              aria-label={s.common.close}
-              className="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
-            >
-              ✕
-            </button>
-          </div>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">{summary}</p>
-          <a
-            href={sourceUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-blue-600 hover:underline dark:text-blue-400"
-          >
-            {s.aboutOpening.adaptedFrom}
-          </a>
-        </div>
-      </dialog>
+      </IconButton>
+      <Dialog ref={dialogRef} title={s.aboutOpening.about(name)}>
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">{summary}</p>
+        <a
+          href={sourceUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`text-sm ${LINK_CLASS}`}
+        >
+          {s.aboutOpening.adaptedFrom}
+        </a>
+      </Dialog>
     </>
   )
 }

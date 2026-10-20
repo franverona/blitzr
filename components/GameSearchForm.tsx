@@ -4,9 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { getStrings } from '@/lib/i18n/strings'
 import { Select } from './Select'
-
-const FILTER_TRIGGER_CLASS =
-  'rounded-md border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900'
+import { INPUT_CLASS } from './styles'
 
 const SEARCH_DEBOUNCE_MS = 400
 const DEFAULT_ACCURACY_THRESHOLD = 80
@@ -109,14 +107,14 @@ export function GameSearchForm({
           }
         }}
         placeholder={s.gamesPage.searchPlaceholder}
-        className="w-full max-w-xs rounded-md border border-zinc-300 px-3 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+        className={`w-full max-w-xs ${INPUT_CLASS}`}
       />
 
       <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
         <Select
           value={result ?? ''}
           onChange={(e) => navigate({ result: e.target.value })}
-          className={FILTER_TRIGGER_CLASS}
+          className={INPUT_CLASS}
         >
           <option value="">{s.gamesPage.allResults}</option>
           <option value="win">{s.common.result.win}</option>
@@ -127,7 +125,7 @@ export function GameSearchForm({
         <Select
           value={color ?? ''}
           onChange={(e) => navigate({ color: e.target.value })}
-          className={FILTER_TRIGGER_CLASS}
+          className={INPUT_CLASS}
         >
           <option value="">{s.gamesPage.allColors}</option>
           <option value="white">{s.common.color.white}</option>
@@ -137,7 +135,7 @@ export function GameSearchForm({
         <Select
           value={rated ?? ''}
           onChange={(e) => navigate({ rated: e.target.value })}
-          className={FILTER_TRIGGER_CLASS}
+          className={INPUT_CLASS}
         >
           <option value="">{s.gamesPage.allRated}</option>
           <option value="true">{s.gamesPage.rated}</option>
@@ -195,7 +193,7 @@ function AccuracyFilterPopover({
 
   return (
     <div ref={containerRef} className="relative">
-      <button type="button" onClick={() => setOpen((o) => !o)} className={FILTER_TRIGGER_CLASS}>
+      <button type="button" onClick={() => setOpen((o) => !o)} className={INPUT_CLASS}>
         {triggerLabel}
       </button>
 
