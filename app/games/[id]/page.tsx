@@ -87,7 +87,6 @@ export default async function GamePage({
           {game.movesSan && (
             <DetailsDialogTrigger>
               <MoveQualityLink />
-              <LiveAnalysisPanel />
               {diff && (
                 <RepertoireDiff
                   diff={diff}
@@ -108,10 +107,11 @@ export default async function GamePage({
       <OpeningLine game={game} />
 
       {game.movesSan ? (
-        // lg+: 16rem ≈ chrome above/below the board.
+        // lg+: 11.5rem ≈ chrome above/below the board.
         <BoardView
-          boardMaxWidthClassName="max-w-160 lg:max-w-[min(40rem,calc(100dvh-16rem))] xl:max-w-[min(43rem,calc(100dvh-16rem))] 2xl:max-w-[min(46rem,calc(100dvh-16rem))]"
+          boardMaxWidthClassName="max-w-160 lg:max-w-[min(40rem,calc(100dvh-11.5rem))] xl:max-w-[min(43rem,calc(100dvh-11.5rem))] 2xl:max-w-[min(46rem,calc(100dvh-11.5rem))]"
           sidebarMaxWidthClassName="lg:max-w-xs xl:max-w-sm"
+          sidebarTop={<LiveAnalysisPanel />}
           sidebarExtra={
             <div className="flex shrink-0 flex-col gap-3">
               <BoardNavControls />

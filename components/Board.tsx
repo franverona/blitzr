@@ -274,11 +274,7 @@ interface LiveAnalysisContextValue {
   fen: string | null
   /** A search is running or queued. */
   thinking: boolean
-  /** The details dialog holding `LiveAnalysisPanel` opened or closed. */
-  setPanelVisible: (visible: boolean) => void
 }
-
-type LiveAnalysisState = Omit<LiveAnalysisContextValue, 'setPanelVisible'>
 
 const LiveAnalysisContext = createContext<LiveAnalysisContextValue | null>(null)
 
@@ -287,7 +283,6 @@ const NO_LIVE_ANALYSIS: LiveAnalysisContextValue = {
   lines: null,
   fen: null,
   thinking: false,
-  setPanelVisible: () => {},
 }
 
 /** Doesn't throw without a provider: `/learn` renders `BoardView` without one
@@ -305,13 +300,12 @@ const LIVE_MOVETIME_MS = 600
  * Lives here rather than in LiveAnalysisPanel.tsx to avoid a circular import.
  */
 export function LiveAnalysisProvider({ children }: { children: React.ReactNode }) {
-  const { displayFen } = useBoardContext()
+  const { displayFen, exploring } = useBoardContext()
   const { hideEngineHints } = useSettings()
-  const [panelVisible, setPanelVisible] = useState(false)
-  // Hidden hints hide the board's arrow and eval bar, so then only the panel
-  // needs a search.
-  const active = !hideEngineHints || panelVisible
-  const [state, setState] = useState<LiveAnalysisState>({
+  // Hidden hints hide the arrow, eval bar and `LiveAnalysisPanel`, except
+  // while exploring, where the panel stays.
+  const active = !hideEngineHints || exploring
+  const [state, setState] = useState<LiveAnalysisContextValue>({
     lines: null,
     fen: null,
     thinking: active,
@@ -364,11 +358,7 @@ export function LiveAnalysisProvider({ children }: { children: React.ReactNode }
     if (active) requestRef.current(displayFen)
   }, [displayFen, active])
 
-  return (
-    <LiveAnalysisContext.Provider value={{ ...state, setPanelVisible }}>
-      {children}
-    </LiveAnalysisContext.Provider>
-  )
+  return <LiveAnalysisContext.Provider value={state}>{children}</LiveAnalysisContext.Provider>
 }
 
 export function ExploreToggleButton() {
@@ -684,6 +674,7 @@ export function BoardView({
   boardMaxWidthClassName = 'max-w-160',
   sidebarMaxWidthClassName = 'lg:max-w-sm xl:max-w-md',
   sidebarExtra,
+  sidebarTop,
 }: {
   boardMaxWidthClassName?: string
   /** The game page narrows it so its nav controls span the whole row. */
@@ -691,6 +682,8 @@ export function BoardView({
   /** Content below the move list. Keep it short — the move list fills the
    *  remaining height. */
   sidebarExtra?: React.ReactNode
+  /** Content above the move list. */
+  sidebarTop?: React.ReactNode
 } = {}) {
   const {
     ply,
@@ -979,6 +972,7 @@ export function BoardView({
         className={`flex min-h-0 w-full flex-col gap-4 lg:flex-1 ${sidebarMaxWidthClassName}`}
         style={sidebarHeight ? { height: sidebarHeight } : undefined}
       >
+        {sidebarTop}
         <MoveList
           movesSan={movesSan}
           ply={ply}
