@@ -1,24 +1,19 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { getStrings } from '@/lib/i18n/strings'
 import type { DrillSourceType } from '@/lib/types'
-import { startRouteProgress } from './RouteProgressBar'
-import { Select } from './Select'
 
 /** URL-driven so `DrillSession` (keyed on these values) remounts with a
  *  fresh session. */
 export function DrillFilters({
   sourceType,
   opening,
-  availableOpenings,
 }: {
   sourceType?: DrillSourceType
   opening?: string
-  availableOpenings: string[]
 }) {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const s = getStrings()
   const TYPE_TABS: { value: DrillSourceType | 'all'; label: string; title?: string }[] = [
@@ -55,22 +50,15 @@ export function DrillFilters({
           </Link>
         )
       })}
-      {availableOpenings.length > 0 && (
-        <Select
-          value={opening ?? ''}
-          onChange={(e) => {
-            startRouteProgress()
-            router.push(hrefFor({ opening: e.target.value || undefined }))
-          }}
-          className="rounded-md border border-zinc-300 bg-zinc-50 px-2 py-1 text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
+      {/* Only reachable from Today's weak spot link. */}
+      {opening && (
+        <Link
+          href={hrefFor({ opening: undefined })}
+          title={s.drillFilters.clearOpening}
+          className="border-accent bg-accent/20 rounded-md border px-3 py-1 text-zinc-900 dark:text-white"
         >
-          <option value="">{s.drillFilters.allOpenings}</option>
-          {availableOpenings.map((label) => (
-            <option key={label} value={label}>
-              {label}
-            </option>
-          ))}
-        </Select>
+          {opening} ✕
+        </Link>
       )}
     </div>
   )

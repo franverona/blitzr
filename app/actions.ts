@@ -346,7 +346,6 @@ export async function getDrillDeck(filters?: {
   prompts: DrillPrompt[]
   totalCards: number
   dueCount: number
-  availableOpenings: string[]
 }> {
   const { liveCards, gamesById, repertoireByColor, analysesByGameId, now } =
     await reconcileDrillCards()
@@ -378,20 +377,10 @@ export async function getDrillDeck(filters?: {
     opponentAvatarUrl: avatarByUsername.get(p.opponentUsername) ?? null,
   }))
 
-  const availableOpenings = [
-    ...new Set(
-      liveCards
-        .map((c) => gamesById.get(c.gameId))
-        .filter((g): g is Game => g !== undefined)
-        .map(openingLabel),
-    ),
-  ].sort()
-
   return {
     prompts,
     totalCards: liveCards.length,
     dueCount: filteredDue.length,
-    availableOpenings,
   }
 }
 

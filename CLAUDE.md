@@ -270,11 +270,17 @@ and the slider are debounced (400ms); selects navigate immediately.
 previous own ply's (same piece left en prise) is folded into that first card. The deck re-syncs on every `/drill` load
 (`reconcileDrillDeck()`, pure) and serves the most-overdue cards (`blitzr-drill-session-size`
 cookie: 10/15/25, default 15, read by `getDrillDeck()` itself). `DrillSession` snapshots its prompts
-so revalidation can't reshuffle an active session. A blunder card also accepts a non-engine move
+so revalidation can't reshuffle an active session, and keeps the snapshot (with position and tally)
+in `sessionStorage` so a reload resumes it. Only an unfinished session under the same filters resumes;
+it's read through `useSyncExternalStore`, rendering nothing until then. A blunder card also accepts a non-engine move
 when a one-off client-side eval rates it good or better (`isNearBestMove()`); if the engine fails,
 only the engine's move counts. **Re-analyzing a game can reset its drill progress:** another
 strength can shift which plies count as blunders, and the deck sync deletes cards (with their SM-2
 schedules) whose ply no longer qualifies. Accepted, not a bug.
+
+The page's only visible filter is card type; `?opening=` has no picker (Today's weak spot links to
+it) and shows as a clearable chip. The auto-advance checkbox lives on the page, not in Settings:
+`blitzr-drill-auto-advance` is read by `app/drill/page.tsx` and written by `DrillSession`.
 
 ## Blunders page
 
