@@ -143,7 +143,7 @@ scripts/
   while they're on.
 - **Move sounds** are hotlinked from chess.com's CDN (not redistributed), via `useMoveSound(fen)`.
 - **`BOARD_ANIMATION_DURATION_MS`** (150ms) is shared by every board and the keyboard nav throttle.
-- **`BoardNavControls`** binds ←/→, Space (play), Home/↑/`0` (start), End/↓ (end) and `F` (flip)
+- **`BoardNavControls`** binds ←/→, Space (play), Home/↑/`0` (start), End/↓ (end), `F` (flip) and Esc (exit explore)
   globally, ignoring modifier keys, form fields, and `<dialog>`s that don't set
   `data-board-shortcuts`.
 - **Play** auto-advances at the `playSpeed` setting (`PLAY_SPEEDS`, 1000/500/250ms), stopping on
@@ -260,6 +260,9 @@ a prepared move. An opponent's unprepared move or the tree running out doesn't c
 - Explore mode is a separate branch in `BoardContext` (`explorePath`/`explorePly`), never persisted.
   The ◀/▶ nav follows it; Play and the saved-analysis hints are off while exploring.
   `playExploreLine()` replays an engine line onto the branch, stopping at the first illegal move.
+  With `BoardView`'s `autoExplore` (game page only, not lessons), moving a piece on the recorded
+  game enters explore mode from that ply; Esc (`BoardNavControls`) or the indicator under the
+  board leaves it.
 - `PositionActions` (game page, under the nav controls) copies the FEN on screen and the game's
   PGN, or the explored line's PGN (`linePgn()`) while exploring, and links to Lichess analysis.
 - `useLiveAnalysisContext()` returns an empty default without a provider, so `/learn` can render

@@ -145,7 +145,8 @@ A game page also has:
 - Your **accuracy** in the header; click it for a **Move quality** table with Chess.com-style
   accuracy and move tiers for both sides.
 - **Engine lines**: the top 3 live lines for the current position. ▶ plays a line onto the board.
-- **Explore moves**: try your own moves from any point, with the engine following along.
+- **Explore moves**: try your own moves from any point (just move a piece), with the engine
+  following along. Esc or "Back to game" returns to the recorded game.
   Nothing is saved.
 - Hanging pieces, forks, pins and skewers in the current position, marked on the board.
 

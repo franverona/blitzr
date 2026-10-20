@@ -249,6 +249,8 @@ const en = {
     },
     startingPositionButton: 'Starting position',
     material: 'Material:',
+    exploring: 'Exploring',
+    backToGame: 'Back to game',
     endReasons: {
       checkmate: 'Checkmate',
       winner: 'Winner',
@@ -526,8 +528,6 @@ const en = {
     deleteGameConfirm: 'Delete this pasted game, its analysis and its drill cards?',
   },
   liveAnalysis: {
-    explore: '♟ Explore moves',
-    exitExplore: 'Exit exploration',
     panelTitle: 'Engine lines',
     thinking: 'Thinking…',
     yourLine: 'Your line:',
@@ -807,6 +807,8 @@ const es: Strings = {
     },
     startingPositionButton: 'Posición inicial',
     material: 'Material:',
+    exploring: 'Explorando',
+    backToGame: 'Volver a la partida',
     endReasons: {
       checkmate: 'Jaque mate',
       winner: 'Ganador',
@@ -1092,8 +1094,6 @@ const es: Strings = {
       '¿Eliminar esta partida pegada, su análisis y sus tarjetas de entrenamiento?',
   },
   liveAnalysis: {
-    explore: '♟ Explorar jugadas',
-    exitExplore: 'Salir de la exploración',
     panelTitle: 'Líneas del motor',
     thinking: 'Pensando…',
     yourLine: 'Tu línea:',
