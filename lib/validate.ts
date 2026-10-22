@@ -34,6 +34,22 @@ export function isValidAnalysis(evals: unknown, moveCount: number, movetimeMs: u
   )
 }
 
+export function isValidDrillAnswer(
+  gameId: unknown,
+  sourceType: unknown,
+  ply: unknown,
+  correct: unknown,
+): boolean {
+  return (
+    isString(gameId) &&
+    (sourceType === 'deviation' || sourceType === 'blunder') &&
+    typeof ply === 'number' &&
+    Number.isInteger(ply) &&
+    ply > 0 &&
+    typeof correct === 'boolean'
+  )
+}
+
 /**
  * The node as the server will store it: its move must be legal from `parent`
  * (or the start), and the SAN and FEN are re-derived rather than trusted.

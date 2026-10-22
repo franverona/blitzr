@@ -103,7 +103,8 @@ scripts/
 - **Server Actions** for all DB reads/writes and triggers — no API routes. They're plain POST
   endpoints, so an action storing a client-built payload checks it first (`lib/validate.ts`):
   `saveGameAnalysis()` wants one well-formed eval per position, and `addRepertoireMove()` replays
-  the move from its parent and stores the server's own SAN/FEN.
+  the move from its parent and stores the server's own SAN/FEN. `submitDrillAnswer()` and `markPuzzleSolved()` reject
+  malformed keys or unknown puzzle ids.
 - **Domain types are camelCase** (`lib/types.ts`), **DB columns snake_case** (`lib/db/types.ts`);
   the repository maps between them. Never leak snake_case past it.
 - **Migrations** run idempotently in `ensureSchema()` (`lib/db/sqlite/migrate.ts`) — no version
