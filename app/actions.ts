@@ -26,7 +26,7 @@ import type { DrillCandidate } from '@/lib/drill'
 import { findDuplicateGame, parseManualGame, type ManualGameSide } from '@/lib/manualGame'
 import { summarizeMoveQuality } from '@/lib/moveQuality'
 import { buildOpeningFamilies, ecoFamilyLabel, unknownOpeningLabel } from '@/lib/openings'
-import { allMateProblems } from '@/lib/puzzleSet'
+import { allMateProblems, getMateProblem } from '@/lib/puzzleSet'
 import { OPENING_LESSONS, countGamesReachingLine } from '@/lib/openingTheory'
 import { buildPositions, isStandardChess, startsFromStandardPosition } from '@/lib/positions'
 import { isSyncStale, listPendingArchives, syncArchive } from '@/lib/sync'
@@ -41,7 +41,7 @@ import {
   repertoireDeviations,
   suggestLesson,
 } from '@/lib/today'
-import { isValidAnalysis, normalizeRepertoireNode } from '@/lib/validate'
+import { isValidAnalysis, isValidDrillAnswer, normalizeRepertoireNode } from '@/lib/validate'
 import type {
   ArchiveSyncStatus,
   BlunderStats,
@@ -406,6 +406,7 @@ export async function submitDrillAnswer(
   ply: number,
   correct: boolean,
 ): Promise<void> {
+  if (!isValidDrillAnswer(gameId, sourceType, ply, correct)) throw new Error('Invalid drill answer')
   const repo = getRepository()
   const cards = await repo.listDrillCards()
   const current = cards.find(
@@ -582,6 +583,7 @@ export async function getSolvedPuzzleIds(): Promise<number[]> {
 }
 
 export async function markPuzzleSolved(puzzleId: number): Promise<void> {
+  if (!Number.isInteger(puzzleId) || !getMateProblem(puzzleId)) throw new Error('Invalid puzzle')
   await getRepository().markPuzzleSolved(puzzleId)
   revalidatePath('/puzzles')
   revalidatePath('/')

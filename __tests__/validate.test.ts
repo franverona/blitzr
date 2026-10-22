@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { RepertoireNode } from '@/lib/types'
-import { isValidAnalysis, normalizeRepertoireNode } from '@/lib/validate'
+import { isValidAnalysis, isValidDrillAnswer, normalizeRepertoireNode } from '@/lib/validate'
 
 const evalOk = { cp: 20, mate: null, bestMove: { from: 'e2', to: 'e4', san: 'e4', bestLine: [] } }
 
@@ -53,5 +53,20 @@ describe('normalizeRepertoireNode', () => {
     expect(
       normalizeRepertoireNode(node({ parentId: 'n1', ply: 2, color: 'black' }), root),
     ).toBeNull()
+  })
+})
+
+describe('isValidDrillAnswer', () => {
+  it('accepts a well-formed answer', () => {
+    expect(isValidDrillAnswer('g1', 'blunder', 12, true)).toBe(true)
+    expect(isValidDrillAnswer('g1', 'deviation', 1, false)).toBe(true)
+  })
+
+  it('rejects anything else', () => {
+    expect(isValidDrillAnswer(1, 'blunder', 12, true)).toBe(false)
+    expect(isValidDrillAnswer('g1', 'puzzle', 12, true)).toBe(false)
+    expect(isValidDrillAnswer('g1', 'blunder', 0, true)).toBe(false)
+    expect(isValidDrillAnswer('g1', 'blunder', 1.5, true)).toBe(false)
+    expect(isValidDrillAnswer('g1', 'blunder', 12, 'yes')).toBe(false)
   })
 })
