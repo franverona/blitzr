@@ -46,7 +46,7 @@ export default async function GamePage({
 
   const event = parsePgnHeaders(game.pgn).Event
   // "Play vs Coach" games get a Link that points to an unrelated game.
-  const isBotGame = event === 'Play vs Coach'
+  const isCoachGame = event === 'Play vs Coach'
   // "Play vs Bot" opponents have a bare display name, not a real account.
   const botColor: MyColor | null = isBareBotNameEvent(event)
     ? game.myColor === 'white'
@@ -68,7 +68,7 @@ export default async function GamePage({
       <div className="flex flex-wrap items-start justify-between gap-4 border-b border-zinc-200 pb-4 dark:border-zinc-800">
         <GameHeader
           game={game}
-          isBotGame={isBotGame}
+          isCoachGame={isCoachGame}
           whiteAvatar={whiteAvatar}
           blackAvatar={blackAvatar}
         />
@@ -160,12 +160,12 @@ function OpeningLine({ game }: { game: Game }) {
 
 function GameHeader({
   game,
-  isBotGame,
+  isCoachGame,
   whiteAvatar,
   blackAvatar,
 }: {
   game: Game
-  isBotGame: boolean
+  isCoachGame: boolean
   whiteAvatar: string | null
   blackAvatar: string | null
 }) {
@@ -189,7 +189,7 @@ function GameHeader({
         {!game.isMine && ` · ${s.gamePage.notMine}`}
         <OpeningLine game={game} />
         {game.movesSan && <MoveQualityLink />}
-        {!isBotGame && game.url && (
+        {!isCoachGame && game.url && (
           <>
             {' · '}
             <a href={game.url} target="_blank" rel="noopener noreferrer" className={LINK_CLASS}>
