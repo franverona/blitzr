@@ -1,13 +1,12 @@
 'use client'
 
 import { createContext, useContext, useEffect, useRef, useState, useTransition } from 'react'
-import { createPortal } from 'react-dom'
+import { toast } from 'react-hot-toast'
 import { listArchivesToSync, syncArchiveMonth } from '@/app/actions'
 import { getStrings } from '@/lib/i18n/strings'
 import { useBulkAnalysis } from './BulkAnalysisProvider'
 import { buttonClass } from './styles'
 
-const TOAST_DURATION_MS = 4000
 // Long enough to reach the "Analyze them" button.
 const ACTION_TOAST_DURATION_MS = 12000
 
@@ -19,11 +18,8 @@ interface SyncContextValue {
 
 const SyncContext = createContext<SyncContextValue | null>(null)
 
-interface Toast {
-  text: string
-  isError: boolean
-  offerAnalysis?: boolean
-}
+// One toast at a time: a new sync's replaces the last one's.
+const TOAST_ID = 'sync'
 
 /**
  * Root-layout sync state, so a sync started on open (`autoSync`, set by the
@@ -37,27 +33,16 @@ export function SyncProvider({
   children: React.ReactNode
 }) {
   const [isPending, startTransition] = useTransition()
-  const [toast, setToast] = useState<Toast | null>(null)
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null)
-  const bulk = useBulkAnalysis()
   const s = getStrings()
 
-  useEffect(() => {
-    if (!toast) return
-    const timeout = setTimeout(
-      () => setToast(null),
-      toast.offerAnalysis ? ACTION_TOAST_DURATION_MS : TOAST_DURATION_MS,
-    )
-    return () => clearTimeout(timeout)
-  }, [toast])
-
   function sync({ quiet = false } = {}) {
-    setToast(null)
+    toast.dismiss(TOAST_ID)
     startTransition(async () => {
       try {
         const pending = await listArchivesToSync()
         if (!pending.ok) {
-          setToast({ text: pending.error, isError: true })
+          toast.error(pending.error, { id: TOAST_ID })
           return
         }
         let gamesUpserted = 0
@@ -66,20 +51,27 @@ export function SyncProvider({
           const month = await syncArchiveMonth(archiveYm)
           if (!month.ok) {
             // Months already synced stay saved; the next sync resumes.
-            setToast({ text: month.error, isError: true })
+            toast.error(month.error, { id: TOAST_ID })
             return
           }
           gamesUpserted += month.gamesUpserted
         }
         // An automatic sync that found nothing new stays silent.
         if (quiet && gamesUpserted === 0) return
-        setToast({
-          text: s.sync.synced(pending.archives.length, gamesUpserted),
-          isError: false,
-          offerAnalysis: gamesUpserted > 0,
-        })
+        const text = s.sync.synced(pending.archives.length, gamesUpserted)
+        if (gamesUpserted === 0) {
+          toast(text, { id: TOAST_ID })
+          return
+        }
+        toast(
+          <>
+            {text}
+            <AnalyzeNewButton />
+          </>,
+          { id: TOAST_ID, duration: ACTION_TOAST_DURATION_MS },
+        )
       } catch {
-        setToast({ text: s.sync.failed, isError: true })
+        toast.error(s.sync.failed, { id: TOAST_ID })
       } finally {
         setProgress(null)
       }
@@ -98,27 +90,19 @@ export function SyncProvider({
   return (
     <SyncContext.Provider value={{ isPending, progress, sync: () => sync() }}>
       {children}
-      {toast &&
-        createPortal(
-          <div
-            role="status"
-            onClick={() => setToast(null)}
-            className={`flex max-w-sm cursor-pointer flex-col items-start gap-2 rounded-md border px-4 py-2.5 text-sm shadow-lg ${
-              toast.isError
-                ? 'border-rose-300 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-200'
-                : 'border-zinc-200 bg-zinc-50 text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100'
-            }`}
-          >
-            {toast.text}
-            {toast.offerAnalysis && bulk.progress === null && (
-              <button onClick={bulk.start} className={buttonClass({ size: 'sm' })}>
-                {s.sync.analyzeNew}
-              </button>
-            )}
-          </div>,
-          document.getElementById('toasts')!,
-        )}
     </SyncContext.Provider>
+  )
+}
+
+// Its own component so it reads live bulk state, hiding once a run starts: the Toaster renders the
+// toast's message, not this provider (so the Toaster must sit inside BulkAnalysisProvider).
+function AnalyzeNewButton() {
+  const bulk = useBulkAnalysis()
+  if (bulk.progress !== null) return null
+  return (
+    <button onClick={bulk.start} className={buttonClass({ size: 'sm' })}>
+      {getStrings().sync.analyzeNew}
+    </button>
   )
 }
 

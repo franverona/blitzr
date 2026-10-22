@@ -15,6 +15,7 @@ Built incrementally, one feature or fix at a time — don't scaffold speculative
 - **SQLite** (Kysely + `better-sqlite3`) behind `getRepository()` (`lib/db/`)
 - **Tailwind CSS v4**, **TypeScript**
 - **chess.js** for PGN/move validation, **react-chessboard** (v5, `options` prop API) for boards
+- **react-hot-toast** for toasts, with its default look replaced by our Tailwind classes
 - **Stockfish** (`stockfish` npm package, WASM "lite single-threaded" build) in a browser Web Worker
 
 ## Project structure
@@ -57,6 +58,7 @@ components/
   Dialog.tsx                # modal shell: title, ✕, backdrop click, aria-labelledby
   PageHeader.tsx / Card.tsx / TableShell.tsx  # page <h1> row, surface + SectionLabel, table frame
   Badge.tsx / IconButton.tsx / ErrorText.tsx / Spinner.tsx  # small shared primitives
+  Toast.tsx                 # <Toaster />: react-hot-toast rendered with our own classes
   styles.ts                 # class helpers: buttonClass(), chipClass(), navButtonClass(), tones
   ...                       # smaller presentational components
 lib/
@@ -119,7 +121,7 @@ scripts/
   (localized) labels need `flex-wrap`.
 - **Page headers** (the `<h1>` row) are `PageHeader` (`title`, `subtitle`, `actions`).
 - **Shared UI before new class strings:** `Dialog`, `Badge` (tones from `styles.ts`), `Card` /
-  `SectionLabel`, `TableShell`, `IconButton`, `ErrorText`, `Spinner`. Things rendered as a `<Link>`
+  `SectionLabel`, `TableShell`, `IconButton`, `ErrorText`, `Spinner`. Toasts are react-hot-toast's `toast()` / `toast.error()`, rendered by `components/Toast.tsx`'s `<Toaster />` (root layout, inside `BulkAnalysisProvider`); pass an `id` so a newer toast from the same source replaces the last. Things rendered as a `<Link>`
   in one place and a `<button>` in another are class helpers in `components/styles.ts`
   (`buttonClass()`, `chipClass()` for filter/mode toggles, `navButtonClass()`, `LINK_CLASS`,
   `INPUT_CLASS`); it has no `'use client'`, so Server Components can import it.

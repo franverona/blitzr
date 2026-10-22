@@ -43,6 +43,7 @@ implies endorsement.
 - **Next.js** (App Router, Server Actions), **TypeScript**, **Tailwind CSS v4**
 - **SQLite** (Kysely + better-sqlite3)
 - **chess.js** and **react-chessboard**
+- **react-hot-toast** (restyled) for toasts
 - **Stockfish** (WASM) in a Web Worker
 - **pnpm**, **Vitest**, ESLint + Prettier, Husky
 
