@@ -102,6 +102,31 @@ describe('parseManualGame', () => {
     expect(game.blackResult).toBe('win')
   })
 
+  it('stores Chess.com-style result codes from the position and Termination header', () => {
+    expect(parseManualGame(BOT_GAME_PGN, 'fverona')).toMatchObject({
+      whiteResult: 'checkmated',
+      blackResult: 'win',
+    })
+    const pgn = (result: string, termination: string) =>
+      `[White "A"]\n[Black "B"]\n[Result "${result}"]\n[Termination "${termination}"]\n\n1. e4 e5 ${result}`
+    expect(parseManualGame(pgn('1-0', 'A won by resignation'), 'A').blackResult).toBe('resigned')
+    expect(parseManualGame(pgn('0-1', 'B won on time'), 'A').whiteResult).toBe('timeout')
+    expect(parseManualGame(pgn('0-1', 'B ha ganado por abandono'), 'A').whiteResult).toBe(
+      'resigned',
+    )
+    expect(parseManualGame(pgn('0-1', 'B won - game abandoned'), 'A').whiteResult).toBe('abandoned')
+    expect(parseManualGame(pgn('0-1', 'Time forfeit'), 'A').whiteResult).toBe('timeout')
+    expect(parseManualGame(pgn('1/2-1/2', 'Game drawn by agreement'), 'A').whiteResult).toBe(
+      'agreed',
+    )
+    expect(
+      parseManualGame(pgn('1/2-1/2', 'Game drawn by timeout vs insufficient material'), 'A')
+        .blackResult,
+    ).toBe('timevsinsufficient')
+    expect(parseManualGame(pgn('1-0', 'Normal'), 'A').blackResult).toBe('loss')
+    expect(parseManualGame(pgn('1/2-1/2', 'Normal'), 'A').whiteResult).toBe('draw')
+  })
+
   it('rejects an unfinished game with no result instead of scoring it a White loss', () => {
     const pgn = '[White "A"]\n[Black "B"]\n[Result "*"]\n\n1. e4 e5 *'
     expect(() => parseManualGame(pgn, 'A')).toThrow(/no final result/)

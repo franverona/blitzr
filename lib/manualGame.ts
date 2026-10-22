@@ -22,6 +22,49 @@ function myResultFromPgnResult(result: PgnResult, color: MyColor): MyResult {
   return (result === '1-0') === (color === 'white') ? 'win' : 'loss'
 }
 
+// Chess.com localizes Termination ("X won by resignation", "ha ganado por jaque mate");
+// Lichess uses "Time forfeit"/"Abandoned". Unmatched text keeps plain loss/draw.
+const LOSS_TERMINATIONS: [RegExp, string][] = [
+  [/checkmate|jaque mate/i, 'checkmated'],
+  // Spanish Chess.com's resign button is "Abandonar", so "por abandono" is a resignation.
+  [/resign|por abandono/i, 'resigned'],
+  [/abandon/i, 'abandoned'],
+  [/on time|time forfeit|por tiempo/i, 'timeout'],
+]
+const DRAW_TERMINATIONS: [RegExp, string][] = [
+  [/(time|tiempo).*insufficient|insuficiente.*tiempo/i, 'timevsinsufficient'],
+  [/agree|acuerdo/i, 'agreed'],
+  [/repetition|repetici[oó]n/i, 'repetition'],
+  [/stalemate|ahogado/i, 'stalemate'],
+  [/insufficient|insuficiente/i, 'insufficient'],
+  [/50/, '50move'],
+]
+
+function terminationCode(termination: string | undefined, table: [RegExp, string][]) {
+  return termination ? table.find(([pattern]) => pattern.test(termination))?.[1] : undefined
+}
+
+/** Chess.com-style per-player result codes, so badges and loss reasons work as for synced games. */
+function resultCodes(
+  result: PgnResult,
+  termination: string | undefined,
+  finalPosition: Chess,
+): { white: string; black: string } {
+  if (result === '1/2-1/2') {
+    const code =
+      (finalPosition.isStalemate() && 'stalemate') ||
+      (finalPosition.isInsufficientMaterial() && 'insufficient') ||
+      (finalPosition.isThreefoldRepetition() && 'repetition') ||
+      terminationCode(termination, DRAW_TERMINATIONS) ||
+      'draw'
+    return { white: code, black: code }
+  }
+  const loss = finalPosition.isCheckmate()
+    ? 'checkmated'
+    : (terminationCode(termination, LOSS_TERMINATIONS) ?? 'loss')
+  return result === '1-0' ? { white: 'win', black: loss } : { white: loss, black: 'win' }
+}
+
 // PGN dates are "YYYY.MM.DD" with no time, which would land at midnight UTC
 // and sort below same-day synced games. Use the current time of day instead.
 function endTimeFromPgnDate(headers: Record<string, string>): number {
@@ -74,6 +117,7 @@ export function parseManualGame(
     myColor = side === 'notMine' ? 'white' : side
   }
   const myResult = myResultFromPgnResult(result, myColor)
+  const codes = resultCodes(result, headers.Termination, chess)
 
   const ecoUrl = headers.ECOUrl ?? null
 
@@ -91,10 +135,10 @@ export function parseManualGame(
     endTime: endTimeFromPgnDate(headers),
     whiteUsername: headers.White,
     whiteRating: ratingFromHeader(headers.WhiteElo),
-    whiteResult: myResultFromPgnResult(result, 'white'),
+    whiteResult: codes.white,
     blackUsername: headers.Black,
     blackRating: ratingFromHeader(headers.BlackElo),
-    blackResult: myResultFromPgnResult(result, 'black'),
+    blackResult: codes.black,
     myColor,
     myResult,
     isMine: side !== 'notMine',
