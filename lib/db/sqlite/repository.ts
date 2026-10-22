@@ -407,14 +407,17 @@ export class SqliteGameRepository {
   ): Promise<void> {
     if (keys.length === 0) return
     const db = await this.ready()
-    for (const key of keys) {
-      await db
-        .deleteFrom('drill_cards')
-        .where('game_id', '=', key.gameId)
-        .where('source_type', '=', key.sourceType)
-        .where('ply', '=', key.ply)
-        .execute()
-    }
+    // One transaction: all or nothing, and one commit instead of one per row.
+    await db.transaction().execute(async (trx) => {
+      for (const key of keys) {
+        await trx
+          .deleteFrom('drill_cards')
+          .where('game_id', '=', key.gameId)
+          .where('source_type', '=', key.sourceType)
+          .where('ply', '=', key.ply)
+          .execute()
+      }
+    })
   }
 
   /** Days ("YYYY-MM-DD", local) with at least one drill answer, for the streak. */
