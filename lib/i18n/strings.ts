@@ -319,6 +319,8 @@ const en = {
       analyzed === total
         ? `Analyzed ${analyzed} game${analyzed === 1 ? '' : 's'}.`
         : `Analyzed ${analyzed} of ${total} games — stopped early.`,
+    someFailed: (analyzed: number, failed: number, total: number) =>
+      `Analyzed ${analyzed} of ${total} games — ${failed} couldn't be saved.`,
   },
   manualGame: {
     noResult:
@@ -892,6 +894,8 @@ const es: Strings = {
       analyzed === total
         ? `${analyzed} ${analyzed === 1 ? 'partida analizada' : 'partidas analizadas'}.`
         : `${analyzed} de ${total} partidas analizadas — detenido antes de tiempo.`,
+    someFailed: (analyzed: number, failed: number, total: number) =>
+      `${analyzed} de ${total} partidas analizadas — ${failed} no se ${failed === 1 ? 'pudo' : 'pudieron'} guardar.`,
   },
   manualGame: {
     noResult:
