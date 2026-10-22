@@ -127,6 +127,26 @@ describe('SqliteGameRepository.deleteGame', () => {
   })
 })
 
+describe('SqliteGameRepository.getDrillCard', () => {
+  it('finds a card by its (gameId, sourceType, ply) key', async () => {
+    const card = {
+      gameId: '1',
+      sourceType: 'blunder' as const,
+      ply: 7,
+      dueAt: 'x',
+      intervalDays: 1,
+      easeFactor: 2.5,
+      repetitions: 1,
+      lastReviewedAt: null,
+      createdAt: 'x',
+    }
+    await repo.upsertDrillCard(card)
+    expect(await repo.getDrillCard('1', 'blunder', 7)).toEqual(card)
+    expect(await repo.getDrillCard('1', 'deviation', 7)).toBeUndefined()
+    expect(await repo.getDrillCard('1', 'blunder', 8)).toBeUndefined()
+  })
+})
+
 describe('SqliteGameRepository.upsertGames', () => {
   it('inserts a month too big for one statement and counts only new rows', async () => {
     const month = Array.from({ length: 1500 }, (_, i) => game(`big-${i}`, 'fverona', 'x', 'white'))
