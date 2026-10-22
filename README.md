@@ -125,6 +125,28 @@ pnpm build
 dev server then silently serves stale code, and the pm2 one can fail to load its pages. Restart
 whichever is running after a build.
 
+### Puzzle data scripts
+
+You don't need these to run Blitzr: the Lichess puzzles ship in `lib/`. They rebuild the puzzle
+files and are safe to re-run, since a puzzle keeps its id (and so its solved state). All need
+Node 22.18+, which runs the TypeScript they import as is.
+
+| Script                             | Writes                                | Needs                                          |
+| ---------------------------------- | ------------------------------------- | ---------------------------------------------- |
+| `import-lichess-mates.mjs`         | `lib/lichessMates.json`               | the Lichess puzzle CSV on stdin (or as a path) |
+| `import-lichess-defenses.mjs`      | `lib/lichessDefenses.json`            | the same CSV, plus a native Stockfish          |
+| `check-defenses.mjs [movetime-ms]` | nothing; reports problems             | a native Stockfish                             |
+| `import-polgar-mates.mjs`          | `data/polgar-mates.json` (local only) | `polgar.pgn` in the repo root, or `--from-git` |
+
+```bash
+brew install stockfish zstd   # macOS; any native stockfish on PATH works
+curl -s https://database.lichess.org/lichess_db_puzzle.csv.zst | zstd -dc |
+  node scripts/import-lichess-mates.mjs
+```
+
+The CSV is the [Lichess puzzle database](https://database.lichess.org/#puzzles) (CC0, a large
+download). See [Puzzles](#puzzles) for what each set contains.
+
 ## How it works
 
 ### Sync
