@@ -62,20 +62,31 @@ export function BulkAnalysisProvider({ children }: { children: React.ReactNode }
 
       setProgress({ gamesDone: 0, gamesTotal: games.length, positionsDone: 0, positionsTotal: 0 })
       let analyzed = 0
+      let failed = 0
       const movetimeMs = ANALYSIS_STRENGTHS[analysisStrength]
       await analyzeGames(
         games,
+        // A failed save skips that game rather than ending the run.
         async (gameId, evals) => {
-          const result = await saveGameAnalysis(gameId, evals, movetimeMs)
-          if (!result.ok) throw new Error(result.error)
-          analyzed++
+          try {
+            const result = await saveGameAnalysis(gameId, evals, movetimeMs)
+            if (result.ok) analyzed++
+            else failed++
+          } catch (err) {
+            console.error(err)
+            failed++
+          }
         },
         setProgress,
         () => shouldContinueRef.current,
         movetimeMs,
       )
 
-      setToast({ text: s.bulkAnalyze.analyzed(analyzed, games.length), isError: false })
+      setToast(
+        failed > 0
+          ? { text: s.bulkAnalyze.someFailed(analyzed, failed, games.length), isError: true }
+          : { text: s.bulkAnalyze.analyzed(analyzed, games.length), isError: false },
+      )
     } catch (err) {
       setToast({
         text: err instanceof Error ? err.message : s.bulkAnalyze.analysisFailed,
