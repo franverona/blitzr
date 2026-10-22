@@ -41,8 +41,14 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
+// Also bounds reading the body: a big month is a few MB.
+const REQUEST_TIMEOUT_MS = 30_000
+
 async function getJson<T>(url: string, attempt = 1): Promise<T> {
-  const res = await fetch(url, { headers: { 'User-Agent': USER_AGENT } })
+  const res = await fetch(url, {
+    headers: { 'User-Agent': USER_AGENT },
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+  })
 
   if (res.status === 429) {
     if (attempt > 5) {
