@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { fetchPlayerAvatar } from '@/lib/chesscom/client'
+import { fetchArchives, fetchPlayerAvatar } from '@/lib/chesscom/client'
 
 afterEach(() => {
   vi.unstubAllGlobals()
@@ -47,5 +47,15 @@ describe('fetchPlayerAvatar', () => {
     )
 
     expect(await fetchPlayerAvatar('slow-user')).toBeNull()
+  })
+})
+
+describe('fetchArchives', () => {
+  it('sends a timeout signal so a hung request fails the sync', async () => {
+    const fetchMock = vi.fn<typeof fetch>(async () => Response.json({ archives: [] }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await fetchArchives('me')
+    expect(fetchMock.mock.calls[0][1]?.signal).toBeInstanceOf(AbortSignal)
   })
 })
