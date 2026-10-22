@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { getStrings } from '@/lib/i18n/strings'
 import { lichessAnalysisUrl, linePgn } from '@/lib/share'
-import { useBoardContext } from './Board'
+import { useBoardContext } from './BoardContext'
 import { buttonClass } from './styles'
 
 const COPIED_FEEDBACK_MS = 1500

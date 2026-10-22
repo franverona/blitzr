@@ -1,11 +1,9 @@
 import { notFound } from 'next/navigation'
 import { getGame, getGameAnalysis } from '../../actions'
-import {
-  BoardNavControls,
-  BoardProvider,
-  BoardView,
-  LiveAnalysisProvider,
-} from '@/components/Board'
+import { BoardView } from '@/components/Board'
+import { BoardProvider } from '@/components/BoardContext'
+import { BoardNavControls } from '@/components/BoardNavControls'
+import { LiveAnalysisProvider } from '@/components/LiveAnalysis'
 import { DeleteGameButton } from '@/components/DeleteGameButton'
 import {
   AnalyzeButton,

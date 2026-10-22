@@ -1,7 +1,7 @@
 'use client'
 
 import { getStrings } from '@/lib/i18n/strings'
-import { useBoardContext } from './Board'
+import { useBoardContext } from './BoardContext'
 import { IconButton } from './IconButton'
 
 export function FlipBoardButton() {
