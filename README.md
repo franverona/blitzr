@@ -240,6 +240,11 @@ Copying `data/polgar-mates.json` to another machine works too.
 - `data/*.db`, `data/backups/` and `public/stockfish/` (~7MB, copied from `node_modules` on install) are
   gitignored.
 
+## Contributing
+
+Issues and small fixes are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md) for scope and how to
+send a change.
+
 ## Credits
 
 - Puzzles from the [Lichess puzzle database](https://database.lichess.org/#puzzles), released
