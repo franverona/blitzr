@@ -371,6 +371,11 @@ const en = {
     hintText: (pieces: string) => `Hint: it's a ${pieces} move.`,
     keyboardHint: 'Space/Enter → Next · H → Hint',
     autoAdvance: 'Go to the next card after a correct answer',
+    saveFailed: (n: number) =>
+      n === 1
+        ? "Couldn't save an answer, so its card keeps its old schedule."
+        : `Couldn't save ${n} answers, so their cards keep their old schedule.`,
+    retrySave: 'Try again',
     sessionComplete: 'Session complete',
     tally: (correct: number, incorrect: number, total: number) =>
       `${correct} correct, ${incorrect} incorrect out of ${total}.`,
@@ -940,6 +945,11 @@ const es: Strings = {
     hintText: (pieces: string) => `Pista: es una jugada de ${pieces}.`,
     keyboardHint: 'Espacio/Intro → Siguiente · H → Pista',
     autoAdvance: 'Pasar a la siguiente tarjeta tras acertar',
+    saveFailed: (n: number) =>
+      n === 1
+        ? 'No se pudo guardar una respuesta, así que su tarjeta mantiene su programación anterior.'
+        : `No se pudieron guardar ${n} respuestas, así que sus tarjetas mantienen su programación anterior.`,
+    retrySave: 'Reintentar',
     sessionComplete: 'Sesión completa',
     tally: (correct: number, incorrect: number, total: number) =>
       `${correct} correctas, ${incorrect} incorrectas de ${total}.`,

@@ -13,14 +13,22 @@ import { StockfishEngine } from '@/lib/stockfish/client'
 import { terminalEval } from '@/lib/stockfish/analyze'
 import { describeBlunderReason, detectBlunderReason } from '@/lib/tactics'
 import { REVEAL_ARROW_COLOR } from '@/lib/theme'
-import type { BlunderReason, DrillPrompt } from '@/lib/types'
+import type { BlunderReason, DrillPrompt, DrillSourceType } from '@/lib/types'
 import { useSettings, useMoveSound } from './SettingsProvider'
 import { LegalMoveSquare } from './LegalMoveSquare'
+import { ErrorText } from './ErrorText'
 import { PlayerAvatar } from './PlayerAvatar'
 import { PromotionPicker, type PromotionPiece } from './PromotionPicker'
 import { buttonClass, LINK_CLASS } from './styles'
 
 type Feedback = 'correct' | 'alternative' | 'incorrect' | null
+
+interface DrillAnswer {
+  gameId: string
+  sourceType: DrillSourceType
+  ply: number
+  correct: boolean
+}
 
 const ALTERNATIVE_CHECK_MOVETIME_MS = 300
 // Long enough to see the move land and read the feedback.
@@ -134,6 +142,8 @@ function DrillDeck({
 
   const [checking, setChecking] = useState(false)
   const [autoAdvance, setAutoAdvance] = useState(initialAutoAdvance)
+  // Answers whose save failed. Kept across cards so auto-advance can't hide the error.
+  const [unsaved, setUnsaved] = useState<DrillAnswer[]>([])
 
   // A ref, not state, so a move can't be graded twice within the same tick.
   const answeredRef = useRef(false)
@@ -313,12 +323,25 @@ function DrillDeck({
     setTally((t) =>
       correct ? { ...t, correct: t.correct + 1 } : { ...t, incorrect: t.incorrect + 1 },
     )
-    submitDrillAnswer(
-      activePrompt.gameId,
-      activePrompt.sourceType,
-      activePrompt.ply,
+    saveAnswer({
+      gameId: activePrompt.gameId,
+      sourceType: activePrompt.sourceType,
+      ply: activePrompt.ply,
       correct,
-    ).catch(() => {})
+    })
+  }
+
+  function saveAnswer(answer: DrillAnswer) {
+    submitDrillAnswer(answer.gameId, answer.sourceType, answer.ply, answer.correct).catch((err) => {
+      console.error(err)
+      setUnsaved((u) => [...u, answer])
+    })
+  }
+
+  function retryUnsaved() {
+    const pending = unsaved
+    setUnsaved([])
+    pending.forEach(saveAnswer)
   }
 
   function handleDrop({
@@ -463,6 +486,15 @@ function DrillDeck({
               {s.drill.next}
             </button>
           </>
+        )}
+
+        {unsaved.length > 0 && (
+          <ErrorText>
+            {s.drill.saveFailed(unsaved.length)}{' '}
+            <button onClick={retryUnsaved} className="font-medium underline">
+              {s.drill.retrySave}
+            </button>
+          </ErrorText>
         )}
 
         <div className="mt-2 flex flex-col gap-2 border-t border-zinc-200 pt-3 dark:border-zinc-800">
