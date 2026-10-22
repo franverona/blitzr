@@ -94,6 +94,15 @@ describe('SqliteGameRepository "not me" games', () => {
   })
 })
 
+describe('SqliteGameRepository.listManualGames', () => {
+  it('returns only pasted games', async () => {
+    await repo.upsertGames([
+      { ...game('pasted', 'fverona', 'frank', 'white'), archiveYm: 'manual' },
+    ])
+    expect((await repo.listManualGames()).map((g) => g.id)).toEqual(['pasted'])
+  })
+})
+
 describe('SqliteGameRepository.deleteGame', () => {
   it('removes the game and cascades to its analysis and drill cards', async () => {
     await repo.upsertGames([game('del', 'fverona', 'eve', 'white')])

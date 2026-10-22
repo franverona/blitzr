@@ -63,7 +63,7 @@ export async function syncArchive(archiveYm: string): Promise<number> {
   const rawGames = await fetchArchiveMonth(username, year, month)
   const games = rawGames.map((raw) => normalizeGame(raw, username, archiveYm))
   // A game already pasted in keeps that copy, with its analysis and drill cards.
-  const manual = (await repo.listAllGames()).filter((g) => g.archiveYm === 'manual')
+  const manual = await repo.listManualGames()
   const fresh = manual.length ? games.filter((g) => !findDuplicateGame(g, manual)) : games
 
   const upserted = await repo.upsertGames(fresh)

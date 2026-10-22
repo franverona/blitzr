@@ -12,7 +12,7 @@ const repo = vi.hoisted(() => ({
   upsertGames: vi.fn(async (games: unknown[]) => games.length - 1),
   markArchiveSynced: vi.fn(async () => {}),
   getArchiveSyncStatus: vi.fn(async () => [{ archiveYm: '2026-07', status: 'complete' }]),
-  listAllGames: vi.fn(async (): Promise<unknown[]> => []),
+  listManualGames: vi.fn(async (): Promise<unknown[]> => []),
 }))
 vi.mock('@/lib/db', () => ({ getRepository: () => repo }))
 vi.mock('@/lib/config', () => ({ getChesscomUsername: () => 'me' }))
@@ -99,7 +99,7 @@ describe('syncArchive', () => {
       { uuid: 'a', url: 'https://www.chess.com/game/live/1' },
       { uuid: 'b', url: 'https://www.chess.com/game/live/2' },
     ] as never)
-    repo.listAllGames.mockResolvedValueOnce([
+    repo.listManualGames.mockResolvedValueOnce([
       {
         id: 'pasted',
         archiveYm: 'manual',
