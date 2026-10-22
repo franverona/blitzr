@@ -213,7 +213,7 @@ scripts/
 ## Manually-added games
 
 `parseManualGame()` builds a `Game` from a pasted PGN's headers and throws on bad movetext or
-missing players (a manual game exists to be analyzed). It gets a fresh `crypto.randomUUID()` and
+missing players (a manual game exists to be analyzed). Its per-player result codes are Chess.com's (`resigned`, `timeout`, `agreed`…), read from the final position, then the (possibly Spanish) `Termination` header, falling back to `loss`/`draw`. It gets a fresh `crypto.randomUUID()` and
 `archiveYm: 'manual'`; since `upsertGames()` is `ON CONFLICT (id) DO NOTHING`, sync can never
 overwrite it. The random id also defeats `ON CONFLICT` as a duplicate check, so `findDuplicateGame()`
 matches on the Chess.com game id in the URL (any of its forms) or on players plus moves: a paste
