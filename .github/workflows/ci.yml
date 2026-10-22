@@ -52,3 +52,24 @@ jobs:
           for route in / /games /openings /learn /settings /repertoire /drill /blunders /puzzles /puzzles/1; do
             curl -fsS -o /dev/null "http://127.0.0.1:9878$route" || { echo "::error::$route failed"; exit 1; }
           done
+          # One game, inserted after the app created the schema, for a real /games/[id].
+          node <<'JS'
+          const db = new (require('better-sqlite3'))('data/blitzr.db')
+          db.prepare(`INSERT INTO games (id, url, pgn, moves_san, initial_fen, time_control,
+            time_class, rules, rated, end_time, white_username, white_result, black_username,
+            black_result, my_color, my_result, archive_ym, created_at)
+            VALUES ('smoke', '', @pgn, @moves, @fen, '180', 'blitz', 'chess', 0, 1, 'smoke-white',
+            'win', 'smoke-black', 'checkmated', 'white', 'win', 'manual', '')`).run({
+            pgn: '1. e4 e5 2. Bc4 Nc6 3. Qh5 Nf6 4. Qxf7# 1-0',
+            moves: JSON.stringify(['e4', 'e5', 'Bc4', 'Nc6', 'Qh5', 'Nf6', 'Qxf7#']),
+            fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+          })
+          JS
+          # notFound() still answers 200 (loading.tsx streams), so check each page's content too.
+          check() {
+            body=$(curl -fsS "http://127.0.0.1:9878$1") || { echo "::error::$1 failed"; exit 1; }
+            grep -qF "$2" <<< "$body" || { echo "::error::$1 lacks \"$2\""; exit 1; }
+          }
+          check /games/smoke smoke-black
+          check /learn/sicilian-defense 'Sicilian Defense'
+          check /learn/king-and-rook-vs-king 'King and Rook vs. King'
