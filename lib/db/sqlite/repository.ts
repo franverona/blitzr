@@ -244,6 +244,16 @@ export class SqliteGameRepository {
     return rows.map(rowToGame)
   }
 
+  async listManualGames(): Promise<Game[]> {
+    const db = await this.ready()
+    const rows = await db
+      .selectFrom('games')
+      .selectAll()
+      .where('archive_ym', '=', 'manual')
+      .execute()
+    return rows.map(rowToGame)
+  }
+
   async getGame(id: string): Promise<Game | undefined> {
     const db = await this.ready()
     const row = await db.selectFrom('games').selectAll().where('id', '=', id).executeTakeFirst()
