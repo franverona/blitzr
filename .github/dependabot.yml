@@ -8,8 +8,12 @@ updates:
       default-days: 2
     open-pull-requests-limit: 10
     groups:
+      # Pinned and upgraded by hand: Next's minors change APIs and defaults. Never auto-merged.
+      framework:
+        patterns: ['next', 'eslint-config-next', 'react', 'react-dom']
       minor-and-patch:
         update-types: [minor, patch]
+        exclude-patterns: ['next', 'eslint-config-next', 'react', 'react-dom']
     commit-message:
       prefix: chore
       prefix-development: chore
