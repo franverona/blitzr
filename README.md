@@ -59,7 +59,8 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000), go to **Games** and click **Sync games**. Later
 syncs only fetch months that aren't complete yet, and run on their own when you open Blitzr more
-than an hour after the last one. A sync that adds games offers to analyze them.
+than an hour after the last one (`BLITZR_AUTO_SYNC_MINUTES` in `.env.local` changes that; `0`
+turns it off). A sync that adds games offers to analyze them.
 
 The database is created at `./data/blitzr.db` on first run. To reset, delete it and re-sync. To
 keep it elsewhere (say, outside the repo, or shared by several checkouts), set `BLITZR_DATA_DIR` in

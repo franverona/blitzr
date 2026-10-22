@@ -202,7 +202,8 @@ backups and `polgar-mates.json` elsewhere. The `data/` paths below assume the de
   drives a sync (`listArchivesToSync()`, then `syncArchiveMonth()` per month) so `SyncButton` can
   show progress; each month revalidates `/games`, and a failed month leaves earlier ones saved.
 - Sync state lives in `SyncProvider` (root layout, inside `BulkAnalysisProvider`). Opening the app
-  syncs once if the newest `sync_state.synced_at` is over an hour old (`isSyncStale()`; never before a
+  syncs once if the newest `sync_state.synced_at` is over an hour old (`isSyncStale()`; `BLITZR_AUTO_SYNC_MINUTES` changes the hour, `0` turns
+  auto-sync off but keeps the hour for Today's stale badge; never before a
   first manual sync), silently unless it finds games. A sync that adds games offers "Analyze them".
 - Incremental: `sync_state` marks months `complete`/`partial`. The current month, and the previous
   one until a full UTC day has passed (`oldestOpenArchiveYm()`), are always re-fetched.
