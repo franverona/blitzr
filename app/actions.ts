@@ -126,6 +126,8 @@ export async function getArchiveSyncStatus(): Promise<ArchiveSyncStatus[]> {
   return getRepository().getArchiveSyncStatus()
 }
 
+type ActionResult = { ok: true } | { ok: false; error: string }
+
 type SyncError = { ok: false; error: string }
 
 function syncError(err: unknown): SyncError {
@@ -212,16 +214,23 @@ export async function listRepertoire(color: RepertoireColor): Promise<Repertoire
   return getRepository().listRepertoireNodes(color)
 }
 
-export async function addRepertoireMove(node: RepertoireNode): Promise<void> {
-  const repo = getRepository()
-  const parent =
-    node.parentId === null
-      ? undefined
-      : (await repo.listRepertoireNodes(node.color)).find((n) => n.id === node.parentId)
-  const valid = normalizeRepertoireNode(node, parent)
-  if (!valid) throw new Error('Invalid repertoire move')
-  await repo.addRepertoireNode(valid)
+export async function addRepertoireMove(node: RepertoireNode): Promise<ActionResult> {
+  const error = getStrings().repertoire.failedToSave
+  try {
+    const repo = getRepository()
+    const parent =
+      node.parentId === null
+        ? undefined
+        : (await repo.listRepertoireNodes(node.color)).find((n) => n.id === node.parentId)
+    const valid = normalizeRepertoireNode(node, parent)
+    if (!valid) return { ok: false, error }
+    await repo.addRepertoireNode(valid)
+  } catch (err) {
+    console.error(err)
+    return { ok: false, error }
+  }
   revalidatePath('/repertoire')
+  return { ok: true }
 }
 
 export async function deleteRepertoireMove(id: string): Promise<void> {
@@ -237,21 +246,28 @@ export async function saveGameAnalysis(
   gameId: string,
   evals: PositionEval[],
   movetimeMs: number,
-): Promise<void> {
-  const game = await getRepository().getGame(gameId)
-  if (!game?.movesSan || !isValidAnalysis(evals, game.movesSan.length, movetimeMs)) {
-    throw new Error('Invalid analysis')
+): Promise<ActionResult> {
+  const error = getStrings().analysisPanel.saveFailed
+  try {
+    const game = await getRepository().getGame(gameId)
+    if (!game?.movesSan || !isValidAnalysis(evals, game.movesSan.length, movetimeMs)) {
+      return { ok: false, error }
+    }
+    await getRepository().saveGameAnalysis({
+      gameId,
+      evals,
+      analyzedAt: new Date().toISOString(),
+      movetimeMs,
+    })
+  } catch (err) {
+    console.error(err)
+    return { ok: false, error }
   }
-  await getRepository().saveGameAnalysis({
-    gameId,
-    evals,
-    analyzedAt: new Date().toISOString(),
-    movetimeMs,
-  })
   revalidatePath(`/games/${gameId}`)
   revalidatePath('/blunders')
   revalidatePath('/games')
   revalidatePath('/')
+  return { ok: true }
 }
 
 export async function getUnanalyzedGames(): Promise<UnanalyzedGame[]> {

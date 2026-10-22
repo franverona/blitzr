@@ -65,7 +65,8 @@ export function BulkAnalysisProvider({ children }: { children: React.ReactNode }
       await analyzeGames(
         games,
         async (gameId, evals) => {
-          await saveGameAnalysis(gameId, evals, movetimeMs)
+          const result = await saveGameAnalysis(gameId, evals, movetimeMs)
+          if (!result.ok) throw new Error(result.error)
           analyzed++
         },
         setProgress,

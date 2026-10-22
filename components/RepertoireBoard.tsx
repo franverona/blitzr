@@ -115,11 +115,16 @@ export function RepertoireBoard({
     setPath((p) => [...p, node])
     setError(null)
 
-    addRepertoireMove(node).catch((err) => {
+    const rollback = (error: string) => {
       setNodes((prev) => prev.filter((n) => n.id !== node.id))
       setPath((p) => p.filter((n) => n.id !== node.id))
-      setError(err instanceof Error ? err.message : s.repertoire.failedToSave)
-    })
+      setError(error)
+    }
+    addRepertoireMove(node)
+      .then((result) => {
+        if (!result.ok) rollback(result.error)
+      })
+      .catch(() => rollback(s.repertoire.failedToSave))
 
     return true
   }
