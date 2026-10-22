@@ -109,6 +109,22 @@ pnpm format          # Prettier (write); pnpm format:check to check
 pnpm backup          # copy the database into data/backups/
 ```
 
+### Before merging
+
+CI runs these five on every PR, then smoke-tests `pnpm start` against an empty database:
+
+```bash
+pnpm format:check
+pnpm exec tsc --noEmit
+pnpm lint
+pnpm test
+pnpm build
+```
+
+`pnpm build` rewrites `.next/`, which a running `pnpm dev` and the pm2 server both read from: the
+dev server then silently serves stale code, and the pm2 one can fail to load its pages. Restart
+whichever is running after a build.
+
 ## How it works
 
 ### Sync
