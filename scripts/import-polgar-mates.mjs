@@ -1,5 +1,6 @@
 // Imports mate-in-1/2/3 puzzles from Polgár's "5334 Problems, Combinations,
-// and Games" (polgar.pgn, Latin-1, in the repo root) into data/polgar-mates.json.
+// and Games" (polgar.pgn, Latin-1, in the repo root) into polgar-mates.json in the data
+// dir (BLITZR_DATA_DIR, else data/).
 // The book is copyrighted, so the output is gitignored: it's for local study,
 // and lib/puzzleSet.ts loads it when present (restart the server after).
 //
@@ -23,10 +24,13 @@ import { Worker, isMainThread, parentPort, workerData } from 'node:worker_thread
 import { Chess } from 'chess.js'
 import { isForcedMate } from '../lib/forcedMate.ts'
 import { REAL_GAME_MATES } from '../lib/realGameMates.ts'
+import { dataDir } from '../lib/dataDir.ts'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const pgnPath = path.join(__dirname, '..', 'polgar.pgn')
-const outPath = path.join(__dirname, '..', 'data', 'polgar-mates.json')
+const root = path.join(__dirname, '..')
+if (fs.existsSync(path.join(root, '.env.local'))) process.loadEnvFile(path.join(root, '.env.local'))
+const outPath = path.join(dataDir(root), 'polgar-mates.json')
 // The ids right after the 221 real-game puzzles, which is where they started.
 const FIRST_ID = 222
 
