@@ -65,7 +65,8 @@ export function GameAnalysisProvider({
         movetimeMs,
       )
       setAnalysis({ gameId, evals, analyzedAt: new Date().toISOString(), movetimeMs })
-      await saveGameAnalysis(gameId, evals, movetimeMs)
+      const result = await saveGameAnalysis(gameId, evals, movetimeMs)
+      if (!result.ok) setError(result.error)
     } catch (err) {
       setError(err instanceof Error ? err.message : getStrings().analysisPanel.analysisFailed)
     } finally {
