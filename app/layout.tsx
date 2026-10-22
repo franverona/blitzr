@@ -111,6 +111,11 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             </SyncProvider>
           </BulkAnalysisProvider>
         </SettingsProvider>
+        {/* Bulk and Sync toasts portal here so they stack instead of overlapping. */}
+        <div
+          id="toasts"
+          className="pointer-events-none fixed right-4 bottom-4 z-50 flex flex-col items-end gap-2 *:pointer-events-auto"
+        />
       </body>
     </html>
   )
