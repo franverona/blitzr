@@ -38,7 +38,11 @@ app/
   puzzles/page.tsx          # mate-in-N puzzle list
   puzzles/[id]/page.tsx     # one puzzle
 components/
-  Board.tsx                 # BoardProvider/BoardView/BoardNavControls/LiveAnalysisProvider
+  Board.tsx                 # BoardView: the board, eval bar, move list and their overlays
+  BoardContext.tsx          # BoardProvider + useBoardContext(): ply, explore branch, orientation
+  BoardNavControls.tsx      # ◀/▶/Play/flip buttons and their keyboard shortcuts
+  LiveAnalysis.tsx          # LiveAnalysisProvider + useLiveAnalysisContext()
+  GameEndBadge.tsx          # mate/flag/draw badges drawn on the final position
   LiveAnalysisPanel.tsx     # live MultiPV engine lines
   MoveSequence.tsx          # SAN line rendered with piece icons
   PlanBoard.tsx             # step-through board for an engine plan
@@ -254,7 +258,7 @@ a prepared move. An opponent's unprepared move or the tree running out doesn't c
 
 ### Live analysis and exploration
 
-- `LiveAnalysisProvider` (in `Board.tsx` to avoid a circular import) owns one long-lived engine
+- `LiveAnalysisProvider` (`LiveAnalysis.tsx`) owns one long-lived engine
   and runs a MultiPV search for `displayFen`, at most one in flight. Its context exposes `lines`,
   the `fen` they were computed for, and `thinking`. `LiveAnalysisPanel` sits above the game page's
   move list (`BoardView`'s `sidebarTop`, capped at 60% of the sidebar). Hidden engine hints hide it

@@ -3,7 +3,7 @@
 import { getLocale } from '@/lib/i18n/locale'
 import { getStrings } from '@/lib/i18n/strings'
 import type { LessonMove } from '@/lib/types'
-import { useBoardContext } from './Board'
+import { useBoardContext } from './BoardContext'
 
 /** The note for the move that led to the current ply. */
 export function MoveExplanation({ moves }: { moves: LessonMove[] }) {
