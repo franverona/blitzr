@@ -14,7 +14,7 @@ import { getChesscomUsername } from '@/lib/config'
 import { getSessionSize } from '@/lib/drill'
 import { getLocale } from '@/lib/i18n/locale'
 import { getStrings } from '@/lib/i18n/strings'
-import { isSyncStale } from '@/lib/sync'
+import { autoSyncMinutes, isSyncStale } from '@/lib/sync'
 import { getBoardColorPreset, getPlaySpeed, getTrainingOrientation } from '@/lib/theme'
 import './globals.css'
 
@@ -48,7 +48,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   }
   const avatarUrl = username ? await fetchPlayerAvatar(username) : null
   let autoSync = false
-  if (username) {
+  if (username && autoSyncMinutes() > 0) {
     try {
       autoSync = isSyncStale((await getArchiveSyncStatus()).map((a) => a.syncedAt))
     } catch {

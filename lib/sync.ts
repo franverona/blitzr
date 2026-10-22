@@ -5,12 +5,26 @@ import { getRepository } from './db'
 import { findDuplicateGame } from './manualGame'
 
 const DAY_MS = 24 * 60 * 60 * 1000
-const AUTO_SYNC_AFTER_MS = 60 * 60 * 1000
+const DEFAULT_AUTO_SYNC_MINUTES = 60
 
-/** Opening the app syncs once the last sync is over an hour old, but never before a first manual one. */
-export function isSyncStale(syncedAts: string[], now: Date = new Date()): boolean {
+/** `BLITZR_AUTO_SYNC_MINUTES` (default 60); 0 turns auto-sync off. Anything invalid is the default. */
+export function autoSyncMinutes(): number {
+  const raw = process.env.BLITZR_AUTO_SYNC_MINUTES?.trim()
+  const minutes = raw ? Number(raw) : DEFAULT_AUTO_SYNC_MINUTES
+  return Number.isFinite(minutes) && minutes >= 0 ? minutes : DEFAULT_AUTO_SYNC_MINUTES
+}
+
+/**
+ * Opening the app syncs once the last sync is over `autoSyncMinutes()` old, but never before a
+ * first manual one. With auto-sync off, Today's badge still goes stale after the default hour.
+ */
+export function isSyncStale(
+  syncedAts: string[],
+  now: Date = new Date(),
+  minutes: number = autoSyncMinutes() || DEFAULT_AUTO_SYNC_MINUTES,
+): boolean {
   if (syncedAts.length === 0) return false
-  return now.getTime() - Math.max(...syncedAts.map(Date.parse)) > AUTO_SYNC_AFTER_MS
+  return now.getTime() - Math.max(...syncedAts.map(Date.parse)) > minutes * 60_000
 }
 
 /**

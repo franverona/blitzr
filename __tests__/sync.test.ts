@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { fetchArchiveMonth, fetchArchives } from '@/lib/chesscom/client'
 import {
+  autoSyncMinutes,
   isSyncStale,
   listPendingArchives,
   oldestOpenArchiveYm,
@@ -38,6 +39,36 @@ describe('isSyncStale', () => {
 
   it('never auto-syncs before a first sync', () => {
     expect(isSyncStale([], now)).toBe(false)
+  })
+
+  it('takes the interval from BLITZR_AUTO_SYNC_MINUTES', () => {
+    vi.stubEnv('BLITZR_AUTO_SYNC_MINUTES', '15')
+    try {
+      expect(isSyncStale(['2026-09-15T11:30:00Z'], now)).toBe(true)
+      expect(isSyncStale(['2026-09-15T11:50:00Z'], now)).toBe(false)
+    } finally {
+      vi.unstubAllEnvs()
+    }
+  })
+})
+
+describe('autoSyncMinutes', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
+  it('defaults to an hour, and falls back to it for invalid values', () => {
+    expect(autoSyncMinutes()).toBe(60)
+    for (const value of ['abc', '-5', '']) {
+      vi.stubEnv('BLITZR_AUTO_SYNC_MINUTES', value)
+      expect(autoSyncMinutes()).toBe(60)
+    }
+  })
+
+  it('reads 0 as off, which still leaves Today a stale cutoff', () => {
+    vi.stubEnv('BLITZR_AUTO_SYNC_MINUTES', '0')
+    expect(autoSyncMinutes()).toBe(0)
+    expect(isSyncStale(['2026-09-15T11:30:00Z'], new Date('2026-09-15T12:00:00Z'))).toBe(false)
   })
 })
 
