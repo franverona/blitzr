@@ -75,6 +75,13 @@ function endTimeFromPgnDate(headers: Record<string, string>): number {
   return Math.floor((parsedDateOnly + msSinceMidnightUtc) / 1000)
 }
 
+// Chess.com's `rules` values: "Chess960" -> "chess960", "King of the Hill" -> "kingofthehill".
+// Lichess's "From Position" is standard rules from a FEN.
+function rulesFromVariant(variant: string | undefined): string {
+  if (!variant || /^(standard|from position)$/i.test(variant)) return 'chess'
+  return variant.toLowerCase().replace(/[^a-z0-9]/g, '')
+}
+
 function ratingFromHeader(value: string | undefined): number | null {
   const rating = Number.parseInt(value ?? '', 10)
   return Number.isNaN(rating) ? null : rating
@@ -130,7 +137,7 @@ export function parseManualGame(
     finalFen,
     timeControl: headers.TimeControl ?? '',
     timeClass: 'unknown',
-    rules: 'chess',
+    rules: rulesFromVariant(headers.Variant),
     rated: false,
     endTime: endTimeFromPgnDate(headers),
     whiteUsername: headers.White,

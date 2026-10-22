@@ -127,6 +127,16 @@ describe('parseManualGame', () => {
     expect(parseManualGame(pgn('1/2-1/2', 'Normal'), 'A').whiteResult).toBe('draw')
   })
 
+  it('stores a Variant header as the rules, so engine and opening features skip it', () => {
+    const pgn = (variant: string) =>
+      `[White "A"]\n[Black "B"]\n[Result "1-0"]\n[Variant "${variant}"]\n\n1. e4 e5 1-0`
+    expect(parseManualGame(pgn('Chess960'), 'A').rules).toBe('chess960')
+    expect(parseManualGame(pgn('King of the Hill'), 'A').rules).toBe('kingofthehill')
+    expect(parseManualGame(pgn('Standard'), 'A').rules).toBe('chess')
+    expect(parseManualGame(pgn('From Position'), 'A').rules).toBe('chess')
+    expect(parseManualGame(BOT_GAME_PGN, 'fverona').rules).toBe('chess')
+  })
+
   it('rejects an unfinished game with no result instead of scoring it a White loss', () => {
     const pgn = '[White "A"]\n[Black "B"]\n[Result "*"]\n\n1. e4 e5 *'
     expect(() => parseManualGame(pgn, 'A')).toThrow(/no final result/)
