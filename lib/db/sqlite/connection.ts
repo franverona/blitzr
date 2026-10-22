@@ -3,6 +3,7 @@ import path from 'path'
 import fs from 'fs'
 import { Kysely, SqliteDialect } from 'kysely'
 import type { DbSchema } from '../types'
+import { dataDir as getDataDir } from '../../dataDir'
 
 const globalForDb = globalThis as typeof globalThis & {
   sqliteRaw?: Database.Database
@@ -11,7 +12,7 @@ const globalForDb = globalThis as typeof globalThis & {
 
 function getSqliteRaw(): Database.Database {
   if (!globalForDb.sqliteRaw) {
-    const dataDir = path.join(process.cwd(), 'data')
+    const dataDir = getDataDir()
     if (!fs.existsSync(dataDir)) {
       fs.mkdirSync(dataDir, { recursive: true })
     }

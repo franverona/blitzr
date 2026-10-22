@@ -84,6 +84,7 @@ lib/
   manualGame.ts             # pasted PGN -> Game
   sync.ts                   # listPendingArchives(), syncArchive()
   validate.ts               # checks on Server Action payloads the client builds
+  dataDir.ts                # dataDir(): BLITZR_DATA_DIR or ./data, shared with scripts/
   i18n/                     # locale + string dictionary
   chesscom/                 # API client + normalization
   stockfish/                # UCI wrapper + batch analysis
@@ -99,6 +100,9 @@ scripts/
 ```
 
 `data/blitzr.db`, `data/backups/` and `public/stockfish/` are created at install/runtime and gitignored.
+`data/` is the default for `dataDir()` (`lib/dataDir.ts`): `BLITZR_DATA_DIR` moves the database, its
+backups and `polgar-mates.json` elsewhere. The `data/` paths below assume the default. Scripts load
+`.env.local` themselves (`process.loadEnvFile`), since only Next does it for the app.
 
 ## Key conventions
 

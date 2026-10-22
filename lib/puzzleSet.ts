@@ -6,6 +6,7 @@ import LICHESS_DEFENSES from './lichessDefenses.json'
 import LICHESS_MATES from './lichessMates.json'
 import type { MateProblem } from './mateProblems'
 import { REAL_GAME_MATES } from './realGameMates'
+import { dataDir } from './dataDir'
 
 /** Shipped in the repo: real games plus Lichess (CC0), mates then defences. */
 export const BUNDLED_MATES: MateProblem[] = [
@@ -16,7 +17,7 @@ export const BUNDLED_MATES: MateProblem[] = [
 
 // Polgár's book is copyrighted, so its puzzles stay out of the public repo:
 // scripts/import-polgar-mates.mjs writes them here for local study.
-const LOCAL_POLGAR_PATH = path.join(process.cwd(), 'data', 'polgar-mates.json')
+const LOCAL_POLGAR_PATH = path.join(dataDir(), 'polgar-mates.json')
 
 let cached: MateProblem[] | null = null
 
