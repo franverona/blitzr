@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { getUnanalyzedGames, saveGameAnalysis } from '@/app/actions'
 import { getStrings } from '@/lib/i18n/strings'
 import { ANALYSIS_STRENGTHS, analyzeGames } from '@/lib/stockfish/analyze'
@@ -92,19 +93,21 @@ export function BulkAnalysisProvider({ children }: { children: React.ReactNode }
   return (
     <BulkAnalysisContext.Provider value={{ progress, start, cancel }}>
       {children}
-      {toast && (
-        <div
-          role="status"
-          onClick={() => setToast(null)}
-          className={`fixed right-4 bottom-4 z-50 max-w-sm cursor-pointer rounded-md border px-4 py-2.5 text-sm shadow-lg ${
-            toast.isError
-              ? 'border-rose-300 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-200'
-              : 'border-zinc-200 bg-zinc-50 text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100'
-          }`}
-        >
-          {toast.text}
-        </div>
-      )}
+      {toast &&
+        createPortal(
+          <div
+            role="status"
+            onClick={() => setToast(null)}
+            className={`max-w-sm cursor-pointer rounded-md border px-4 py-2.5 text-sm shadow-lg ${
+              toast.isError
+                ? 'border-rose-300 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-200'
+                : 'border-zinc-200 bg-zinc-50 text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100'
+            }`}
+          >
+            {toast.text}
+          </div>,
+          document.getElementById('toasts')!,
+        )}
     </BulkAnalysisContext.Provider>
   )
 }

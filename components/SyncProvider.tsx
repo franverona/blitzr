@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useRef, useState, useTransition } from 'react'
+import { createPortal } from 'react-dom'
 import { listArchivesToSync, syncArchiveMonth } from '@/app/actions'
 import { getStrings } from '@/lib/i18n/strings'
 import { useBulkAnalysis } from './BulkAnalysisProvider'
@@ -97,24 +98,26 @@ export function SyncProvider({
   return (
     <SyncContext.Provider value={{ isPending, progress, sync: () => sync() }}>
       {children}
-      {toast && (
-        <div
-          role="status"
-          onClick={() => setToast(null)}
-          className={`fixed right-4 bottom-4 z-50 flex max-w-sm cursor-pointer flex-col items-start gap-2 rounded-md border px-4 py-2.5 text-sm shadow-lg ${
-            toast.isError
-              ? 'border-rose-300 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-200'
-              : 'border-zinc-200 bg-zinc-50 text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100'
-          }`}
-        >
-          {toast.text}
-          {toast.offerAnalysis && bulk.progress === null && (
-            <button onClick={bulk.start} className={buttonClass({ size: 'sm' })}>
-              {s.sync.analyzeNew}
-            </button>
-          )}
-        </div>
-      )}
+      {toast &&
+        createPortal(
+          <div
+            role="status"
+            onClick={() => setToast(null)}
+            className={`flex max-w-sm cursor-pointer flex-col items-start gap-2 rounded-md border px-4 py-2.5 text-sm shadow-lg ${
+              toast.isError
+                ? 'border-rose-300 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-200'
+                : 'border-zinc-200 bg-zinc-50 text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100'
+            }`}
+          >
+            {toast.text}
+            {toast.offerAnalysis && bulk.progress === null && (
+              <button onClick={bulk.start} className={buttonClass({ size: 'sm' })}>
+                {s.sync.analyzeNew}
+              </button>
+            )}
+          </div>,
+          document.getElementById('toasts')!,
+        )}
     </SyncContext.Provider>
   )
 }
