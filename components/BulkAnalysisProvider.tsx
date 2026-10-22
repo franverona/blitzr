@@ -1,12 +1,12 @@
 'use client'
 
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
+import { toast } from 'react-hot-toast'
 import { getUnanalyzedGames, saveGameAnalysis } from '@/app/actions'
 import { getStrings } from '@/lib/i18n/strings'
 import { ANALYSIS_STRENGTHS, analyzeGames } from '@/lib/stockfish/analyze'
 import type { BulkAnalysisProgress } from '@/lib/stockfish/analyze'
 import { useSettings } from './SettingsProvider'
-import { Toast, useToast } from './Toast'
 
 interface BulkAnalysisContextValue {
   progress: BulkAnalysisProgress | null
@@ -14,12 +14,14 @@ interface BulkAnalysisContextValue {
   cancel: () => void
 }
 
+// One toast at a time: a new run's replaces the last one's.
+const TOAST_ID = 'bulk-analysis'
+
 const BulkAnalysisContext = createContext<BulkAnalysisContextValue | null>(null)
 
 // Mounted in the root layout so a run survives navigation.
 export function BulkAnalysisProvider({ children }: { children: React.ReactNode }) {
   const [progress, setProgress] = useState<BulkAnalysisProgress | null>(null)
-  const [toast, setToast] = useToast<{ text: string; isError: boolean }>()
   const { analysisStrength } = useSettings()
   // A ref so cancel() is visible to the long-running analyzeGames() closure.
   const shouldContinueRef = useRef(true)
@@ -42,13 +44,13 @@ export function BulkAnalysisProvider({ children }: { children: React.ReactNode }
   async function start() {
     if (runningRef.current) return
     runningRef.current = true
-    setToast(null)
+    toast.dismiss(TOAST_ID)
     shouldContinueRef.current = true
 
     try {
       const games = await getUnanalyzedGames()
       if (games.length === 0) {
-        setToast({ text: s.bulkAnalyze.nothingToAnalyze, isError: false })
+        toast(s.bulkAnalyze.nothingToAnalyze, { id: TOAST_ID })
         return
       }
 
@@ -74,15 +76,14 @@ export function BulkAnalysisProvider({ children }: { children: React.ReactNode }
         movetimeMs,
       )
 
-      setToast(
-        failed > 0
-          ? { text: s.bulkAnalyze.someFailed(analyzed, failed, games.length), isError: true }
-          : { text: s.bulkAnalyze.analyzed(analyzed, games.length), isError: false },
-      )
+      if (failed > 0) {
+        toast.error(s.bulkAnalyze.someFailed(analyzed, failed, games.length), { id: TOAST_ID })
+      } else {
+        toast(s.bulkAnalyze.analyzed(analyzed, games.length), { id: TOAST_ID })
+      }
     } catch (err) {
-      setToast({
-        text: err instanceof Error ? err.message : s.bulkAnalyze.analysisFailed,
-        isError: true,
+      toast.error(err instanceof Error ? err.message : s.bulkAnalyze.analysisFailed, {
+        id: TOAST_ID,
       })
     } finally {
       runningRef.current = false
@@ -97,11 +98,6 @@ export function BulkAnalysisProvider({ children }: { children: React.ReactNode }
   return (
     <BulkAnalysisContext.Provider value={{ progress, start, cancel }}>
       {children}
-      {toast && (
-        <Toast isError={toast.isError} onClose={() => setToast(null)}>
-          {toast.text}
-        </Toast>
-      )}
     </BulkAnalysisContext.Provider>
   )
 }
