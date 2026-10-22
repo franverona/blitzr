@@ -90,21 +90,32 @@ describe('bundled puzzle content', () => {
     }
   }, 60_000)
 
-  // Checking all 2,000+ entries takes hours, so sample a few per run.
-  const FORCED_MATE_SAMPLE_SIZE = 8
+  // Checking all 2,000+ entries takes hours, so sample per run. Bounded by time, not count: one
+  // mate-in-3 takes 0.1–6s locally and ~3x that on CI, so 8 slow ones once overran a fixed timeout.
+  const FORCED_MATE_BUDGET_MS = 10_000
+  const FORCED_MATE_MIN_SAMPLE = 3
 
-  it(`a random sample of ${FORCED_MATE_SAMPLE_SIZE} mate-in-2/3 problems are forced against every legal reply`, () => {
+  it('a random sample of mate-in-2/3 problems are forced against every legal reply', () => {
     // A defence puzzle's FEN is the defender's move, so there's no mate to find from it.
     const candidates = BUNDLED_MATES.filter((p) => p.mateIn > 1 && !p.saves)
-    const sample = [...candidates].sort(() => Math.random() - 0.5).slice(0, FORCED_MATE_SAMPLE_SIZE)
-    // Unseeded, so log the sample to make a failure reproducible.
-    console.info(`Forced-mate sample: ${sample.map((p) => `#${p.id}`).join(', ')}`)
+    const shuffled = [...candidates].sort(() => Math.random() - 0.5)
+    const checked: string[] = []
+    const start = performance.now()
 
-    for (const problem of sample) {
+    for (const problem of shuffled) {
+      if (
+        checked.length >= FORCED_MATE_MIN_SAMPLE &&
+        performance.now() - start > FORCED_MATE_BUDGET_MS
+      )
+        break
       expect(problem.mateIn, `#${problem.id}: mateIn too deep to brute-force`).toBeLessThanOrEqual(
         3,
       )
       expect(isForcedMate(problem.fen, problem.mateIn), `#${problem.id}`).toBe(true)
+      checked.push(`#${problem.id}`)
     }
-  }, 60_000)
+    // Unseeded, so log the sample to make a run reproducible (a failure names its puzzle).
+    console.info(`Forced-mate sample (${checked.length}): ${checked.join(', ')}`)
+    // Worst case on CI: three slow puzzles (~20s each), or the budget plus one past it.
+  }, 120_000)
 })
