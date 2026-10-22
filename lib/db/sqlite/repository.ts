@@ -357,6 +357,22 @@ export class SqliteGameRepository {
     return rows.map(rowToDrillCard)
   }
 
+  async getDrillCard(
+    gameId: string,
+    sourceType: DrillSourceType,
+    ply: number,
+  ): Promise<DrillCard | undefined> {
+    const db = await this.ready()
+    const row = await db
+      .selectFrom('drill_cards')
+      .selectAll()
+      .where('game_id', '=', gameId)
+      .where('source_type', '=', sourceType)
+      .where('ply', '=', ply)
+      .executeTakeFirst()
+    return row ? rowToDrillCard(row) : undefined
+  }
+
   /** Insert or replace, keyed by (gameId, sourceType, ply). */
   async upsertDrillCard(card: DrillCard): Promise<void> {
     const db = await this.ready()

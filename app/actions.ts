@@ -407,10 +407,7 @@ export async function submitDrillAnswer(
   correct: boolean,
 ): Promise<void> {
   const repo = getRepository()
-  const cards = await repo.listDrillCards()
-  const current = cards.find(
-    (c) => c.gameId === gameId && c.sourceType === sourceType && c.ply === ply,
-  )
+  const current = await repo.getDrillCard(gameId, sourceType, ply)
   const now = new Date()
   const next = scheduleReview(
     current ?? { intervalDays: 0, easeFactor: 2.5, repetitions: 0 },
