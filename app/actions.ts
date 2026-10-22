@@ -176,9 +176,13 @@ export async function addManualGame(
 ): Promise<{ ok: true; gameId: string } | { ok: false; error: string }> {
   // Returned, not thrown: Next hides thrown Server Action messages in
   // production, and the dialog needs parseManualGame()'s reason.
+  // Only 'auto' needs the username; an explicit side works without one.
+  if (side === 'auto' && !hasChesscomUsername()) {
+    return { ok: false, error: getStrings().sync.noUsername }
+  }
   let game: Game
   try {
-    game = parseManualGame(pgn, getChesscomUsername(), side)
+    game = parseManualGame(pgn, side === 'auto' ? getChesscomUsername() : '', side)
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : '' }
   }
