@@ -1,13 +1,12 @@
 'use client'
 
 import { createContext, useContext, useEffect, useRef, useState, useTransition } from 'react'
-import { createPortal } from 'react-dom'
 import { listArchivesToSync, syncArchiveMonth } from '@/app/actions'
 import { getStrings } from '@/lib/i18n/strings'
 import { useBulkAnalysis } from './BulkAnalysisProvider'
 import { buttonClass } from './styles'
+import { Toast, useToast } from './Toast'
 
-const TOAST_DURATION_MS = 4000
 // Long enough to reach the "Analyze them" button.
 const ACTION_TOAST_DURATION_MS = 12000
 
@@ -19,10 +18,11 @@ interface SyncContextValue {
 
 const SyncContext = createContext<SyncContextValue | null>(null)
 
-interface Toast {
+interface SyncToast {
   text: string
   isError: boolean
   offerAnalysis?: boolean
+  durationMs?: number
 }
 
 /**
@@ -37,19 +37,10 @@ export function SyncProvider({
   children: React.ReactNode
 }) {
   const [isPending, startTransition] = useTransition()
-  const [toast, setToast] = useState<Toast | null>(null)
+  const [toast, setToast] = useToast<SyncToast>()
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null)
   const bulk = useBulkAnalysis()
   const s = getStrings()
-
-  useEffect(() => {
-    if (!toast) return
-    const timeout = setTimeout(
-      () => setToast(null),
-      toast.offerAnalysis ? ACTION_TOAST_DURATION_MS : TOAST_DURATION_MS,
-    )
-    return () => clearTimeout(timeout)
-  }, [toast])
 
   function sync({ quiet = false } = {}) {
     setToast(null)
@@ -77,6 +68,7 @@ export function SyncProvider({
           text: s.sync.synced(pending.archives.length, gamesUpserted),
           isError: false,
           offerAnalysis: gamesUpserted > 0,
+          durationMs: gamesUpserted > 0 ? ACTION_TOAST_DURATION_MS : undefined,
         })
       } catch {
         setToast({ text: s.sync.failed, isError: true })
@@ -98,26 +90,16 @@ export function SyncProvider({
   return (
     <SyncContext.Provider value={{ isPending, progress, sync: () => sync() }}>
       {children}
-      {toast &&
-        createPortal(
-          <div
-            role="status"
-            onClick={() => setToast(null)}
-            className={`flex max-w-sm cursor-pointer flex-col items-start gap-2 rounded-md border px-4 py-2.5 text-sm shadow-lg ${
-              toast.isError
-                ? 'border-rose-300 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-200'
-                : 'border-zinc-200 bg-zinc-50 text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100'
-            }`}
-          >
-            {toast.text}
-            {toast.offerAnalysis && bulk.progress === null && (
-              <button onClick={bulk.start} className={buttonClass({ size: 'sm' })}>
-                {s.sync.analyzeNew}
-              </button>
-            )}
-          </div>,
-          document.getElementById('toasts')!,
-        )}
+      {toast && (
+        <Toast isError={toast.isError} onClose={() => setToast(null)}>
+          {toast.text}
+          {toast.offerAnalysis && bulk.progress === null && (
+            <button onClick={bulk.start} className={buttonClass({ size: 'sm' })}>
+              {s.sync.analyzeNew}
+            </button>
+          )}
+        </Toast>
+      )}
     </SyncContext.Provider>
   )
 }

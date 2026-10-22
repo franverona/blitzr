@@ -57,6 +57,7 @@ components/
   Dialog.tsx                # modal shell: title, ✕, backdrop click, aria-labelledby
   PageHeader.tsx / Card.tsx / TableShell.tsx  # page <h1> row, surface + SectionLabel, table frame
   Badge.tsx / IconButton.tsx / ErrorText.tsx / Spinner.tsx  # small shared primitives
+  Toast.tsx                 # Toast + useToast(), portaled into the layout's #toasts region
   styles.ts                 # class helpers: buttonClass(), chipClass(), navButtonClass(), tones
   ...                       # smaller presentational components
 lib/
@@ -119,7 +120,7 @@ scripts/
   (localized) labels need `flex-wrap`.
 - **Page headers** (the `<h1>` row) are `PageHeader` (`title`, `subtitle`, `actions`).
 - **Shared UI before new class strings:** `Dialog`, `Badge` (tones from `styles.ts`), `Card` /
-  `SectionLabel`, `TableShell`, `IconButton`, `ErrorText`, `Spinner`. Things rendered as a `<Link>`
+  `SectionLabel`, `TableShell`, `IconButton`, `ErrorText`, `Spinner`, `Toast` (with `useToast()`). Things rendered as a `<Link>`
   in one place and a `<button>` in another are class helpers in `components/styles.ts`
   (`buttonClass()`, `chipClass()` for filter/mode toggles, `navButtonClass()`, `LINK_CLASS`,
   `INPUT_CLASS`); it has no `'use client'`, so Server Components can import it.
