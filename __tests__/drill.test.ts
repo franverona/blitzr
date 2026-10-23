@@ -322,9 +322,20 @@ describe('scheduleReview', () => {
     expect(schedule.easeFactor).toBe(1.3)
   })
 
-  it('sets dueAt to now plus the new interval', () => {
-    const schedule = scheduleReview({ intervalDays: 0, easeFactor: 2.5, repetitions: 0 }, true, now)
-    expect(schedule.dueAt).toBe(new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString())
+  it('sets dueAt to the start of the local day the new interval lands on', () => {
+    const evening = new Date(2024, 0, 10, 21, 30)
+    const missed = scheduleReview(
+      { intervalDays: 6, easeFactor: 2.5, repetitions: 2 },
+      false,
+      evening,
+    )
+    expect(missed.dueAt).toBe(new Date(2024, 0, 11).toISOString())
+    const known = scheduleReview(
+      { intervalDays: 1, easeFactor: 2.5, repetitions: 1 },
+      true,
+      evening,
+    )
+    expect(known.dueAt).toBe(new Date(2024, 0, 16).toISOString())
   })
 })
 
