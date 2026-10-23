@@ -81,7 +81,12 @@ export default async function TodayPage() {
           </p>
           {drill.due > 0 && (
             <p className={mutedClassName}>
-              {s.today.dueBreakdown(drill.due, drill.dueDeviations, drill.dueBlunders)}
+              {s.today.dueBreakdown(
+                drill.due,
+                drill.dueDeviations,
+                drill.dueBlunders,
+                drill.duePunishes,
+              )}
             </p>
           )}
           <StreakBadge streak={drill.streak} week={drill.week} />

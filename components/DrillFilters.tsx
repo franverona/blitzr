@@ -21,6 +21,7 @@ export function DrillFilters({
     { value: 'all', label: s.drillFilters.all },
     { value: 'deviation', label: s.drillFilters.deviations, title: s.drillFilters.deviationsTitle },
     { value: 'blunder', label: s.drillFilters.blunders, title: s.drillFilters.blundersTitle },
+    { value: 'punish', label: s.drillFilters.punishes, title: s.drillFilters.punishesTitle },
   ]
 
   function hrefFor(next: { type?: string; opening?: string }): string {

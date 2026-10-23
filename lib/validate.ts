@@ -42,7 +42,7 @@ export function isValidDrillAnswer(
 ): boolean {
   return (
     isString(gameId) &&
-    (sourceType === 'deviation' || sourceType === 'blunder') &&
+    (sourceType === 'deviation' || sourceType === 'blunder' || sourceType === 'punish') &&
     typeof ply === 'number' &&
     Number.isInteger(ply) &&
     ply > 0 &&
