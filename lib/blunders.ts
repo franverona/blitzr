@@ -89,9 +89,10 @@ export function buildBlunderStats(
 
       const isMateSwing = blunder.evalBefore.mate !== null || blunder.evalAfter.mate !== null
 
-      const ecoKey = game.ecoCode ?? 'unknown'
+      // By name, not ECO code: one family spans several codes, and /drill?opening= (linked
+      // from Today's weak spot) filters by this same label.
       const ecoLabel = game.ecoName ? ecoFamilyLabel(game.ecoName) : unknownOpeningLabel(locale)
-      accumulate(byOpening, ecoKey, ecoLabel, blunder.swingCp, isMateSwing)
+      accumulate(byOpening, ecoLabel, ecoLabel, blunder.swingCp, isMateSwing)
 
       const { key, label } = pieceKey(blunder.moveSan, locale)
       accumulate(byPiece, key, label, blunder.swingCp, isMateSwing)

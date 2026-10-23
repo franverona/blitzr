@@ -327,7 +327,7 @@ section. The trend chart's x-axis is game index, not date, because sessions are 
 last 7 days throughout; the pure parts live in `lib/today.ts`. The due count goes through the same
 `reconcileDrillCards()` as `getDrillDeck()`, so it matches `/drill`, and is shown against the
 session size. Ratings change per time class (`recentResults()`; Chess.com never mixes them). The
-weak spot is the top opening from `buildBlunderStats()` over recent games, linking to
+weak spot is the top opening family from `buildBlunderStats()` over recent games, linking to
 `/drill?opening=` only if the deck has a card for it. Focus also lists the week's worst blunder
 (`buildBlunderStats().worst[0]`), how the week's games were lost (`lossReasons()`, from the user's
 own result code) and the opening lesson those games reached most (`suggestLesson()`, exact SAN
