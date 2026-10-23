@@ -186,6 +186,13 @@ describe('findDuplicateGame', () => {
     expect(findDuplicateGame({ ...pasted, url: '' }, [again])).toBe(again)
   })
 
+  it('tells apart same-move games on different days, or with different Chess.com ids', () => {
+    const rematch = { ...pasted, id: 'rematch', url: '', endTime: pasted.endTime + 7 * 86_400 }
+    expect(findDuplicateGame({ ...pasted, url: '' }, [rematch])).toBeUndefined()
+    const sameDay = { ...pasted, id: 'same-day', url: 'https://www.chess.com/game/computer/2' }
+    expect(findDuplicateGame(pasted, [sameDay])).toBeUndefined()
+  })
+
   it('tells different games apart', () => {
     const other = {
       ...pasted,

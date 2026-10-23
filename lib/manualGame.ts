@@ -165,21 +165,34 @@ export function parseManualGame(
 // Chess.com URLs vary: "/analysis/game/…/analysis", "?move=0"; the type and id are what match.
 const CHESSCOM_GAME_ID = /\/game\/(live|daily|computer)\/(\d+)/
 
-/** Keys a game can be matched on: its Chess.com game id, and its players plus moves. */
-function duplicateKeys(game: Game): string[] {
-  const keys = [
-    `players:${game.whiteUsername.toLowerCase()}|${game.blackUsername.toLowerCase()}|${(game.movesSan ?? []).join(' ')}`,
-  ]
+function chesscomGameId(game: Game): string | undefined {
   const id = game.url.match(CHESSCOM_GAME_ID)
-  if (id) keys.push(`chesscom:${id[1]}/${id[2]}`)
-  return keys
+  return id ? `${id[1]}/${id[2]}` : undefined
 }
+
+function playersAndMoves(game: Game): string {
+  return `${game.whiteUsername.toLowerCase()}|${game.blackUsername.toLowerCase()}|${(game.movesSan ?? []).join(' ')}`
+}
+
+// A pasted game's end time is only its PGN date (plus the time of day it was pasted),
+// so "the same day" allows a day either way.
+const SAME_GAME_MAX_SECONDS_APART = 2 * 24 * 60 * 60
 
 /**
  * A game in `existing` that is the same game as `game`. A pasted copy has a
- * random id, so the id-based ON CONFLICT can't catch it; this can.
+ * random id, so the id-based ON CONFLICT can't catch it; this can. Two Chess.com
+ * ids decide on their own; otherwise the same players and moves must also end within
+ * a day or so, since bot rematches and quick repetition draws replay the same moves.
  */
 export function findDuplicateGame(game: Game, existing: Game[]): Game | undefined {
-  const keys = new Set(duplicateKeys(game))
-  return existing.find((other) => duplicateKeys(other).some((key) => keys.has(key)))
+  const id = chesscomGameId(game)
+  const key = playersAndMoves(game)
+  return existing.find((other) => {
+    const otherId = chesscomGameId(other)
+    if (id && otherId) return id === otherId
+    return (
+      playersAndMoves(other) === key &&
+      Math.abs(other.endTime - game.endTime) <= SAME_GAME_MAX_SECONDS_APART
+    )
+  })
 }
