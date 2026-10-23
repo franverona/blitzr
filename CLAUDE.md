@@ -187,6 +187,8 @@ backups and `polgar-mates.json` elsewhere. The `data/` paths below assume the de
   `showModal()`; with `onSubmit` the body is a `<form>`.
 - **react-chessboard needs a unique `options.id` (`useId()`) when two boards share a page**, and
   keys arrows by start/end square only — dedupe arrows before passing them.
+- **No page can be framed** (`X-Frame-Options: DENY` and `frame-ancestors 'none'`, `next.config.ts`):
+  a framed page's clicks would reach Server Actions with Blitzr's own `Origin`.
 
 ## Database
 
