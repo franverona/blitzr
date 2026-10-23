@@ -220,7 +220,8 @@ filter scopes the whole page.
 
 `/learn` has short lessons on 14 openings and 3 basic endgames, each a line you step through
 with a note per move. **Quiz** mode tests you on one side while the opponent's moves play
-automatically. Opening lessons show how many of your own games reached that line. Content is
+automatically (H shows the move, R restarts). Study mode has the game page's shortcuts. Opening
+lessons show how many of your own games reached that line. Content is
 adapted, in original wording, from Wikibooks'
 [Chess Opening Theory](https://en.wikibooks.org/wiki/Chess_Opening_Theory/1._e4) and
 [Chess/The Endgame](https://en.wikibooks.org/wiki/Chess/The_Endgame) (CC BY-SA).
@@ -239,7 +240,8 @@ final position, and the next unsolved puzzle.
 `/puzzles` has mate-in-1/2/3 positions from real games and 2,000 from the
 [Lichess puzzle database](https://database.lichess.org/#puzzles) (CC0), sorted from easy to hard,
 each linked back to Lichess. You play the whole line yourself, both sides. Wrong moves can be
-retried, and **Reveal solution** doesn't count as solving. Solved puzzles are tracked, and the
+retried, and **Reveal solution** doesn't count as solving; ←/→ step through the moves played so
+far. Solved puzzles are tracked, and the
 list filters by status, side to move, type and mate length.
 
 Defence puzzles flip it around: about 500 more Lichess positions, taken one move before a mate in 1
