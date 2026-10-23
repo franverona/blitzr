@@ -67,6 +67,11 @@ export interface PuzzleProgressTable {
   solved_at: string
 }
 
+export interface PuzzleRevealsTable {
+  puzzle_id: number
+  revealed_at: string
+}
+
 export interface DrillReviewDaysTable {
   /** Local "YYYY-MM-DD". */
   day: string
@@ -79,5 +84,6 @@ export interface DbSchema {
   game_analysis: GameAnalysisTable
   drill_cards: DrillCardsTable
   puzzle_progress: PuzzleProgressTable
+  puzzle_reveals: PuzzleRevealsTable
   drill_review_days: DrillReviewDaysTable
 }

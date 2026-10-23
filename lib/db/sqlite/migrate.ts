@@ -146,6 +146,14 @@ async function runMigrations(db: Kysely<DbSchema>): Promise<void> {
       solved_at TEXT NOT NULL
     )
   `.execute(db)
+
+  // Puzzles whose solution was revealed; unsolved ones come back first as Today's next puzzle.
+  await sql`
+    CREATE TABLE IF NOT EXISTS puzzle_reveals (
+      puzzle_id INTEGER PRIMARY KEY,
+      revealed_at TEXT NOT NULL
+    )
+  `.execute(db)
 }
 
 /** Copies the database to `backups/pre-migration-<time>.db` next to it; no-op in memory. */

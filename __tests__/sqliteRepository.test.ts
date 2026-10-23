@@ -1,6 +1,6 @@
 import Database from 'better-sqlite3'
 import { Kysely, SqliteDialect } from 'kysely'
-import { beforeAll, describe, expect, it } from 'vitest'
+import { beforeAll, describe, expect, it, vi } from 'vitest'
 import { SqliteGameRepository } from '@/lib/db/sqlite/repository'
 import type { DbSchema } from '@/lib/db/types'
 import type { Game } from '@/lib/types'
@@ -177,6 +177,23 @@ describe('SqliteGameRepository.upsertGames', () => {
     const month = Array.from({ length: 1500 }, (_, i) => game(`big-${i}`, 'fverona', 'x', 'white'))
     expect(await repo.upsertGames(month)).toBe(1500)
     expect(await repo.upsertGames(month)).toBe(0)
+  })
+})
+
+describe('SqliteGameRepository puzzle reveals', () => {
+  it('lists reveals oldest first, keeping a puzzle in place when revealed again', async () => {
+    vi.useFakeTimers()
+    try {
+      vi.setSystemTime(new Date('2026-10-20T10:00:00Z'))
+      await repo.markPuzzleRevealed(7)
+      vi.setSystemTime(new Date('2026-10-21T10:00:00Z'))
+      await repo.markPuzzleRevealed(3)
+      vi.setSystemTime(new Date('2026-10-22T10:00:00Z'))
+      await repo.markPuzzleRevealed(7)
+    } finally {
+      vi.useRealTimers()
+    }
+    expect(await repo.listRevealedPuzzleIds()).toEqual([7, 3])
   })
 })
 

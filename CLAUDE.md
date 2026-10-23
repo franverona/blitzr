@@ -212,7 +212,7 @@ backups and `polgar-mates.json` elsewhere. The `data/` paths below assume the de
 - Tables: `games`, `sync_state`, `repertoire_moves` (tree per color, `ON DELETE CASCADE` to the
   subtree — needs the `foreign_keys` pragma), `game_analysis` (one row per game), `drill_cards`
   (schedule only, keyed by `(game_id, source_type, ply)`), `drill_review_days` (streak),
-  `puzzle_progress` (solved puzzle ids;
+  `puzzle_progress` (solved puzzle ids), `puzzle_reveals` (revealed ones, Today's retry queue;
   the puzzles themselves are hardcoded).
 
 ## Chess.com ingestion
@@ -386,7 +386,8 @@ imports only `lib/mateProblems.ts` (type and helpers) so the puzzles never ship 
 page passes the one it shows as a prop. Every line was verified to mate; mate-in-2/3 also with
 `isForcedMate()`, which the tests re-check on a random sample (a full pass takes hours). Side to
 move is read from each FEN (about a third are Black). `PuzzleBoard` makes the user play every ply,
-both sides; wrong moves retry, "Reveal" doesn't count as solved, and promotions show a piece picker
+both sides; wrong moves retry, "Reveal" doesn't count as solved (it records the id in
+`puzzle_reveals`, and Today's next puzzle is the oldest revealed one not solved since), and promotions show a piece picker
 (some puzzles need underpromotion). A defence puzzle (`saves` set) is one ply: any save solves it.
 `/puzzles` filters by `?status=solved|unsolved`, `?color=white|black`, `?kind=mate|defend` and `?mateIn=`. `PromotionPicker` is shared with `DrillSession` (an engine best move
 can be an underpromotion too) and explore mode.

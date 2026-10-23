@@ -203,6 +203,7 @@ export default async function TodayPage() {
                   <p className={mutedClassName}>
                     {s.today.puzzleLabel(puzzle.id, puzzleKindLabel(puzzle))}
                   </p>
+                  {puzzles.retry && <p className={mutedClassName}>{s.today.puzzleRetry}</p>}
                 </Link>
               )}
               {puzzles.total > 0 && (

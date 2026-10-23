@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Chess } from 'chess.js'
 import { Chessboard } from 'react-chessboard'
 import { BoardCoordinates } from './BoardCoordinates'
-import { markPuzzleSolved } from '@/app/actions'
+import { markPuzzleRevealed, markPuzzleSolved } from '@/app/actions'
 import { getStrings } from '@/lib/i18n/strings'
 import { legalDestinations } from '@/lib/legalMoves'
 import { puzzleColorToMove, type MateProblem } from '@/lib/mateProblems'
@@ -309,6 +309,8 @@ export function PuzzleBoard({
               setPendingPromotion(null)
               setRevealed(true)
               setViewPly(line.length)
+              // Only queues it for a retry on Today, so a failed save just loses that.
+              markPuzzleRevealed(problem.id).catch(console.error)
             }}
             disabled={finished}
             className={NAV_BUTTON_CLASS}
