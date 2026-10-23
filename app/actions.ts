@@ -237,9 +237,17 @@ export async function addRepertoireMove(node: RepertoireNode): Promise<ActionRes
   return { ok: true }
 }
 
-export async function deleteRepertoireMove(id: string): Promise<void> {
-  await getRepository().deleteRepertoireNode(id)
+export async function deleteRepertoireMove(id: string): Promise<ActionResult> {
+  const error = getStrings().repertoire.failedToDelete
+  if (typeof id !== 'string') return { ok: false, error }
+  try {
+    await getRepository().deleteRepertoireNode(id)
+  } catch (err) {
+    console.error(err)
+    return { ok: false, error }
+  }
   revalidatePath('/repertoire')
+  return { ok: true }
 }
 
 export async function getGameAnalysis(gameId: string): Promise<GameAnalysis | undefined> {

@@ -82,9 +82,9 @@ export function BulkAnalysisProvider({ children }: { children: React.ReactNode }
         toast(s.bulkAnalyze.analyzed(analyzed, games.length), { id: TOAST_ID })
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : s.bulkAnalyze.analysisFailed, {
-        id: TOAST_ID,
-      })
+      // The engine's messages are English-only.
+      console.error(err)
+      toast.error(s.bulkAnalyze.analysisFailed, { id: TOAST_ID })
     } finally {
       runningRef.current = false
       setProgress(null)

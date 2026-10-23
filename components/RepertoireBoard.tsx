@@ -158,12 +158,17 @@ export function RepertoireBoard({
     setDeleting(true)
     setError(null)
     try {
-      await deleteRepertoireMove(currentNode.id)
+      const result = await deleteRepertoireMove(currentNode.id)
+      if (!result.ok) {
+        setError(result.error)
+        return
+      }
       const fresh = await listRepertoire(color)
       setNodes(() => fresh)
       setPath((p) => p.slice(0, -1))
     } catch (err) {
-      setError(err instanceof Error ? err.message : s.repertoire.failedToDelete)
+      console.error(err)
+      setError(s.repertoire.failedToDelete)
     } finally {
       setDeleting(false)
     }

@@ -68,7 +68,9 @@ export function GameAnalysisProvider({
       const result = await saveGameAnalysis(gameId, evals, movetimeMs)
       if (!result.ok) setError(result.error)
     } catch (err) {
-      setError(err instanceof Error ? err.message : getStrings().analysisPanel.analysisFailed)
+      // The engine's messages are English-only.
+      console.error(err)
+      setError(getStrings().analysisPanel.analysisFailed)
     } finally {
       setProgress(null)
     }
