@@ -37,9 +37,10 @@ export default async function GamesPage({
     getGameAccuracyById(),
     getUnanalyzedGames(),
   ])
-  const accuracyThreshold = accValue !== undefined ? Number(accValue) : undefined
+  // `Number('')` is 0, and a malformed value is NaN, which would match no game.
+  const accuracyThreshold = accValue ? Number(accValue) : NaN
   const gameIds =
-    (accOp === 'gte' || accOp === 'lte') && accuracyThreshold !== undefined
+    (accOp === 'gte' || accOp === 'lte') && Number.isFinite(accuracyThreshold)
       ? Object.entries(accuracyByGameId)
           .filter(([, acc]) =>
             accOp === 'gte' ? acc.accuracy >= accuracyThreshold : acc.accuracy <= accuracyThreshold,

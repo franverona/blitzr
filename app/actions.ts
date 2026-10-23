@@ -75,10 +75,16 @@ const cachedStandardStartGames = cache(async () =>
   (await cachedListAllGames()).filter((g) => g.isMine && startsFromStandardPosition(g)),
 )
 
+// A malformed or repeated `?from=`/`?to=` is ignored rather than filtering out every game.
+function dayBound(value: unknown, toSeconds: (date: string) => number): number | undefined {
+  const seconds = typeof value === 'string' && value ? toSeconds(value) : NaN
+  return Number.isFinite(seconds) ? seconds : undefined
+}
+
 function filterByDateRange(games: Game[], filters?: { from?: string; to?: string }): Game[] {
-  if (!filters?.from && !filters?.to) return games
-  const fromSeconds = filters.from ? startOfDaySeconds(filters.from) : undefined
-  const toSeconds = filters.to ? endOfDaySeconds(filters.to) : undefined
+  const fromSeconds = dayBound(filters?.from, startOfDaySeconds)
+  const toSeconds = dayBound(filters?.to, endOfDaySeconds)
+  if (fromSeconds === undefined && toSeconds === undefined) return games
   return games.filter(
     (g) =>
       (fromSeconds === undefined || g.endTime >= fromSeconds) &&
