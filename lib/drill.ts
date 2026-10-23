@@ -23,13 +23,25 @@ export interface DrillCandidate {
 
 /**
  * Each game's first deviation from the repertoire, one card per position: games that
- * left the tree at the same point share a prompt, so only the oldest one gets the card
- * (stable as new games sync in).
+ * left the tree at the same point share a prompt, so only one gets the card. A game
+ * that already has the card keeps it (an older game pasted later would otherwise reset
+ * its schedule); otherwise the oldest wins.
  */
 export function findDeviationCandidates(
   games: Game[],
   repertoireByColor: Map<RepertoireColor, RepertoireNode[]>,
+  existingCards: DrillCard[] = [],
 ): DrillCandidate[] {
+  const hasCard = new Set(
+    existingCards.filter((c) => c.sourceType === 'deviation').map((c) => `${c.gameId}:${c.ply}`),
+  )
+  const owns = (c: { game: Game; ply: number }) => hasCard.has(`${c.game.id}:${c.ply}`)
+  const better = (a: { game: Game; ply: number }, b: { game: Game; ply: number }) =>
+    owns(a) !== owns(b)
+      ? owns(a)
+      : a.game.endTime !== b.game.endTime
+        ? a.game.endTime < b.game.endTime
+        : a.game.id < b.game.id
   const byPosition = new Map<string, { game: Game; ply: number }>()
   for (const game of games) {
     if (!game.movesSan) continue
@@ -38,14 +50,9 @@ export function findDeviationCandidates(
     const { deviationPly } = diffGameAgainstRepertoire(game.movesSan, game.myColor, nodes)
     if (deviationPly === null) continue
     const key = `${game.myColor}:${game.movesSan.slice(0, deviationPly - 1).join(' ')}`
+    const candidate = { game, ply: deviationPly }
     const kept = byPosition.get(key)
-    if (
-      !kept ||
-      game.endTime < kept.game.endTime ||
-      (game.endTime === kept.game.endTime && game.id < kept.game.id)
-    ) {
-      byPosition.set(key, { game, ply: deviationPly })
-    }
+    if (!kept || better(candidate, kept)) byPosition.set(key, candidate)
   }
   return [...byPosition.values()].map(({ game, ply }) => ({
     gameId: game.id,
