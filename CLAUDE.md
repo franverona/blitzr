@@ -19,10 +19,10 @@ Built incrementally, one feature or fix at a time — don't scaffold speculative
 - **Stockfish** (`stockfish` npm package, WASM "lite single-threaded" build) in a browser Web Worker
 
 `pnpm-workspace.yaml`'s `allowBuilds` lists the dependencies pnpm may run install scripts for (it
-skips every other one's): `better-sqlite3` (native addon with a `binding.gyp`), `unrs-resolver`
-(postinstall fetching the native resolver behind `eslint-config-next`), and `sharp` / `stockfish`,
-which no longer run install scripts in their current versions; `public/stockfish/` comes from our own
-`postinstall` (`scripts/setup-stockfish.mjs`). A new dependency that builds on install needs adding.
+skips every other one's): `unrs-resolver` (postinstall fetching the native resolver behind
+`eslint-config-next`). `better-sqlite3` is set to `false`: it loads its bundled prebuilt binary, and
+building it would only run node-gyp (Python, a C++ toolchain) for nothing. `public/stockfish/` comes
+from our own `postinstall` (`scripts/setup-stockfish.mjs`). A new dependency that builds on install needs adding.
 
 ## Project structure
 

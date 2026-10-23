@@ -1,5 +1,5 @@
 allowBuilds:
-  better-sqlite3: true
-  sharp: true
-  stockfish: true
+  # Ships prebuilt binaries for macOS, Linux and Windows; its binding.gyp would only make pnpm
+  # run node-gyp, which needs Python and a C++ toolchain, to build nothing.
+  better-sqlite3: false
   unrs-resolver: true
