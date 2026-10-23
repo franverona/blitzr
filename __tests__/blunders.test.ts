@@ -132,6 +132,27 @@ describe('buildBlunderStats', () => {
     expect(keys).toEqual(['Q', 'castle', 'pawn'].sort())
   })
 
+  it('groups own blunders by tactical reason, with a bucket for no simple pattern', () => {
+    // 2.Ng5?? walks into the d8 queen, with nothing defending it.
+    const hanging = makeGame({ id: 'hanging', movesSan: ['Nf3', 'e5', 'Ng5'] })
+    const unexplained = makeGame({ id: 'unexplained', movesSan: ['a4'] })
+    const analyses = new Map([
+      [hanging.id, makeAnalysis(hanging.id, [cp(20), cp(20), cp(20), cp(-300)])],
+      [unexplained.id, makeAnalysis(unexplained.id, [cp(0), cp(-260)])],
+    ])
+
+    const stats = buildBlunderStats([hanging, unexplained], analyses)
+    expect(
+      stats.byReason
+        .map(({ key, label, count }) => ({ key, label, count }))
+        .sort((a, b) => a.key.localeCompare(b.key)),
+    ).toEqual([
+      { key: 'hanging-piece', label: 'Hanging piece', count: 1 },
+      { key: 'none', label: 'No simple pattern', count: 1 },
+    ])
+    expect(buildBlunderStats([hanging], analyses, 'es').byReason[0].label).toBe('Pieza colgada')
+  })
+
   it('excludes blunders on the opponent’s plies', () => {
     // ply 1 is white (the pawn move, fine); ply 2 is black — but this game's
     // myColor is white, so black's blunder shouldn't count.

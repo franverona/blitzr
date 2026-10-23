@@ -8,7 +8,14 @@ import { ecoFamilyLabel, unknownOpeningLabel } from './openings'
 import { buildPositions } from './positions'
 import { describeMove, pieceName, splitSanPiece } from './san'
 import { describeBetterMove, detectBlunderReason } from './tactics'
-import type { BlunderGroupStat, BlunderStats, Game, GameAnalysis, WorstBlunder } from './types'
+import type {
+  BlunderGroupStat,
+  BlunderReason,
+  BlunderStats,
+  Game,
+  GameAnalysis,
+  WorstBlunder,
+} from './types'
 
 const WORST_LIST_SIZE = 10
 
@@ -58,6 +65,23 @@ function pieceKey(moveSan: string, locale: Locale): { key: string; label: string
   return { key: piece, label: pieceName(piece.toLowerCase() as PieceSymbol, locale) }
 }
 
+const REASON_LABELS: Record<Locale, Record<BlunderReason['kind'] | 'none', string>> = {
+  en: {
+    'hanging-piece': 'Hanging piece',
+    fork: 'Fork',
+    pin: 'Pin',
+    skewer: 'Skewer',
+    none: 'No simple pattern',
+  },
+  es: {
+    'hanging-piece': 'Pieza colgada',
+    fork: 'Horquilla',
+    pin: 'Clavada',
+    skewer: 'Enfilada',
+    none: 'Sin patrón simple',
+  },
+}
+
 /**
  * Cross-game aggregate of the user's own blunders over analyzed games. The
  * caller merges in `trend`.
@@ -69,6 +93,7 @@ export function buildBlunderStats(
 ): Omit<BlunderStats, 'trend'> {
   const byOpening = new Map<string, GroupAcc>()
   const byPiece = new Map<string, GroupAcc>()
+  const byReason = new Map<string, GroupAcc>()
   const worst: BlunderCandidate[] = []
   let analyzedGames = 0
   let totalBlunders = 0
@@ -81,6 +106,7 @@ export function buildBlunderStats(
 
     const opponent = game.myColor === 'white' ? game.blackUsername : game.whiteUsername
     const gameLabel = `vs ${opponent} · ${formatDate(game.endTime)}`
+    let positions: string[] | undefined
 
     for (const blunder of findBlunders(analysis.evals, game.movesSan, game.initialFen)) {
       const isMine = whiteToMove(blunder.ply, game.initialFen) === (game.myColor === 'white')
@@ -96,6 +122,13 @@ export function buildBlunderStats(
 
       const { key, label } = pieceKey(blunder.moveSan, locale)
       accumulate(byPiece, key, label, blunder.swingCp, isMateSwing)
+
+      positions ??= buildPositions(game.initialFen, game.movesSan)
+      const reasonKind =
+        detectBlunderReason(positions[blunder.ply - 1], positions[blunder.ply], game.myColor)
+          ?.kind ?? 'none'
+      const reasonLabel = REASON_LABELS[locale][reasonKind]
+      accumulate(byReason, reasonKind, reasonLabel, blunder.swingCp, isMateSwing)
 
       worst.push({
         gameId: game.id,
@@ -146,6 +179,7 @@ export function buildBlunderStats(
     totalBlunders,
     byOpening: toGroupStats(byOpening),
     byPiece: toGroupStats(byPiece),
+    byReason: toGroupStats(byReason),
     worst: topWorst,
   }
 }
