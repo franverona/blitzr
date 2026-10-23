@@ -83,6 +83,7 @@ const en = {
     puzzleTitle: 'Next puzzle',
     puzzleLabel: (id: number, kind: string) => `#${id} · ${kind}`,
     allPuzzlesSolved: 'Every puzzle is solved.',
+    puzzleRetry: 'You revealed this one: try it again.',
   },
   settings: {
     trigger: 'Settings',
@@ -658,6 +659,7 @@ const es: Strings = {
     puzzleTitle: 'Siguiente problema',
     puzzleLabel: (id: number, kind: string) => `#${id} · ${kind}`,
     allPuzzlesSolved: 'Todos los problemas están resueltos.',
+    puzzleRetry: 'Viste la solución de este: inténtalo de nuevo.',
   },
   settings: {
     trigger: 'Ajustes',

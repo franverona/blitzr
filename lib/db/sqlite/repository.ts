@@ -452,6 +452,27 @@ export class SqliteGameRepository {
       .execute()
   }
 
+  /** Oldest reveal first. */
+  async listRevealedPuzzleIds(): Promise<number[]> {
+    const db = await this.ready()
+    const rows = await db
+      .selectFrom('puzzle_reveals')
+      .select('puzzle_id')
+      .orderBy('revealed_at')
+      .execute()
+    return rows.map((r) => r.puzzle_id)
+  }
+
+  /** No-op if already revealed, so a puzzle keeps its place in the retry queue. */
+  async markPuzzleRevealed(puzzleId: number): Promise<void> {
+    const db = await this.ready()
+    await db
+      .insertInto('puzzle_reveals')
+      .values({ puzzle_id: puzzleId, revealed_at: new Date().toISOString() })
+      .onConflict((oc) => oc.column('puzzle_id').doNothing())
+      .execute()
+  }
+
   /** A consistent snapshot of the whole database. */
   async exportBackup(): Promise<Uint8Array<ArrayBuffer>> {
     const db = await this.ready()

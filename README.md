@@ -243,7 +243,8 @@ final position, and the next unsolved puzzle.
 `/puzzles` has mate-in-1/2/3 positions from real games and 2,000 from the
 [Lichess puzzle database](https://database.lichess.org/#puzzles) (CC0), sorted from easy to hard,
 each linked back to Lichess. You play the whole line yourself, both sides. Wrong moves can be
-retried, and **Reveal solution** doesn't count as solving; ←/→ step through the moves played so
+retried, and **Reveal solution** doesn't count as solving (a revealed puzzle comes back first as
+Today's next puzzle until you solve it); ←/→ step through the moves played so
 far. Solved puzzles are tracked, and the
 list filters by status, side to move, type and mate length.
 

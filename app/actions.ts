@@ -537,7 +537,8 @@ export async function getTodaySummary(): Promise<{
     firstBlunderMove: number | null
   } | null
   repertoire: ReturnType<typeof repertoireDeviations>
-  puzzles: { nextId: number | null; solved: number; total: number }
+  /** `retry`: the next puzzle is one whose solution was revealed, coming back first. */
+  puzzles: { nextId: number | null; retry: boolean; solved: number; total: number }
   lastSyncedAt: string | null
   /** Not yet stale by auto-sync's `isSyncStale()`. */
   syncIsFresh: boolean
@@ -550,6 +551,7 @@ export async function getTodaySummary(): Promise<{
     games,
     standardStartGames,
     solved,
+    revealed,
     reviewDays,
     syncStatus,
   ] = await Promise.all([
@@ -559,6 +561,7 @@ export async function getTodaySummary(): Promise<{
     cachedMyStandardGames(),
     cachedStandardStartGames(),
     repo.listSolvedPuzzleIds(),
+    repo.listRevealedPuzzleIds(),
     repo.listDrillReviewDays(),
     repo.getArchiveSyncStatus(),
   ])
@@ -590,6 +593,8 @@ export async function getTodaySummary(): Promise<{
   const last = newestFirst[0]
   const solvedIds = new Set(solved)
   const problems = allMateProblems()
+  // A revealed puzzle not solved since comes back first, oldest reveal first.
+  const retryId = revealed.find((id) => !solvedIds.has(id) && getMateProblem(id))
   const syncedAts = syncStatus.map((a) => a.syncedAt).sort()
 
   return {
@@ -628,7 +633,8 @@ export async function getTodaySummary(): Promise<{
       repertoireByColor,
     ),
     puzzles: {
-      nextId: problems.find((p) => !solvedIds.has(p.id))?.id ?? null,
+      nextId: retryId ?? problems.find((p) => !solvedIds.has(p.id))?.id ?? null,
+      retry: retryId !== undefined,
       // Only puzzles in this set: progress can include ones missing from it (local Polgár).
       solved: problems.filter((p) => solvedIds.has(p.id)).length,
       total: problems.length,
@@ -664,5 +670,11 @@ export async function markPuzzleSolved(puzzleId: number): Promise<void> {
   if (!Number.isInteger(puzzleId) || !getMateProblem(puzzleId)) throw new Error('Invalid puzzle')
   await getRepository().markPuzzleSolved(puzzleId)
   revalidatePath('/puzzles')
+  revalidatePath('/')
+}
+
+export async function markPuzzleRevealed(puzzleId: number): Promise<void> {
+  if (!Number.isInteger(puzzleId) || !getMateProblem(puzzleId)) throw new Error('Invalid puzzle')
+  await getRepository().markPuzzleRevealed(puzzleId)
   revalidatePath('/')
 }
