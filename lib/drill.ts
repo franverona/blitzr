@@ -90,6 +90,36 @@ export function findBlunderCandidates(
 }
 
 /**
+ * The user's replies to an opponent's blunder that weren't near-best (`isNearBestMove()`), so the
+ * mistake went unpunished. A reply that was itself a blunder is left to its blunder card.
+ */
+export function findPunishCandidates(
+  games: Game[],
+  analysesByGameId: Map<string, GameAnalysis>,
+): DrillCandidate[] {
+  const candidates: DrillCandidate[] = []
+  for (const game of games) {
+    if (!game.movesSan) continue
+    const analysis = analysesByGameId.get(game.id)
+    if (!analysis) continue
+    const blunders = findBlunders(analysis.evals, game.movesSan, game.initialFen)
+    const blunderPlies = new Set(blunders.map((b) => b.ply))
+    let positions: string[] | undefined
+    for (const blunder of blunders) {
+      const theirs = whiteToMove(blunder.ply, game.initialFen) !== (game.myColor === 'white')
+      const reply = blunder.ply + 1
+      if (!theirs || reply > game.movesSan.length || blunderPlies.has(reply)) continue
+      const evalBefore = analysis.evals[reply - 1]
+      if (!evalBefore?.bestMove) continue
+      positions ??= buildPositions(game.initialFen, game.movesSan)
+      if (isNearBestMove(positions[reply - 1], evalBefore, analysis.evals[reply])) continue
+      candidates.push({ gameId: game.id, sourceType: 'punish', ply: reply })
+    }
+  }
+  return candidates
+}
+
+/**
  * Re-derives a stored card's FEN and accepted moves from source data.
  * Returns null if the card no longer matches its source, so it gets pruned.
  */
@@ -126,15 +156,21 @@ export function buildDrillPrompt(
   }
 
   const analysis = analysesByGameId.get(game.id)
-  const evalBefore = analysis
-    ? findBlunders(analysis.evals, game.movesSan, game.initialFen).find((b) => b.ply === card.ply)
-        ?.evalBefore
-    : undefined
+  const evalBefore =
+    card.sourceType === 'punish'
+      ? findPunishCandidates([game], analysesByGameId).some((c) => c.ply === card.ply)
+        ? analysis?.evals[card.ply - 1]
+        : undefined
+      : analysis
+        ? findBlunders(analysis.evals, game.movesSan, game.initialFen).find(
+            (b) => b.ply === card.ply,
+          )?.evalBefore
+        : undefined
   const bestMove = evalBefore?.bestMove
   if (!evalBefore || !bestMove) return null
   return {
     gameId: game.id,
-    sourceType: 'blunder',
+    sourceType: card.sourceType,
     ply: card.ply,
     fen,
     color,

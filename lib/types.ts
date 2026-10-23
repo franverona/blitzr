@@ -212,7 +212,8 @@ export interface ChecklistFinding {
   reason: BlunderReason
 }
 
-export type DrillSourceType = 'deviation' | 'blunder'
+/** 'punish': the opponent just blundered and the user's reply let it go. */
+export type DrillSourceType = 'deviation' | 'blunder' | 'punish'
 
 /** Only the review schedule is stored; the prompt is re-derived from the
  *  source game/repertoire/analysis at drill time (see lib/drill.ts). */

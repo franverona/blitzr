@@ -316,7 +316,9 @@ and the slider are debounced (400ms); selects navigate immediately.
 
 `drill_cards` stores only the SM-2 schedule (binary grading; a right answer after the hint shows
 the move's square counts as wrong); prompts are re-derived by
-`buildDrillPrompt()` from deviations and own-move blunders. Deviations are one card per position
+`buildDrillPrompt()` from deviations, own-move blunders and missed punishments (`findPunishCandidates()`:
+the user's reply to an opponent's blunder that wasn't `isNearBestMove()`, unless the reply was itself
+a blunder, which its blunder card covers). Deviations are one card per position
 (the game that already holds the card, else the oldest that left the tree there, so pasting an
 older game doesn't reset its schedule), not per game; a blunder whose best move repeats the
 previous own ply's (same piece left en prise) is folded into that first card. A review's `dueAt` is the start of a local day, so "tomorrow" means

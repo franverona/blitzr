@@ -4,6 +4,7 @@ import {
   dueDrillCards,
   findBlunderCandidates,
   findDeviationCandidates,
+  findPunishCandidates,
   getSessionSize,
   isNearBestMove,
   newCardSchedule,
@@ -177,6 +178,46 @@ describe('findBlunderCandidates', () => {
     ])
 
     expect(findBlunderCandidates([game], analysesByGameId).map((c) => c.ply)).toEqual([1, 5])
+  })
+})
+
+describe('findPunishCandidates', () => {
+  // ply 2 (black's f6) throws the game away; ply 3 is the user's reply.
+  const game = makeGame({ movesSan: ['e4', 'f6', 'd4'], myColor: 'white' })
+  const analyses = (afterReply: number) =>
+    new Map<string, GameAnalysis>([
+      [
+        'g1',
+        {
+          gameId: 'g1',
+          evals: [cp(20), cp(30), withBest(cp(400)), cp(afterReply)],
+          analyzedAt: '',
+        },
+      ],
+    ])
+
+  it("flags a reply to the opponent's blunder that let most of it go", () => {
+    expect(findPunishCandidates([game], analyses(250))).toEqual([
+      { gameId: 'g1', sourceType: 'punish', ply: 3 },
+    ])
+  })
+
+  it('skips a near-best reply, and one that was itself a blunder (its blunder card covers it)', () => {
+    expect(findPunishCandidates([game], analyses(390))).toEqual([])
+    expect(findPunishCandidates([game], analyses(-100))).toEqual([])
+    expect(findBlunderCandidates([game], analyses(-100)).map((c) => c.ply)).toEqual([3])
+  })
+
+  it('hydrates a punish card with the engine reply, and drops it once it no longer qualifies', () => {
+    const card = { gameId: 'g1', sourceType: 'punish' as const, ply: 3 }
+    const prompt = buildDrillPrompt(card, game, new Map(), analyses(250))
+    expect(prompt).toMatchObject({ sourceType: 'punish', ply: 3, correctMoves: ['Ra2'] })
+    expect(buildDrillPrompt(card, game, new Map(), analyses(390))).toBeNull()
+  })
+
+  it("ignores the user's own blunders", () => {
+    const mine = makeGame({ movesSan: ['e4', 'f6', 'd4'], myColor: 'black' })
+    expect(findPunishCandidates([mine], analyses(250))).toEqual([])
   })
 })
 

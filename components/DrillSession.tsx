@@ -487,7 +487,11 @@ function DrillDeck({
           </a>
         </div>
         <p className="font-medium">
-          {prompt.sourceType === 'deviation' ? s.drill.findPreparedMove : s.drill.findBestMove}
+          {prompt.sourceType === 'deviation'
+            ? s.drill.findPreparedMove
+            : prompt.sourceType === 'punish'
+              ? s.drill.findPunish
+              : s.drill.findBestMove}
         </p>
 
         {!feedback && (
