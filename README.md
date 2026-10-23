@@ -167,7 +167,9 @@ deleted from their game page.
 
 On `/repertoire`, build an opening tree per color by playing moves on the board, branching as
 needed. Each game page then flags the first move where _you_ left your prepared line — an
-opponent's unprepared move doesn't count.
+opponent's unprepared move doesn't count. Instead, those show up beside the tree as the places
+where your games most often run past your prep, with how many games reached each. Click one to go
+there and add the next move.
 
 ### Engine analysis
 

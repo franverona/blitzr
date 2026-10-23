@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { diffGameAgainstRepertoire } from '@/lib/repertoire'
-import type { RepertoireNode } from '@/lib/types'
+import { diffGameAgainstRepertoire, findRepertoireGaps } from '@/lib/repertoire'
+import type { Game, RepertoireNode } from '@/lib/types'
 
 function node(overrides: Partial<RepertoireNode>): RepertoireNode {
   return {
@@ -84,5 +84,36 @@ describe('diffGameAgainstRepertoire', () => {
       deviationMove: 'e5',
       expectedMoves: ['c5'],
     })
+  })
+})
+
+describe('findRepertoireGaps', () => {
+  const e4 = node({ id: 'e4', ply: 1, moveSan: 'e4' })
+  const e5 = node({ id: 'e5', parentId: 'e4', ply: 2, moveSan: 'e5' })
+  const nodes = [e4, e5]
+  const game = (movesSan: string[], myColor: 'white' | 'black' = 'white') =>
+    ({ id: movesSan.join(''), movesSan, myColor }) as Game
+
+  it("groups games by where they ran past the tree, most first, skipping deviations and other colors' games", () => {
+    const gaps = findRepertoireGaps(
+      [
+        game(['e4', 'e5', 'Nf3', 'Nc6']), // the tree ran out after 1...e5
+        game(['e4', 'e5', 'Nf3']),
+        game(['e4', 'c5', 'Nf3']), // the opponent played a move the tree doesn't answer
+        game(['d4', 'd5']), // a deviation: e4 was prepared
+        game(['e4', 'e5', 'Nf3'], 'black'),
+        game(['e4', 'e5']), // ended in book
+      ],
+      'white',
+      nodes,
+    )
+    expect(gaps).toEqual([
+      { line: ['e4', 'e5'], next: 'Nf3', games: 2 },
+      { line: ['e4'], next: 'c5', games: 1 },
+    ])
+  })
+
+  it('needs a tree for the color', () => {
+    expect(findRepertoireGaps([game(['e4', 'e5', 'Nf3'])], 'white', [])).toEqual([])
   })
 })

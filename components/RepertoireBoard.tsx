@@ -13,7 +13,8 @@ import { START_FEN } from '@/lib/positions'
 import { buildRepertoireIndex } from '@/lib/repertoire'
 import { describeBlunderReason, detectBlunderReason } from '@/lib/tactics'
 import { BOARD_ANIMATION_DURATION_MS } from '@/lib/theme'
-import type { RepertoireColor, RepertoireNode } from '@/lib/types'
+import type { RepertoireColor, RepertoireGap, RepertoireNode } from '@/lib/types'
+import { MoveSequence } from './MoveSequence'
 import { useSettings, useMoveSound } from './SettingsProvider'
 import { LegalMoveSquare } from './LegalMoveSquare'
 import { RepertoireTree } from './RepertoireTree'
@@ -26,9 +27,11 @@ import { buttonClass, chipClass } from './styles'
 export function RepertoireBoard({
   color,
   initialNodes,
+  gaps,
 }: {
   color: RepertoireColor
   initialNodes: RepertoireNode[]
+  gaps: RepertoireGap[]
 }) {
   const s = getStrings()
   const boardColors = useSettings()
@@ -54,6 +57,21 @@ export function RepertoireBoard({
   }
 
   const index = useMemo(() => buildRepertoireIndex(nodes), [nodes])
+
+  // The tree nodes along a gap's line, so the board can jump to where the next move goes.
+  function pathFor(line: string[]): RepertoireNode[] {
+    const found: RepertoireNode[] = []
+    let parent: string | null = null
+    for (const san of line) {
+      const node: RepertoireNode | undefined = (index.get(parent) ?? []).find(
+        (n) => n.moveSan === san,
+      )
+      if (!node) break
+      found.push(node)
+      parent = node.id
+    }
+    return found
+  }
   const currentNode = path[path.length - 1] ?? null
   const currentFen = currentNode?.fen ?? START_FEN
   useMoveSound(currentFen)
@@ -273,7 +291,31 @@ export function RepertoireBoard({
           )}
         </div>
 
-        <RepertoireTree nodes={nodes} currentPath={path} onSelectPath={setPath} />
+        <div className="flex min-w-0 flex-1 flex-col gap-4">
+          <RepertoireTree nodes={nodes} currentPath={path} onSelectPath={setPath} />
+          {gaps.length > 0 && (
+            <section className="flex flex-col gap-2">
+              <h2 className="text-xs font-semibold tracking-wide text-zinc-500 uppercase dark:text-zinc-400">
+                <abbr title={s.repertoire.gapsTooltip}>{s.repertoire.gapsTitle}</abbr>
+              </h2>
+              <ul className="flex flex-col gap-1.5 text-sm">
+                {gaps.map((gap) => (
+                  <li key={[...gap.line, gap.next].join(' ')}>
+                    <button
+                      onClick={() => setPath(pathFor(gap.line))}
+                      className="flex w-full flex-wrap items-center gap-x-2 gap-y-1 rounded px-2 py-1 text-left hover:bg-zinc-200 dark:hover:bg-zinc-800"
+                    >
+                      <MoveSequence fen={START_FEN} moves={[...gap.line, gap.next]} />
+                      <span className="text-zinc-500 dark:text-zinc-400">
+                        {s.repertoire.gapGames(gap.games)}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </div>
       </div>
     </div>
   )

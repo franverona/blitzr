@@ -262,7 +262,10 @@ Only manual games can be deleted (`deleteManualGame()`); FKs cascade to analysis
 ## Repertoire
 
 `diffGameAgainstRepertoire()` flags a **deviation** only on the user's own ply where the tree had
-a prepared move. An opponent's unprepared move or the tree running out doesn't count.
+a prepared move. An opponent's unprepared move or the tree running out doesn't count. Those two are
+what `findRepertoireGaps()` lists instead, beside the tree on `/repertoire`: the top 5 spots (line in
+book plus the move played next) by game count, each jumping the board to that node. They come from
+the page as props, outside `RepertoireBoard`'s key, so adding a move re-sends them.
 
 ## Engine analysis
 
