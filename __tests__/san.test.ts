@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { describeMove, formatMoveSequence, hintPieceName, plyLabel, splitSanPiece } from '@/lib/san'
+import {
+  describeMove,
+  formatMoveSequence,
+  hintPieceName,
+  moveNumberOfPly,
+  plyLabel,
+  splitSanPiece,
+} from '@/lib/san'
 
 describe('splitSanPiece', () => {
   it('splits a leading piece letter off piece moves', () => {
@@ -28,6 +35,14 @@ describe('plyLabel', () => {
   it('labels black plies with an ellipsis', () => {
     expect(plyLabel(2)).toBe('1…')
     expect(plyLabel(4)).toBe('2…')
+  })
+
+  it("counts from the starting FEN's side to move and move number", () => {
+    const blackToMove = '8/8/8/4k3/8/8/4K3/8 b - - 0 30'
+    expect(plyLabel(1, blackToMove)).toBe('30…')
+    expect(plyLabel(2, blackToMove)).toBe('31.')
+    expect(moveNumberOfPly(3, blackToMove)).toBe(31)
+    expect(plyLabel(1, '8/8/8/4k3/8/8/4K3/8 w - - 0 12')).toBe('12.')
   })
 })
 

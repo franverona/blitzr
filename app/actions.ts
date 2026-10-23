@@ -29,6 +29,7 @@ import { buildOpeningFamilies, ecoFamilyLabel, unknownOpeningLabel } from '@/lib
 import { allMateProblems, getMateProblem } from '@/lib/puzzleSet'
 import { OPENING_LESSONS, countGamesReachingLine } from '@/lib/openingTheory'
 import { buildPositions, isStandardChess, startsFromStandardPosition } from '@/lib/positions'
+import { plyLabel } from '@/lib/san'
 import { isSyncStale, listPendingArchives, syncArchive } from '@/lib/sync'
 import { describeBlunderReason } from '@/lib/tactics'
 import {
@@ -462,7 +463,15 @@ export async function getTodaySummary(): Promise<{
   accuracy: ReturnType<typeof recentAccuracy>
   results: ReturnType<typeof recentResults>
   weakSpot: { opening: string; blunders: number; drillable: boolean } | null
-  worstBlunder: { gameId: string; ply: number; moveSan: string; label: string; why: string } | null
+  worstBlunder: {
+    gameId: string
+    ply: number
+    /** "12." or "12…", from the game's starting position. */
+    moveLabel: string
+    moveSan: string
+    label: string
+    why: string
+  } | null
   losses: ReturnType<typeof lossReasons>
   lesson: { slug: string; name: string; games: number } | null
   lastGame: {
@@ -474,6 +483,7 @@ export async function getTodaySummary(): Promise<{
     fen: string
     accuracy: number | null
     firstBlunderPly: number | null
+    firstBlunderMove: number | null
   } | null
   repertoire: ReturnType<typeof repertoireDeviations>
   puzzles: { nextId: number | null; solved: number; total: number }
@@ -576,6 +586,7 @@ export async function getTodaySummary(): Promise<{
       ? {
           gameId: worst.gameId,
           ply: worst.ply,
+          moveLabel: plyLabel(worst.ply, worst.initialFen),
           moveSan: worst.moveSan,
           label: worst.gameLabel,
           why: worst.reason ? describeBlunderReason(worst.reason) : worst.moveDescription,

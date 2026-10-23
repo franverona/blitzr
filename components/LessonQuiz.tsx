@@ -48,7 +48,8 @@ export function LessonQuiz({ sidebarExtra }: { sidebarExtra?: React.ReactNode })
     () => new Map(legalMoves.map((m) => [m.to, m.isCapture])),
     [legalMoves],
   )
-  const isMyTurn = ply < lastPly && (whiteToMove(ply + 1) ? 'white' : 'black') === myColor
+  const isMyTurn =
+    ply < lastPly && (whiteToMove(ply + 1, positions[0]) ? 'white' : 'black') === myColor
   const isComplete = ply >= lastPly
 
   // Auto-play the opponent's move after a short delay.

@@ -95,7 +95,7 @@ export function BlunderStats({ stats }: { stats: BlunderStatsData }) {
                 </Link>
                 <BlunderSeverityBadge winDrop={b.winDrop} />
                 <span className="text-zinc-600 dark:text-zinc-400">
-                  {plyLabel(b.ply)} {b.moveSan}: {formatEval(b.evalBefore)} →{' '}
+                  {plyLabel(b.ply, b.initialFen)} {b.moveSan}: {formatEval(b.evalBefore)} →{' '}
                   {formatEval(b.evalAfter)} ({formatSwing(b)})
                 </span>
               </div>

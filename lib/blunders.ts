@@ -100,6 +100,7 @@ export function buildBlunderStats(
       worst.push({
         gameId: game.id,
         gameLabel,
+        initialFen: game.initialFen,
         ply: blunder.ply,
         moveSan: blunder.moveSan,
         swingCp: blunder.swingCp,

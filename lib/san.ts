@@ -12,10 +12,25 @@ export function splitSanPiece(san: string): { piece: SanPiece | null; rest: stri
   return { piece: match[1] as SanPiece, rest: match[2] }
 }
 
+/** The move number and side of a 1-indexed ply, counted from `initialFen`'s side to move and fullmove number. */
+function plyMove(ply: number, initialFen?: string): { moveNumber: number; white: boolean } {
+  const [, sideToMove, , , , fullmove] = initialFen?.split(' ') ?? []
+  // Half-moves since White's move of the starting move number.
+  const halfMoves = ply - 1 + (sideToMove === 'b' ? 1 : 0)
+  return {
+    moveNumber: (Number(fullmove) || 1) + Math.floor(halfMoves / 2),
+    white: halfMoves % 2 === 0,
+  }
+}
+
+export function moveNumberOfPly(ply: number, initialFen?: string): number {
+  return plyMove(ply, initialFen).moveNumber
+}
+
 /** Formats a 1-indexed ply as a move-number label, e.g. 1 -> "1.", 2 -> "1…". */
-export function plyLabel(ply: number): string {
-  const moveNumber = Math.ceil(ply / 2)
-  return ply % 2 === 1 ? `${moveNumber}.` : `${moveNumber}…`
+export function plyLabel(ply: number, initialFen?: string): string {
+  const { moveNumber, white } = plyMove(ply, initialFen)
+  return white ? `${moveNumber}.` : `${moveNumber}…`
 }
 
 const PIECE_NAMES_BY_LOCALE: Record<Locale, Record<PieceSymbol, string>> = {
