@@ -372,7 +372,9 @@ const en = {
     findBestMove: 'Find the best move',
     cardOf: (index: number, total: number) => `Card ${index} of ${total}`,
     hintText: (pieces: string) => `Hint: it's a ${pieces} move.`,
-    keyboardHint: 'Space/Enter → Next · H → Hint',
+    keyboardHint: 'Space/Enter → Next · H → Hint · U → Undo',
+    undo: 'Undo',
+    undoFailed: "Couldn't undo that answer.",
     autoAdvance: 'Go to the next card after a correct answer',
     saveFailed: (n: number) =>
       n === 1
@@ -949,7 +951,9 @@ const es: Strings = {
     findBestMove: 'Encuentra la mejor jugada',
     cardOf: (index: number, total: number) => `Tarjeta ${index} de ${total}`,
     hintText: (pieces: string) => `Pista: es una jugada de ${pieces}.`,
-    keyboardHint: 'Espacio/Intro → Siguiente · H → Pista',
+    keyboardHint: 'Espacio/Intro → Siguiente · H → Pista · U → Deshacer',
+    undo: 'Deshacer',
+    undoFailed: 'No se pudo deshacer la respuesta.',
     autoAdvance: 'Pasar a la siguiente tarjeta tras acertar',
     saveFailed: (n: number) =>
       n === 1

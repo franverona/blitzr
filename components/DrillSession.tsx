@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore
 import { Chess, type Move } from 'chess.js'
 import { Chessboard } from 'react-chessboard'
 import { BoardCoordinates } from './BoardCoordinates'
-import { submitDrillAnswer } from '@/app/actions'
+import { submitDrillAnswer, undoDrillAnswer } from '@/app/actions'
 import { isNearBestMove } from '@/lib/drill'
 import { getStrings } from '@/lib/i18n/strings'
 import { legalDestinations } from '@/lib/legalMoves'
@@ -13,7 +13,7 @@ import { StockfishEngine } from '@/lib/stockfish/client'
 import { terminalEval } from '@/lib/stockfish/analyze'
 import { describeBlunderReason, detectBlunderReason } from '@/lib/tactics'
 import { REVEAL_ARROW_COLOR } from '@/lib/theme'
-import type { BlunderReason, DrillPrompt, DrillSourceType } from '@/lib/types'
+import type { BlunderReason, DrillPrompt, DrillSourceType, DrillUndo } from '@/lib/types'
 import { useSettings, useMoveSound } from './SettingsProvider'
 import { LegalMoveSquare } from './LegalMoveSquare'
 import { ErrorText } from './ErrorText'
@@ -145,6 +145,12 @@ function DrillDeck({
   const [autoAdvance, setAutoAdvance] = useState(initialAutoAdvance)
   // Answers whose save failed. Kept across cards so auto-advance can't hide the error.
   const [unsaved, setUnsaved] = useState<DrillAnswer[]>([])
+  // The current card's answer, until Next: its save resolves to what undoing it needs.
+  const lastAnswerRef = useRef<{ answer: DrillAnswer; saved: Promise<DrillUndo | null> } | null>(
+    null,
+  )
+  const [undoing, setUndoing] = useState(false)
+  const [undoError, setUndoError] = useState<string | null>(null)
 
   // A ref, not state, so a move can't be graded twice within the same tick.
   const answeredRef = useRef(false)
@@ -196,6 +202,8 @@ function DrillDeck({
 
   const handleNext = useCallback(() => {
     answeredRef.current = false
+    lastAnswerRef.current = null
+    setUndoError(null)
     setFeedback(null)
     setHangingReason(null)
     setHintLevel(0)
@@ -210,10 +218,10 @@ function DrillDeck({
 
   // Unchecking during the pause cancels it.
   useEffect(() => {
-    if (!autoAdvance || !feedback || feedback === 'incorrect') return
+    if (!autoAdvance || !feedback || feedback === 'incorrect' || undoing) return
     const timer = setTimeout(handleNext, AUTO_ADVANCE_DELAY_MS)
     return () => clearTimeout(timer)
-  }, [autoAdvance, feedback, handleNext])
+  }, [autoAdvance, feedback, handleNext, undoing])
 
   // A focused button already handles Enter/Space natively; avoid firing twice.
   useEffect(() => {
@@ -224,11 +232,13 @@ function DrillDeck({
         handleNext()
       } else if (e.key.toLowerCase() === 'h' && !feedback) {
         handleHint()
+      } else if (e.key.toLowerCase() === 'u' && feedback) {
+        handleUndo()
       }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [feedback, handleNext, handleHint])
+  })
 
   if (sessionPrompts.length === 0) {
     return (
@@ -325,19 +335,55 @@ function DrillDeck({
     setTally((t) =>
       correct ? { ...t, correct: t.correct + 1 } : { ...t, incorrect: t.incorrect + 1 },
     )
-    saveAnswer({
+    const answer = {
       gameId: activePrompt.gameId,
       sourceType: activePrompt.sourceType,
       ply: activePrompt.ply,
       correct,
-    })
+    }
+    lastAnswerRef.current = { answer, saved: saveAnswer(answer) }
   }
 
-  function saveAnswer(answer: DrillAnswer) {
-    submitDrillAnswer(answer.gameId, answer.sourceType, answer.ply, answer.correct).catch((err) => {
-      console.error(err)
-      setUnsaved((u) => [...u, answer])
-    })
+  /** Resolves to null when the save failed (the answer is then in `unsaved`). */
+  function saveAnswer(answer: DrillAnswer): Promise<DrillUndo | null> {
+    return submitDrillAnswer(answer.gameId, answer.sourceType, answer.ply, answer.correct).catch(
+      (err) => {
+        console.error(err)
+        setUnsaved((u) => [...u, answer])
+        return null
+      },
+    )
+  }
+
+  // Back to the unanswered card, with the SM-2 schedule as it was.
+  async function handleUndo() {
+    const last = lastAnswerRef.current
+    if (!last || undoing) return
+    setUndoing(true)
+    setUndoError(null)
+    const undo = await last.saved
+    const { answer } = last
+    if (undo) {
+      const result = await undoDrillAnswer(answer.gameId, answer.sourceType, answer.ply, undo)
+      if (!result.ok) {
+        setUndoError(result.error)
+        setUndoing(false)
+        return
+      }
+    } else {
+      // Never saved, so there's nothing to revert on the server.
+      setUnsaved((u) => u.filter((a) => a !== answer))
+    }
+    lastAnswerRef.current = null
+    answeredRef.current = false
+    setTally((t) =>
+      answer.correct ? { ...t, correct: t.correct - 1 } : { ...t, incorrect: t.incorrect - 1 },
+    )
+    setFeedback(null)
+    setHangingReason(null)
+    setCommittedFen(null)
+    setSelectedSquare(null)
+    setUndoing(false)
   }
 
   function retryUnsaved() {
@@ -486,9 +532,15 @@ function DrillDeck({
                 {describeBlunderReason(hangingReason)}
               </p>
             )}
-            <button onClick={handleNext} className={`w-fit ${buttonClass()}`}>
-              {s.drill.next}
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <button onClick={handleNext} disabled={undoing} className={`w-fit ${buttonClass()}`}>
+                {s.drill.next}
+              </button>
+              <button onClick={handleUndo} disabled={undoing} className={`w-fit ${buttonClass()}`}>
+                {s.drill.undo}
+              </button>
+            </div>
+            {undoError && <ErrorText>{undoError}</ErrorText>}
           </>
         )}
 

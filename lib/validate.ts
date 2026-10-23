@@ -50,6 +50,29 @@ export function isValidDrillAnswer(
   )
 }
 
+const isIsoDate = (v: unknown) => isString(v) && !Number.isNaN(Date.parse(v))
+const isCount = (v: unknown) => typeof v === 'number' && Number.isInteger(v) && v >= 0
+
+/** A schedule `submitDrillAnswer()` returned, sent back to undo that answer. */
+export function isValidDrillUndo(v: unknown): boolean {
+  if (typeof v !== 'object' || v === null) return false
+  const { previous, reviewedAt } = v as Record<string, unknown>
+  if (!isIsoDate(reviewedAt) || typeof previous !== 'object' || previous === null) return false
+  const { dueAt, intervalDays, easeFactor, repetitions, lastReviewedAt } = previous as Record<
+    string,
+    unknown
+  >
+  return (
+    isIsoDate(dueAt) &&
+    isCount(intervalDays) &&
+    isCount(repetitions) &&
+    typeof easeFactor === 'number' &&
+    Number.isFinite(easeFactor) &&
+    easeFactor > 0 &&
+    (lastReviewedAt === null || isIsoDate(lastReviewedAt))
+  )
+}
+
 /**
  * The node as the server will store it: its move must be legal from `parent`
  * (or the start), and the SAN and FEN are re-derived rather than trusted.
