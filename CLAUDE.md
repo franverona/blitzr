@@ -331,6 +331,9 @@ only the engine's move counts. **Re-analyzing a game can reset its drill progres
 strength can shift which plies count as blunders, and the deck sync deletes cards (with their SM-2
 schedules) whose ply no longer qualifies. Accepted, not a bug.
 
+**Undo** (`undoDrillAnswer()`) restores the schedule `submitDrillAnswer()` returned, only while that
+answer is still the card's `last_reviewed_at` and only before Next; the streak keeps the day.
+
 The page's only visible filter is card type; `?opening=` has no picker (Today's weak spot links to
 it) and shows as a clearable chip. The auto-advance checkbox lives on the page, not in Settings:
 `blitzr-drill-auto-advance` is read by `app/drill/page.tsx` and written by `DrillSession`.

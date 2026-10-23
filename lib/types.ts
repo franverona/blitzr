@@ -228,6 +228,17 @@ export interface DrillCard {
   createdAt: string
 }
 
+export type DrillSchedule = Pick<
+  DrillCard,
+  'dueAt' | 'intervalDays' | 'easeFactor' | 'repetitions' | 'lastReviewedAt'
+>
+
+/** What `undoDrillAnswer()` needs: the schedule before the answer, and when the answer was saved. */
+export interface DrillUndo {
+  previous: DrillSchedule
+  reviewedAt: string
+}
+
 export interface BlunderGroupStat {
   key: string
   label: string

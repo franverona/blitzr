@@ -42,12 +42,18 @@ import {
   repertoireDeviations,
   suggestLesson,
 } from '@/lib/today'
-import { isValidAnalysis, isValidDrillAnswer, normalizeRepertoireNode } from '@/lib/validate'
+import {
+  isValidAnalysis,
+  isValidDrillAnswer,
+  isValidDrillUndo,
+  normalizeRepertoireNode,
+} from '@/lib/validate'
 import type {
   ArchiveSyncStatus,
   BlunderStats,
   DrillPrompt,
   DrillSourceType,
+  DrillUndo,
   Game,
   GameAccuracy,
   GameAnalysis,
@@ -424,7 +430,7 @@ export async function submitDrillAnswer(
   sourceType: DrillSourceType,
   ply: number,
   correct: boolean,
-): Promise<void> {
+): Promise<DrillUndo | null> {
   if (!isValidDrillAnswer(gameId, sourceType, ply, correct)) throw new Error('Invalid drill answer')
   const repo = getRepository()
   const current = await repo.getDrillCard(gameId, sourceType, ply)
@@ -444,6 +450,48 @@ export async function submitDrillAnswer(
   await repo.recordDrillReviewDay(localDay(now))
   revalidatePath('/drill')
   revalidatePath('/')
+  if (!current) return null
+  const { dueAt, intervalDays, easeFactor, repetitions, lastReviewedAt } = current
+  return {
+    previous: { dueAt, intervalDays, easeFactor, repetitions, lastReviewedAt },
+    reviewedAt: next.lastReviewedAt!,
+  }
+}
+
+/**
+ * Puts a card's schedule back as it was before `submitDrillAnswer()`, for a misclick. Only while
+ * that answer is still the card's latest review; the streak keeps the day.
+ */
+export async function undoDrillAnswer(
+  gameId: string,
+  sourceType: DrillSourceType,
+  ply: number,
+  undo: DrillUndo,
+): Promise<ActionResult> {
+  const error = getStrings().drill.undoFailed
+  if (!isValidDrillAnswer(gameId, sourceType, ply, true) || !isValidDrillUndo(undo)) {
+    return { ok: false, error }
+  }
+  try {
+    const repo = getRepository()
+    const current = await repo.getDrillCard(gameId, sourceType, ply)
+    if (!current || current.lastReviewedAt !== undo.reviewedAt) return { ok: false, error }
+    const { dueAt, intervalDays, easeFactor, repetitions, lastReviewedAt } = undo.previous
+    await repo.upsertDrillCard({
+      ...current,
+      dueAt,
+      intervalDays,
+      easeFactor,
+      repetitions,
+      lastReviewedAt,
+    })
+  } catch (err) {
+    console.error(err)
+    return { ok: false, error }
+  }
+  revalidatePath('/drill')
+  revalidatePath('/')
+  return { ok: true }
 }
 
 /** Everything the Today page (`/`) shows. Each recent stat covers the last 7 days. */

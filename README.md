@@ -207,7 +207,8 @@ or better. Scheduling is SM-2: right answers come back later, wrong ones tomorro
 like a wrong one), and cards can be filtered by type (Today's weak spot also
 links to a single opening's cards). A checkbox moves on to the next card after a right answer, and reloading the page resumes the
 session where you left it.
-Shortcuts: Space/Enter for the next card, H for a hint. Re-analyzing a game at another strength can change
+**Undo** (or U) takes back a misclicked answer, restoring the card's schedule, until you move on.
+Shortcuts: Space/Enter for the next card, H for a hint, U to undo. Re-analyzing a game at another strength can change
 which moves count as blunders, so its blunder cards (and their review history) may be replaced.
 
 ### Blunders

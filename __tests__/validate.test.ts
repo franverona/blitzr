@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import type { RepertoireNode } from '@/lib/types'
-import { isValidAnalysis, isValidDrillAnswer, normalizeRepertoireNode } from '@/lib/validate'
+import {
+  isValidAnalysis,
+  isValidDrillAnswer,
+  isValidDrillUndo,
+  normalizeRepertoireNode,
+} from '@/lib/validate'
 
 const evalOk = { cp: 20, mate: null, bestMove: { from: 'e2', to: 'e4', san: 'e4', bestLine: [] } }
 
@@ -68,5 +73,36 @@ describe('isValidDrillAnswer', () => {
     expect(isValidDrillAnswer('g1', 'blunder', 0, true)).toBe(false)
     expect(isValidDrillAnswer('g1', 'blunder', 1.5, true)).toBe(false)
     expect(isValidDrillAnswer('g1', 'blunder', 12, 'yes')).toBe(false)
+  })
+})
+
+describe('isValidDrillUndo', () => {
+  const previous = {
+    dueAt: '2026-10-20T00:00:00.000Z',
+    intervalDays: 6,
+    easeFactor: 2.6,
+    repetitions: 2,
+    lastReviewedAt: '2026-10-14T09:00:00.000Z',
+  }
+  const reviewedAt = '2026-10-23T09:00:00.000Z'
+
+  it('accepts the schedule submitDrillAnswer() returned, including a never-reviewed card', () => {
+    expect(isValidDrillUndo({ previous, reviewedAt })).toBe(true)
+    expect(isValidDrillUndo({ previous: { ...previous, lastReviewedAt: null }, reviewedAt })).toBe(
+      true,
+    )
+  })
+
+  it('rejects malformed schedules', () => {
+    expect(isValidDrillUndo(null)).toBe(false)
+    expect(isValidDrillUndo({ previous, reviewedAt: 'soon' })).toBe(false)
+    expect(isValidDrillUndo({ previous: { ...previous, dueAt: 'later' }, reviewedAt })).toBe(false)
+    expect(isValidDrillUndo({ previous: { ...previous, intervalDays: -1 }, reviewedAt })).toBe(
+      false,
+    )
+    expect(isValidDrillUndo({ previous: { ...previous, repetitions: 1.5 }, reviewedAt })).toBe(
+      false,
+    )
+    expect(isValidDrillUndo({ previous: { ...previous, easeFactor: NaN }, reviewedAt })).toBe(false)
   })
 })
