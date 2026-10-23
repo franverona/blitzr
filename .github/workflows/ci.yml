@@ -88,3 +88,14 @@ jobs:
             echo "::error::the server logged errors (above)"
             exit 1
           fi
+
+      # Nothing else runs scripts/: they import lib/*.ts through Node's type stripping, which tsc
+      # doesn't hold them to. The smoke test left a database with one game to back up.
+      - name: Backup script
+        run: |
+          pnpm backup
+          node -e "
+            const [file] = require('fs').readdirSync('data/backups').filter((f) => f.startsWith('blitzr-'))
+            const db = new (require('better-sqlite3'))('data/backups/' + file, { readonly: true })
+            if (db.prepare('SELECT count(*) AS n FROM games').get().n !== 1) process.exit(1)
+          "
