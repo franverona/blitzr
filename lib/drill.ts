@@ -77,8 +77,10 @@ export function findBlunderCandidates(
     let previous: { ply: number; bestSan: string | undefined } | null = null
     for (const blunder of findBlunders(analysis.evals, game.movesSan, game.initialFen)) {
       const isMine = whiteToMove(blunder.ply, game.initialFen) === (game.myColor === 'white')
-      if (!isMine) continue
+      // buildDrillPrompt() can't make a card without the engine's move; one would sit
+      // in the deck forever, taking a session slot.
       const bestSan = blunder.evalBefore.bestMove?.san
+      if (!isMine || !bestSan) continue
       const repeat = previous?.ply === blunder.ply - 2 && bestSan && previous.bestSan === bestSan
       previous = { ply: blunder.ply, bestSan }
       if (!repeat) candidates.push({ gameId: game.id, sourceType: 'blunder', ply: blunder.ply })
