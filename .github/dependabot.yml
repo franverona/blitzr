@@ -8,12 +8,13 @@ updates:
       default-days: 2
     open-pull-requests-limit: 10
     groups:
-      # Pinned and upgraded by hand: Next's minors change APIs and defaults. Never auto-merged.
+      # Never auto-merged. Next's minors change APIs and defaults; kysely is 0.x, so its minors
+      # (0.29 -> 0.30) can break, and it backs the whole data layer.
       framework:
-        patterns: ['next', 'eslint-config-next', 'react', 'react-dom']
+        patterns: ['next', 'eslint-config-next', 'react', 'react-dom', 'kysely']
       minor-and-patch:
         update-types: [minor, patch]
-        exclude-patterns: ['next', 'eslint-config-next', 'react', 'react-dom']
+        exclude-patterns: ['next', 'eslint-config-next', 'react', 'react-dom', 'kysely']
     commit-message:
       prefix: chore
       prefix-development: chore
