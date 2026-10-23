@@ -54,5 +54,5 @@ next-env.d.ts
 /polgar.pgn
 /data/polgar-mates.json
 
-# Stockfish engine assets — copied from node_modules by scripts/setup-stockfish.js
+# Stockfish engine assets — copied from node_modules by scripts/setup-stockfish.mjs
 /public/stockfish/
