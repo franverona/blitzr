@@ -163,14 +163,15 @@ backups and `polgar-mates.json` elsewhere. The `data/` paths below assume the de
   initial state. Cookies, not localStorage, because react-chessboard's square colors are
   inline-style props and must be right on first render. **Cookie names are duplicated as literals**
   in `layout.tsx` and the client modules — a constant exported from a `'use client'` module reads as
-  `undefined` in a Server Component.
+  `undefined` in a Server Component. The sidebar's collapsed state isn't a setting but follows the
+  same pattern (`blitzr-sidebar-collapsed`).
 - **Lesson/puzzle orientation** (`TrainingOrientation`, `lib/theme.ts`): `auto` is the side that
   plays. Lessons still pass the lesson's color as `myColor`, so the quiz tests the same side.
 - **Board colors** are one of four presets (`BOARD_COLOR_PRESETS`, `lib/theme.ts`), consumed via
   `useSettings()` by every board.
 - **Analysis strength** (fast/normal/deep = 150/300/1000ms per position) only affects batch
-  analysis. It's the default for a game's Analyze button, which has its own picker; each
-  `game_analysis` row records its `movetime_ms`.
+  analysis. A game's Analyze button has its own picker, defaulting to the strength of the game's
+  saved analysis, else this setting; each `game_analysis` row records its `movetime_ms`.
 - **Coordinates** are drawn outside the board by `BoardCoordinates`; react-chessboard's
   `showNotation` is always `false`. A sibling stretched next to the board (`EvalBar`) needs `mb-7`
   while they're on.
@@ -387,7 +388,7 @@ page passes the one it shows as a prop. Every line was verified to mate; mate-in
 move is read from each FEN (about a third are Black). `PuzzleBoard` makes the user play every ply,
 both sides; wrong moves retry, "Reveal" doesn't count as solved, and promotions show a piece picker
 (some puzzles need underpromotion). A defence puzzle (`saves` set) is one ply: any save solves it.
-`/puzzles` filters by `?kind=mate|defend`. `PromotionPicker` is shared with `DrillSession` (an engine best move
+`/puzzles` filters by `?status=solved|unsolved`, `?color=white|black`, `?kind=mate|defend` and `?mateIn=`. `PromotionPicker` is shared with `DrillSession` (an engine best move
 can be an underpromotion too) and explore mode.
 
 ## Lessons
@@ -417,7 +418,8 @@ since Next redacts thrown messages in production.
 ## Testing
 
 - **Vitest** (`pnpm test`). Tests live in `__tests__/`, one file per `lib/` module, against
-  fixtures — no DB, network or browser, except `sqliteRepository.test.ts` (in-memory SQLite).
+  fixtures — no DB, network or browser, except `sqliteRepository.test.ts` (in-memory SQLite) and
+  `migrate.test.ts` (a SQLite file in a temp dir, for the pre-migration backup).
   `sync.test.ts` stubs the Chess.com client and repository with `vi.mock`.
 - Worker-driven code (`evaluate()`, `analyzeGame()`) isn't unit-tested; its pure parsers are.
 
