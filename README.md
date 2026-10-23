@@ -49,7 +49,8 @@ implies endorsement.
 
 ## Getting started
 
-Needs Node 22+ (`.nvmrc`); `pnpm install` refuses older versions.
+Needs Node 22.18+ (`.nvmrc`), which runs the TypeScript that `pnpm backup` and the puzzle scripts
+import as is; `pnpm install` refuses older versions.
 
 ```bash
 pnpm install
@@ -128,8 +129,7 @@ whichever is running after a build.
 ### Puzzle data scripts
 
 You don't need these to run Blitzr: the Lichess puzzles ship in `lib/`. They rebuild the puzzle
-files and are safe to re-run, since a puzzle keeps its id (and so its solved state). All need
-Node 22.18+, which runs the TypeScript they import as is.
+files and are safe to re-run, since a puzzle keeps its id (and so its solved state).
 
 | Script                             | Writes                                | Needs                                          |
 | ---------------------------------- | ------------------------------------- | ---------------------------------------------- |
@@ -247,7 +247,7 @@ both need a native Stockfish (`brew install stockfish`).
 
 László Polgár's _5334 Problems, Combinations, and Games_ is copyrighted, so its mates stay out of
 the published puzzle set and live in the gitignored `data/polgar-mates.json` instead, joining the
-list after a restart. To create that file (Node 22.18+):
+list after a restart. To create that file:
 
 - `node scripts/import-polgar-mates.mjs --from-git` restores it from git history, where the
   puzzles were committed before moving out of the repo. Any clone can do this.
