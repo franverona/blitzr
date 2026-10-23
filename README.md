@@ -113,7 +113,7 @@ pnpm backup          # copy the database into data/backups/
 
 ### Before merging
 
-CI runs these five on every PR, then smoke-tests `pnpm start` against an empty database:
+CI runs these five on every PR, after `pnpm audit --prod`:
 
 ```bash
 pnpm format:check
@@ -122,6 +122,9 @@ pnpm lint
 pnpm test
 pnpm build
 ```
+
+Then it starts the built app against an empty database and checks the main pages, a seeded game
+and two lessons, failing on any error in the server's log, and runs `pnpm backup`.
 
 `pnpm build` rewrites `.next/`, which a running `pnpm dev` and the pm2 server both read from: the
 dev server then silently serves stale code, and the pm2 one can fail to load its pages. Restart
