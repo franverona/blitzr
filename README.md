@@ -53,6 +53,7 @@ Needs Node 22.18+ (`.nvmrc`), which runs the TypeScript that `pnpm backup` and t
 import as is; `pnpm install` refuses older versions.
 
 ```bash
+npm install -g pnpm          # any recent pnpm runs the version package.json pins
 pnpm install
 cp .env.example .env.local   # set CHESSCOM_USERNAME
 pnpm dev
