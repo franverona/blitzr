@@ -124,7 +124,12 @@ export function parseManualGame(
     myColor = side === 'notMine' ? 'white' : side
   }
   const myResult = myResultFromPgnResult(result, myColor)
-  const codes = resultCodes(result, headers.Termination, chess)
+  // Chess.com's Termination names the winner, so a name like "NeverResign" mustn't match.
+  const termination = [headers.White, headers.Black].reduce(
+    (text, name) => text?.split(name).join(''),
+    headers.Termination,
+  )
+  const codes = resultCodes(result, termination, chess)
 
   const ecoUrl = headers.ECOUrl ?? null
 

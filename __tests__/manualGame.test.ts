@@ -116,6 +116,14 @@ describe('parseManualGame', () => {
     )
     expect(parseManualGame(pgn('0-1', 'B won - game abandoned'), 'A').whiteResult).toBe('abandoned')
     expect(parseManualGame(pgn('0-1', 'Time forfeit'), 'A').whiteResult).toBe('timeout')
+    const named = (termination: string) =>
+      `[White "CheckmateKid"]\n[Black "NeverResign"]\n[Result "0-1"]\n[Termination "${termination}"]\n\n1. e4 e5 0-1`
+    expect(parseManualGame(named('NeverResign won on time'), 'CheckmateKid').whiteResult).toBe(
+      'timeout',
+    )
+    expect(
+      parseManualGame(named('NeverResign won by resignation'), 'CheckmateKid').whiteResult,
+    ).toBe('resigned')
     expect(parseManualGame(pgn('1/2-1/2', 'Game drawn by agreement'), 'A').whiteResult).toBe(
       'agreed',
     )
