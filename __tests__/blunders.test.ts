@@ -153,6 +153,15 @@ describe('buildBlunderStats', () => {
     expect(buildBlunderStats([hanging], analyses, 'es').byReason[0].label).toBe('Pieza colgada')
   })
 
+  it('groups own blunders by game phase, in game order', () => {
+    const early = makeGame({ id: 'early', movesSan: ['a4'] })
+    const analyses = new Map([[early.id, makeAnalysis(early.id, [cp(0), cp(-260)])]])
+
+    const stats = buildBlunderStats([early], analyses)
+    expect(stats.byPhase).toEqual([{ key: 'opening', label: 'Opening', count: 1, avgSwingCp: 260 }])
+    expect(buildBlunderStats([early], analyses, 'es').byPhase[0].label).toBe('Apertura')
+  })
+
   it('excludes blunders on the opponent’s plies', () => {
     // ply 1 is white (the pawn move, fine); ply 2 is black — but this game's
     // myColor is white, so black's blunder shouldn't count.

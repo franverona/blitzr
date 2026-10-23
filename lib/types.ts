@@ -288,6 +288,8 @@ export interface BlunderStats {
   byPiece: BlunderGroupStat[]
   /** By `detectBlunderReason()` kind, with 'none' when no simple pattern explains it. */
   byReason: BlunderGroupStat[]
+  /** Opening, middlegame, endgame (`gamePhase()`), in that order. */
+  byPhase: BlunderGroupStat[]
   worst: WorstBlunder[]
   /** Oldest first, one point per analyzed game in scope. */
   trend: AccuracyTrendPoint[]

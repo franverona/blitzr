@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatMaterialDiff, materialDiff } from '@/lib/material'
+import { formatMaterialDiff, gamePhase, materialDiff } from '@/lib/material'
 
 describe('materialDiff', () => {
   it('is 0 for the starting position', () => {
@@ -39,5 +39,24 @@ describe('formatMaterialDiff', () => {
 
   it('formats zero as Igual in Spanish', () => {
     expect(formatMaterialDiff(0, 'es')).toBe('Igual')
+  })
+})
+
+describe('gamePhase', () => {
+  const start = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+
+  it('calls the first 10 moves the opening, then the middlegame', () => {
+    expect(gamePhase(start, 1)).toBe('opening')
+    expect(gamePhase(start, 20)).toBe('opening')
+    expect(gamePhase(start, 21)).toBe('middlegame')
+  })
+
+  it('calls a position with at most 6 queens, rooks and minor pieces an endgame, from any ply', () => {
+    // Two rooks and a bishop each: 6 pieces.
+    expect(gamePhase('r1b1k2r/pppp1ppp/8/8/8/8/PPPP1PPP/R1B1K2R w KQkq - 0 15', 9)).toBe('endgame')
+    // One more knight: 7 pieces, still the middlegame.
+    expect(gamePhase('r1b1k2r/pppp1ppp/8/8/8/5N2/PPPP1PPP/R1B1K2R w KQkq - 0 15', 40)).toBe(
+      'middlegame',
+    )
   })
 })
