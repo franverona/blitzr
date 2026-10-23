@@ -68,17 +68,35 @@ describe('buildBlunderStats', () => {
     expect(stats.totalBlunders).toBe(2)
     expect(stats.byOpening).toEqual(
       expect.arrayContaining([
-        { key: 'C50', label: 'Italian Game', count: 1, avgSwingCp: 300 },
-        { key: 'unknown', label: 'Unknown opening', count: 1, avgSwingCp: 240 },
+        { key: 'Italian Game', label: 'Italian Game', count: 1, avgSwingCp: 300 },
+        { key: 'Unknown opening', label: 'Unknown opening', count: 1, avgSwingCp: 240 },
       ]),
     )
   })
 
+  it('groups openings by family name across ECO codes', () => {
+    const b20 = makeGame({ ecoCode: 'B20', ecoName: 'Sicilian Defense', movesSan: ['e4'] })
+    const b90 = makeGame({
+      ecoCode: 'B90',
+      ecoName: 'Sicilian Defense: Najdorf Variation',
+      movesSan: ['e4'],
+    })
+    const analyses = new Map([
+      [b20.id, makeAnalysis(b20.id, [cp(0), cp(-260)])],
+      [b90.id, makeAnalysis(b90.id, [cp(0), cp(-260)])],
+    ])
+
+    expect(buildBlunderStats([b20, b90], analyses).byOpening).toEqual([
+      { key: 'Sicilian Defense', label: 'Sicilian Defense', count: 2, avgSwingCp: 260 },
+    ])
+  })
+
   it('excludes mate-sentinel swings from the average but still counts them', () => {
     // Mate swings use a ±100,000 sentinel and must be left out of avgSwingCp.
-    const normal = makeGame({ ecoCode: 'B20', movesSan: ['e4'] })
-    const intoMate = makeGame({ ecoCode: 'B20', movesSan: ['Nc3'] })
-    const onlyMate = makeGame({ ecoCode: 'C00', movesSan: ['Nf3'] })
+    const sicilian = { ecoCode: 'B20', ecoName: 'Sicilian Defense' }
+    const normal = makeGame({ ...sicilian, movesSan: ['e4'] })
+    const intoMate = makeGame({ ...sicilian, movesSan: ['Nc3'] })
+    const onlyMate = makeGame({ ecoCode: 'C00', ecoName: 'French Defense', movesSan: ['Nf3'] })
     const analyses = new Map([
       [normal.id, makeAnalysis(normal.id, [cp(0), cp(-260)])],
       [intoMate.id, makeAnalysis(intoMate.id, [cp(50), mate(-3)])],
@@ -86,8 +104,8 @@ describe('buildBlunderStats', () => {
     ])
 
     const stats = buildBlunderStats([normal, intoMate, onlyMate], analyses)
-    const b20 = stats.byOpening.find((g) => g.key === 'B20')
-    const c00 = stats.byOpening.find((g) => g.key === 'C00')
+    const b20 = stats.byOpening.find((g) => g.label === 'Sicilian Defense')
+    const c00 = stats.byOpening.find((g) => g.label === 'French Defense')
     expect(b20).toMatchObject({ count: 2, avgSwingCp: 260 })
     expect(c00).toMatchObject({ count: 1, avgSwingCp: null })
   })
