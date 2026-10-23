@@ -1,5 +1,6 @@
 import { findBlunders, whiteToMove } from './analysis'
 import { summarizeMoveQuality } from './moveQuality'
+import { moveNumberOfPly } from './san'
 import { startsFromStandardPosition } from './positions'
 import { diffGameAgainstRepertoire } from './repertoire'
 import { countGamesReachingLine } from './openingTheory'
@@ -106,14 +107,19 @@ export function repertoireDeviations(
 export function gameReview(
   game: Game,
   analysis: GameAnalysis | undefined,
-): { accuracy: number | null; firstBlunderPly: number | null } {
-  if (!analysis || !game.movesSan) return { accuracy: null, firstBlunderPly: null }
+): { accuracy: number | null; firstBlunderPly: number | null; firstBlunderMove: number | null } {
+  if (!analysis || !game.movesSan)
+    return { accuracy: null, firstBlunderPly: null, firstBlunderMove: null }
   const summary = summarizeMoveQuality(analysis.evals, game.movesSan, game.initialFen)
   const mine = game.myColor === 'white' ? summary.white : summary.black
   const firstBlunder = findBlunders(analysis.evals, game.movesSan, game.initialFen).find(
     (b) => whiteToMove(b.ply, game.initialFen) === (game.myColor === 'white'),
   )
-  return { accuracy: mine.accuracy, firstBlunderPly: firstBlunder?.ply ?? null }
+  return {
+    accuracy: mine.accuracy,
+    firstBlunderPly: firstBlunder?.ply ?? null,
+    firstBlunderMove: firstBlunder ? moveNumberOfPly(firstBlunder.ply, game.initialFen) : null,
+  }
 }
 
 /** Keys into `s.today.lossReasons`. */

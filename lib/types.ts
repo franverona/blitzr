@@ -239,6 +239,8 @@ export interface BlunderGroupStat {
 export interface WorstBlunder {
   gameId: string
   gameLabel: string
+  /** The game's starting position, for move numbers. */
+  initialFen: string
   ply: number
   moveSan: string
   swingCp: number

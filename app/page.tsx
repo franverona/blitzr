@@ -18,7 +18,6 @@ import { getLocale } from '@/lib/i18n/locale'
 import { getStrings } from '@/lib/i18n/strings'
 import { puzzleColorToMove, puzzleKindLabel } from '@/lib/mateProblems'
 import { getMateProblem } from '@/lib/puzzleSet'
-import { plyLabel } from '@/lib/san'
 import { getTrainingOrientation, resolveOrientation } from '@/lib/theme'
 import type { LossReason } from '@/lib/today'
 import { Badge } from '@/components/Badge'
@@ -163,14 +162,14 @@ export default async function TodayPage() {
                   <>
                     <p className="text-sm">{s.today.lastGameAccuracy(lastGame.accuracy)}</p>
                     <p className={mutedClassName}>
-                      {lastGame.firstBlunderPly === null ? (
+                      {lastGame.firstBlunderPly === null || lastGame.firstBlunderMove === null ? (
                         s.today.noBlunders
                       ) : (
                         <Link
                           href={`/games/${lastGame.id}?ply=${lastGame.firstBlunderPly - 1}`}
                           className="hover:underline"
                         >
-                          {s.today.firstBlunder(Math.ceil(lastGame.firstBlunderPly / 2))}
+                          {s.today.firstBlunder(lastGame.firstBlunderMove)}
                         </Link>
                       )}
                     </p>
@@ -264,7 +263,7 @@ export default async function TodayPage() {
               >
                 <p className="text-sm">
                   <span className="font-semibold">
-                    {plyLabel(today.worstBlunder.ply)}
+                    {today.worstBlunder.moveLabel}
                     {today.worstBlunder.moveSan}
                   </span>{' '}
                   <span className="text-xs text-zinc-500 dark:text-zinc-400">
