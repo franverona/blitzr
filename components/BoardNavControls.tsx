@@ -28,6 +28,8 @@ export function BoardNavControls() {
   const s = getStrings()
   const { playSpeed } = useSettings()
   const [isPlaying, setIsPlaying] = useState(false)
+  // Moving a piece mid-play enters explore mode, where Play is disabled and can't be paused.
+  if (exploring && isPlaying) setIsPlaying(false)
 
   // Refs let the interval/keydown callbacks read fresh values without
   // re-subscribing, and keep setPly out of setIsPlaying's updater (React warns
