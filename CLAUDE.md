@@ -333,16 +333,19 @@ section. The trend chart's x-axis is game index, not date, because sessions are 
 ## Today
 
 `getTodaySummary()` feeds `/`, the landing page (the games list is `/games`). "Recent" means the
-last 7 days throughout; the pure parts live in `lib/today.ts`. The due count goes through the same
+last 7 days, except for the repertoire rate; the pure parts live in `lib/today.ts`. The due count goes through the same
 `reconcileDrillCards()` as `getDrillDeck()`, so it matches `/drill`, and is shown against the
 session size. Ratings change per time class (`recentResults()`; Chess.com never mixes them). The
 weak spot is the top opening family from `buildBlunderStats()` over recent games, linking to
 `/drill?opening=` only if the deck has a card for it. Focus also lists the week's worst blunder
 (`buildBlunderStats().worst[0]`), how the week's games were lost (`lossReasons()`, from the user's
 own result code) and the opening lesson those games reached most (`suggestLesson()`, exact SAN
-prefix like `countGamesReachingLine()`). The drill streak reads `drill_review_days` (one row per
+prefix like `countGamesReachingLine()`). The repertoire rate (`repertoireDeviations()`) is how many
+of the 10 newest games with a repertoire for their color left it, with no date window. The last game shows its final position, own accuracy
+and a link to its first own blunder (`gameReview()`). The drill streak reads `drill_review_days` (one row per
 local day with an answer, recorded by `submitDrillAnswer()`): `drill_cards.last_reviewed_at` keeps
-only the latest review, so the table was seeded once from it and undercounts older history.
+only the latest review, so the table was seeded once from it and undercounts older history. `drillWeek()` turns the same days
+into the 7-day strip beside the streak.
 
 ## Puzzles
 
