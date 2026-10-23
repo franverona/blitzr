@@ -316,7 +316,7 @@ function DrillDeck({
       const evalAfter =
         terminalEval(move.after) ??
         (await engineRef.current.evaluate(move.after, ALTERNATIVE_CHECK_MOVETIME_MS))
-      accepted = isNearBestMove(move.before, evalBefore, evalAfter)
+      accepted = isNearBestMove(move.color === 'w', evalBefore, evalAfter)
     } catch {
       // Engine unavailable: fall back to engine-move-only grading.
     }

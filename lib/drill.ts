@@ -1,5 +1,5 @@
-import { findBlunders, whiteToMove } from './analysis'
-import { summarizeMoveQuality } from './moveQuality'
+import { findBlunders, moveWinDrop, whiteToMove } from './analysis'
+import { classifyMoveQuality } from './moveQuality'
 export { whiteToMove }
 import { formatDate } from './dates'
 import { buildPositions } from './positions'
@@ -104,15 +104,14 @@ export function findPunishCandidates(
     if (!analysis) continue
     const blunders = findBlunders(analysis.evals, game.movesSan, game.initialFen)
     const blunderPlies = new Set(blunders.map((b) => b.ply))
-    let positions: string[] | undefined
     for (const blunder of blunders) {
       const theirs = whiteToMove(blunder.ply, game.initialFen) !== (game.myColor === 'white')
       const reply = blunder.ply + 1
       if (!theirs || reply > game.movesSan.length || blunderPlies.has(reply)) continue
       const evalBefore = analysis.evals[reply - 1]
       if (!evalBefore?.bestMove) continue
-      positions ??= buildPositions(game.initialFen, game.movesSan)
-      if (isNearBestMove(positions[reply - 1], evalBefore, analysis.evals[reply])) continue
+      const evalAfter = analysis.evals[reply]
+      if (evalAfter && isNearBestMove(game.myColor === 'white', evalBefore, evalAfter)) continue
       candidates.push({ gameId: game.id, sourceType: 'punish', ply: reply })
     }
   }
@@ -185,14 +184,12 @@ export function buildDrillPrompt(
 /** Whether a move other than the engine's still passes a blunder card: it must
  *  rate "good" or better, not merely avoid being a blunder. */
 export function isNearBestMove(
-  fenBefore: string,
+  whiteMoved: boolean,
   evalBefore: PositionEval,
   evalAfter: PositionEval,
 ): boolean {
-  const summary = summarizeMoveQuality([evalBefore, evalAfter], ['?'], fenBefore)
-  const { best, excellent, good } =
-    fenBefore.split(' ')[1] === 'b' ? summary.black.counts : summary.white.counts
-  return best + excellent + good > 0
+  const tier = classifyMoveQuality(moveWinDrop(evalBefore, evalAfter, whiteMoved))
+  return tier === 'best' || tier === 'excellent' || tier === 'good'
 }
 
 const NEW_CARD_EASE_FACTOR = 2.5

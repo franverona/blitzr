@@ -307,20 +307,17 @@ describe('buildDrillPrompt', () => {
 })
 
 describe('isNearBestMove', () => {
-  const whiteToMoveFen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
-  const blackToMoveFen = 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1'
-
   it('accepts a move that keeps nearly the same eval', () => {
-    expect(isNearBestMove(whiteToMoveFen, cp(40), cp(25))).toBe(true)
+    expect(isNearBestMove(true, cp(40), cp(25))).toBe(true)
   })
 
   it('rejects a move that loses real ground even if it is not a blunder', () => {
-    expect(isNearBestMove(whiteToMoveFen, cp(40), cp(-80))).toBe(false)
+    expect(isNearBestMove(true, cp(40), cp(-80))).toBe(false)
   })
 
   it("judges Black's moves from Black's side", () => {
-    expect(isNearBestMove(blackToMoveFen, cp(30), cp(40))).toBe(true)
-    expect(isNearBestMove(blackToMoveFen, cp(30), cp(200))).toBe(false)
+    expect(isNearBestMove(false, cp(30), cp(40))).toBe(true)
+    expect(isNearBestMove(false, cp(30), cp(200))).toBe(false)
   })
 })
 
