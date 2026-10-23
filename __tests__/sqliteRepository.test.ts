@@ -189,7 +189,8 @@ describe('SqliteGameRepository drill review days', () => {
   })
 })
 
-describe('SqliteGameRepository.exportBackup', () => {
+// VACUUM INTO writes a temp file: slow on a busy CI runner's disk (see migrate.test.ts).
+describe('SqliteGameRepository.exportBackup', { timeout: 60_000 }, () => {
   it('returns a SQLite file holding the same data', async () => {
     const data = await repo.exportBackup()
     expect(Buffer.from(data.subarray(0, 15)).toString()).toBe('SQLite format 3')
