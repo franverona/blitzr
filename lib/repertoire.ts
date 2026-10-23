@@ -1,4 +1,11 @@
-import type { MyColor, RepertoireDiffResult, RepertoireNode } from './types'
+import type {
+  Game,
+  MyColor,
+  RepertoireColor,
+  RepertoireDiffResult,
+  RepertoireGap,
+  RepertoireNode,
+} from './types'
 
 /** Children by parent id (roots under null). */
 export function buildRepertoireIndex(
@@ -50,4 +57,31 @@ export function diffGameAgainstRepertoire(
   }
 
   return { inBookPlies, deviationPly: null, deviationMove: null, expectedMoves: null }
+}
+
+/**
+ * Where `color`'s games most often went past the end of the tree without a deviation: the tree
+ * ran out, or the opponent played a move it has no answer for. Grouped by the line in book plus
+ * the move played next, most games first. Exact move order, like the diff.
+ */
+export function findRepertoireGaps(
+  games: Game[],
+  color: RepertoireColor,
+  nodes: RepertoireNode[],
+  limit = 5,
+): RepertoireGap[] {
+  if (nodes.length === 0) return []
+  const gaps = new Map<string, RepertoireGap>()
+  for (const game of games) {
+    if (game.myColor !== color || !game.movesSan) continue
+    const diff = diffGameAgainstRepertoire(game.movesSan, color, nodes)
+    if (diff.deviationPly !== null || diff.inBookPlies >= game.movesSan.length) continue
+    const line = game.movesSan.slice(0, diff.inBookPlies)
+    const next = game.movesSan[diff.inBookPlies]
+    const key = [...line, next].join(' ')
+    const gap = gaps.get(key) ?? { line, next, games: 0 }
+    gap.games++
+    gaps.set(key, gap)
+  }
+  return [...gaps.values()].sort((a, b) => b.games - a.games).slice(0, limit)
 }

@@ -31,6 +31,7 @@ import { allMateProblems, getMateProblem } from '@/lib/puzzleSet'
 import { OPENING_LESSONS, countGamesReachingLine } from '@/lib/openingTheory'
 import { buildPositions, isStandardChess, startsFromStandardPosition } from '@/lib/positions'
 import { plyLabel } from '@/lib/san'
+import { findRepertoireGaps } from '@/lib/repertoire'
 import { isSyncStale, listPendingArchives, syncArchive } from '@/lib/sync'
 import { describeBlunderReason } from '@/lib/tactics'
 import {
@@ -64,6 +65,7 @@ import type {
   OpeningFamily,
   PositionEval,
   RepertoireColor,
+  RepertoireGap,
   RepertoireNode,
   UnanalyzedGame,
 } from '@/lib/types'
@@ -230,6 +232,15 @@ export async function exportDatabaseBackup(): Promise<
 
 export async function listRepertoire(color: RepertoireColor): Promise<RepertoireNode[]> {
   return getRepository().listRepertoireNodes(color)
+}
+
+export async function getRepertoireGaps(color: RepertoireColor): Promise<RepertoireGap[]> {
+  if (color !== 'white' && color !== 'black') return []
+  const [games, nodes] = await Promise.all([
+    cachedStandardStartGames(),
+    getRepository().listRepertoireNodes(color),
+  ])
+  return findRepertoireGaps(games, color, nodes)
 }
 
 export async function addRepertoireMove(node: RepertoireNode): Promise<ActionResult> {

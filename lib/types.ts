@@ -212,6 +212,15 @@ export interface ChecklistFinding {
   reason: BlunderReason
 }
 
+/** A spot where games left the repertoire tree without a deviation (`findRepertoireGaps()`). */
+export interface RepertoireGap {
+  /** The moves still in the tree, from the start. */
+  line: string[]
+  /** What was played next, with nothing in the tree for it. */
+  next: string
+  games: number
+}
+
 /** 'punish': the opponent just blundered and the user's reply let it go. */
 export type DrillSourceType = 'deviation' | 'blunder' | 'punish'
 

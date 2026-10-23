@@ -439,6 +439,10 @@ const en = {
     helpP2: `Drag, or click a piece then a destination, to record your prep. Playing a move that's already in the tree just navigates into it; a new move adds a branch. Multiple branches from the same position are fine — that's how you prepare for more than one opponent try.`,
     noMovesYet:
       'No moves recorded yet — drag a piece on the board to start building this repertoire.',
+    gapsTitle: 'Where your games leave your prep',
+    gapsTooltip:
+      'The lines your games most often played past the end of this tree (or an opponent move it has no answer for). Click one to jump to where the next move would go.',
+    gapGames: (n: number) => `${n} ${n === 1 ? 'game' : 'games'}`,
   },
   gamesPage: {
     title: 'Games',
@@ -1026,6 +1030,10 @@ const es: Strings = {
       'Arrastra, o haz clic en una pieza y luego en un destino, para registrar tu preparación. Jugar una jugada que ya está en el árbol simplemente navega hacia ella; una jugada nueva agrega una rama. Tener varias ramas desde la misma posición está bien — así te preparas para más de una posible respuesta del rival.',
     noMovesYet:
       'Aún no hay jugadas registradas — arrastra una pieza en el tablero para empezar a construir este repertorio.',
+    gapsTitle: 'Dónde tus partidas salen de tu preparación',
+    gapsTooltip:
+      'Las líneas en las que tus partidas más a menudo siguieron más allá del final de este árbol (o una jugada del rival a la que no tiene respuesta). Haz clic en una para ir a donde iría la siguiente jugada.',
+    gapGames: (n: number) => `${n} ${n === 1 ? 'partida' : 'partidas'}`,
   },
   gamesPage: {
     title: 'Partidas',
