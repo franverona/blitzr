@@ -72,6 +72,10 @@ function cp(value: number): PositionEval {
   return { cp: value, mate: null, bestMove: null }
 }
 
+function withBest(evaluation: PositionEval): PositionEval {
+  return { ...evaluation, bestMove: { from: 'a1', to: 'a2', san: 'Ra2', bestLine: [] } }
+}
+
 describe('findDeviationCandidates', () => {
   it('flags a game that deviates from the repertoire', () => {
     const e4 = node({ id: 'e4', ply: 1, moveSan: 'e4' })
@@ -115,7 +119,7 @@ describe('findBlunderCandidates', () => {
     const game = makeGame({ movesSan: ['e4', 'Nf6??', 'Qh5??'], myColor: 'white' })
     // ply 1 (white e4): fine. ply 2 (black Nf6??): blunder, but the opponent's.
     // ply 3 (white Qh5??): blunder, and it's mine — only this one should count.
-    const evals = [cp(0), cp(10), cp(250), cp(-50)]
+    const evals = [cp(0), withBest(cp(10)), withBest(cp(250)), cp(-50)]
     const analysesByGameId = new Map<string, GameAnalysis>([
       ['g1', { gameId: 'g1', evals, analyzedAt: '' }],
     ])
@@ -123,6 +127,15 @@ describe('findBlunderCandidates', () => {
     expect(findBlunderCandidates([game], analysesByGameId)).toEqual([
       { gameId: 'g1', sourceType: 'blunder', ply: 3 },
     ])
+  })
+
+  it('skips blunders with no saved best move, which buildDrillPrompt() could not show', () => {
+    const game = makeGame({ movesSan: ['e4', 'e5', 'Qh5??'], myColor: 'white' })
+    const evals = [cp(0), cp(10), cp(20), cp(-300)]
+    const analysesByGameId = new Map<string, GameAnalysis>([
+      ['g1', { gameId: 'g1', evals, analyzedAt: '' }],
+    ])
+    expect(findBlunderCandidates([game], analysesByGameId)).toEqual([])
   })
 
   it('skips games without saved analysis', () => {
