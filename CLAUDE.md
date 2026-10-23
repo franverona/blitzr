@@ -342,7 +342,9 @@ it) and shows as a clearable chip. The auto-advance checkbox lives on the page, 
 
 `buildBlunderStats()` and `buildAccuracyTrend()` are pure aggregations merged by
 `getBlunderStats()`, which applies the `?from=&to=` date range (local calendar days) to every
-section. The trend chart's x-axis is game index, not date, because sessions are bursty.
+section. The trend chart's x-axis is game index, not date, because sessions are bursty. `byReason`
+runs `detectBlunderReason()` on every own blunder (the worst list only on its top 10), so it's as
+narrow as that detector: most blunders land in "no simple pattern".
 
 ## Today
 

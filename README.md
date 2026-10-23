@@ -213,7 +213,8 @@ which moves count as blunders, so its blunder cards (and their review history) m
 
 ### Blunders
 
-`/blunders` aggregates your blunders across analyzed games by opening family and by piece, with a top-10
+`/blunders` aggregates your blunders across analyzed games by opening family, by piece and by tactic (hanging piece, fork,
+pin, skewer, or no simple pattern), with a top-10
 worst list and an accuracy trend (per-game dots plus a 10-game rolling average). A date range
 filter scopes the whole page.
 
