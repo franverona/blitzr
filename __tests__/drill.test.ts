@@ -99,6 +99,26 @@ describe('findDeviationCandidates', () => {
     ])
   })
 
+  it('keeps the card on the game that already has it when an older game joins', () => {
+    const e4 = node({ id: 'e4', ply: 1, moveSan: 'e4' })
+    const repertoireByColor = new Map<RepertoireColor, RepertoireNode[]>([['white', [e4]]])
+    const games = [
+      makeGame({ id: 'owner', movesSan: ['d4', 'd5'], endTime: 200 }),
+      makeGame({ id: 'pasted-older', movesSan: ['c4', 'e5'], endTime: 100 }),
+    ]
+    const card = {
+      gameId: 'owner',
+      sourceType: 'deviation' as const,
+      ply: 1,
+      ...newCardSchedule(new Date(0)),
+      createdAt: '',
+    }
+
+    expect(findDeviationCandidates(games, repertoireByColor, [card])).toEqual([
+      { gameId: 'owner', sourceType: 'deviation', ply: 1 },
+    ])
+  })
+
   it('skips games with no repertoire for their color, and games fully in book', () => {
     const inBook = makeGame({ id: 'in-book', movesSan: ['e4', 'e5'] })
     const noRepertoire = makeGame({ id: 'no-rep', myColor: 'black' })

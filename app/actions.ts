@@ -341,7 +341,7 @@ async function reconcileDrillCards() {
   const analysesByGameId = new Map(analyses.map((a) => [a.gameId, a]))
 
   const candidates: DrillCandidate[] = [
-    ...findDeviationCandidates(standardStartGames, repertoireByColor),
+    ...findDeviationCandidates(standardStartGames, repertoireByColor, existingCards),
     ...findBlunderCandidates(games, analysesByGameId),
   ]
   const now = new Date()
