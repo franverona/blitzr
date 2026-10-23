@@ -51,10 +51,13 @@ jobs:
 
       - run: pnpm build
 
-      # Catches runtime crashes the build misses, against an empty database.
+      # Catches runtime crashes the build misses, against an empty database. Pages stream through
+      # loading.tsx, so one that throws still answers 200, and error.tsx only renders in the browser:
+      # the server log is what shows the error.
       - name: Smoke test
         run: |
-          pnpm start -p 9878 &
+          log="$RUNNER_TEMP/server.log"
+          pnpm start -p 9878 > "$log" 2>&1 &
           curl -fsS -o /dev/null --retry 30 --retry-connrefused --retry-delay 1 http://127.0.0.1:9878/
           for route in / /games /openings /learn /settings /repertoire /drill /blunders /puzzles /puzzles/1; do
             curl -fsS -o /dev/null "http://127.0.0.1:9878$route" || { echo "::error::$route failed"; exit 1; }
@@ -80,3 +83,8 @@ jobs:
           check /games/smoke smoke-black
           check /learn/sicilian-defense 'Sicilian Defense'
           check /learn/king-and-rook-vs-king 'King and Rook vs. King'
+          # Next logs a server-side render or action error as "⨯ …", even when the page recovers.
+          if grep -F '⨯' "$log"; then
+            echo "::error::the server logged errors (above)"
+            exit 1
+          fi
