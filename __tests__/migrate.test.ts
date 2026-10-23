@@ -15,7 +15,9 @@ async function freshEnsureSchema() {
   return (await import('@/lib/db/sqlite/migrate')).ensureSchema
 }
 
-describe('ensureSchema', () => {
+// These write real files (VACUUM INTO). They usually take ~50ms, but on a busy CI runner the disk
+// has stalled them past 30s, so the timeout only guards against a real hang.
+describe('ensureSchema', { timeout: 60_000 }, () => {
   it('copies an existing database before altering it', async () => {
     const raw = new Database(path.join(dir, 'blitzr.db'))
     // A games table from before is_mine (only the columns the indexes need).
