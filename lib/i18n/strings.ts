@@ -362,6 +362,7 @@ const en = {
   drill: {
     hint: '💡 Hint',
     correct: 'Correct!',
+    correctWithHelp: 'Correct, with help — it comes back tomorrow.',
     notQuite: (moves: string) => `Not quite — the move was ${moves}.`,
     alsoGood: (moves: string) => `Good move too — the engine preferred ${moves}.`,
     checkingMove: 'Checking your move…',
@@ -938,6 +939,7 @@ const es: Strings = {
   drill: {
     hint: '💡 Pista',
     correct: '¡Correcto!',
+    correctWithHelp: 'Correcto, con ayuda — vuelve mañana.',
     notQuite: (moves: string) => `No exactamente — la jugada era ${moves}.`,
     alsoGood: (moves: string) => `También es buena — el motor prefería ${moves}.`,
     checkingMove: 'Comprobando tu jugada…',
