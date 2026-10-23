@@ -70,6 +70,9 @@ components/
   Badge.tsx / IconButton.tsx / ErrorText.tsx / Spinner.tsx  # small shared primitives
   Toast.tsx                 # <Toaster />: react-hot-toast rendered with our own classes
   styles.ts                 # class helpers: buttonClass(), chipClass(), navButtonClass(), tones
+  Sidebar.tsx               # collapsible nav (blitzr-sidebar-collapsed cookie)
+  PositionActions.tsx       # copy FEN / PGN, open in Lichess, under the game page's nav
+  PromotionPicker.tsx       # piece picker shared by puzzles, drills and explore mode
   ...                       # smaller presentational components
 lib/
   types.ts                  # domain types (camelCase)
@@ -91,6 +94,13 @@ lib/
   sync.ts                   # listPendingArchives(), syncArchive()
   validate.ts               # checks on Server Action payloads the client builds
   dataDir.ts                # dataDir(): BLITZR_DATA_DIR or ./data, shared with scripts/
+  today.ts                  # Today's pure parts: streak, recent results, repertoire rate, lesson
+  san.ts                    # SAN helpers: piece names, move labels, plain-English moves
+  gameEnd.ts                # gameEndBadges()
+  share.ts                  # linePgn(), lichessAnalysisUrl()
+  dates.ts / config.ts      # date formatting and bounds; CHESSCOM_USERNAME
+  material.ts / legalMoves.ts / moveSound.ts  # material balance, a square's moves, which sound
+  localHost.ts              # isLoopbackHost(), for proxy.ts
   i18n/                     # locale + string dictionary
   chesscom/                 # API client + normalization
   stockfish/                # UCI wrapper + batch analysis
@@ -103,7 +113,7 @@ scripts/
   check-defenses.mjs        # re-checks lib/lichessDefenses.json with native Stockfish
   stockfish.mjs             # native Stockfish pool for the two scripts above
   import-polgar-mates.mjs   # polgar.pgn -> data/polgar-mates.json, local only (re-runnable)
-proxy.ts                    # 403 unless Host is localhost/127.0.0.1/[::1] (isLoopbackHost(), lib/localHost.ts)
+proxy.ts                    # 403 unless Host is localhost/127.0.0.1/[::1]
 ```
 
 `data/blitzr.db`, `data/backups/` and `public/stockfish/` are created at install/runtime and gitignored.
