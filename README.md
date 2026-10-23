@@ -260,6 +260,8 @@ Copying `data/polgar-mates.json` to another machine works too.
 ## Data hygiene
 
 - Your username lives in `.env.local`, never in code. The API is public, so there's no secret.
+- Blitzr answers only requests addressed to `localhost`, `127.0.0.1` or `[::1]` (`proxy.ts`), so a
+  web page can't reach it through DNS rebinding. Open it by one of those names.
 - `data/*.db`, `data/backups/` and `public/stockfish/` (~7MB, copied from `node_modules` on install) are
   gitignored.
 

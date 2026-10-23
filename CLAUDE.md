@@ -103,6 +103,7 @@ scripts/
   check-defenses.mjs        # re-checks lib/lichessDefenses.json with native Stockfish
   stockfish.mjs             # native Stockfish pool for the two scripts above
   import-polgar-mates.mjs   # polgar.pgn -> data/polgar-mates.json, local only (re-runnable)
+proxy.ts                    # 403 unless Host is localhost/127.0.0.1/[::1] (isLoopbackHost(), lib/localHost.ts)
 ```
 
 `data/blitzr.db`, `data/backups/` and `public/stockfish/` are created at install/runtime and gitignored.
@@ -118,7 +119,9 @@ backups and `polgar-mates.json` elsewhere. The `data/` paths below assume the de
   endpoints, so an action storing a client-built payload checks it first (`lib/validate.ts`):
   `saveGameAnalysis()` wants one well-formed eval per position, and `addRepertoireMove()` replays
   the move from its parent and stores the server's own SAN/FEN. `submitDrillAnswer()` and `markPuzzleSolved()` reject
-  malformed keys or unknown puzzle ids.
+  malformed keys or unknown puzzle ids. With no auth, they rely on both servers binding
+  `127.0.0.1` and on `proxy.ts` rejecting any other `Host` (DNS rebinding sends a matching `Origin`,
+  which Next's CSRF check accepts). Hosting it anywhere (#168) means changing both.
 - **Domain types are camelCase** (`lib/types.ts`), **DB columns snake_case** (`lib/db/types.ts`);
   the repository maps between them. Never leak snake_case past it.
 - **Migrations** run idempotently in `ensureSchema()` (`lib/db/sqlite/migrate.ts`) — no version
