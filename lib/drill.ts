@@ -251,6 +251,16 @@ export function scheduleReview(
     easeFactor = Math.max(MIN_EASE_FACTOR, easeFactor - 0.2)
   }
 
-  const dueAt = new Date(now.getTime() + intervalDays * 24 * 60 * 60 * 1000).toISOString()
-  return { dueAt, intervalDays, easeFactor, repetitions, lastReviewedAt: now.toISOString() }
+  // Due from the start of that local day, so a card missed in the evening is in the
+  // next morning's session ("tomorrow") rather than 24 hours later.
+  const due = new Date(now)
+  due.setDate(due.getDate() + intervalDays)
+  due.setHours(0, 0, 0, 0)
+  return {
+    dueAt: due.toISOString(),
+    intervalDays,
+    easeFactor,
+    repetitions,
+    lastReviewedAt: now.toISOString(),
+  }
 }
