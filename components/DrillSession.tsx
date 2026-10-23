@@ -21,7 +21,8 @@ import { PlayerAvatar } from './PlayerAvatar'
 import { PromotionPicker, type PromotionPiece } from './PromotionPicker'
 import { buttonClass, LINK_CLASS } from './styles'
 
-type Feedback = 'correct' | 'alternative' | 'incorrect' | null
+// 'helped': right move, but after the hint showed its square, so it's scheduled as a miss.
+type Feedback = 'correct' | 'alternative' | 'helped' | 'incorrect' | null
 
 interface DrillAnswer {
   gameId: string
@@ -313,8 +314,9 @@ function DrillDeck({
     grade(move, accepted ? 'alternative' : 'incorrect')
   }
 
-  function grade(move: Move, result: Exclude<Feedback, null>) {
-    const correct = result !== 'incorrect'
+  function grade(move: Move, graded: 'correct' | 'alternative' | 'incorrect') {
+    const result = graded !== 'incorrect' && hintLevel >= 2 ? 'helped' : graded
+    const correct = result === 'correct' || result === 'alternative'
     setFeedback(result)
     setCommittedFen(move.after)
     setHangingReason(
@@ -469,13 +471,15 @@ function DrillDeck({
         {feedback && (
           <>
             <p
-              className={`text-sm ${feedback === 'incorrect' ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}
+              className={`text-sm ${feedback === 'incorrect' ? 'text-rose-600 dark:text-rose-400' : feedback === 'helped' ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}
             >
               {feedback === 'correct'
                 ? s.drill.correct
                 : feedback === 'alternative'
                   ? s.drill.alsoGood(prompt.correctMoves.join(` ${s.drill.or} `))
-                  : s.drill.notQuite(prompt.correctMoves.join(` ${s.drill.or} `))}
+                  : feedback === 'helped'
+                    ? s.drill.correctWithHelp
+                    : s.drill.notQuite(prompt.correctMoves.join(` ${s.drill.or} `))}
             </p>
             {hangingReason && (
               <p className="text-sm text-amber-600 dark:text-amber-400">

@@ -297,7 +297,8 @@ and the slider are debounced (400ms); selects navigate immediately.
 
 ## Drilling
 
-`drill_cards` stores only the SM-2 schedule (binary grading); prompts are re-derived by
+`drill_cards` stores only the SM-2 schedule (binary grading; a right answer after the hint shows
+the move's square counts as wrong); prompts are re-derived by
 `buildDrillPrompt()` from deviations and own-move blunders. Deviations are one card per position
 (the oldest game that left the tree there), not per game; a blunder whose best move repeats the
 previous own ply's (same piece left en prise) is folded into that first card. The deck re-syncs on every `/drill` load
