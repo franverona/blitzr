@@ -4,6 +4,7 @@ import { formatDate } from './dates'
 import { whiteToMove } from './drill'
 import { getLocale } from './i18n/locale'
 import type { Locale } from './i18n/locale'
+import { gamePhase, type GamePhase } from './material'
 import { ecoFamilyLabel, unknownOpeningLabel } from './openings'
 import { buildPositions } from './positions'
 import { describeMove, pieceName, splitSanPiece } from './san'
@@ -81,6 +82,11 @@ const REASON_LABELS: Record<Locale, Record<BlunderReason['kind'] | 'none', strin
     none: 'Sin patrón simple',
   },
 }
+const PHASE_LABELS: Record<Locale, Record<GamePhase, string>> = {
+  en: { opening: 'Opening', middlegame: 'Middlegame', endgame: 'Endgame' },
+  es: { opening: 'Apertura', middlegame: 'Medio juego', endgame: 'Final' },
+}
+const PHASE_ORDER: GamePhase[] = ['opening', 'middlegame', 'endgame']
 
 /**
  * Cross-game aggregate of the user's own blunders over analyzed games. The
@@ -94,6 +100,7 @@ export function buildBlunderStats(
   const byOpening = new Map<string, GroupAcc>()
   const byPiece = new Map<string, GroupAcc>()
   const byReason = new Map<string, GroupAcc>()
+  const byPhase = new Map<string, GroupAcc>()
   const worst: BlunderCandidate[] = []
   let analyzedGames = 0
   let totalBlunders = 0
@@ -129,6 +136,8 @@ export function buildBlunderStats(
           ?.kind ?? 'none'
       const reasonLabel = REASON_LABELS[locale][reasonKind]
       accumulate(byReason, reasonKind, reasonLabel, blunder.swingCp, isMateSwing)
+      const phase = gamePhase(positions[blunder.ply - 1], blunder.ply)
+      accumulate(byPhase, phase, PHASE_LABELS[locale][phase], blunder.swingCp, isMateSwing)
 
       worst.push({
         gameId: game.id,
@@ -180,6 +189,10 @@ export function buildBlunderStats(
     byOpening: toGroupStats(byOpening),
     byPiece: toGroupStats(byPiece),
     byReason: toGroupStats(byReason),
+    // Game order, not count order: the point is where in the game they happen.
+    byPhase: toGroupStats(byPhase).sort(
+      (a, b) => PHASE_ORDER.indexOf(a.key as GamePhase) - PHASE_ORDER.indexOf(b.key as GamePhase),
+    ),
     worst: topWorst,
   }
 }

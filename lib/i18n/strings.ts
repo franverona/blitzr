@@ -190,6 +190,9 @@ const en = {
     byOpening: 'By opening',
     byPiece: 'By piece',
     byReason: 'By tactic',
+    byPhase: 'By game phase',
+    byPhaseTooltip:
+      'Endgame: at most 6 queens, rooks, bishops and knights left on the board. Before that, the first 10 moves count as the opening.',
     worstBlunders: 'Worst blunders',
     avgSwing: 'Avg swing',
     avgSwingTooltip: 'How many pawns worse the position got, on average, across these blunders',
@@ -774,6 +777,9 @@ const es: Strings = {
     byOpening: 'Por apertura',
     byPiece: 'Por pieza',
     byReason: 'Por táctica',
+    byPhase: 'Por fase de la partida',
+    byPhaseTooltip:
+      'Final: como mucho 6 damas, torres, alfiles y caballos en el tablero. Antes, las primeras 10 jugadas cuentan como apertura.',
     worstBlunders: 'Peores errores',
     avgSwing: 'Diferencia media',
     avgSwingTooltip: 'Cuántos peones peoró la posición, en promedio, a lo largo de estos errores',
