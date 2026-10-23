@@ -419,7 +419,7 @@ smoke-tests `pnpm start`: the main routes must return 2xx against an empty datab
 ## Running
 
 ```bash
-pnpm dev                          # development
+pnpm dev                          # development, localhost only like start
 pnpm build && pnpm start -p 9877  # production, localhost only (pm2 manages this, see README)
 ```
 
