@@ -90,7 +90,22 @@ jobs:
           fi
 
       # Nothing else runs scripts/: they import lib/*.ts through Node's type stripping, which tsc
-      # doesn't hold them to. The smoke test left a database with one game to back up.
+      # doesn't hold them to (an enum, a parameter property, an import without .ts). The import
+      # scripts need the Lichess dump, so just load every lib/ file a script imports.
+      - name: Script imports
+        run: |
+          node --input-type=module -e "
+            import { readdirSync, readFileSync } from 'node:fs'
+            const files = new Set()
+            for (const f of readdirSync('scripts')) {
+              for (const [, lib] of readFileSync('scripts/' + f, 'utf8').matchAll(/from '\\.\\.\\/(lib\\/[^']+)'/g)) files.add(lib)
+            }
+            if (files.size === 0) throw new Error('no lib/ imports found in scripts/')
+            for (const lib of files) await import('./' + lib)
+            console.log([...files].join('\\n'))
+          "
+
+      # The smoke test left a database with one game to back up.
       - name: Backup script
         run: |
           pnpm backup
