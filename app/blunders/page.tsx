@@ -4,6 +4,7 @@ import { BlunderStats } from '@/components/BlunderStats'
 import { DateRangeFilter } from '@/components/DateRangeFilter'
 import { getStrings } from '@/lib/i18n/strings'
 import { PageHeader } from '@/components/PageHeader'
+import { ThrownWins } from '@/components/ThrownWins'
 
 export default async function BlundersPage({
   searchParams,
@@ -29,6 +30,9 @@ export default async function BlundersPage({
 
       {/* Outside BlunderStats' early returns: a clean stretch still has a trend. */}
       <AccuracyTrendChart points={stats.trend} />
+
+      {/* Also outside: a game can be thrown without a blunder (on time, say). */}
+      <ThrownWins wins={stats.thrownWins} analyzedGames={stats.analyzedGames} />
 
       <BlunderStats stats={stats} />
     </div>

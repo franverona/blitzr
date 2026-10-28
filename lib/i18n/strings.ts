@@ -217,6 +217,18 @@ const en = {
     avgSwing: 'Avg swing',
     avgSwingTooltip: 'How many pawns worse the position got, on average, across these blunders',
   },
+  thrownWins: {
+    title: 'Won positions not won',
+    tooltip: (pct: number) =>
+      `Games you drew or lost after your winning chances reached ${pct}% (the eval bar), linked to your best position`,
+    summary: (thrown: number, analyzed: number) =>
+      thrown === 0
+        ? `None of your ${analyzed} analyzed ${analyzed === 1 ? 'game' : 'games'} — every winning position was won.`
+        : `${thrown} of your ${analyzed} analyzed ${analyzed === 1 ? 'game' : 'games'} reached a winning position and still slipped away.`,
+    peak: (evaluation: string, move: string | null) =>
+      move ? `Peaked at ${evaluation} after ${move}` : `Peaked at ${evaluation} from the start`,
+    result: { draw: 'Drawn', loss: 'Lost' },
+  },
   evalHelp: {
     summary: 'How to read this',
     entries: [
@@ -837,6 +849,18 @@ const es: Strings = {
     worstBlunders: 'Peores errores',
     avgSwing: 'Diferencia media',
     avgSwingTooltip: 'Cuántos peones peoró la posición, en promedio, a lo largo de estos errores',
+  },
+  thrownWins: {
+    title: 'Posiciones ganadas sin ganar',
+    tooltip: (pct: number) =>
+      `Partidas que empataste o perdiste después de que tus opciones de ganar llegaran al ${pct}% (la barra de evaluación), enlazadas a tu mejor posición`,
+    summary: (thrown: number, analyzed: number) =>
+      thrown === 0
+        ? `Ninguna de tus ${analyzed} ${analyzed === 1 ? 'partida analizada' : 'partidas analizadas'} — ganaste cada posición ganadora.`
+        : `${thrown} de tus ${analyzed} ${analyzed === 1 ? 'partida analizada' : 'partidas analizadas'} llegaron a una posición ganadora y aun así se escaparon.`,
+    peak: (evaluation: string, move: string | null) =>
+      move ? `Máximo de ${evaluation} tras ${move}` : `Máximo de ${evaluation} desde el inicio`,
+    result: { draw: 'Tablas', loss: 'Derrota' },
   },
   evalHelp: {
     summary: 'Cómo interpretar esto',

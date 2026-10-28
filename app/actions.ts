@@ -37,6 +37,7 @@ import { plyLabel } from '@/lib/san'
 import { findRepertoireGaps } from '@/lib/repertoire'
 import { isSyncStale, listPendingArchives, syncArchive } from '@/lib/sync'
 import { describeBlunderReason } from '@/lib/tactics'
+import { findThrownWins } from '@/lib/thrownWins'
 import {
   drillStreak,
   drillWeek,
@@ -138,6 +139,7 @@ export async function getBlunderStats(filters?: {
   return {
     ...buildBlunderStats(games, analysesByGameId),
     trend: buildAccuracyTrend(games, analysesByGameId),
+    thrownWins: findThrownWins(games, analysesByGameId),
   }
 }
 

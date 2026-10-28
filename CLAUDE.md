@@ -68,6 +68,7 @@ components/
   GameSearchForm.tsx        # games list filters
   DateRangeFilter.tsx       # /blunders date range
   AccuracyTrendChart.tsx    # hand-rolled SVG chart on /blunders
+  ThrownWins.tsx            # /blunders: drawn or lost games that reached a winning position
   BoardCoordinates.tsx      # rank/file labels outside the board
   Select.tsx                # native <select> + chevron — use for every dropdown
   Dialog.tsx                # modal shell: title, ✕, backdrop click, aria-labelledby
@@ -87,7 +88,7 @@ lib/
   tactics.ts / hangingPiece.ts  # tactical detectors and their descriptions
   checklist.ts              # static per-position tactic scan
   drill.ts                  # drill candidates, card hydration, SM-2
-  blunders.ts / accuracyTrend.ts / openings.ts  # pure aggregations
+  blunders.ts / accuracyTrend.ts / openings.ts / thrownWins.ts  # pure aggregations
   repertoire.ts             # diffGameAgainstRepertoire()
   positions.ts              # buildPositions(), isStandardChess()
   openingTheory.ts / endgameTheory.ts  # hand-authored lessons
@@ -363,14 +364,17 @@ it) and shows as a clearable chip. The auto-advance checkbox lives on the page, 
 
 ## Blunders page
 
-`buildBlunderStats()` and `buildAccuracyTrend()` are pure aggregations merged by
+`buildBlunderStats()`, `buildAccuracyTrend()` and `findThrownWins()` are pure aggregations merged by
 `getBlunderStats()`, which applies the `?from=&to=` date range (local calendar days) to every
 section. The trend chart's x-axis is game index, not date, because sessions are bursty. `byReason`
 runs `detectBlunderReason()` on every own blunder (the worst list only on its top 10), so it's as
 narrow as that detector: most blunders land in "no simple pattern". `byPhase`
 uses `gamePhase()` (`lib/material.ts`): an endgame once at most 6 queens, rooks and minor pieces
 are left (Lichess's divider count), else the first 10 moves (the FEN's fullmove number, so a game
-from a FEN counts from there) are the opening; listed in game order.
+from a FEN counts from there) are the opening; listed in game order. `findThrownWins()`
+(`lib/thrownWins.ts`) lists drawn or lost games whose own win chance (`evalBarPercent()`) peaked at
+90%+, linking to that position; it renders outside `BlunderStats`' early returns, since a game can be
+thrown without a blunder.
 
 ## Today
 
