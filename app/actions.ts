@@ -604,7 +604,8 @@ export async function getTodaySummary(): Promise<{
   const last = newestFirst[0]
   const solvedIds = new Set(solved)
   const problems = allMateProblems()
-  // A revealed puzzle not solved since comes back first, oldest reveal first.
+  // A revealed puzzle never solved comes back first, oldest reveal first. Both tables keep their
+  // first timestamp, so revealing an already-solved puzzle doesn't queue it.
   const retryId = revealed.find((id) => !solvedIds.has(id) && getMateProblem(id))
   const syncedAts = syncStatus.map((a) => a.syncedAt).sort()
 
