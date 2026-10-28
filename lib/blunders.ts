@@ -96,7 +96,7 @@ export function buildBlunderStats(
   games: Game[],
   analysesByGameId: Map<string, GameAnalysis>,
   locale: Locale = getLocale(),
-): Omit<BlunderStats, 'trend'> {
+): Omit<BlunderStats, 'trend' | 'thrownWins'> {
   const byOpening = new Map<string, GroupAcc>()
   const byPiece = new Map<string, GroupAcc>()
   const byReason = new Map<string, GroupAcc>()

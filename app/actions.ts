@@ -16,10 +16,13 @@ import {
   buildDrillPrompt,
   findBlunderCandidates,
   dueDrillCards,
+  filterDrillCards,
   findDeviationCandidates,
+  findMissedMateCandidates,
   findPunishCandidates,
   reconcileDrillDeck,
   scheduleReview,
+  troubleCards,
   getSessionSize,
   selectSessionCards,
 } from '@/lib/drill'
@@ -34,6 +37,7 @@ import { plyLabel } from '@/lib/san'
 import { findRepertoireGaps } from '@/lib/repertoire'
 import { isSyncStale, listPendingArchives, syncArchive } from '@/lib/sync'
 import { describeBlunderReason } from '@/lib/tactics'
+import { findThrownWins } from '@/lib/thrownWins'
 import {
   drillStreak,
   drillWeek,
@@ -135,6 +139,7 @@ export async function getBlunderStats(filters?: {
   return {
     ...buildBlunderStats(games, analysesByGameId),
     trend: buildAccuracyTrend(games, analysesByGameId),
+    thrownWins: findThrownWins(games, analysesByGameId),
   }
 }
 
@@ -377,6 +382,7 @@ async function reconcileDrillCards() {
     ...findDeviationCandidates(standardStartGames, repertoireByColor, existingCards),
     ...findBlunderCandidates(games, analysesByGameId),
     ...findPunishCandidates(games, analysesByGameId),
+    ...findMissedMateCandidates(games, analysesByGameId),
   ]
   const now = new Date()
   const { live: liveCards, stale, added } = reconcileDrillDeck(existingCards, candidates, now)
@@ -400,14 +406,17 @@ export async function getDrillDeck(filters?: {
   prompts: DrillPrompt[]
   totalCards: number
   dueCount: number
+  /** `troubleCards()` under the same filters, due or not. */
+  troubles: DrillPrompt[]
 }> {
   const { liveCards, gamesById, repertoireByColor, analysesByGameId, now } =
     await reconcileDrillCards()
 
-  const filteredDue = dueDrillCards(liveCards, now, filters, (gameId) => {
+  const openingOf = (gameId: string) => {
     const game = gamesById.get(gameId)
     return game && openingLabel(game)
-  })
+  }
+  const filteredDue = dueDrillCards(liveCards, now, filters, openingOf)
   const sessionSize = getSessionSize((await cookies()).get('blitzr-drill-session-size')?.value)
   const sessionCards = selectSessionCards(filteredDue, sessionSize)
 
@@ -431,10 +440,18 @@ export async function getDrillDeck(filters?: {
     opponentAvatarUrl: avatarByUsername.get(p.opponentUsername) ?? null,
   }))
 
+  const troubles = troubleCards(filterDrillCards(liveCards, filters, openingOf))
+    .map((card) => {
+      const game = gamesById.get(card.gameId)
+      return game ? buildDrillPrompt(card, game, repertoireByColor, analysesByGameId) : null
+    })
+    .filter((p): p is DrillPrompt => p !== null)
+
   return {
     prompts,
     totalCards: liveCards.length,
     dueCount: filteredDue.length,
+    troubles,
   }
 }
 
@@ -516,6 +533,7 @@ export async function getTodaySummary(): Promise<{
     dueDeviations: number
     dueBlunders: number
     duePunishes: number
+    dueMates: number
     sessionSize: number
     streak: number
     /** Last 7 days, oldest first; the last entry is today. */
@@ -617,6 +635,7 @@ export async function getTodaySummary(): Promise<{
       dueDeviations: due.filter((c) => c.sourceType === 'deviation').length,
       dueBlunders: due.filter((c) => c.sourceType === 'blunder').length,
       duePunishes: due.filter((c) => c.sourceType === 'punish').length,
+      dueMates: due.filter((c) => c.sourceType === 'mate').length,
       sessionSize: getSessionSize((await cookies()).get('blitzr-drill-session-size')?.value),
       streak: drillStreak(reviewDays, now),
       week: drillWeek(reviewDays, now),

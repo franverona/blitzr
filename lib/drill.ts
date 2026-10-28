@@ -118,6 +118,46 @@ export function findPunishCandidates(
   return candidates
 }
 
+/** Longest forced mate a missed-mate card asks for. */
+export const MISSED_MATE_MAX_MOVES = 3
+
+/** Whether `evaluation` (White's perspective) is a forced mate for the side that just moved. */
+export function keepsForcedMate(whiteMoved: boolean, evaluation: PositionEval): boolean {
+  return evaluation.mate !== null && evaluation.mate > 0 === whiteMoved
+}
+
+/**
+ * The user's own moves that let a forced mate in `MISSED_MATE_MAX_MOVES` or fewer go. The win-%
+ * curve saturates (any mate is 99%), so a move from M2 into +8 isn't a blunder and passes as a
+ * punishment. Plies that already have a blunder or punish card are left to it.
+ */
+export function findMissedMateCandidates(
+  games: Game[],
+  analysesByGameId: Map<string, GameAnalysis>,
+): DrillCandidate[] {
+  const candidates: DrillCandidate[] = []
+  for (const game of games) {
+    if (!game.movesSan) continue
+    const analysis = analysesByGameId.get(game.id)
+    if (!analysis) continue
+    const covered = new Set([
+      ...findBlunders(analysis.evals, game.movesSan, game.initialFen).map((b) => b.ply),
+      ...findPunishCandidates([game], analysesByGameId).map((c) => c.ply),
+    ])
+    const white = game.myColor === 'white'
+    for (let ply = 1; ply <= game.movesSan.length; ply++) {
+      if (whiteToMove(ply, game.initialFen) !== white || covered.has(ply)) continue
+      const evalBefore = analysis.evals[ply - 1]
+      const evalAfter = analysis.evals[ply]
+      if (!evalBefore?.bestMove || !evalAfter || !keepsForcedMate(white, evalBefore)) continue
+      if (Math.abs(evalBefore.mate!) > MISSED_MATE_MAX_MOVES) continue
+      if (keepsForcedMate(white, evalAfter)) continue
+      candidates.push({ gameId: game.id, sourceType: 'mate', ply })
+    }
+  }
+  return candidates
+}
+
 /**
  * Re-derives a stored card's FEN and accepted moves from source data.
  * Returns null if the card no longer matches its source, so it gets pruned.
@@ -155,16 +195,20 @@ export function buildDrillPrompt(
   }
 
   const analysis = analysesByGameId.get(game.id)
-  const evalBefore =
+  const findCandidates =
     card.sourceType === 'punish'
-      ? findPunishCandidates([game], analysesByGameId).some((c) => c.ply === card.ply)
-        ? analysis?.evals[card.ply - 1]
-        : undefined
-      : analysis
-        ? findBlunders(analysis.evals, game.movesSan, game.initialFen).find(
-            (b) => b.ply === card.ply,
-          )?.evalBefore
-        : undefined
+      ? findPunishCandidates
+      : card.sourceType === 'mate'
+        ? findMissedMateCandidates
+        : null
+  const evalBefore = findCandidates
+    ? findCandidates([game], analysesByGameId).some((c) => c.ply === card.ply)
+      ? analysis?.evals[card.ply - 1]
+      : undefined
+    : analysis
+      ? findBlunders(analysis.evals, game.movesSan, game.initialFen).find((b) => b.ply === card.ply)
+          ?.evalBefore
+      : undefined
   const bestMove = evalBefore?.bestMove
   if (!evalBefore || !bestMove) return null
   return {
@@ -236,8 +280,21 @@ export function reconcileDrillDeck(
   }
 }
 
-/** Cards due by `now` that pass the /drill filters. `openingOf` returns
- *  undefined for a card whose game is gone, which fails an opening filter. */
+/** Cards that pass the /drill filters. `openingOf` returns undefined for a card whose game is
+ *  gone, which fails an opening filter. */
+export function filterDrillCards(
+  cards: DrillCard[],
+  filters: { sourceType?: DrillSourceType; opening?: string } | undefined,
+  openingOf: (gameId: string) => string | undefined,
+): DrillCard[] {
+  return cards.filter(
+    (c) =>
+      (!filters?.sourceType || c.sourceType === filters.sourceType) &&
+      (!filters?.opening || openingOf(c.gameId) === filters.opening),
+  )
+}
+
+/** Cards due by `now` that pass the /drill filters. */
 export function dueDrillCards(
   cards: DrillCard[],
   now: Date,
@@ -245,12 +302,22 @@ export function dueDrillCards(
   openingOf: (gameId: string) => string | undefined,
 ): DrillCard[] {
   const nowIso = now.toISOString()
-  return cards.filter(
-    (c) =>
-      c.dueAt <= nowIso &&
-      (!filters?.sourceType || c.sourceType === filters.sourceType) &&
-      (!filters?.opening || openingOf(c.gameId) === filters.opening),
-  )
+  return filterDrillCards(cards, filters, openingOf).filter((c) => c.dueAt <= nowIso)
+}
+
+// Below one miss (2.3) and miss-then-hit (2.4): two net misses, 2.1 or 2.2 and down.
+const TROUBLE_EASE_BELOW = 2.25
+
+/** The cards missed again and again, lowest ease first (latest review breaks ties). */
+export function troubleCards(cards: DrillCard[], max = 5): DrillCard[] {
+  return cards
+    .filter((c) => c.easeFactor < TROUBLE_EASE_BELOW)
+    .sort(
+      (a, b) =>
+        a.easeFactor - b.easeFactor ||
+        (b.lastReviewedAt ?? '').localeCompare(a.lastReviewedAt ?? ''),
+    )
+    .slice(0, max)
 }
 
 export function newCardSchedule(
