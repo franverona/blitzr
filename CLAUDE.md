@@ -56,6 +56,7 @@ components/
   MoveSequence.tsx          # SAN line rendered with piece icons
   PlanBoard.tsx             # step-through board for an engine plan
   GameAnalysisPanel.tsx     # batch Stockfish analysis + move-quality side panel
+  EvalGraph.tsx             # the eval bar across a game, inside the move-quality panel
   RepertoireBoard.tsx       # editable board that builds the repertoire tree
   DrillSession.tsx          # one drill card at a time
   PuzzleBoard.tsx           # manual, multi-ply mate-puzzle solving
