@@ -86,6 +86,8 @@ export function PuzzleBoard({
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
+      // Cmd/Alt+← is the browser's Back.
+      if (e.metaKey || e.ctrlKey || e.altKey) return
       e.preventDefault()
       if (pendingPromotion) return
       const now = Date.now()
