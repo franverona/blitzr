@@ -214,6 +214,11 @@ const en = {
     byPhaseTooltip:
       'Endgame: at most 6 queens, rooks, bishops and knights left on the board. Before that, the first 10 moves count as the opening.',
     worstBlunders: 'Worst blunders',
+    punishTitle: 'Punishing their blunders',
+    punishTooltip:
+      "Your opponents' blunders that you got a move to answer, and how often your reply was good or better — the same bar as a missed-punishment drill card",
+    punishSummary: (punished: number, chances: number, pct: number) =>
+      `You punished ${punished} of your opponents' ${chances} ${chances === 1 ? 'blunder' : 'blunders'} (${pct}%).`,
     avgSwing: 'Avg swing',
     avgSwingTooltip: 'How many pawns worse the position got, on average, across these blunders',
   },
@@ -847,6 +852,11 @@ const es: Strings = {
     byPhaseTooltip:
       'Final: como mucho 6 damas, torres, alfiles y caballos en el tablero. Antes, las primeras 10 jugadas cuentan como apertura.',
     worstBlunders: 'Peores errores',
+    punishTitle: 'Castigar sus errores',
+    punishTooltip:
+      'Los errores graves de tus rivales a los que pudiste responder, y cuántas veces tu respuesta fue buena o mejor — el mismo criterio que una tarjeta de error sin castigar',
+    punishSummary: (punished: number, chances: number, pct: number) =>
+      `Castigaste ${punished} de ${chances} ${chances === 1 ? 'error grave' : 'errores graves'} de tus rivales (${pct}%).`,
     avgSwing: 'Diferencia media',
     avgSwingTooltip: 'Cuántos peones peoró la posición, en promedio, a lo largo de estos errores',
   },

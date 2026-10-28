@@ -225,7 +225,8 @@ which moves count as blunders, so its blunder cards (and their review history) m
 
 ### Blunders
 
-`/blunders` aggregates your blunders across analyzed games by opening family, by piece, by tactic
+`/blunders` shows how often you punished your opponents' blunders, and aggregates your own
+blunders across analyzed games by opening family, by piece, by tactic
 (hanging piece, fork, pin, skewer, or no simple pattern) and by game phase (opening, middlegame,
 endgame), with a top-10 worst list (each opening its game at that move) and an accuracy trend
 (per-game dots plus a 10-game rolling average). **Won positions not won** lists the games you drew
