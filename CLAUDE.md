@@ -113,7 +113,7 @@ scripts/
   check-defenses.mjs        # re-checks lib/lichessDefenses.json with native Stockfish
   stockfish.mjs             # native Stockfish pool for the two scripts above
   import-polgar-mates.mjs   # polgar.pgn -> data/polgar-mates.json, local only (re-runnable)
-proxy.ts                    # 403 unless Host is localhost/127.0.0.1/[::1]
+proxy.ts                    # 403 unless Host is localhost/127.0.0.1/[::1]; per-request CSP nonce
 ```
 
 `data/blitzr.db`, `data/backups/` and `public/stockfish/` are created at install/runtime and gitignored.
@@ -198,8 +198,12 @@ backups and `polgar-mates.json` elsewhere. The `data/` paths below assume the de
   `showModal()`; with `onSubmit` the body is a `<form>`.
 - **react-chessboard needs a unique `options.id` (`useId()`) when two boards share a page**, and
   keys arrows by start/end square only — dedupe arrows before passing them.
-- **No page can be framed** (`X-Frame-Options: DENY` and `frame-ancestors 'none'`, `next.config.ts`):
+- **No page can be framed** (`X-Frame-Options: DENY` in `next.config.ts`, `frame-ancestors 'none'`):
   a framed page's clicks would reach Server Actions with Blitzr's own `Origin`.
+- **Content-Security-Policy** is set per request in `proxy.ts`: scripts need its nonce (Next adds
+  it to its own), so injected markup can't run script against the Server Actions. Every page is
+  already dynamic (the layout reads cookies), so the nonce costs nothing. A new external resource
+  (image, sound, script) needs adding there; inline `style` attributes are allowed.
 
 ## Database
 
