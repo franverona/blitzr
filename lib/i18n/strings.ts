@@ -307,6 +307,7 @@ const en = {
     you: 'You',
     opponent: 'Opponent',
     yourMoves: 'Your moves to review — click one to see it on the board',
+    phases: { opening: 'Opening', middlegame: 'Middlegame', endgame: 'Endgame' },
     moveQuality: {
       best: 'Best',
       excellent: 'Excellent',
@@ -904,6 +905,7 @@ const es: Strings = {
     you: 'Tú',
     opponent: 'Rival',
     yourMoves: 'Tus jugadas a revisar — pulsa una para verla en el tablero',
+    phases: { opening: 'Apertura', middlegame: 'Medio juego', endgame: 'Final' },
     moveQuality: {
       best: 'Mejor',
       excellent: 'Excelente',

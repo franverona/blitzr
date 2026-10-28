@@ -5,6 +5,7 @@ import {
   whiteToMove,
   winDropFromEqual,
 } from './analysis'
+import { gamePhase, type GamePhase } from './material'
 import type { PositionEval } from './types'
 
 export type MoveQualityTier = 'best' | 'excellent' | 'good' | 'inaccuracy' | 'mistake' | 'blunder'
@@ -50,6 +51,8 @@ export interface SideAccuracy {
   counts: MoveQualityCounts
   /** 1-indexed plies of each tier's moves, in game order. */
   plies: Record<MoveQualityTier, number[]>
+  /** Only with `positions`; null for a phase the side made no move in. */
+  byPhase?: Record<GamePhase, number | null>
 }
 
 export interface GameAccuracySummary {
@@ -71,15 +74,27 @@ function average(nums: number[]): number {
   return Math.round((nums.reduce((a, b) => a + b, 0) / nums.length) * 10) / 10
 }
 
-/** Accuracy and move-quality tally per side. */
+function averageOrNull(nums: number[]): number | null {
+  return nums.length === 0 ? null : average(nums)
+}
+
+/**
+ * Accuracy and move-quality tally per side. With `positions` (the FEN before each ply), also
+ * accuracy per `gamePhase()`; it's opt-in since building positions replays the game.
+ */
 export function summarizeMoveQuality(
   evals: PositionEval[],
   movesSan: string[],
   initialFen?: string,
+  positions?: string[],
 ): GameAccuracySummary {
   const counts = { white: emptyCounts(), black: emptyCounts() }
   const plies = { white: emptyPlies(), black: emptyPlies() }
   const perMoveAccuracy: { white: number[]; black: number[] } = { white: [], black: [] }
+  const byPhase = {
+    white: { opening: [], middlegame: [], endgame: [] } as Record<GamePhase, number[]>,
+    black: { opening: [], middlegame: [], endgame: [] } as Record<GamePhase, number[]>,
+  }
 
   for (let i = 0; i < movesSan.length; i++) {
     const before = evals[i]
@@ -91,14 +106,25 @@ export function summarizeMoveQuality(
     const winBefore = whiteMoved ? evalBarPercent(before) : 100 - evalBarPercent(before)
     const winAfter = whiteMoved ? evalBarPercent(after) : 100 - evalBarPercent(after)
 
-    perMoveAccuracy[side].push(moveAccuracy(winBefore, winAfter))
+    const accuracy = moveAccuracy(winBefore, winAfter)
+    perMoveAccuracy[side].push(accuracy)
+    if (positions?.[i]) byPhase[side][gamePhase(positions[i])].push(accuracy)
     const tier = classifyMoveQuality(moveWinDrop(before, after, whiteMoved))
     counts[side][tier]++
     plies[side][tier].push(i + 1)
   }
 
-  return {
-    white: { accuracy: average(perMoveAccuracy.white), counts: counts.white, plies: plies.white },
-    black: { accuracy: average(perMoveAccuracy.black), counts: counts.black, plies: plies.black },
-  }
+  const side = (color: 'white' | 'black'): SideAccuracy => ({
+    accuracy: average(perMoveAccuracy[color]),
+    counts: counts[color],
+    plies: plies[color],
+    ...(positions && {
+      byPhase: {
+        opening: averageOrNull(byPhase[color].opening),
+        middlegame: averageOrNull(byPhase[color].middlegame),
+        endgame: averageOrNull(byPhase[color].endgame),
+      },
+    }),
+  })
+  return { white: side('white'), black: side('black') }
 }

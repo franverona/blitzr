@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useId, useMemo, useState } from 'react'
 import { saveGameAnalysis } from '@/app/actions'
 import { getStrings } from '@/lib/i18n/strings'
+import type { GamePhase } from '@/lib/material'
 import { MOVE_QUALITY_TIERS, summarizeMoveQuality } from '@/lib/moveQuality'
 import { buildPositions } from '@/lib/positions'
 import { plyLabel } from '@/lib/san'
@@ -205,7 +206,7 @@ function MoveQualityPanel({
 
   if (!analysis) return null
 
-  const summary = summarizeMoveQuality(analysis.evals, movesSan, positions[0])
+  const summary = summarizeMoveQuality(analysis.evals, movesSan, positions[0], positions)
   const mine = myColor === 'white' ? summary.white : summary.black
   const theirs = myColor === 'white' ? summary.black : summary.white
   const badTiers = BAD_TIERS.filter((tier) => mine.plies[tier].length > 0)
@@ -261,6 +262,13 @@ function MoveQualityPanel({
             <td className="px-3 py-2 text-right">{mine.accuracy}</td>
             <td className="px-3 py-2 text-right">{theirs.accuracy}</td>
           </tr>
+          {GAME_PHASES.map((phase) => (
+            <tr key={phase} className="text-zinc-500 dark:text-zinc-400">
+              <td className="py-2 pr-3 pl-6">{s.analysisPanel.phases[phase]}</td>
+              <td className="px-3 py-2 text-right">{mine.byPhase?.[phase] ?? '—'}</td>
+              <td className="px-3 py-2 text-right">{theirs.byPhase?.[phase] ?? '—'}</td>
+            </tr>
+          ))}
           {MOVE_QUALITY_TIERS.map((tier) => (
             <tr key={tier} className="text-zinc-500 dark:text-zinc-400">
               <td className="px-3 py-2">{s.analysisPanel.moveQuality[tier]}</td>
@@ -299,3 +307,4 @@ function MoveQualityPanel({
 }
 
 const BAD_TIERS: readonly BadMoveTier[] = ['blunder', 'mistake', 'inaccuracy']
+const GAME_PHASES: readonly GamePhase[] = ['opening', 'middlegame', 'endgame']
