@@ -302,6 +302,19 @@ export interface BlunderStats {
   worst: WorstBlunder[]
   /** Oldest first, one point per analyzed game in scope. */
   trend: AccuracyTrendPoint[]
+  /** `findThrownWins()`: drawn or lost after reaching a winning position, newest first. */
+  thrownWins: ThrownWin[]
+}
+
+export interface ThrownWin {
+  gameId: string
+  gameLabel: string
+  initialFen: string
+  result: 'draw' | 'loss'
+  /** Position index (0 = start) where the user's win chance peaked; the move before it is `moveSan`. */
+  peakPly: number
+  moveSan: string | null
+  peakEval: PositionEval
 }
 
 export interface DrillPrompt {
