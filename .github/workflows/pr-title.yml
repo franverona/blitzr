@@ -19,13 +19,17 @@ jobs:
         with:
           node-version-file: .nvmrc
 
-      # Just commitlint and its config, at package.json's versions, instead of the whole project.
+      # Just commitlint and its config, instead of the whole project, at pnpm-lock.yaml's versions:
+      # package.json's ranges would take a release the minute it's published, past Dependabot's
+      # cooldown, in a required check. Their own dependencies still resolve fresh.
       - name: Install commitlint
         run: |
+          locked() { awk -v pkg="'$1':" '$1 == pkg { getline; getline; sub(/\(.*/, "", $2); print $2; exit }' pnpm-lock.yaml; }
+          cli=$(locked @commitlint/cli)
+          conventional=$(locked @commitlint/config-conventional)
+          [ -n "$cli" ] && [ -n "$conventional" ] || { echo "::error::commitlint not found in pnpm-lock.yaml"; exit 1; }
           mkdir "$RUNNER_TEMP/commitlint"
           cp commitlint.config.mjs "$RUNNER_TEMP/commitlint/"
-          cli=$(node -p "require('./package.json').devDependencies['@commitlint/cli']")
-          conventional=$(node -p "require('./package.json').devDependencies['@commitlint/config-conventional']")
           cd "$RUNNER_TEMP/commitlint"
           npm init -y > /dev/null
           npm install --no-audit --no-fund "@commitlint/cli@$cli" "@commitlint/config-conventional@$conventional"

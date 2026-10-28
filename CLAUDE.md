@@ -455,10 +455,11 @@ pnpm build
 CI (`.github/workflows/ci.yml`) runs the same five on pushes to `main` and on PRs, after
 `pnpm audit --prod` (dev tooling's advisories don't block). Then it smoke-tests `pnpm start`: the
 main routes must return 2xx against an empty database, a seeded `/games/smoke` and two lessons must
-show their content, and the server log must have no `⨯` errors (a page that throws still answers
-200, since `loading.tsx` streams). Then it loads every `lib/` file a script imports under plain Node
-(type stripping rejects enums, parameter properties and imports without `.ts`, which tsc allows),
-and `pnpm backup` backs up that database. Each push to `main` gets its own full run; a PR's newer push
+show their content, a foreign `Host` must get 403 and `/` must send `X-Frame-Options` and a CSP
+nonce, and the server log must have no `⨯` errors (a page that throws still answers 200, since
+`loading.tsx` streams). Then it loads every `lib/` file a script imports under plain Node (type
+stripping rejects enums, parameter properties and imports without `.ts`, which tsc allows), and
+`pnpm backup` backs up that database. Each push to `main` gets its own full run; a PR's newer push
 cancels its older one.
 
 ## Running
