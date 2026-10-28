@@ -306,6 +306,7 @@ const en = {
     accuracy: 'Accuracy',
     you: 'You',
     opponent: 'Opponent',
+    yourMoves: 'Your moves to review — click one to see it on the board',
     moveQuality: {
       best: 'Best',
       excellent: 'Excellent',
@@ -897,6 +898,7 @@ const es: Strings = {
     accuracy: 'Precisión',
     you: 'Tú',
     opponent: 'Rival',
+    yourMoves: 'Tus jugadas a revisar — pulsa una para verla en el tablero',
     moveQuality: {
       best: 'Mejor',
       excellent: 'Excelente',

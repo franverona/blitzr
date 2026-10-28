@@ -181,7 +181,7 @@ function GameHeader({
         {game.blackUsername}
         {game.isMine && <ResultBadge result={game.myResult} />}
       </h1>
-      {/* A div, not a <p>: MoveQualityLink renders a <dialog>. */}
+      {/* A div, not a <p>: MoveQualityLink renders an <aside>. */}
       <div className="text-xs text-zinc-500 dark:text-zinc-400">
         {formatDateTime(game.endTime)} · {timeClassLabel}
         {!game.isMine && ` · ${s.gamePage.notMine}`}

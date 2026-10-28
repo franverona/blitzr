@@ -48,6 +48,8 @@ export interface SideAccuracy {
   /** 0-100, one decimal place. */
   accuracy: number
   counts: MoveQualityCounts
+  /** 1-indexed plies of each tier's moves, in game order. */
+  plies: Record<MoveQualityTier, number[]>
 }
 
 export interface GameAccuracySummary {
@@ -57,6 +59,10 @@ export interface GameAccuracySummary {
 
 function emptyCounts(): MoveQualityCounts {
   return { best: 0, excellent: 0, good: 0, inaccuracy: 0, mistake: 0, blunder: 0 }
+}
+
+function emptyPlies(): Record<MoveQualityTier, number[]> {
+  return { best: [], excellent: [], good: [], inaccuracy: [], mistake: [], blunder: [] }
 }
 
 // No moves means nothing went wrong.
@@ -72,6 +78,7 @@ export function summarizeMoveQuality(
   initialFen?: string,
 ): GameAccuracySummary {
   const counts = { white: emptyCounts(), black: emptyCounts() }
+  const plies = { white: emptyPlies(), black: emptyPlies() }
   const perMoveAccuracy: { white: number[]; black: number[] } = { white: [], black: [] }
 
   for (let i = 0; i < movesSan.length; i++) {
@@ -85,11 +92,13 @@ export function summarizeMoveQuality(
     const winAfter = whiteMoved ? evalBarPercent(after) : 100 - evalBarPercent(after)
 
     perMoveAccuracy[side].push(moveAccuracy(winBefore, winAfter))
-    counts[side][classifyMoveQuality(moveWinDrop(before, after, whiteMoved))]++
+    const tier = classifyMoveQuality(moveWinDrop(before, after, whiteMoved))
+    counts[side][tier]++
+    plies[side][tier].push(i + 1)
   }
 
   return {
-    white: { accuracy: average(perMoveAccuracy.white), counts: counts.white },
-    black: { accuracy: average(perMoveAccuracy.black), counts: counts.black },
+    white: { accuracy: average(perMoveAccuracy.white), counts: counts.white, plies: plies.white },
+    black: { accuracy: average(perMoveAccuracy.black), counts: counts.black, plies: plies.black },
   }
 }

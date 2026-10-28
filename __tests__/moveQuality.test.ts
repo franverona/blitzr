@@ -50,6 +50,8 @@ describe('summarizeMoveQuality', () => {
     const summary = summarizeMoveQuality(evals, movesSan)
     expect(summary.white.counts.best).toBe(1)
     expect(summary.black.counts.blunder).toBe(1)
+    expect(summary.black.plies.blunder).toEqual([2])
+    expect(summary.white.plies.best).toEqual([1])
     expect(summary.black.accuracy).toBeLessThan(summary.white.accuracy)
   })
 
