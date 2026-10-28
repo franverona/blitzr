@@ -51,6 +51,12 @@ export function GameAnalysisProvider({
   children: React.ReactNode
 }) {
   const [analysis, setAnalysis] = useState(initialAnalysis)
+  // "Analyze all" can save this game while it's open; the revalidated page brings it as a new prop.
+  const [prevInitialAnalysis, setPrevInitialAnalysis] = useState(initialAnalysis)
+  if (initialAnalysis?.analyzedAt !== prevInitialAnalysis?.analyzedAt) {
+    setPrevInitialAnalysis(initialAnalysis)
+    if (initialAnalysis) setAnalysis(initialAnalysis)
+  }
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null)
   const [error, setError] = useState<string | null>(null)
   const positions = useMemo(() => buildPositions(initialFen, movesSan), [initialFen, movesSan])
