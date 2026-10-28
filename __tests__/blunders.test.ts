@@ -46,6 +46,23 @@ function makeAnalysis(gameId: string, evals: PositionEval[]): GameAnalysis {
 }
 
 describe('buildBlunderStats', () => {
+  it("counts how many of the opponent's blunders the user's reply punished", () => {
+    // Black blunders on ply 2 in both; White's reply keeps it in one and gives most back in the other.
+    const kept = makeGame({ movesSan: ['e4', 'f6', 'd4'] })
+    const missed = makeGame({ movesSan: ['e4', 'f6', 'a3'] })
+    // A last-move blunder had no reply, so it isn't a chance.
+    const last = makeGame({ movesSan: ['e4', 'f6'] })
+    const analyses = new Map([
+      [kept.id, makeAnalysis(kept.id, [cp(20), cp(30), cp(400), cp(390)])],
+      [missed.id, makeAnalysis(missed.id, [cp(20), cp(30), cp(400), cp(150)])],
+      [last.id, makeAnalysis(last.id, [cp(20), cp(30), cp(400)])],
+    ])
+    expect(buildBlunderStats([kept, missed, last], analyses).punish).toEqual({
+      chances: 2,
+      punished: 1,
+    })
+  })
+
   it('groups own blunders by opening family, bucketing a null ECO code as unknown', () => {
     const white = makeGame({
       ecoCode: 'C50',

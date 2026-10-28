@@ -293,6 +293,8 @@ export interface BlunderStats {
   totalGames: number
   analyzedGames: number
   totalBlunders: number
+  /** The opponent's blunders the user could reply to, and how many replies were near-best. */
+  punish: { chances: number; punished: number }
   byOpening: BlunderGroupStat[]
   byPiece: BlunderGroupStat[]
   /** By `detectBlunderReason()` kind, with 'none' when no simple pattern explains it. */

@@ -359,7 +359,10 @@ it) and shows as a clearable chip. The auto-advance checkbox lives on the page, 
 `getBlunderStats()`, which applies the `?from=&to=` date range (local calendar days) to every
 section. The trend chart's x-axis is game index, not date, because sessions are bursty. `byReason`
 runs `detectBlunderReason()` on every own blunder (the worst list only on its top 10), so it's as
-narrow as that detector: most blunders land in "no simple pattern". `byPhase`
+narrow as that detector: most blunders land in "no simple pattern". `punish` counts the
+opponent's blunders the user got to answer and the replies `isNearBestMove()` accepts, the same
+bar as `findPunishCandidates()` (which also leaves out replies that were blunders themselves, so
+it finds fewer). `byPhase`
 uses `gamePhase()` (`lib/material.ts`): an endgame once at most 6 queens, rooks and minor pieces
 are left (Lichess's divider count), else the first 10 moves (the FEN's fullmove number, so a game
 from a FEN counts from there) are the opening; listed in game order.
