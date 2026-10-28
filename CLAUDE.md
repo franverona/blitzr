@@ -52,7 +52,7 @@ components/
   LiveAnalysisPanel.tsx     # live MultiPV engine lines
   MoveSequence.tsx          # SAN line rendered with piece icons
   PlanBoard.tsx             # step-through board for an engine plan
-  GameAnalysisPanel.tsx     # batch Stockfish analysis + move-quality dialog
+  GameAnalysisPanel.tsx     # batch Stockfish analysis + move-quality side panel
   RepertoireBoard.tsx       # editable board that builds the repertoire tree
   DrillSession.tsx          # one drill card at a time
   PuzzleBoard.tsx           # manual, multi-ply mate-puzzle solving

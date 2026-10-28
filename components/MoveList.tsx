@@ -4,10 +4,11 @@ import { Fragment, useEffect, useMemo, useRef } from 'react'
 import { findBlunders, formatEval, formatSwing } from '@/lib/analysis'
 import { whiteToMove } from '@/lib/drill'
 import { getStrings } from '@/lib/i18n/strings'
+import { summarizeMoveQuality } from '@/lib/moveQuality'
 import { describeMove } from '@/lib/san'
 import { describeBetterMove, describeBlunderReason, detectBlunderReason } from '@/lib/tactics'
 import type { Blunder, MyColor, PositionEval } from '@/lib/types'
-import { BlunderSeverityBadge } from './BlunderSeverityBadge'
+import { MoveQualityBadge, type BadMoveTier } from './MoveQualityBadge'
 import { MoveSequence } from './MoveSequence'
 import { PieceMoveLabel } from './PieceMoveLabel'
 import { PlanBoardButton } from './PlanBoard'
@@ -39,11 +40,13 @@ function buildMovePairs(movesSan: string[]): MovePair[] {
 /** Detail shown under a selected blunder ply. */
 function BlunderDetail({
   blunder,
+  tier,
   fenBefore,
   fenAfter,
   myColor,
 }: {
   blunder: Blunder
+  tier: BadMoveTier
   fenBefore: string
   fenAfter: string
   myColor: MyColor
@@ -61,7 +64,7 @@ function BlunderDetail({
   return (
     <li className="bg-accent/10 flex flex-col gap-3 border-t border-zinc-200 px-3 py-4 dark:border-zinc-800">
       <div className="flex flex-wrap items-center gap-2">
-        <BlunderSeverityBadge winDrop={blunder.winDrop} />
+        <MoveQualityBadge tier={tier} />
         <span className="text-xs text-zinc-500 dark:text-zinc-400">
           {formatEval(blunder.evalBefore)} → {formatEval(blunder.evalAfter)} ({formatSwing(blunder)}
           )
@@ -129,6 +132,17 @@ export function MoveList({
     return new Map(own.map((b) => [b.ply, b]))
   }, [evals, movesSan, positions, myColor])
 
+  // Same tiers as the move-quality panel, so a move is named the same in both.
+  const tierByPly = useMemo(() => {
+    const map = new Map<number, BadMoveTier>()
+    if (!evals) return map
+    const { plies } = summarizeMoveQuality(evals, movesSan, positions[0])[myColor]
+    for (const tier of ['inaccuracy', 'mistake', 'blunder'] as const) {
+      for (const p of plies[tier]) map.set(p, tier)
+    }
+    return map
+  }, [evals, movesSan, positions, myColor])
+
   useEffect(() => {
     activeRef.current?.scrollIntoView({ block: 'nearest' })
   }, [ply])
@@ -163,7 +177,7 @@ export function MoveList({
                     return <span key={side} className="flex-1 px-2 py-1.5" />
                   }
                   const isActive = move.ply === ply
-                  const blunder = blunderByPly.get(move.ply)
+                  const tier = tierByPly.get(move.ply)
                   return (
                     <button
                       key={side}
@@ -176,7 +190,7 @@ export function MoveList({
                       }`}
                     >
                       <PieceMoveLabel san={move.san} color={side} />
-                      {blunder && <BlunderSeverityBadge winDrop={blunder.winDrop} />}
+                      {tier && <MoveQualityBadge tier={tier} />}
                     </button>
                   )
                 })}
@@ -184,6 +198,7 @@ export function MoveList({
               {showDetailForPair && activeBlunder && (
                 <BlunderDetail
                   blunder={activeBlunder}
+                  tier={tierByPly.get(activeBlunder.ply) ?? 'blunder'}
                   fenBefore={positions[activeBlunder.ply - 1]}
                   fenAfter={positions[activeBlunder.ply]}
                   myColor={myColor}

@@ -1,17 +1,19 @@
 'use client'
 
-import { createContext, useContext, useMemo, useRef, useState } from 'react'
+import { createContext, useContext, useId, useMemo, useState } from 'react'
 import { saveGameAnalysis } from '@/app/actions'
 import { getStrings } from '@/lib/i18n/strings'
 import { MOVE_QUALITY_TIERS, summarizeMoveQuality } from '@/lib/moveQuality'
 import { buildPositions } from '@/lib/positions'
+import { plyLabel } from '@/lib/san'
 import { ANALYSIS_STRENGTHS, type AnalysisStrength, analyzeGame } from '@/lib/stockfish/analyze'
 import type { GameAnalysis, MyColor } from '@/lib/types'
-import { Dialog } from './Dialog'
+import { useBoardContext } from './BoardContext'
+import type { BadMoveTier } from './MoveQualityBadge'
 import { ErrorText } from './ErrorText'
 import { Select } from './Select'
 import { useSettings } from './SettingsProvider'
-import { accuracyTone, LINK_CLASS, TONE_TEXT_CLASS } from './styles'
+import { accuracyTone, chipClass, LINK_CLASS, TONE_TEXT_CLASS } from './styles'
 import { TableShell } from './TableShell'
 
 interface AnalysisContextValue {
@@ -135,10 +137,11 @@ export function AnalyzeButton() {
   )
 }
 
-/** Inline " · Accuracy 87" for the game header; opens the move-quality breakdown. */
+/** Inline " · Accuracy 87" for the game header; toggles the move-quality panel. */
 export function MoveQualityLink() {
   const { analysis, movesSan, myColor, positions } = useAnalysisContext()
-  const dialogRef = useRef<HTMLDialogElement>(null)
+  const [open, setOpen] = useState(false)
+  const panelId = useId()
   const s = getStrings()
   if (!analysis) return null
 
@@ -149,8 +152,9 @@ export function MoveQualityLink() {
     <>
       {' · '}
       <button
-        onClick={() => dialogRef.current?.showModal()}
-        aria-haspopup="dialog"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        aria-controls={panelId}
         title={s.analysisPanel.moveQualityLink}
         className={`cursor-pointer ${LINK_CLASS}`}
       >
@@ -161,55 +165,118 @@ export function MoveQualityLink() {
           {mine.accuracy}
         </span>
       </button>
-      <MoveQualityDialog dialogRef={dialogRef} />
+      <MoveQualityPanel id={panelId} open={open} onClose={() => setOpen(false)} />
     </>
   )
 }
 
-function MoveQualityDialog({
-  dialogRef,
+/** Always mounted so it can slide out too; `inert` keeps it out of the tab order while closed. */
+function MoveQualityPanel({
+  id,
+  open,
+  onClose,
 }: {
-  dialogRef: React.RefObject<HTMLDialogElement | null>
+  id: string
+  open: boolean
+  onClose: () => void
 }) {
   const { analysis, movesSan, myColor, positions } = useAnalysisContext()
+  const { ply: currentPly, exploring, setPly, exitExploring } = useBoardContext()
+  const titleId = useId()
   const s = getStrings()
   if (!analysis) return null
 
   const summary = summarizeMoveQuality(analysis.evals, movesSan, positions[0])
   const mine = myColor === 'white' ? summary.white : summary.black
   const theirs = myColor === 'white' ? summary.black : summary.white
+  const badTiers = BAD_TIERS.filter((tier) => mine.plies[tier].length > 0)
+
+  // The move itself, so the move list highlights it with its badge.
+  function jumpTo(ply: number) {
+    exitExploring()
+    setPly(ply)
+  }
 
   return (
-    <Dialog
-      ref={dialogRef}
-      title={s.analysisPanel.moveQualityLink}
-      titleClassName="text-base"
-      className="w-[95vw] max-w-md overflow-y-auto"
-      bodyClassName="gap-4 p-6"
-    >
-      <TableShell
-        headClassName="bg-zinc-100 dark:bg-zinc-950"
-        head={
-          <>
-            <th className="px-3 py-2"></th>
-            <th className="px-3 py-2 text-right">{s.analysisPanel.you}</th>
-            <th className="px-3 py-2 text-right">{s.analysisPanel.opponent}</th>
-          </>
-        }
+    <>
+      <div
+        aria-hidden
+        onClick={onClose}
+        className={`fixed inset-0 z-40 bg-zinc-950/20 transition-opacity duration-200 motion-reduce:transition-none dark:bg-black/40 ${
+          open ? 'opacity-100' : 'pointer-events-none opacity-0'
+        }`}
+      />
+      <aside
+        id={id}
+        aria-labelledby={titleId}
+        inert={!open}
+        className={`fixed inset-y-0 right-0 z-40 w-full max-w-md space-y-4 overflow-y-auto border-l border-zinc-200 bg-zinc-50 p-6 text-sm text-zinc-900 shadow-xl transition-transform duration-200 ease-out motion-reduce:transition-none dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 ${
+          open ? 'translate-x-0' : 'translate-x-full'
+        }`}
       >
-        <tr className="font-medium">
-          <td className="px-3 py-2">{s.analysisPanel.accuracy}</td>
-          <td className="px-3 py-2 text-right">{mine.accuracy}</td>
-          <td className="px-3 py-2 text-right">{theirs.accuracy}</td>
-        </tr>
-        {MOVE_QUALITY_TIERS.map((tier) => (
-          <tr key={tier} className="text-zinc-500 dark:text-zinc-400">
-            <td className="px-3 py-2">{s.analysisPanel.moveQuality[tier]}</td>
-            <td className="px-3 py-2 text-right">{mine.counts[tier]}</td>
-            <td className="px-3 py-2 text-right">{theirs.counts[tier]}</td>
+        <div className="flex items-center justify-between gap-4">
+          <h2 id={titleId} className="text-base font-semibold">
+            {s.analysisPanel.moveQualityLink}
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={s.common.close}
+            className="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
+          >
+            ✕
+          </button>
+        </div>
+        <TableShell
+          headClassName="bg-zinc-100 dark:bg-zinc-950"
+          head={
+            <>
+              <th className="px-3 py-2"></th>
+              <th className="px-3 py-2 text-right">{s.analysisPanel.you}</th>
+              <th className="px-3 py-2 text-right">{s.analysisPanel.opponent}</th>
+            </>
+          }
+        >
+          <tr className="font-medium">
+            <td className="px-3 py-2">{s.analysisPanel.accuracy}</td>
+            <td className="px-3 py-2 text-right">{mine.accuracy}</td>
+            <td className="px-3 py-2 text-right">{theirs.accuracy}</td>
           </tr>
-        ))}
-      </TableShell>
-    </Dialog>
+          {MOVE_QUALITY_TIERS.map((tier) => (
+            <tr key={tier} className="text-zinc-500 dark:text-zinc-400">
+              <td className="px-3 py-2">{s.analysisPanel.moveQuality[tier]}</td>
+              <td className="px-3 py-2 text-right">{mine.counts[tier]}</td>
+              <td className="px-3 py-2 text-right">{theirs.counts[tier]}</td>
+            </tr>
+          ))}
+        </TableShell>
+        {badTiers.length > 0 && (
+          <div className="flex flex-col gap-3">
+            <p className="text-sm font-medium">{s.analysisPanel.yourMoves}</p>
+            {badTiers.map((tier) => (
+              <div key={tier} className="flex flex-col gap-1.5">
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  {s.analysisPanel.moveQuality[tier]}
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {mine.plies[tier].map((ply) => (
+                    <button
+                      key={ply}
+                      onClick={() => jumpTo(ply)}
+                      aria-current={!exploring && ply === currentPly ? 'step' : undefined}
+                      className={`${chipClass(!exploring && ply === currentPly)} tabular-nums`}
+                    >
+                      {plyLabel(ply, positions[0])} {movesSan[ply - 1]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </aside>
+    </>
   )
 }
+
+const BAD_TIERS: readonly BadMoveTier[] = ['blunder', 'mistake', 'inaccuracy']

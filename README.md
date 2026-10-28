@@ -191,8 +191,10 @@ A game page also has:
 
 - **Play** (or Space), which auto-advances and pauses on your blunders. ←/→ step, Home/↑/`0` jump
   to the start, End/↓ to the end, and `F` flips the board.
-- Your **accuracy** in the header; click it for a **Move quality** table with accuracy (Lichess's
-  formula, from each move's drop in winning chances) and move tiers for both sides.
+- Your **accuracy** in the header; click it for a **Move quality** side panel: accuracy (Lichess's
+  formula, from each move's drop in winning chances) and move tiers for both sides, then your
+  inaccuracies, mistakes and blunders. Click one to see it on the board; the panel stays open
+  until ✕ or a click outside it. The move list badges the same three tiers on your own moves.
 - **Engine lines**: the top 3 live lines for the current position. ▶ plays a line onto the board.
 - **Explore moves**: try your own moves from any point (just move a piece), with the engine
   following along. Esc or "Back to game" returns to the recorded game.
