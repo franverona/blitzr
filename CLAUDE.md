@@ -351,7 +351,8 @@ section. The trend chart's x-axis is game index, not date, because sessions are 
 runs `detectBlunderReason()` on every own blunder (the worst list only on its top 10), so it's as
 narrow as that detector: most blunders land in "no simple pattern". `byPhase`
 uses `gamePhase()` (`lib/material.ts`): an endgame once at most 6 queens, rooks and minor pieces
-are left (Lichess's divider count), else the first 10 moves are the opening; listed in game order.
+are left (Lichess's divider count), else the first 10 moves (the FEN's fullmove number, so a game
+from a FEN counts from there) are the opening; listed in game order.
 
 ## Today
 
