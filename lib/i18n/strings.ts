@@ -344,6 +344,7 @@ const en = {
     you: 'You',
     opponent: 'Opponent',
     yourMoves: 'Your moves to review — click one to see it on the board',
+    phases: { opening: 'Opening', middlegame: 'Middlegame', endgame: 'Endgame' },
     evalGraph: 'Evaluation over the game',
     evalGraphLabel:
       "The eval bar over the whole game, first move to last: White's share in white, Black's in black. Click to jump to a move.",
@@ -982,6 +983,7 @@ const es: Strings = {
     you: 'Tú',
     opponent: 'Rival',
     yourMoves: 'Tus jugadas a revisar — pulsa una para verla en el tablero',
+    phases: { opening: 'Apertura', middlegame: 'Medio juego', endgame: 'Final' },
     evalGraph: 'Evaluación a lo largo de la partida',
     evalGraphLabel:
       'La barra de evaluación durante toda la partida, de la primera jugada a la última: la parte de las blancas en blanco, la de las negras en negro. Pulsa para ir a una jugada.',

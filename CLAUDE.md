@@ -299,7 +299,9 @@ the page as props, outside `RepertoireBoard`'s key, so adding a move re-sends th
   `detectBlunderReason()` and `explainBestMove()`: a forking knight is also a cheaper attacker of
   each target, and the fork is the better explanation.
 - `lib/moveQuality.ts` tiers each move (its blunder cutoff matches `findBlunders()`) and scores
-  accuracy with the Lichess formula. No Brilliant/Great/Book tiers.
+  accuracy with the Lichess formula. Given the positions, `summarizeMoveQuality()` also splits it by
+  `gamePhase()`; only the Move quality panel asks, since building positions replays the game (too
+  slow across every game on `/blunders`, see #304). No Brilliant/Great/Book tiers.
 
 ### Live analysis and exploration
 
