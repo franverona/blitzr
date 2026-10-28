@@ -157,6 +157,12 @@ const en = {
       "Cards for moves where your opponent blundered and your reply didn't take advantage",
     clearOpening: 'Show all openings',
   },
+  troubleCards: {
+    title: 'Trouble cards',
+    tooltip:
+      'Cards you keep missing (two or more misses more than hits), the hardest first. Open the game to study the position; the answer stays hidden so they still drill.',
+    kind: { deviation: 'Deviation', blunder: 'Blunder', punish: 'Missed punishment' },
+  },
   gameList: {
     empty: 'No games synced yet. Click "Sync games" to fetch your Chess.com history.',
     noMatches: 'No games match these filters.',
@@ -751,6 +757,12 @@ const es: Strings = {
     punishesTitle:
       'Tarjetas de jugadas en las que tu rival cometió un error y tu respuesta no lo aprovechó',
     clearOpening: 'Mostrar todas las aperturas',
+  },
+  troubleCards: {
+    title: 'Tarjetas difíciles',
+    tooltip:
+      'Tarjetas que sigues fallando (dos o más fallos más que aciertos), la más difícil primero. Abre la partida para estudiar la posición; la respuesta sigue oculta para que puedas entrenarlas.',
+    kind: { deviation: 'Desviación', blunder: 'Error grave', punish: 'Sin castigar' },
   },
   gameList: {
     empty:
