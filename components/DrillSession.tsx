@@ -227,6 +227,8 @@ function DrillDeck({
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.target instanceof HTMLElement && e.target.tagName === 'BUTTON') return
+      // Like the disabled buttons: the undo's reset would land on the next card.
+      if (undoing) return
       if ((e.key === ' ' || e.key === 'Enter') && feedback) {
         e.preventDefault()
         handleNext()
@@ -389,7 +391,11 @@ function DrillDeck({
   function retryUnsaved() {
     const pending = unsaved
     setUnsaved([])
-    pending.forEach(saveAnswer)
+    for (const answer of pending) {
+      const saved = saveAnswer(answer)
+      // Undo must revert the retried save, not see the failed one.
+      if (lastAnswerRef.current?.answer === answer) lastAnswerRef.current = { answer, saved }
+    }
   }
 
   function handleDrop({
