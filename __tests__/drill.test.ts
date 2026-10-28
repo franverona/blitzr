@@ -13,6 +13,7 @@ import {
   reconcileDrillDeck,
   scheduleReview,
   selectSessionCards,
+  troubleCards,
 } from '@/lib/drill'
 import { formatDate } from '@/lib/dates'
 import { buildPositions } from '@/lib/positions'
@@ -528,5 +529,26 @@ describe('dueDrillCards', () => {
   it('filters by source type and opening; a missing game fails the opening filter', () => {
     expect(dueDrillCards(cards, now, { sourceType: 'deviation' }, openingOf)).toEqual([deviation])
     expect(dueDrillCards(cards, now, { opening: 'Italian Game' }, openingOf)).toEqual([due])
+  })
+})
+
+describe('troubleCards', () => {
+  // Real SM-2 eases: each miss takes 0.2 off 2.5, each hit adds 0.1.
+  const missed = (times: number, hits = 0) => {
+    let ease = { intervalDays: 0, easeFactor: 2.5, repetitions: 0 }
+    for (let i = 0; i < times; i++) ease = scheduleReview(ease, false, new Date())
+    for (let i = 0; i < hits; i++) ease = scheduleReview(ease, true, new Date())
+    return ease.easeFactor
+  }
+
+  it('lists cards missed twice or more on net, lowest ease first, capped', () => {
+    const once = makeCard({ ply: 1, easeFactor: missed(1) })
+    const twice = makeCard({ ply: 2, easeFactor: missed(2) })
+    const twiceThenHit = makeCard({ ply: 3, easeFactor: missed(2, 1) })
+    const thrice = makeCard({ ply: 4, easeFactor: missed(3) })
+    const fresh = makeCard({ ply: 5 })
+    const cards = [once, twice, twiceThenHit, thrice, fresh]
+    expect(troubleCards(cards).map((c) => c.ply)).toEqual([4, 2, 3])
+    expect(troubleCards(cards, 1).map((c) => c.ply)).toEqual([4])
   })
 })

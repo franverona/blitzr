@@ -218,6 +218,8 @@ like a wrong one), and cards can be filtered by type (Today's weak spot also
 links to a single opening's cards). A checkbox moves on to the next card after a right answer, and reloading the page resumes the
 session where you left it.
 **Undo** (or U) takes back a misclicked answer, restoring the card's schedule, until you move on.
+**Trouble cards** below the session show up to 5 cards you keep missing, as positions linking to
+their games, without the answer.
 Shortcuts: Space/Enter for the next card, H for a hint, U to undo. Re-analyzing a game at another strength can change
 which moves count as blunders, so its blunder cards (and their review history) may be replaced.
 

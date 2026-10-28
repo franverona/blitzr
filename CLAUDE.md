@@ -59,6 +59,7 @@ components/
   EvalGraph.tsx             # the eval bar across a game, inside the move-quality panel
   RepertoireBoard.tsx       # editable board that builds the repertoire tree
   DrillSession.tsx          # one drill card at a time
+  TroubleCards.tsx          # /drill: the cards missed again and again, as positions
   PuzzleBoard.tsx           # manual, multi-ply mate-puzzle solving
   LessonPractice.tsx        # Study/Quiz toggle for a lesson; LessonQuiz.tsx is quiz mode
   SettingsProvider.tsx      # per-viewer settings context (cookie-seeded)
@@ -349,6 +350,9 @@ when a one-off client-side eval rates it good or better (`isNearBestMove()`); if
 only the engine's move counts. **Re-analyzing a game can reset its drill progress:** another
 strength can shift which plies count as blunders, and the deck sync deletes cards (with their SM-2
 schedules) whose ply no longer qualifies. Accepted, not a bug.
+
+**Trouble cards** (`troubleCards()`): up to 5 cards under the page's filters, due or not, with
+an ease below 2.25 (two net misses), lowest first, shown under the session without their answers.
 
 **Undo** (`undoDrillAnswer()`) restores the schedule `submitDrillAnswer()` returned, only while that
 answer is still the card's `last_reviewed_at` and only before Next; the streak keeps the day.

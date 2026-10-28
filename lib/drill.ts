@@ -280,8 +280,21 @@ export function reconcileDrillDeck(
   }
 }
 
-/** Cards due by `now` that pass the /drill filters. `openingOf` returns
- *  undefined for a card whose game is gone, which fails an opening filter. */
+/** Cards that pass the /drill filters. `openingOf` returns undefined for a card whose game is
+ *  gone, which fails an opening filter. */
+export function filterDrillCards(
+  cards: DrillCard[],
+  filters: { sourceType?: DrillSourceType; opening?: string } | undefined,
+  openingOf: (gameId: string) => string | undefined,
+): DrillCard[] {
+  return cards.filter(
+    (c) =>
+      (!filters?.sourceType || c.sourceType === filters.sourceType) &&
+      (!filters?.opening || openingOf(c.gameId) === filters.opening),
+  )
+}
+
+/** Cards due by `now` that pass the /drill filters. */
 export function dueDrillCards(
   cards: DrillCard[],
   now: Date,
@@ -289,12 +302,22 @@ export function dueDrillCards(
   openingOf: (gameId: string) => string | undefined,
 ): DrillCard[] {
   const nowIso = now.toISOString()
-  return cards.filter(
-    (c) =>
-      c.dueAt <= nowIso &&
-      (!filters?.sourceType || c.sourceType === filters.sourceType) &&
-      (!filters?.opening || openingOf(c.gameId) === filters.opening),
-  )
+  return filterDrillCards(cards, filters, openingOf).filter((c) => c.dueAt <= nowIso)
+}
+
+// Below one miss (2.3) and miss-then-hit (2.4): two net misses, 2.1 or 2.2 and down.
+const TROUBLE_EASE_BELOW = 2.25
+
+/** The cards missed again and again, lowest ease first (latest review breaks ties). */
+export function troubleCards(cards: DrillCard[], max = 5): DrillCard[] {
+  return cards
+    .filter((c) => c.easeFactor < TROUBLE_EASE_BELOW)
+    .sort(
+      (a, b) =>
+        a.easeFactor - b.easeFactor ||
+        (b.lastReviewedAt ?? '').localeCompare(a.lastReviewedAt ?? ''),
+    )
+    .slice(0, max)
 }
 
 export function newCardSchedule(

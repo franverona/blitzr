@@ -166,6 +166,17 @@ const en = {
       'Cards for moves where you had a forced mate in 3 or fewer and played something else',
     clearOpening: 'Show all openings',
   },
+  troubleCards: {
+    title: 'Trouble cards',
+    tooltip:
+      'Cards you keep missing (two or more misses more than hits), the hardest first. Open the game to study the position; the answer stays hidden so they still drill.',
+    kind: {
+      deviation: 'Deviation',
+      blunder: 'Blunder',
+      punish: 'Missed punishment',
+      mate: 'Missed mate',
+    },
+  },
   gameList: {
     empty: 'No games synced yet. Click "Sync games" to fetch your Chess.com history.',
     noMatches: 'No games match these filters.',
@@ -773,6 +784,17 @@ const es: Strings = {
     matesTitle:
       'Tarjetas de jugadas en las que tenías un mate forzado en 3 o menos y jugaste otra cosa',
     clearOpening: 'Mostrar todas las aperturas',
+  },
+  troubleCards: {
+    title: 'Tarjetas difíciles',
+    tooltip:
+      'Tarjetas que sigues fallando (dos o más fallos más que aciertos), la más difícil primero. Abre la partida para estudiar la posición; la respuesta sigue oculta para que puedas entrenarlas.',
+    kind: {
+      deviation: 'Desviación',
+      blunder: 'Error grave',
+      punish: 'Sin castigar',
+      mate: 'Mate perdido',
+    },
   },
   gameList: {
     empty:
