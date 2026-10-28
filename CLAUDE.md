@@ -399,7 +399,7 @@ page passes the one it shows as a prop. Every line was verified to mate; mate-in
 `isForcedMate()`, which the tests re-check on a random sample (a full pass takes hours). Side to
 move is read from each FEN (about a third are Black). `PuzzleBoard` makes the user play every ply,
 both sides; wrong moves retry, "Reveal" doesn't count as solved (it records the id in
-`puzzle_reveals`, and Today's next puzzle is the oldest revealed one not solved since), and promotions show a piece picker
+`puzzle_reveals`, and Today's next puzzle is the oldest revealed one never solved, so revealing a solved puzzle again doesn't queue it), and promotions show a piece picker
 (some puzzles need underpromotion). A defence puzzle (`saves` set) is one ply: any save solves it.
 `/puzzles` filters by `?status=solved|unsolved`, `?color=white|black`, `?kind=mate|defend` and `?mateIn=`. `PromotionPicker` is shared with `DrillSession` (an engine best move
 can be an underpromotion too) and explore mode.
