@@ -43,19 +43,24 @@ describe('formatMaterialDiff', () => {
 })
 
 describe('gamePhase', () => {
-  const start = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+  const full = (side: 'w' | 'b', move: number) =>
+    `rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR ${side} KQkq - 0 ${move}`
 
   it('calls the first 10 moves the opening, then the middlegame', () => {
-    expect(gamePhase(start, 1)).toBe('opening')
-    expect(gamePhase(start, 20)).toBe('opening')
-    expect(gamePhase(start, 21)).toBe('middlegame')
+    expect(gamePhase(full('w', 1))).toBe('opening')
+    expect(gamePhase(full('b', 10))).toBe('opening')
+    expect(gamePhase(full('w', 11))).toBe('middlegame')
+  })
+
+  it("counts from a FEN's own move number, not from ply 1", () => {
+    expect(gamePhase(full('b', 30))).toBe('middlegame')
   })
 
   it('calls a position with at most 6 queens, rooks and minor pieces an endgame, from any ply', () => {
     // Two rooks and a bishop each: 6 pieces.
-    expect(gamePhase('r1b1k2r/pppp1ppp/8/8/8/8/PPPP1PPP/R1B1K2R w KQkq - 0 15', 9)).toBe('endgame')
+    expect(gamePhase('r1b1k2r/pppp1ppp/8/8/8/8/PPPP1PPP/R1B1K2R w KQkq - 0 5')).toBe('endgame')
     // One more knight: 7 pieces, still the middlegame.
-    expect(gamePhase('r1b1k2r/pppp1ppp/8/8/8/5N2/PPPP1PPP/R1B1K2R w KQkq - 0 15', 40)).toBe(
+    expect(gamePhase('r1b1k2r/pppp1ppp/8/8/8/5N2/PPPP1PPP/R1B1K2R w KQkq - 0 15')).toBe(
       'middlegame',
     )
   })

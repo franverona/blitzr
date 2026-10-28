@@ -136,7 +136,7 @@ export function buildBlunderStats(
           ?.kind ?? 'none'
       const reasonLabel = REASON_LABELS[locale][reasonKind]
       accumulate(byReason, reasonKind, reasonLabel, blunder.swingCp, isMateSwing)
-      const phase = gamePhase(positions[blunder.ply - 1], blunder.ply)
+      const phase = gamePhase(positions[blunder.ply - 1])
       accumulate(byPhase, phase, PHASE_LABELS[locale][phase], blunder.swingCp, isMateSwing)
 
       worst.push({

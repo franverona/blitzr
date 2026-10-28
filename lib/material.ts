@@ -30,13 +30,14 @@ export type GamePhase = 'opening' | 'middlegame' | 'endgame'
 // An endgame has at most 6 queens, rooks and minor pieces left between both sides (Lichess's
 // game divider uses the same count); before that, the first 10 moves are the opening.
 const ENDGAME_MAX_PIECES = 6
-const OPENING_PLIES = 20
+const OPENING_MOVES = 10
 
-/** The phase of the position `fen`, before the move at 1-indexed `ply`. */
-export function gamePhase(fen: string, ply: number): GamePhase {
-  const pieces = fen.split(' ')[0].replace(/[^qrbnQRBN]/g, '').length
+/** The phase of the position `fen`. Its fullmove number, not the ply, so a game from a FEN counts from there. */
+export function gamePhase(fen: string): GamePhase {
+  const [placement, , , , , fullmove] = fen.split(' ')
+  const pieces = placement.replace(/[^qrbnQRBN]/g, '').length
   if (pieces <= ENDGAME_MAX_PIECES) return 'endgame'
-  return ply <= OPENING_PLIES ? 'opening' : 'middlegame'
+  return (Number(fullmove) || 1) <= OPENING_MOVES ? 'opening' : 'middlegame'
 }
 
 export function formatMaterialDiff(diff: number, locale: Locale = getLocale()): string {
