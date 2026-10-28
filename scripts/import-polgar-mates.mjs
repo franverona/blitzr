@@ -96,8 +96,9 @@ if (process.argv.includes('--from-git')) {
     cwd: path.join(__dirname, '..'),
     maxBuffer: 64 * 1024 * 1024,
   }).toString()
-  // Imported from inside the repo so its `chess.js` import resolves.
-  const tmp = path.join(path.dirname(outPath), `.polgar-from-git-${process.pid}.ts`)
+  // Next to this script, not in the data dir: BLITZR_DATA_DIR can be outside the repo, where the
+  // old file's `chess.js` import wouldn't resolve.
+  const tmp = path.join(__dirname, `.polgar-from-git-${process.pid}.ts`)
   fs.mkdirSync(path.dirname(outPath), { recursive: true })
   fs.writeFileSync(tmp, source)
   try {
