@@ -7,6 +7,11 @@ updates:
     cooldown:
       default-days: 2
     open-pull-requests-limit: 10
+    ignore:
+      # Matches the Node major in .nvmrc and engines: newer types would let code use APIs that
+      # throw on the Node we run. Bump all three together.
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
     groups:
       # Never auto-merged. Next's minors change APIs and defaults; kysely is 0.x, so its minors
       # (0.29 -> 0.30) can break, and it backs the whole data layer.
