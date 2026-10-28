@@ -83,6 +83,13 @@ jobs:
           check /games/smoke smoke-black
           check /learn/sicilian-defense 'Sicilian Defense'
           check /learn/king-and-rook-vs-king 'King and Rook vs. King'
+          # Every curl above uses Host 127.0.0.1, so a proxy.ts or headers() that stopped loading
+          # (a Next rename, a refactor) would pass silently.
+          status=$(curl -s -o /dev/null -w '%{http_code}' -H 'Host: evil.example' http://127.0.0.1:9878/)
+          [ "$status" = 403 ] || { echo "::error::a foreign Host got $status, not 403"; exit 1; }
+          headers=$(curl -fsS -D - -o /dev/null http://127.0.0.1:9878/)
+          grep -qi '^x-frame-options: DENY' <<< "$headers" || { echo "::error::no X-Frame-Options"; exit 1; }
+          grep -qi "^content-security-policy: .*'nonce-" <<< "$headers" || { echo "::error::no CSP nonce"; exit 1; }
           # Next logs a server-side render or action error as "⨯ …", even when the page recovers.
           if grep -F '⨯' "$log"; then
             echo "::error::the server logged errors (above)"
