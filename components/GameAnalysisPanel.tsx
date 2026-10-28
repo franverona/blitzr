@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useId, useMemo, useState } from 'react'
+import { createContext, useContext, useEffect, useId, useMemo, useState } from 'react'
 import { saveGameAnalysis } from '@/app/actions'
 import { getStrings } from '@/lib/i18n/strings'
 import { MOVE_QUALITY_TIERS, summarizeMoveQuality } from '@/lib/moveQuality'
@@ -184,6 +184,19 @@ function MoveQualityPanel({
   const { ply: currentPly, exploring, setPly, exitExploring } = useBoardContext()
   const titleId = useId()
   const s = getStrings()
+
+  // Capture phase, so BoardNavControls' Esc (leave explore mode) never sees it.
+  useEffect(() => {
+    if (!open) return
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key !== 'Escape') return
+      e.stopPropagation()
+      onClose()
+    }
+    window.addEventListener('keydown', onKeyDown, true)
+    return () => window.removeEventListener('keydown', onKeyDown, true)
+  }, [open, onClose])
+
   if (!analysis) return null
 
   const summary = summarizeMoveQuality(analysis.evals, movesSan, positions[0])
