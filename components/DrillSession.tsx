@@ -5,7 +5,7 @@ import { Chess, type Move } from 'chess.js'
 import { Chessboard } from 'react-chessboard'
 import { BoardCoordinates } from './BoardCoordinates'
 import { submitDrillAnswer, undoDrillAnswer } from '@/app/actions'
-import { isNearBestMove } from '@/lib/drill'
+import { isNearBestMove, keepsForcedMate } from '@/lib/drill'
 import { getStrings } from '@/lib/i18n/strings'
 import { legalDestinations } from '@/lib/legalMoves'
 import { hintPieceName } from '@/lib/san'
@@ -318,7 +318,11 @@ function DrillDeck({
       const evalAfter =
         terminalEval(move.after) ??
         (await engineRef.current.evaluate(move.after, ALTERNATIVE_CHECK_MOVETIME_MS))
-      accepted = isNearBestMove(move.color === 'w', evalBefore, evalAfter)
+      // Any mate counts; a move that drops it can still rate "good" on the saturated win-% curve.
+      accepted =
+        activePrompt.sourceType === 'mate'
+          ? keepsForcedMate(move.color === 'w', evalAfter)
+          : isNearBestMove(move.color === 'w', evalBefore, evalAfter)
     } catch {
       // Engine unavailable: fall back to engine-move-only grading.
     }
@@ -497,7 +501,9 @@ function DrillDeck({
             ? s.drill.findPreparedMove
             : prompt.sourceType === 'punish'
               ? s.drill.findPunish
-              : s.drill.findBestMove}
+              : prompt.sourceType === 'mate'
+                ? s.drill.findMate
+                : s.drill.findBestMove}
         </p>
 
         {!feedback && (

@@ -56,6 +56,7 @@ components/
   MoveSequence.tsx          # SAN line rendered with piece icons
   PlanBoard.tsx             # step-through board for an engine plan
   GameAnalysisPanel.tsx     # batch Stockfish analysis + move-quality side panel
+  EvalGraph.tsx             # the eval bar across a game, inside the move-quality panel
   RepertoireBoard.tsx       # editable board that builds the repertoire tree
   DrillSession.tsx          # one drill card at a time
   TroubleCards.tsx          # /drill: the cards missed again and again, as positions
@@ -332,7 +333,10 @@ and the slider are debounced (400ms); selects navigate immediately.
 the move's square counts as wrong); prompts are re-derived by
 `buildDrillPrompt()` from deviations, own-move blunders and missed punishments (`findPunishCandidates()`:
 the user's reply to an opponent's blunder that wasn't `isNearBestMove()`, unless the reply was itself
-a blunder, which its blunder card covers). Deviations are one card per position
+a blunder, which its blunder card covers) and missed mates (`findMissedMateCandidates()`: an own
+move from a forced mate in 3 or fewer to no mate, on a ply no blunder or punish card covers; the
+win-% curve saturates at mate, so neither sees it, and an alternative answer must still mate,
+`keepsForcedMate()`). Deviations are one card per position
 (the game that already holds the card, else the oldest that left the tree there, so pasting an
 older game doesn't reset its schedule), not per game; a blunder whose best move repeats the
 previous own ply's (same piece left en prise) is folded into that first card. A review's `dueAt` is the start of a local day, so "tomorrow" means

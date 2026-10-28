@@ -221,8 +221,9 @@ export interface RepertoireGap {
   games: number
 }
 
-/** 'punish': the opponent just blundered and the user's reply let it go. */
-export type DrillSourceType = 'deviation' | 'blunder' | 'punish'
+/** 'punish': the opponent just blundered and the user's reply let it go. 'mate': the user had a
+ *  short forced mate and played a move that no longer mates. */
+export type DrillSourceType = 'deviation' | 'blunder' | 'punish' | 'mate'
 
 /** Only the review schedule is stored; the prompt is re-derived from the
  *  source game/repertoire/analysis at drill time (see lib/drill.ts). */

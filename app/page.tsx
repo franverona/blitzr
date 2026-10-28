@@ -86,6 +86,7 @@ export default async function TodayPage() {
                 drill.dueDeviations,
                 drill.dueBlunders,
                 drill.duePunishes,
+                drill.dueMates,
               )}
             </p>
           )}

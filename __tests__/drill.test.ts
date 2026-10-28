@@ -4,9 +4,11 @@ import {
   dueDrillCards,
   findBlunderCandidates,
   findDeviationCandidates,
+  findMissedMateCandidates,
   findPunishCandidates,
   getSessionSize,
   isNearBestMove,
+  keepsForcedMate,
   newCardSchedule,
   reconcileDrillDeck,
   scheduleReview,
@@ -219,6 +221,56 @@ describe('findPunishCandidates', () => {
   it("ignores the user's own blunders", () => {
     const mine = makeGame({ movesSan: ['e4', 'f6', 'd4'], myColor: 'black' })
     expect(findPunishCandidates([mine], analyses(250))).toEqual([])
+  })
+})
+
+describe('findMissedMateCandidates', () => {
+  const mate = (moves: number): PositionEval => ({ cp: null, mate: moves, bestMove: null })
+  // White has mate from ply 1 on; ply 2 (Black) keeps it at M2, so it isn't an opponent blunder.
+  const game = makeGame({ movesSan: ['e4', 'e5', 'Nf3', 'Nc6'], myColor: 'white' })
+  const analyses = (before: PositionEval, afterMine: PositionEval) =>
+    new Map<string, GameAnalysis>([
+      [
+        'g1',
+        { gameId: 'g1', evals: [cp(20), mate(3), withBest(before), afterMine], analyzedAt: '' },
+      ],
+    ])
+
+  it('flags an own move that let a short forced mate go, though it stays winning', () => {
+    expect(findMissedMateCandidates([game], analyses(mate(2), cp(800)))).toEqual([
+      { gameId: 'g1', sourceType: 'mate', ply: 3 },
+    ])
+    // The saturated win-% curve is why: neither a blunder nor a punish card covers it.
+    expect(findBlunderCandidates([game], analyses(mate(2), cp(800)))).toEqual([])
+    expect(findPunishCandidates([game], analyses(mate(2), cp(800)))).toEqual([])
+  })
+
+  it('skips a move that still mates, a mate longer than 3, and a move its blunder card covers', () => {
+    expect(findMissedMateCandidates([game], analyses(mate(2), mate(2)))).toEqual([])
+    expect(findMissedMateCandidates([game], analyses(mate(5), cp(800)))).toEqual([])
+    expect(findMissedMateCandidates([game], analyses(mate(2), cp(-300)))).toEqual([])
+  })
+
+  it("ignores the opponent's missed mates", () => {
+    const mine = makeGame({ movesSan: ['e4', 'e5', 'Nf3', 'Nc6'], myColor: 'black' })
+    expect(findMissedMateCandidates([mine], analyses(mate(2), cp(800)))).toEqual([])
+  })
+
+  it('hydrates a card with the engine move, and drops it once it no longer qualifies', () => {
+    const card = { gameId: 'g1', sourceType: 'mate' as const, ply: 3 }
+    expect(buildDrillPrompt(card, game, new Map(), analyses(mate(2), cp(800)))).toMatchObject({
+      sourceType: 'mate',
+      ply: 3,
+      correctMoves: ['Ra2'],
+    })
+    expect(buildDrillPrompt(card, game, new Map(), analyses(mate(2), mate(1)))).toBeNull()
+  })
+
+  it('keepsForcedMate reads White-perspective mates for the side that moved', () => {
+    expect(keepsForcedMate(true, mate(1))).toBe(true)
+    expect(keepsForcedMate(true, mate(-1))).toBe(false)
+    expect(keepsForcedMate(false, mate(-2))).toBe(true)
+    expect(keepsForcedMate(false, cp(-900))).toBe(false)
   })
 })
 
