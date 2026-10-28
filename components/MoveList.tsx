@@ -5,7 +5,7 @@ import { findBlunders, formatEval, formatSwing } from '@/lib/analysis'
 import { whiteToMove } from '@/lib/drill'
 import { getStrings } from '@/lib/i18n/strings'
 import { summarizeMoveQuality } from '@/lib/moveQuality'
-import { describeMove } from '@/lib/san'
+import { describeMove, moveNumberOfPly } from '@/lib/san'
 import { describeBetterMove, describeBlunderReason, detectBlunderReason } from '@/lib/tactics'
 import type { Blunder, MyColor, PositionEval } from '@/lib/types'
 import { MoveQualityBadge, type BadMoveTier } from './MoveQualityBadge'
@@ -24,15 +24,15 @@ interface MovePair {
   black?: MoveEntry
 }
 
-function buildMovePairs(movesSan: string[]): MovePair[] {
+// A game from a FEN can start with Black to move, leaving its first row's White slot empty.
+function buildMovePairs(movesSan: string[], initialFen: string): MovePair[] {
   const pairs: MovePair[] = []
   movesSan.forEach((san, i) => {
     const ply = i + 1
-    if (i % 2 === 0) {
-      pairs.push({ moveNumber: Math.floor(i / 2) + 1, white: { san, ply } })
-    } else {
-      pairs[pairs.length - 1].black = { san, ply }
+    if (whiteToMove(ply, initialFen) || pairs.length === 0) {
+      pairs.push({ moveNumber: moveNumberOfPly(ply, initialFen) })
     }
+    pairs[pairs.length - 1][whiteToMove(ply, initialFen) ? 'white' : 'black'] = { san, ply }
   })
   return pairs
 }
@@ -119,7 +119,7 @@ export function MoveList({
   positions: string[]
   myColor: MyColor
 }) {
-  const pairs = useMemo(() => buildMovePairs(movesSan), [movesSan])
+  const pairs = useMemo(() => buildMovePairs(movesSan, positions[0]), [movesSan, positions])
   const activeRef = useRef<HTMLButtonElement>(null)
   const s = getStrings()
 
