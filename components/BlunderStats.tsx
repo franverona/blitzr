@@ -122,7 +122,7 @@ export function BlunderStats({ stats }: { stats: BlunderStatsData }) {
           {stats.worst.map((b) => (
             <li key={`${b.gameId}-${b.ply}`}>
               <div className="flex flex-wrap items-center gap-1.5">
-                <Link href={`/games/${b.gameId}`} className={LINK_CLASS}>
+                <Link href={`/games/${b.gameId}?ply=${b.ply - 1}`} className={LINK_CLASS}>
                   {b.gameLabel}
                 </Link>
                 <BlunderSeverityBadge winDrop={b.winDrop} />
