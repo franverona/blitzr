@@ -87,8 +87,9 @@ function formatSolution(moves, sideToMove) {
 
 // --- 0. --from-git: restore the last committed copy, then stop ----------
 
-// The last commit with the Polgár puzzles inline in lib/mateProblems.ts.
-const LAST_COMMIT_WITH_POLGAR = 'ab7c1d2'
+// The last commit on main with the Polgár puzzles inline in lib/mateProblems.ts: the parent of
+// #218's squash merge (5f5e862), which moved them out.
+const LAST_COMMIT_WITH_POLGAR = 'c6de3b3'
 
 if (process.argv.includes('--from-git')) {
   const source = execFileSync('git', ['show', `${LAST_COMMIT_WITH_POLGAR}:lib/mateProblems.ts`], {
