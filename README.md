@@ -28,7 +28,7 @@ implies endorsement.
 - Board replay, openings aggregated by ECO, and a user-defined repertoire with deviation detection
 - In-browser Stockfish analysis: blunders, plain-English tactical explanations, move-quality and
   accuracy, live multi-line analysis and free-move exploration
-- Spaced-repetition drilling of your deviations and blunders
+- Spaced-repetition drilling of your deviations, blunders and missed punishments
 - Cross-game blunder stats with an accuracy-over-time chart and date filter
 - Opening and endgame lessons with study and quiz modes
 - Mate-in-N puzzles you solve move by move, and defence puzzles where you stop a mate
@@ -124,7 +124,9 @@ pnpm build
 ```
 
 Then it starts the built app against an empty database and checks the main pages, a seeded game
-and two lessons, failing on any error in the server's log, and runs `pnpm backup`.
+and two lessons, the localhost-only check and the security headers, failing on any error in the
+server's log. Last, it loads the `lib/` files the scripts import under plain Node and runs
+`pnpm backup`.
 
 `pnpm build` rewrites `.next/`, which a running `pnpm dev` and the pm2 server both read from: the
 dev server then silently serves stale code, and the pm2 one can fail to load its pages. Restart
@@ -194,7 +196,7 @@ A game page also has:
 - Your **accuracy** in the header; click it for a **Move quality** side panel: accuracy (Lichess's
   formula, from each move's drop in winning chances) and move tiers for both sides, then your
   inaccuracies, mistakes and blunders. Click one to see it on the board; the panel stays open
-  until ✕ or a click outside it. The move list badges the same three tiers on your own moves.
+  until ✕, Esc or a click outside it. The move list badges the same three tiers on your own moves.
 - **Engine lines**: the top 3 live lines for the current position. ▶ plays a line onto the board.
 - **Explore moves**: try your own moves from any point (just move a piece), with the engine
   following along. Esc or "Back to game" returns to the recorded game.
@@ -220,9 +222,8 @@ which moves count as blunders, so its blunder cards (and their review history) m
 
 `/blunders` aggregates your blunders across analyzed games by opening family, by piece, by tactic
 (hanging piece, fork, pin, skewer, or no simple pattern) and by game phase (opening, middlegame,
-endgame), with a top-10
-worst list and an accuracy trend (per-game dots plus a 10-game rolling average). A date range
-filter scopes the whole page.
+endgame), with a top-10 worst list (each opening its game at that move) and an accuracy trend
+(per-game dots plus a 10-game rolling average). A date range filter scopes the whole page.
 
 ### Learn
 
