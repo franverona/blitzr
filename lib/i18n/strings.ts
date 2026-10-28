@@ -36,8 +36,14 @@ const en = {
     drillTitle: 'Drill',
     sessionCards: (n: number): string =>
       n === 1 ? "card in today's session" : "cards in today's session",
-    dueBreakdown: (due: number, deviations: number, blunders: number, punishes: number) =>
-      `${due} due: ${deviations} repertoire, ${blunders} blunder${punishes ? `, ${punishes} missed punishment` : ''}`,
+    dueBreakdown: (
+      due: number,
+      deviations: number,
+      blunders: number,
+      punishes: number,
+      mates: number,
+    ) =>
+      `${due} due: ${deviations} repertoire, ${blunders} blunder${punishes ? `, ${punishes} missed punishment` : ''}${mates ? `, ${mates} missed mate` : ''}`,
     streak: (days: number) => `${days}-day streak`,
     noStreak: 'Drill today to start a streak',
     keepStreak: 'Drill today to keep it',
@@ -155,6 +161,9 @@ const en = {
     punishes: 'Missed punishments',
     punishesTitle:
       "Cards for moves where your opponent blundered and your reply didn't take advantage",
+    mates: 'Missed mates',
+    matesTitle:
+      'Cards for moves where you had a forced mate in 3 or fewer and played something else',
     clearOpening: 'Show all openings',
   },
   gameList: {
@@ -388,6 +397,7 @@ const en = {
     findPreparedMove: 'Find your prepared move',
     findBestMove: 'Find the best move',
     findPunish: 'Your opponent just blundered — punish it',
+    findMate: 'You have a forced mate — find the first move',
     cardOf: (index: number, total: number) => `Card ${index} of ${total}`,
     hintText: (pieces: string) => `Hint: it's a ${pieces} move.`,
     keyboardHint: 'Space/Enter → Next · H → Hint · U → Undo',
@@ -627,8 +637,14 @@ const es: Strings = {
     drillTitle: 'Entrenar',
     sessionCards: (n: number): string =>
       n === 1 ? 'tarjeta en la sesión de hoy' : 'tarjetas en la sesión de hoy',
-    dueBreakdown: (due: number, deviations: number, blunders: number, punishes: number) =>
-      `${due} pendientes: ${deviations} de repertorio, ${blunders} de errores${punishes ? `, ${punishes} sin castigar` : ''}`,
+    dueBreakdown: (
+      due: number,
+      deviations: number,
+      blunders: number,
+      punishes: number,
+      mates: number,
+    ) =>
+      `${due} pendientes: ${deviations} de repertorio, ${blunders} de errores${punishes ? `, ${punishes} sin castigar` : ''}${mates ? `, ${mates} de mate perdido` : ''}`,
     streak: (days: number) => `Racha de ${days} ${days === 1 ? 'día' : 'días'}`,
     noStreak: 'Entrena hoy para empezar una racha',
     keepStreak: 'Entrena hoy para mantenerla',
@@ -753,6 +769,9 @@ const es: Strings = {
     punishes: 'Sin castigar',
     punishesTitle:
       'Tarjetas de jugadas en las que tu rival cometió un error y tu respuesta no lo aprovechó',
+    mates: 'Mates perdidos',
+    matesTitle:
+      'Tarjetas de jugadas en las que tenías un mate forzado en 3 o menos y jugaste otra cosa',
     clearOpening: 'Mostrar todas las aperturas',
   },
   gameList: {
@@ -990,6 +1009,7 @@ const es: Strings = {
     findPreparedMove: 'Encuentra tu jugada preparada',
     findBestMove: 'Encuentra la mejor jugada',
     findPunish: 'Tu rival acaba de cometer un error — castígalo',
+    findMate: 'Tienes un mate forzado — encuentra la primera jugada',
     cardOf: (index: number, total: number) => `Tarjeta ${index} de ${total}`,
     hintText: (pieces: string) => `Pista: es una jugada de ${pieces}.`,
     keyboardHint: 'Espacio/Intro → Siguiente · H → Pista · U → Deshacer',
