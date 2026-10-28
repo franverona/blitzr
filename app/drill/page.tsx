@@ -13,7 +13,9 @@ export default async function DrillPage({
 }) {
   const { type, opening } = await searchParams
   const sourceType: DrillSourceType | undefined =
-    type === 'deviation' || type === 'blunder' || type === 'punish' ? type : undefined
+    type === 'deviation' || type === 'blunder' || type === 'punish' || type === 'mate'
+      ? type
+      : undefined
   const { prompts, totalCards, dueCount } = await getDrillDeck({
     sourceType,
     opening,

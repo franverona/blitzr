@@ -28,7 +28,7 @@ implies endorsement.
 - Board replay, openings aggregated by ECO, and a user-defined repertoire with deviation detection
 - In-browser Stockfish analysis: blunders, plain-English tactical explanations, move-quality and
   accuracy, live multi-line analysis and free-move exploration
-- Spaced-repetition drilling of your deviations, blunders and missed punishments
+- Spaced-repetition drilling of your deviations, blunders, missed punishments and missed mates
 - Cross-game blunder stats with an accuracy-over-time chart and date filter
 - Opening and endgame lessons with study and quiz modes
 - Mate-in-N puzzles you solve move by move, and defence puzzles where you stop a mate
@@ -207,9 +207,11 @@ A game page also has:
 
 `/drill` turns every repertoire deviation and every one of your blunders into a card: find the move
 you should have played. **Missed punishments** are cards too: your opponent blundered and your
-reply let it go, so find the move that cashes in. Games that left your repertoire at the same position share one card, and missing the same move several turns in a row is one card. On a
+reply let it go, so find the move that cashes in. So are **missed mates**: you had a forced mate in
+3 or fewer and played something that stays winning but no longer mates, which the blunder check
+can't see (every mate is already 99% winning). Games that left your repertoire at the same position share one card, and missing the same move several turns in a row is one card. On a
 blunder or missed-punishment card, a move other than the engine's still counts if a quick Stockfish check rates it good
-or better. Scheduling is SM-2: right answers come back later, wrong ones tomorrow. Sessions hold 15 cards by default (10 or 25 in settings), the most overdue first.
+or better; on a missed-mate card, if it still mates. Scheduling is SM-2: right answers come back later, wrong ones tomorrow. Sessions hold 15 cards by default (10 or 25 in settings), the most overdue first.
 **Hint** reveals progressively more (an answer found once it shows the piece's square is scheduled
 like a wrong one), and cards can be filtered by type (Today's weak spot also
 links to a single opening's cards). A checkbox moves on to the next card after a right answer, and reloading the page resumes the
