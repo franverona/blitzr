@@ -24,6 +24,9 @@ skips every other one's): `unrs-resolver` (postinstall fetching the native resol
 building it would only run node-gyp (Python, a C++ toolchain) for nothing. `public/stockfish/` comes
 from our own `postinstall` (`scripts/setup-stockfish.mjs`). A new dependency that builds on install needs adding.
 
+Node is 22.18+ (`.nvmrc`, `engines`, the `preinstall` guard). `@types/node` stays on the same
+major, so tsc rejects APIs Node 22 lacks; Dependabot ignores its majors. Bump all of them together.
+
 ## Project structure
 
 ```
@@ -179,20 +182,22 @@ backups and `polgar-mates.json` elsewhere. The `data/` paths below assume the de
 - **`BOARD_ANIMATION_DURATION_MS`** (150ms) is shared by every board and the keyboard nav throttle.
 - **`BoardNavControls`** binds ←/→, Space (play), Home/↑/`0` (start), End/↓ (end), `F` (flip) and Esc (exit explore)
   globally, ignoring modifier keys, form fields, and `<dialog>`s that don't set
-  `data-board-shortcuts`.
+  `data-board-shortcuts`. The Move quality panel isn't a dialog: while open, it takes Esc in the
+  capture phase to close itself; the other keys still drive the board beside it.
 - **Play** auto-advances at the `playSpeed` setting (`PLAY_SPEEDS`, 1000/500/250ms), stopping on
   the user's own blunders.
 - **`BoardProvider`'s `myColor`** (defaults to `boardOrientation`) is the user's side for Play's
   stops, saved hints, `MoveList` and `LessonQuiz`. Never read `boardOrientation` as "my color" —
   it's only the view, so a flip button can't change whose moves count.
-- **Game replay and lesson Study mode open on ply 1.** A game page's `?ply=` overrides it (Today
-  links a blunder one ply early, so the board shows the position before it).
+- **Game replay and lesson Study mode open on ply 1.** A game page's `?ply=` overrides it (Today,
+  `/blunders` and the drill link a blunder one ply early, so the board shows the position before it).
 - **Game-end badges** (`gameEndBadges()`, `lib/gameEnd.ts`): mate/draw come from the position;
   resignations, timeouts and agreed draws from the per-player result codes, on the final ply only.
 - **Beginner jargon is explained in place** (`<abbr title>` tooltips, `EvalHelp`), not removed.
 - **A component seeding state from props (`useState(initialX)`) needs `key={id}`** wherever it can
   receive a different record. Exception: a filter that must survive its own navigation (the
-  accuracy popover, the search text) stays out of the key and re-syncs from props during render.
+  accuracy popover, the search text) stays out of the key and re-syncs from props during render, as
+  does `GameAnalysisProvider` when a bulk run saves the open game (a new `analyzedAt`).
 - **Every `<dialog>` is a `Dialog`**, which names it by its visible `<h2>` (`aria-labelledby` to a
   `useId()`, since some dialogs render more than once per page). The caller owns the `ref` and
   `showModal()`; with `onSubmit` the body is a `<form>`.
