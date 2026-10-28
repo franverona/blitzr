@@ -7,7 +7,7 @@ export function BlunderSeverityBadge({ winDrop }: { winDrop: number }) {
   const severity = blunderSeverity(winDrop)
   return (
     <abbr title={s.blunderBadge.titles[severity]} className="no-underline">
-      <Badge tone={severity === 'blunder' ? 'rose' : 'amber'} shape="tag">
+      <Badge tone={severity === 'severe' ? 'rose' : 'amber'} shape="tag">
         {s.blunderBadge.labels[severity]}
       </Badge>
     </abbr>

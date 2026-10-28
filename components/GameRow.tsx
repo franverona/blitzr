@@ -51,14 +51,14 @@ export function GameRow({ game, accuracy }: { game: Game; accuracy: GameAccuracy
         {accuracy ? (
           <span className="inline-flex items-center gap-1.5">
             <abbr
-              title={s.blunderBadge.titles.mistake}
+              title={s.analysisPanel.moveQualityTitles.mistake}
               className="text-amber-600 no-underline dark:text-amber-400"
             >
               {accuracy.mistakes}
             </abbr>
             <span className="text-zinc-300 dark:text-zinc-700">/</span>
             <abbr
-              title={s.blunderBadge.titles.blunder}
+              title={s.analysisPanel.moveQualityTitles.blunder}
               className="text-rose-600 no-underline dark:text-rose-400"
             >
               {accuracy.blunders}

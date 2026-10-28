@@ -271,8 +271,9 @@ the page as props, outside `RepertoireBoard`'s key, so adding a move re-sends th
 
 - Stockfish runs **client-side only**; Server Actions only persist results. Evals are normalized
   to White's perspective. `findBlunders()` flags win-% drops (`moveWinDrop()`, the eval bar's
-  curve) at least as large as 200cp from equal; `blunderSeverity()` splits Mistake/Blunder at 400cp
-  from equal. `swingCp` is display-only.
+  curve) at least as large as 200cp from equal; `blunderSeverity()` splits them into
+  Serious/Severe at 400cp from equal, a separate scale from `lib/moveQuality.ts`'s mistake/blunder
+  tiers. `swingCp` is display-only.
 - Bulk "Analyze all" state lives in `BulkAnalysisProvider` (root layout) so a run survives
   navigation. Cancel is checked between games, so an in-flight game always finishes and saves.
   While a run is active, `beforeunload` asks before the tab closes.

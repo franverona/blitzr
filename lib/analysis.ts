@@ -2,7 +2,7 @@ import { getLocale } from './i18n/locale'
 import type { Locale } from './i18n/locale'
 import type { Blunder, PositionEval } from './types'
 
-export type BlunderSeverity = 'mistake' | 'blunder'
+export type BlunderSeverity = 'serious' | 'severe'
 
 /** Mover's win % lost by dropping `cp` from an equal position. Thresholds are
  *  win-% based so the same cp loss in a won position counts for far less. */
@@ -12,11 +12,11 @@ export function winDropFromEqual(cp: number): number {
 
 export const BLUNDER_THRESHOLD_WIN_DROP = winDropFromEqual(200)
 
-// Display-only split of blunders into mistake/blunder.
+// Display-only split of blunders into serious/severe; not the move-quality mistake/blunder tiers.
 const SEVERE_BLUNDER_THRESHOLD_WIN_DROP = winDropFromEqual(400)
 
 export function blunderSeverity(winDrop: number): BlunderSeverity {
-  return winDrop >= SEVERE_BLUNDER_THRESHOLD_WIN_DROP ? 'blunder' : 'mistake'
+  return winDrop >= SEVERE_BLUNDER_THRESHOLD_WIN_DROP ? 'severe' : 'serious'
 }
 
 // Mate is mapped to a large value so swings keep the winning side; only used

@@ -170,10 +170,10 @@ describe('describeEval', () => {
 
 describe('blunderSeverity', () => {
   it('splits at the win-% drop of 400cp from equal', () => {
-    expect(blunderSeverity(winDropFromEqual(200))).toBe('mistake')
-    expect(blunderSeverity(winDropFromEqual(399))).toBe('mistake')
-    expect(blunderSeverity(winDropFromEqual(400))).toBe('blunder')
-    expect(blunderSeverity(49)).toBe('blunder')
+    expect(blunderSeverity(winDropFromEqual(200))).toBe('serious')
+    expect(blunderSeverity(winDropFromEqual(399))).toBe('serious')
+    expect(blunderSeverity(winDropFromEqual(400))).toBe('severe')
+    expect(blunderSeverity(49)).toBe('severe')
   })
 })
 

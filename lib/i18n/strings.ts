@@ -137,11 +137,11 @@ const en = {
     } as Record<string, string>,
   },
   blunderBadge: {
-    labels: { mistake: 'Mistake', blunder: 'Blunder' },
+    labels: { serious: 'Serious', severe: 'Severe' },
     titles: {
-      mistake:
+      serious:
         'A blunder costing as much as 2–4 pawns would from an equal position — the smaller of the two severities',
-      blunder:
+      severe:
         'A blunder costing as much as 4+ pawns would from an equal position — the more severe of the two severities',
     },
   },
@@ -217,8 +217,8 @@ const en = {
         body: 'A move that cost whoever played it as many winning chances as losing 2 pawns from an equal position. It is measured in winning chances, not pawns: dropping from +9 to +6.5 is still completely winning, so it does not count, but the same 2.5 pawns from an equal position does.',
       },
       {
-        term: 'Mistake / Blunder',
-        body: 'Two severities within what already counts as a blunder above: costing less than 4 pawns would from an equal position is labeled Mistake, more is labeled Blunder. Both still count as "a blunder" everywhere else in the app (drilling, the totals above) — this is just a finer read on how bad it was.',
+        term: 'Serious / Severe',
+        body: 'Two severities within what already counts as a blunder above: costing less than 4 pawns would from an equal position is labeled Serious, more is labeled Severe. Both still count as "a blunder" everywhere else in the app (drilling, the totals above) — this is just a finer read on how bad it was.',
       },
       {
         term: 'Swing',
@@ -314,6 +314,11 @@ const en = {
       inaccuracy: 'Inaccuracy',
       mistake: 'Mistake',
       blunder: 'Blunder',
+    },
+    moveQualityTitles: {
+      mistake:
+        'Mistakes: moves costing as much as 0.6–2 pawns would from an equal position, just short of a blunder',
+      blunder: 'Blunders: moves costing as much as 2+ pawns would from an equal position',
     },
   },
   bulkAnalyze: {
@@ -727,12 +732,12 @@ const es: Strings = {
     } as Record<string, string>,
   },
   blunderBadge: {
-    labels: { mistake: 'Error', blunder: 'Error grave' },
+    labels: { serious: 'Grave', severe: 'Muy grave' },
     titles: {
-      mistake:
-        'Un error que cuesta lo que costarían 2–4 peones desde una posición igualada — la menos grave de las dos categorías',
-      blunder:
-        'Un error que cuesta lo que costarían 4+ peones desde una posición igualada — la más grave de las dos categorías',
+      serious:
+        'Un error grave que cuesta lo que costarían 2–4 peones desde una posición igualada — la menos grave de las dos categorías',
+      severe:
+        'Un error grave que cuesta lo que costarían 4+ peones desde una posición igualada — la más grave de las dos categorías',
     },
   },
   drillFilters: {
@@ -809,8 +814,8 @@ const es: Strings = {
         body: 'Una jugada que le costó a quien la jugó tantas opciones de ganar como perder 2 peones desde una posición igualada. Se mide en opciones de ganar, no en peones: pasar de +9 a +6.5 sigue siendo totalmente ganador, así que no cuenta, pero los mismos 2.5 peones desde una posición igualada sí.',
       },
       {
-        term: 'Error / Error grave',
-        body: 'Dos niveles de gravedad dentro de lo que ya cuenta como error arriba: costar menos que 4 peones desde una posición igualada se etiqueta Error, más se etiqueta Error grave. Ambos cuentan igual como "un error" en el resto de la app (entrenamiento, los totales de arriba) — esto es solo una lectura más fina de qué tan malo fue.',
+        term: 'Grave / Muy grave',
+        body: 'Dos niveles de gravedad dentro de lo que ya cuenta como error grave arriba: costar menos que 4 peones desde una posición igualada se etiqueta Grave, más se etiqueta Muy grave. Ambos cuentan igual como "un error grave" en el resto de la app (entrenamiento, los totales de arriba) — esto es solo una lectura más fina de qué tan malo fue.',
       },
       {
         term: 'Diferencia',
@@ -906,6 +911,12 @@ const es: Strings = {
       inaccuracy: 'Imprecisión',
       mistake: 'Error',
       blunder: 'Error grave',
+    },
+    moveQualityTitles: {
+      mistake:
+        'Errores: jugadas que cuestan lo que costarían 0.6–2 peones desde una posición igualada, sin llegar a error grave',
+      blunder:
+        'Errores graves: jugadas que cuestan lo que costarían 2+ peones desde una posición igualada',
     },
   },
   bulkAnalyze: {
