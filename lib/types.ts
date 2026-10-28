@@ -221,8 +221,9 @@ export interface RepertoireGap {
   games: number
 }
 
-/** 'punish': the opponent just blundered and the user's reply let it go. */
-export type DrillSourceType = 'deviation' | 'blunder' | 'punish'
+/** 'punish': the opponent just blundered and the user's reply let it go. 'mate': the user had a
+ *  short forced mate and played a move that no longer mates. */
+export type DrillSourceType = 'deviation' | 'blunder' | 'punish' | 'mate'
 
 /** Only the review schedule is stored; the prompt is re-derived from the
  *  source game/repertoire/analysis at drill time (see lib/drill.ts). */
@@ -293,6 +294,8 @@ export interface BlunderStats {
   totalGames: number
   analyzedGames: number
   totalBlunders: number
+  /** The opponent's blunders the user could reply to, and how many replies were near-best. */
+  punish: { chances: number; punished: number }
   byOpening: BlunderGroupStat[]
   byPiece: BlunderGroupStat[]
   /** By `detectBlunderReason()` kind, with 'none' when no simple pattern explains it. */
@@ -302,6 +305,19 @@ export interface BlunderStats {
   worst: WorstBlunder[]
   /** Oldest first, one point per analyzed game in scope. */
   trend: AccuracyTrendPoint[]
+  /** `findThrownWins()`: drawn or lost after reaching a winning position, newest first. */
+  thrownWins: ThrownWin[]
+}
+
+export interface ThrownWin {
+  gameId: string
+  gameLabel: string
+  initialFen: string
+  result: 'draw' | 'loss'
+  /** Position index (0 = start) where the user's win chance peaked; the move before it is `moveSan`. */
+  peakPly: number
+  moveSan: string | null
+  peakEval: PositionEval
 }
 
 export interface DrillPrompt {

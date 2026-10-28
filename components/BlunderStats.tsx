@@ -34,8 +34,25 @@ export function BlunderStats({ stats }: { stats: BlunderStatsData }) {
     )
   }
 
+  const { chances, punished } = stats.punish
+
   return (
     <div className="flex flex-col gap-6">
+      {chances > 0 && (
+        <section className="flex flex-col gap-2">
+          <SectionLabel>
+            <abbr title={s.blunderStats.punishTooltip}>{s.blunderStats.punishTitle}</abbr>
+          </SectionLabel>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            {s.blunderStats.punishSummary(
+              punished,
+              chances,
+              Math.round((punished / chances) * 100),
+            )}
+          </p>
+        </section>
+      )}
+
       <section className="flex flex-col gap-2">
         <SectionLabel>{s.blunderStats.byOpening}</SectionLabel>
         <TableShell

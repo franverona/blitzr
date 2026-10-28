@@ -56,8 +56,10 @@ components/
   MoveSequence.tsx          # SAN line rendered with piece icons
   PlanBoard.tsx             # step-through board for an engine plan
   GameAnalysisPanel.tsx     # batch Stockfish analysis + move-quality side panel
+  EvalGraph.tsx             # the eval bar across a game, inside the move-quality panel
   RepertoireBoard.tsx       # editable board that builds the repertoire tree
   DrillSession.tsx          # one drill card at a time
+  TroubleCards.tsx          # /drill: the cards missed again and again, as positions
   PuzzleBoard.tsx           # manual, multi-ply mate-puzzle solving
   LessonPractice.tsx        # Study/Quiz toggle for a lesson; LessonQuiz.tsx is quiz mode
   SettingsProvider.tsx      # per-viewer settings context (cookie-seeded)
@@ -66,6 +68,7 @@ components/
   GameSearchForm.tsx        # games list filters
   DateRangeFilter.tsx       # /blunders date range
   AccuracyTrendChart.tsx    # hand-rolled SVG chart on /blunders
+  ThrownWins.tsx            # /blunders: drawn or lost games that reached a winning position
   BoardCoordinates.tsx      # rank/file labels outside the board
   Select.tsx                # native <select> + chevron — use for every dropdown
   Dialog.tsx                # modal shell: title, ✕, backdrop click, aria-labelledby
@@ -85,7 +88,7 @@ lib/
   tactics.ts / hangingPiece.ts  # tactical detectors and their descriptions
   checklist.ts              # static per-position tactic scan
   drill.ts                  # drill candidates, card hydration, SM-2
-  blunders.ts / accuracyTrend.ts / openings.ts  # pure aggregations
+  blunders.ts / accuracyTrend.ts / openings.ts / thrownWins.ts  # pure aggregations
   repertoire.ts             # diffGameAgainstRepertoire()
   positions.ts              # buildPositions(), isStandardChess()
   openingTheory.ts / endgameTheory.ts  # hand-authored lessons
@@ -333,7 +336,10 @@ and the slider are debounced (400ms); selects navigate immediately.
 the move's square counts as wrong); prompts are re-derived by
 `buildDrillPrompt()` from deviations, own-move blunders and missed punishments (`findPunishCandidates()`:
 the user's reply to an opponent's blunder that wasn't `isNearBestMove()`, unless the reply was itself
-a blunder, which its blunder card covers). Deviations are one card per position
+a blunder, which its blunder card covers) and missed mates (`findMissedMateCandidates()`: an own
+move from a forced mate in 3 or fewer to no mate, on a ply no blunder or punish card covers; the
+win-% curve saturates at mate, so neither sees it, and an alternative answer must still mate,
+`keepsForcedMate()`). Deviations are one card per position
 (the game that already holds the card, else the oldest that left the tree there, so pasting an
 older game doesn't reset its schedule), not per game; a blunder whose best move repeats the
 previous own ply's (same piece left en prise) is folded into that first card. A review's `dueAt` is the start of a local day, so "tomorrow" means
@@ -348,6 +354,9 @@ only the engine's move counts. **Re-analyzing a game can reset its drill progres
 strength can shift which plies count as blunders, and the deck sync deletes cards (with their SM-2
 schedules) whose ply no longer qualifies. Accepted, not a bug.
 
+**Trouble cards** (`troubleCards()`): up to 5 cards under the page's filters, due or not, with
+an ease below 2.25 (two net misses), lowest first, shown under the session without their answers.
+
 **Undo** (`undoDrillAnswer()`) restores the schedule `submitDrillAnswer()` returned, only while that
 answer is still the card's `last_reviewed_at` and only before Next; the streak keeps the day.
 
@@ -357,14 +366,20 @@ it) and shows as a clearable chip. The auto-advance checkbox lives on the page, 
 
 ## Blunders page
 
-`buildBlunderStats()` and `buildAccuracyTrend()` are pure aggregations merged by
+`buildBlunderStats()`, `buildAccuracyTrend()` and `findThrownWins()` are pure aggregations merged by
 `getBlunderStats()`, which applies the `?from=&to=` date range (local calendar days) to every
 section. The trend chart's x-axis is game index, not date, because sessions are bursty. `byReason`
 runs `detectBlunderReason()` on every own blunder (the worst list only on its top 10), so it's as
-narrow as that detector: most blunders land in "no simple pattern". `byPhase`
+narrow as that detector: most blunders land in "no simple pattern". `punish` counts the
+opponent's blunders the user got to answer and the replies `isNearBestMove()` accepts, the same
+bar as `findPunishCandidates()` (which also leaves out replies that were blunders themselves, so
+it finds fewer). `byPhase`
 uses `gamePhase()` (`lib/material.ts`): an endgame once at most 6 queens, rooks and minor pieces
 are left (Lichess's divider count), else the first 10 moves (the FEN's fullmove number, so a game
-from a FEN counts from there) are the opening; listed in game order.
+from a FEN counts from there) are the opening; listed in game order. `findThrownWins()`
+(`lib/thrownWins.ts`) lists drawn or lost games whose own win chance (`evalBarPercent()`) peaked at
+90%+, linking to that position; it renders outside `BlunderStats`' early returns, since a game can be
+thrown without a blunder.
 
 ## Today
 

@@ -1,7 +1,7 @@
 import type { PieceSymbol } from 'chess.js'
 import { findBlunders } from './analysis'
 import { formatDate } from './dates'
-import { whiteToMove } from './drill'
+import { isNearBestMove, whiteToMove } from './drill'
 import { getLocale } from './i18n/locale'
 import type { Locale } from './i18n/locale'
 import { gamePhase, type GamePhase } from './material'
@@ -96,7 +96,7 @@ export function buildBlunderStats(
   games: Game[],
   analysesByGameId: Map<string, GameAnalysis>,
   locale: Locale = getLocale(),
-): Omit<BlunderStats, 'trend'> {
+): Omit<BlunderStats, 'trend' | 'thrownWins'> {
   const byOpening = new Map<string, GroupAcc>()
   const byPiece = new Map<string, GroupAcc>()
   const byReason = new Map<string, GroupAcc>()
@@ -104,6 +104,7 @@ export function buildBlunderStats(
   const worst: BlunderCandidate[] = []
   let analyzedGames = 0
   let totalBlunders = 0
+  const punish = { chances: 0, punished: 0 }
 
   for (const game of games) {
     if (!game.movesSan) continue
@@ -117,7 +118,16 @@ export function buildBlunderStats(
 
     for (const blunder of findBlunders(analysis.evals, game.movesSan, game.initialFen)) {
       const isMine = whiteToMove(blunder.ply, game.initialFen) === (game.myColor === 'white')
-      if (!isMine) continue
+      if (!isMine) {
+        // Same bar as a punish card (findPunishCandidates()); a blunder that ended the game had no reply.
+        const replyEval = analysis.evals[blunder.ply + 1]
+        if (blunder.ply < game.movesSan.length && replyEval) {
+          punish.chances++
+          if (isNearBestMove(game.myColor === 'white', blunder.evalAfter, replyEval))
+            punish.punished++
+        }
+        continue
+      }
       totalBlunders++
 
       const isMateSwing = blunder.evalBefore.mate !== null || blunder.evalAfter.mate !== null
@@ -186,6 +196,7 @@ export function buildBlunderStats(
     totalGames: games.length,
     analyzedGames,
     totalBlunders,
+    punish,
     byOpening: toGroupStats(byOpening),
     byPiece: toGroupStats(byPiece),
     byReason: toGroupStats(byReason),

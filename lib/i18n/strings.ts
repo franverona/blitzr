@@ -36,8 +36,14 @@ const en = {
     drillTitle: 'Drill',
     sessionCards: (n: number): string =>
       n === 1 ? "card in today's session" : "cards in today's session",
-    dueBreakdown: (due: number, deviations: number, blunders: number, punishes: number) =>
-      `${due} due: ${deviations} repertoire, ${blunders} blunder${punishes ? `, ${punishes} missed punishment` : ''}`,
+    dueBreakdown: (
+      due: number,
+      deviations: number,
+      blunders: number,
+      punishes: number,
+      mates: number,
+    ) =>
+      `${due} due: ${deviations} repertoire, ${blunders} blunder${punishes ? `, ${punishes} missed punishment` : ''}${mates ? `, ${mates} missed mate` : ''}`,
     streak: (days: number) => `${days}-day streak`,
     noStreak: 'Drill today to start a streak',
     keepStreak: 'Drill today to keep it',
@@ -155,7 +161,21 @@ const en = {
     punishes: 'Missed punishments',
     punishesTitle:
       "Cards for moves where your opponent blundered and your reply didn't take advantage",
+    mates: 'Missed mates',
+    matesTitle:
+      'Cards for moves where you had a forced mate in 3 or fewer and played something else',
     clearOpening: 'Show all openings',
+  },
+  troubleCards: {
+    title: 'Trouble cards',
+    tooltip:
+      'Cards you keep missing (two or more misses more than hits), the hardest first. Open the game to study the position; the answer stays hidden so they still drill.',
+    kind: {
+      deviation: 'Deviation',
+      blunder: 'Blunder',
+      punish: 'Missed punishment',
+      mate: 'Missed mate',
+    },
   },
   gameList: {
     empty: 'No games synced yet. Click "Sync games" to fetch your Chess.com history.',
@@ -194,8 +214,25 @@ const en = {
     byPhaseTooltip:
       'Endgame: at most 6 queens, rooks, bishops and knights left on the board. Before that, the first 10 moves count as the opening.',
     worstBlunders: 'Worst blunders',
+    punishTitle: 'Punishing their blunders',
+    punishTooltip:
+      "Your opponents' blunders that you got a move to answer, and how often your reply was good or better — the same bar as a missed-punishment drill card",
+    punishSummary: (punished: number, chances: number, pct: number) =>
+      `You punished ${punished} of your opponents' ${chances} ${chances === 1 ? 'blunder' : 'blunders'} (${pct}%).`,
     avgSwing: 'Avg swing',
     avgSwingTooltip: 'How many pawns worse the position got, on average, across these blunders',
+  },
+  thrownWins: {
+    title: 'Won positions not won',
+    tooltip: (pct: number) =>
+      `Games you drew or lost after your winning chances reached ${pct}% (the eval bar), linked to your best position`,
+    summary: (thrown: number, analyzed: number) =>
+      thrown === 0
+        ? `None of your ${analyzed} analyzed ${analyzed === 1 ? 'game' : 'games'} — every winning position was won.`
+        : `${thrown} of your ${analyzed} analyzed ${analyzed === 1 ? 'game' : 'games'} reached a winning position and still slipped away.`,
+    peak: (evaluation: string, move: string | null) =>
+      move ? `Peaked at ${evaluation} after ${move}` : `Peaked at ${evaluation} from the start`,
+    result: { draw: 'Drawn', loss: 'Lost' },
   },
   evalHelp: {
     summary: 'How to read this',
@@ -308,6 +345,9 @@ const en = {
     opponent: 'Opponent',
     yourMoves: 'Your moves to review — click one to see it on the board',
     phases: { opening: 'Opening', middlegame: 'Middlegame', endgame: 'Endgame' },
+    evalGraph: 'Evaluation over the game',
+    evalGraphLabel:
+      "The eval bar over the whole game, first move to last: White's share in white, Black's in black. Click to jump to a move.",
     moveQuality: {
       best: 'Best',
       excellent: 'Excellent',
@@ -386,6 +426,7 @@ const en = {
     findPreparedMove: 'Find your prepared move',
     findBestMove: 'Find the best move',
     findPunish: 'Your opponent just blundered — punish it',
+    findMate: 'You have a forced mate — find the first move',
     cardOf: (index: number, total: number) => `Card ${index} of ${total}`,
     hintText: (pieces: string) => `Hint: it's a ${pieces} move.`,
     keyboardHint: 'Space/Enter → Next · H → Hint · U → Undo',
@@ -625,8 +666,14 @@ const es: Strings = {
     drillTitle: 'Entrenar',
     sessionCards: (n: number): string =>
       n === 1 ? 'tarjeta en la sesión de hoy' : 'tarjetas en la sesión de hoy',
-    dueBreakdown: (due: number, deviations: number, blunders: number, punishes: number) =>
-      `${due} pendientes: ${deviations} de repertorio, ${blunders} de errores${punishes ? `, ${punishes} sin castigar` : ''}`,
+    dueBreakdown: (
+      due: number,
+      deviations: number,
+      blunders: number,
+      punishes: number,
+      mates: number,
+    ) =>
+      `${due} pendientes: ${deviations} de repertorio, ${blunders} de errores${punishes ? `, ${punishes} sin castigar` : ''}${mates ? `, ${mates} de mate perdido` : ''}`,
     streak: (days: number) => `Racha de ${days} ${days === 1 ? 'día' : 'días'}`,
     noStreak: 'Entrena hoy para empezar una racha',
     keepStreak: 'Entrena hoy para mantenerla',
@@ -751,7 +798,21 @@ const es: Strings = {
     punishes: 'Sin castigar',
     punishesTitle:
       'Tarjetas de jugadas en las que tu rival cometió un error y tu respuesta no lo aprovechó',
+    mates: 'Mates perdidos',
+    matesTitle:
+      'Tarjetas de jugadas en las que tenías un mate forzado en 3 o menos y jugaste otra cosa',
     clearOpening: 'Mostrar todas las aperturas',
+  },
+  troubleCards: {
+    title: 'Tarjetas difíciles',
+    tooltip:
+      'Tarjetas que sigues fallando (dos o más fallos más que aciertos), la más difícil primero. Abre la partida para estudiar la posición; la respuesta sigue oculta para que puedas entrenarlas.',
+    kind: {
+      deviation: 'Desviación',
+      blunder: 'Error grave',
+      punish: 'Sin castigar',
+      mate: 'Mate perdido',
+    },
   },
   gameList: {
     empty:
@@ -792,8 +853,25 @@ const es: Strings = {
     byPhaseTooltip:
       'Final: como mucho 6 damas, torres, alfiles y caballos en el tablero. Antes, las primeras 10 jugadas cuentan como apertura.',
     worstBlunders: 'Peores errores',
+    punishTitle: 'Castigar sus errores',
+    punishTooltip:
+      'Los errores graves de tus rivales a los que pudiste responder, y cuántas veces tu respuesta fue buena o mejor — el mismo criterio que una tarjeta de error sin castigar',
+    punishSummary: (punished: number, chances: number, pct: number) =>
+      `Castigaste ${punished} de ${chances} ${chances === 1 ? 'error grave' : 'errores graves'} de tus rivales (${pct}%).`,
     avgSwing: 'Diferencia media',
     avgSwingTooltip: 'Cuántos peones peoró la posición, en promedio, a lo largo de estos errores',
+  },
+  thrownWins: {
+    title: 'Posiciones ganadas sin ganar',
+    tooltip: (pct: number) =>
+      `Partidas que empataste o perdiste después de que tus opciones de ganar llegaran al ${pct}% (la barra de evaluación), enlazadas a tu mejor posición`,
+    summary: (thrown: number, analyzed: number) =>
+      thrown === 0
+        ? `Ninguna de tus ${analyzed} ${analyzed === 1 ? 'partida analizada' : 'partidas analizadas'} — ganaste cada posición ganadora.`
+        : `${thrown} de tus ${analyzed} ${analyzed === 1 ? 'partida analizada' : 'partidas analizadas'} llegaron a una posición ganadora y aun así se escaparon.`,
+    peak: (evaluation: string, move: string | null) =>
+      move ? `Máximo de ${evaluation} tras ${move}` : `Máximo de ${evaluation} desde el inicio`,
+    result: { draw: 'Tablas', loss: 'Derrota' },
   },
   evalHelp: {
     summary: 'Cómo interpretar esto',
@@ -906,6 +984,9 @@ const es: Strings = {
     opponent: 'Rival',
     yourMoves: 'Tus jugadas a revisar — pulsa una para verla en el tablero',
     phases: { opening: 'Apertura', middlegame: 'Medio juego', endgame: 'Final' },
+    evalGraph: 'Evaluación a lo largo de la partida',
+    evalGraphLabel:
+      'La barra de evaluación durante toda la partida, de la primera jugada a la última: la parte de las blancas en blanco, la de las negras en negro. Pulsa para ir a una jugada.',
     moveQuality: {
       best: 'Mejor',
       excellent: 'Excelente',
@@ -986,6 +1067,7 @@ const es: Strings = {
     findPreparedMove: 'Encuentra tu jugada preparada',
     findBestMove: 'Encuentra la mejor jugada',
     findPunish: 'Tu rival acaba de cometer un error — castígalo',
+    findMate: 'Tienes un mate forzado — encuentra la primera jugada',
     cardOf: (index: number, total: number) => `Tarjeta ${index} de ${total}`,
     hintText: (pieces: string) => `Pista: es una jugada de ${pieces}.`,
     keyboardHint: 'Espacio/Intro → Siguiente · H → Pista · U → Deshacer',
