@@ -11,6 +11,7 @@ import type { GameAnalysis, MyColor } from '@/lib/types'
 import { useBoardContext } from './BoardContext'
 import type { BadMoveTier } from './MoveQualityBadge'
 import { ErrorText } from './ErrorText'
+import { EvalGraph } from './EvalGraph'
 import { Select } from './Select'
 import { useSettings } from './SettingsProvider'
 import { accuracyTone, chipClass, LINK_CLASS, TONE_TEXT_CLASS } from './styles'
@@ -269,6 +270,13 @@ function MoveQualityPanel({
             </tr>
           ))}
         </TableShell>
+        <EvalGraph
+          evals={analysis.evals}
+          movesSan={movesSan}
+          initialFen={positions[0]}
+          currentPly={exploring ? null : currentPly}
+          onSelect={jumpTo}
+        />
         {badTiers.length > 0 && (
           <div className="flex flex-col gap-3">
             <p className="text-sm font-medium">{s.analysisPanel.yourMoves}</p>
