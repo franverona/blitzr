@@ -3,6 +3,7 @@ import {
   diffGameAgainstRepertoire,
   findRepertoireGaps,
   lineToRepertoireNodes,
+  repertoireLines,
 } from '@/lib/repertoire'
 import type { Game, RepertoireNode } from '@/lib/types'
 
@@ -152,5 +153,30 @@ describe('lineToRepertoireNodes', () => {
     const black = lineToRepertoireNodes(['e4'], 'black', [], newId, 't')!
     expect(lineToRepertoireNodes(['e4'], 'white', black, newId, 't')).toHaveLength(1)
     expect(lineToRepertoireNodes(['e4', 'e4'], 'white', [], newId, 't')).toBeNull()
+  })
+})
+
+describe('repertoireLines', () => {
+  it('lists every root-to-leaf line', () => {
+    const nodes = [
+      node({ id: 'e4', ply: 1, moveSan: 'e4' }),
+      node({ id: 'e5', parentId: 'e4', ply: 2, moveSan: 'e5' }),
+      node({ id: 'c5', parentId: 'e4', ply: 2, moveSan: 'c5' }),
+      node({ id: 'nf3', parentId: 'e5', ply: 3, moveSan: 'Nf3' }),
+    ]
+    expect(repertoireLines(nodes, 'white')).toEqual([
+      ['e4', 'e5', 'Nf3'],
+      ['e4', 'c5'],
+    ])
+  })
+
+  it("drops a Black line with no Black move, and an empty tree's", () => {
+    const nodes = [
+      node({ id: 'e4', color: 'black', ply: 1, moveSan: 'e4' }),
+      node({ id: 'd4', color: 'black', ply: 1, moveSan: 'd4' }),
+      node({ id: 'd5', color: 'black', parentId: 'd4', ply: 2, moveSan: 'd5' }),
+    ]
+    expect(repertoireLines(nodes, 'black')).toEqual([['d4', 'd5']])
+    expect(repertoireLines([], 'white')).toEqual([])
   })
 })

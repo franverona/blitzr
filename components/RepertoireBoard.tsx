@@ -22,6 +22,7 @@ import { Dialog } from './Dialog'
 import { ErrorText } from './ErrorText'
 import { IconButton } from './IconButton'
 import { PageHeader } from './PageHeader'
+import { ModeTabs } from './RepertoireQuiz'
 import { buttonClass, chipClass } from './styles'
 
 export function RepertoireBoard({
@@ -214,6 +215,7 @@ export function RepertoireBoard({
             </button>
             <span className="mx-1 h-4 w-px bg-zinc-300 dark:bg-zinc-700" />
             <HelpButton />
+            <ModeTabs color={color} quiz={false} />
             <ColorTab color="white" active={color === 'white'} />
             <ColorTab color="black" active={color === 'black'} />
           </div>
