@@ -408,7 +408,8 @@ last 7 days, except for the repertoire rate; the pure parts live in `lib/today.t
 session size. Ratings change per time class (`recentResults()`; Chess.com never mixes them). The
 weak spot is the top opening family from `buildBlunderStats()` over recent games, linking to
 `/drill?opening=` only if the deck has a card for it. Focus also lists the week's worst blunder
-(`buildBlunderStats().worst[0]`), how the week's games were lost (`lossReasons()`, from the user's
+(`buildBlunderStats().worst[0]`), the deck's trouble-card count (`troubleCards()` uncapped, linking
+to `/drill`), how the week's games were lost (`lossReasons()`, from the user's
 own result code) and the opening lesson those games reached most (`suggestLesson()`, exact SAN
 prefix like `countGamesReachingLine()`). The repertoire rate (`repertoireDeviations()`) is how many
 of the 10 newest games with a repertoire for their color left it, with no date window. The last game shows its final position, own accuracy

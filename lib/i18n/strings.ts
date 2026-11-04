@@ -61,6 +61,9 @@ const en = {
     drillOpening: 'Drill it',
     worstBlunderLabel: 'Worst blunder this week',
     reviewIt: 'Review',
+    troubleCardsLabel: 'Cards you keep missing',
+    troubleCardsDetail: (n: number) => `${n} trouble card${n === 1 ? '' : 's'}`,
+    seeTroubleCards: 'See them',
     lossesHeading: (n: number) => `${n} loss${n === 1 ? '' : 'es'} this week`,
     lossReasons: {
       timeout: 'on time',
@@ -693,6 +696,9 @@ const es: Strings = {
     drillOpening: 'Entrénala',
     worstBlunderLabel: 'Peor error de la semana',
     reviewIt: 'Revisar',
+    troubleCardsLabel: 'Tarjetas que sigues fallando',
+    troubleCardsDetail: (n: number) => `${n} ${n === 1 ? 'tarjeta difícil' : 'tarjetas difíciles'}`,
+    seeTroubleCards: 'Verlas',
     lossesHeading: (n: number) => `${n} ${n === 1 ? 'derrota' : 'derrotas'} esta semana`,
     lossReasons: {
       timeout: 'por tiempo',
