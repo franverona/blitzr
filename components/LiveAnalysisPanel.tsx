@@ -24,8 +24,9 @@ export function LiveAnalysisPanel() {
     playExploreLine,
     resetExploreLine,
     setExplorePly,
+    hintsHidden,
   } = useBoardContext()
-  const { hideEngineHints } = useSettings()
+  const hideEngineHints = useSettings().hideEngineHints || hintsHidden
   const s = getStrings()
 
   // Highlights the line just played via ▶. Reset during render when `fen`

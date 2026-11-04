@@ -194,6 +194,8 @@ backups and `polgar-mates.json` elsewhere. The `data/` paths below assume the de
   it's only the view, so a flip button can't change whose moves count.
 - **Game replay and lesson Study mode open on ply 1.** A game page's `?ply=` overrides it (Today,
   `/blunders` and the drill link a blunder one ply early, so the board shows the position before it).
+  `?hints=0` (trouble cards) hides the arrow, eval bar and live panel there until the user steps
+  away or moves (`BoardContext`'s `hintsHidden`), whatever the setting.
 - **Game-end badges** (`gameEndBadges()`, `lib/gameEnd.ts`): mate/draw come from the position;
   resignations, timeouts and agreed draws from the per-player result codes, on the final ply only.
 - **Beginner jargon is explained in place** (`<abbr title>` tooltips, `EvalHelp`), not removed.
@@ -356,6 +358,7 @@ schedules) whose ply no longer qualifies. Accepted, not a bug.
 
 **Trouble cards** (`troubleCards()`): up to 5 cards under the page's filters, due or not, with
 an ease below 2.25 (two net misses), lowest first, shown under the session without their answers.
+They link with `?hints=0`, so the game page doesn't show the engine's move either.
 
 **Undo** (`undoDrillAnswer()`) restores the schedule `submitDrillAnswer()` returned, only while that
 answer is still the card's `last_reviewed_at` and only before Next; the streak keeps the day.

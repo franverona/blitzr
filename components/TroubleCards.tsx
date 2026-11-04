@@ -19,11 +19,11 @@ export function TroubleCards({ troubles }: { troubles: DrillPrompt[] }) {
       <ul className="flex flex-wrap gap-4">
         {troubles.map((t) => (
           <li key={`${t.gameId}:${t.sourceType}:${t.ply}`} className="flex w-36 flex-col gap-1">
-            <Link href={`/games/${t.gameId}?ply=${t.ply - 1}`}>
+            <Link href={`/games/${t.gameId}?ply=${t.ply - 1}&hints=0`}>
               <MiniBoard fen={t.fen} boardOrientation={t.color} />
             </Link>
             <Link
-              href={`/games/${t.gameId}?ply=${t.ply - 1}`}
+              href={`/games/${t.gameId}?ply=${t.ply - 1}&hints=0`}
               className={`truncate text-xs ${LINK_CLASS}`}
             >
               {t.gameLabel}

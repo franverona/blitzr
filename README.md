@@ -219,7 +219,7 @@ links to a single opening's cards). A checkbox moves on to the next card after a
 session where you left it.
 **Undo** (or U) takes back a misclicked answer, restoring the card's schedule, until you move on.
 **Trouble cards** below the session show up to 5 cards you keep missing, as positions linking to
-their games, without the answer.
+their games, without the answer (the game opens with the engine's hints hidden until you move).
 Shortcuts: Space/Enter for the next card, H for a hint, U to undo. Re-analyzing a game at another strength can change
 which moves count as blunders, so its blunder cards (and their review history) may be replaced.
 
