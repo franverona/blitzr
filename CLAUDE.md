@@ -302,6 +302,8 @@ the page as props, outside `RepertoireBoard`'s key, so adding a move re-sends th
   accuracy with the Lichess formula. Given the positions, `summarizeMoveQuality()` also splits it by
   `gamePhase()`; only the Move quality panel asks, since building positions replays the game (too
   slow across every game on `/blunders`, see #304). No Brilliant/Great/Book tiers.
+  A side that never moved (a timeout before the first move) has `accuracy: null`, so the trend,
+  Today and the games list's column and filter skip it rather than count a 100.
 
 ### Live analysis and exploration
 

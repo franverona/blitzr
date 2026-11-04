@@ -55,7 +55,7 @@ describe('summarizeMoveQuality', () => {
     expect(summary.black.counts.blunder).toBe(1)
     expect(summary.black.plies.blunder).toEqual([2])
     expect(summary.white.plies.best).toEqual([1])
-    expect(summary.black.accuracy).toBeLessThan(summary.white.accuracy)
+    expect(summary.black.accuracy).toBeLessThan(summary.white.accuracy!)
   })
 
   it('splits accuracy by game phase when given the positions, null for a phase without moves', () => {
@@ -76,9 +76,13 @@ describe('summarizeMoveQuality', () => {
     expect(summary.white.byPhase).toEqual({ opening: null, middlegame: null, endgame: 100 })
   })
 
-  it('defaults an empty side to 100 rather than 0', () => {
+  it('gives a side that never moved no accuracy rather than 100', () => {
     const summary = summarizeMoveQuality([cp(0)], [])
-    expect(summary.white.accuracy).toBe(100)
-    expect(summary.black.accuracy).toBe(100)
+    expect(summary.white.accuracy).toBeNull()
+    expect(summary.black.accuracy).toBeNull()
+    // Black timed out after 1.e4.
+    const one = summarizeMoveQuality([cp(0), cp(30)], ['e4'])
+    expect(one.white.accuracy).not.toBeNull()
+    expect(one.black.accuracy).toBeNull()
   })
 })

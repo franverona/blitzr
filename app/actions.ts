@@ -345,6 +345,7 @@ export async function getGameAccuracyById(): Promise<Record<string, GameAccuracy
     if (!analysis || !game.movesSan) continue
     const summary = summarizeMoveQuality(analysis.evals, game.movesSan, game.initialFen)
     const mine = game.myColor === 'white' ? summary.white : summary.black
+    if (mine.accuracy === null) continue
     result[game.id] = {
       accuracy: mine.accuracy,
       mistakes: mine.counts.mistake,
@@ -561,6 +562,7 @@ export async function getTodaySummary(): Promise<{
     myColor: MyColor
     /** The final position, for its mini board. */
     fen: string
+    analyzed: boolean
     accuracy: number | null
     firstBlunderPly: number | null
     firstBlunderMove: number | null

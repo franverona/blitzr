@@ -162,11 +162,13 @@ export default async function TodayPage() {
                   </Link>
                   <ResultBadge result={lastGame.result} className="shrink-0" />
                 </p>
-                {lastGame.accuracy === null ? (
+                {!lastGame.analyzed ? (
                   <p className={mutedClassName}>{s.today.notAnalyzed}</p>
                 ) : (
                   <>
-                    <p className="text-sm">{s.today.lastGameAccuracy(lastGame.accuracy)}</p>
+                    {lastGame.accuracy !== null && (
+                      <p className="text-sm">{s.today.lastGameAccuracy(lastGame.accuracy)}</p>
+                    )}
                     <p className={mutedClassName}>
                       {lastGame.firstBlunderPly === null || lastGame.firstBlunderMove === null ? (
                         s.today.noBlunders

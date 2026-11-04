@@ -168,9 +168,9 @@ export function MoveQualityLink() {
       >
         {s.analysisPanel.accuracy}{' '}
         <span
-          className={`font-semibold tabular-nums ${TONE_TEXT_CLASS[accuracyTone(mine.accuracy)]}`}
+          className={`font-semibold tabular-nums ${mine.accuracy === null ? '' : TONE_TEXT_CLASS[accuracyTone(mine.accuracy)]}`}
         >
-          {mine.accuracy}
+          {mine.accuracy ?? '—'}
         </span>
       </button>
       <MoveQualityPanel id={panelId} open={open} onClose={() => setOpen(false)} />
@@ -260,8 +260,8 @@ function MoveQualityPanel({
         >
           <tr className="font-medium">
             <td className="px-3 py-2">{s.analysisPanel.accuracy}</td>
-            <td className="px-3 py-2 text-right">{mine.accuracy}</td>
-            <td className="px-3 py-2 text-right">{theirs.accuracy}</td>
+            <td className="px-3 py-2 text-right">{mine.accuracy ?? '—'}</td>
+            <td className="px-3 py-2 text-right">{theirs.accuracy ?? '—'}</td>
           </tr>
           {GAME_PHASES.map((phase) => (
             <tr key={phase} className="text-zinc-500 dark:text-zinc-400">
