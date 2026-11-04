@@ -460,6 +460,11 @@ const en = {
       `You've played this in ${games} of your games (${wins}W ${draws}D ${losses}L)`,
     neverPlayed: "You haven't played this exact line in any synced games yet",
     seeOpeningStats: 'see your opening stats',
+    addToRepertoire: 'Add to my repertoire',
+    addedToRepertoire: (n: number, color: 'white' | 'black') =>
+      n === 0
+        ? `This line is already in your ${color} repertoire.`
+        : `Added ${n} move${n === 1 ? '' : 's'} to your ${color} repertoire.`,
   },
   lessonQuiz: {
     lineComplete: 'Line complete!',
@@ -1106,6 +1111,11 @@ const es: Strings = {
       `Has jugado esto en ${games} de tus partidas (${wins}V ${draws}E ${losses}D)`,
     neverPlayed: 'Aún no has jugado esta línea exacta en ninguna partida sincronizada',
     seeOpeningStats: 'ver tus estadísticas de apertura',
+    addToRepertoire: 'Añadir a mi repertorio',
+    addedToRepertoire: (n: number, color: 'white' | 'black') =>
+      n === 0
+        ? `Esta línea ya está en tu repertorio con ${color === 'white' ? 'blancas' : 'negras'}.`
+        : `${n === 1 ? 'Añadida 1 jugada' : `Añadidas ${n} jugadas`} a tu repertorio con ${color === 'white' ? 'blancas' : 'negras'}.`,
   },
   lessonQuiz: {
     lineComplete: '¡Línea completa!',

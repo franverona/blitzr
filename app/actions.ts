@@ -32,9 +32,14 @@ import { summarizeMoveQuality } from '@/lib/moveQuality'
 import { buildOpeningFamilies, ecoFamilyLabel, unknownOpeningLabel } from '@/lib/openings'
 import { allMateProblems, getMateProblem } from '@/lib/puzzleSet'
 import { OPENING_LESSONS, countGamesReachingLine } from '@/lib/openingTheory'
-import { buildPositions, isStandardChess, startsFromStandardPosition } from '@/lib/positions'
+import {
+  buildPositions,
+  isStandardChess,
+  START_FEN,
+  startsFromStandardPosition,
+} from '@/lib/positions'
 import { plyLabel } from '@/lib/san'
-import { findRepertoireGaps } from '@/lib/repertoire'
+import { findRepertoireGaps, lineToRepertoireNodes } from '@/lib/repertoire'
 import { isSyncStale, listPendingArchives, syncArchive } from '@/lib/sync'
 import { describeBlunderReason } from '@/lib/tactics'
 import { findThrownWins } from '@/lib/thrownWins'
@@ -265,6 +270,35 @@ export async function addRepertoireMove(node: RepertoireNode): Promise<ActionRes
   }
   revalidatePath('/repertoire')
   return { ok: true }
+}
+
+/**
+ * Adds an opening lesson's line to the repertoire of the lesson's color, reusing the nodes it
+ * already shares. Takes only the slug: the line comes from the server's own lesson data.
+ */
+export async function addLessonToRepertoire(
+  slug: string,
+): Promise<{ ok: true; added: number } | { ok: false; error: string }> {
+  const error = getStrings().repertoire.failedToSave
+  const lesson = typeof slug === 'string' ? OPENING_LESSONS.find((l) => l.slug === slug) : undefined
+  if (!lesson || lesson.initialFen !== START_FEN) return { ok: false, error }
+  try {
+    const repo = getRepository()
+    const nodes = lineToRepertoireNodes(
+      lesson.moves.map((m) => m.san),
+      lesson.primaryColor,
+      await repo.listRepertoireNodes(lesson.primaryColor),
+      () => crypto.randomUUID(),
+      new Date().toISOString(),
+    )
+    if (!nodes) return { ok: false, error }
+    for (const node of nodes) await repo.addRepertoireNode(node)
+    revalidatePath('/repertoire')
+    return { ok: true, added: nodes.length }
+  } catch (err) {
+    console.error(err)
+    return { ok: false, error }
+  }
 }
 
 export async function deleteRepertoireMove(id: string): Promise<ActionResult> {

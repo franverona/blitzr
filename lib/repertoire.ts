@@ -1,3 +1,4 @@
+import { Chess } from 'chess.js'
 import type {
   Game,
   MyColor,
@@ -84,4 +85,48 @@ export function findRepertoireGaps(
     gaps.set(key, gap)
   }
   return [...gaps.values()].sort((a, b) => b.games - a.games).slice(0, limit)
+}
+
+/**
+ * The nodes a SAN line from the start position adds to a color's tree: it follows existing nodes
+ * where they match, then branches. Empty if the line is already there; null if a move is illegal.
+ */
+export function lineToRepertoireNodes(
+  movesSan: string[],
+  color: RepertoireColor,
+  existing: RepertoireNode[],
+  newId: () => string,
+  now: string,
+): RepertoireNode[] | null {
+  const chess = new Chess()
+  const added: RepertoireNode[] = []
+  let parentId: string | null = null
+  for (const [i, san] of movesSan.entries()) {
+    let move
+    try {
+      move = chess.move(san)
+    } catch {
+      return null
+    }
+    const match: RepertoireNode | undefined = existing.find(
+      (n) => n.color === color && n.parentId === parentId && n.moveSan === move.san,
+    )
+    if (match) {
+      parentId = match.id
+      continue
+    }
+    const node: RepertoireNode = {
+      id: newId(),
+      color,
+      parentId,
+      ply: i + 1,
+      moveSan: move.san,
+      fen: chess.fen(),
+      createdAt: now,
+    }
+    // Nothing in `existing` hangs below a new node, so later moves all branch too.
+    added.push(node)
+    parentId = node.id
+  }
+  return added
 }

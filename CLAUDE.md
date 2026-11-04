@@ -458,6 +458,9 @@ can be an underpromotion too) and explore mode.
   must be read live before citing. **Summaries are paraphrased, never copied** (Wikibooks is
   CC BY-SA, this repo is MIT).
 - `countGamesReachingLine()` matches the lesson's exact SAN prefix, not Chess.com's ECO tag.
+- `addLessonToRepertoire(slug)` adds an opening lesson's line to its `primaryColor` tree through
+  `lineToRepertoireNodes()` (pure: follows matching nodes, branches after). It takes only the slug,
+  so the moves come from the server's lesson data, not the client.
 - Endgame lessons have their own `initialFen` and run to mate (or promotion), covered by
   `endgameTheory.test.ts`.
 
