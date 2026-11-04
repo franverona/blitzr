@@ -1,8 +1,9 @@
 'use client'
 
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
+import { terminalEval } from '@/lib/stockfish/analyze'
 import { StockfishEngine } from '@/lib/stockfish/client'
-import type { EngineLine } from '@/lib/types'
+import type { EngineLine, PositionEval } from '@/lib/types'
 import { useSettings } from './SettingsProvider'
 import { useBoardContext } from './BoardContext'
 
@@ -12,6 +13,8 @@ interface LiveAnalysisContextValue {
   /** The position `lines` was computed for. Searches lag `displayFen`, so
    *  anything drawn on the board must check this against `displayFen`. */
   fen: string | null
+  /** Set for a mate or stalemate, which has no lines: the eval bar's score there. */
+  terminal: PositionEval | null
   /** A search is running or queued. */
   thinking: boolean
 }
@@ -22,6 +25,7 @@ const LiveAnalysisContext = createContext<LiveAnalysisContextValue | null>(null)
 const NO_LIVE_ANALYSIS: LiveAnalysisContextValue = {
   lines: null,
   fen: null,
+  terminal: null,
   thinking: false,
 }
 
@@ -48,6 +52,7 @@ export function LiveAnalysisProvider({ children }: { children: React.ReactNode }
   const [state, setState] = useState<LiveAnalysisContextValue>({
     lines: null,
     fen: null,
+    terminal: null,
     thinking: active,
   })
 
@@ -69,9 +74,13 @@ export function LiveAnalysisProvider({ children }: { children: React.ReactNode }
         while (pendingFen && !cancelled) {
           const fen = pendingFen
           pendingFen = null
-          const lines = await engine.evaluateLines(fen, LIVE_MULTI_PV, LIVE_MOVETIME_MS)
+          // Stockfish gives a game-over position no PV, so it's scored here instead.
+          const terminal = terminalEval(fen)
+          const lines = terminal
+            ? []
+            : await engine.evaluateLines(fen, LIVE_MULTI_PV, LIVE_MOVETIME_MS)
           // Skip a result that a newer request has already superseded.
-          if (!cancelled && !pendingFen) setState({ lines, fen, thinking: false })
+          if (!cancelled && !pendingFen) setState({ lines, fen, terminal, thinking: false })
         }
       } catch {
         // Worker died — clear the spinner.

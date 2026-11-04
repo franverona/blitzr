@@ -66,13 +66,13 @@ export function BoardView({
   const s = getStrings()
   const boardColors = useSettings()
   const hideHints = boardColors.hideEngineHints || hintsHidden
-  const { lines: liveLines, fen: liveFen } = useLiveAnalysisContext()
+  const { lines: liveLines, fen: liveFen, terminal: liveTerminal } = useLiveAnalysisContext()
   useMoveSound(displayFen)
   // The eval bar uses the latest completed search even if it's for the
   // previous position, so it doesn't blink on every step.
   const liveEval: PositionEval | undefined = liveLines?.[0]
     ? { cp: liveLines[0].cp, mate: liveLines[0].mate, bestMove: null }
-    : undefined
+    : (liveTerminal ?? undefined)
   // Saved analysis wins on the recorded game; live is the fallback and the
   // only source while exploring.
   const barEval = exploring ? liveEval : (evals?.[ply] ?? liveEval)
