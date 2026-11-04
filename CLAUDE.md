@@ -279,7 +279,8 @@ Only manual games can be deleted (`deleteManualGame()`); FKs cascade to analysis
 a prepared move. An opponent's unprepared move or the tree running out doesn't count. Those two are
 what `findRepertoireGaps()` lists instead, beside the tree on `/repertoire`: the top 5 spots (line in
 book plus the move played next) by game count, each jumping the board to that node. They come from
-the page as props, outside `RepertoireBoard`'s key, so adding a move re-sends them.
+the page as props, outside `RepertoireBoard`'s key, so adding a move re-sends them. The color
+whose tree is shown is `?color=` (`white` unless `black`).
 
 ## Engine analysis
 
@@ -367,8 +368,8 @@ show the engine's move either.
 answer is still the card's `last_reviewed_at` and only before Next; the streak keeps the day. An answer to a
 card that's gone (a resumed session outliving its game or a deck sync) isn't saved at all.
 
-The page's only visible filter is card type; `?opening=` has no picker (Today's weak spot links to
-it) and shows as a clearable chip. The auto-advance checkbox lives on the page, not in Settings:
+The page's only visible filter is card type (`?type=`); `?opening=` has no picker (Today's weak
+spot links to it) and shows as a clearable chip. The auto-advance checkbox lives on the page, not in Settings:
 `blitzr-drill-auto-advance` is read by `app/drill/page.tsx` and written by `DrillSession`.
 
 ## Blunders page
