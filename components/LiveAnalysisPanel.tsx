@@ -80,6 +80,8 @@ export function LiveAnalysisPanel() {
       <div className="flex flex-col divide-y divide-zinc-200 dark:divide-zinc-800">
         {lines === null || fen === null ? (
           <p className="px-3 pb-3 text-zinc-500">{s.liveAnalysis.thinking}</p>
+        ) : lines.length === 0 ? (
+          <p className="px-3 pb-3 text-zinc-500">{s.liveAnalysis.gameOver}</p>
         ) : (
           lines.map((line, i) => {
             const moves = [line.move.san, ...line.move.bestLine]
