@@ -65,14 +65,24 @@ function resultCodes(
   return result === '1-0' ? { white: 'win', black: loss } : { white: loss, black: 'win' }
 }
 
-// PGN dates are "YYYY.MM.DD" with no time, which would land at midnight UTC
-// and sort below same-day synced games. Use the current time of day instead.
+// PGN dates are "YYYY.MM.DD" with no time, which would land at midnight and sort below
+// same-day synced games, so the current time of day is added. Both in local time, as every
+// date is shown: UTC would move a game pasted near midnight to the next or previous day.
 function endTimeFromPgnDate(headers: Record<string, string>): number {
-  const raw = headers.EndDate ?? headers.Date
-  const parsedDateOnly = raw ? Date.parse(raw.replace(/\./g, '-')) : NaN
-  if (Number.isNaN(parsedDateOnly)) return Math.floor(Date.now() / 1000)
-  const msSinceMidnightUtc = Date.now() % 86_400_000
-  return Math.floor((parsedDateOnly + msSinceMidnightUtc) / 1000)
+  const now = new Date()
+  const match = (headers.EndDate ?? headers.Date)?.match(/^(\d{4})\.(\d{2})\.(\d{2})$/)
+  if (!match) return Math.floor(now.getTime() / 1000)
+  const local = new Date(
+    Number(match[1]),
+    Number(match[2]) - 1,
+    Number(match[3]),
+    now.getHours(),
+    now.getMinutes(),
+    now.getSeconds(),
+  )
+  return Number.isNaN(local.getTime())
+    ? Math.floor(now.getTime() / 1000)
+    : Math.floor(local.getTime() / 1000)
 }
 
 // Chess.com's `rules` values: "Chess960" -> "chess960", "King of the Hill" -> "kingofthehill".
