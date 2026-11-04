@@ -46,8 +46,8 @@ function moveAccuracy(winPctBefore: number, winPctAfter: number): number {
 export type MoveQualityCounts = Record<MoveQualityTier, number>
 
 export interface SideAccuracy {
-  /** 0-100, one decimal place. */
-  accuracy: number
+  /** 0-100, one decimal place; null if the side made no move (a timeout before moving). */
+  accuracy: number | null
   counts: MoveQualityCounts
   /** 1-indexed plies of each tier's moves, in game order. */
   plies: Record<MoveQualityTier, number[]>
@@ -68,14 +68,10 @@ function emptyPlies(): Record<MoveQualityTier, number[]> {
   return { best: [], excellent: [], good: [], inaccuracy: [], mistake: [], blunder: [] }
 }
 
-// No moves means nothing went wrong.
-function average(nums: number[]): number {
-  if (nums.length === 0) return 100
+// No moves is no score: a 100 would lift every average for a game the user never played.
+function average(nums: number[]): number | null {
+  if (nums.length === 0) return null
   return Math.round((nums.reduce((a, b) => a + b, 0) / nums.length) * 10) / 10
-}
-
-function averageOrNull(nums: number[]): number | null {
-  return nums.length === 0 ? null : average(nums)
 }
 
 /**
@@ -120,9 +116,9 @@ export function summarizeMoveQuality(
     plies: plies[color],
     ...(positions && {
       byPhase: {
-        opening: averageOrNull(byPhase[color].opening),
-        middlegame: averageOrNull(byPhase[color].middlegame),
-        endgame: averageOrNull(byPhase[color].endgame),
+        opening: average(byPhase[color].opening),
+        middlegame: average(byPhase[color].middlegame),
+        endgame: average(byPhase[color].endgame),
       },
     }),
   })

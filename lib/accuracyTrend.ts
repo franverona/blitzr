@@ -16,6 +16,7 @@ export function buildAccuracyTrend(
 
     const summary = summarizeMoveQuality(analysis.evals, game.movesSan, game.initialFen)
     const mine = game.myColor === 'white' ? summary.white : summary.black
+    if (mine.accuracy === null) continue
     const opponent = game.myColor === 'white' ? game.blackUsername : game.whiteUsername
 
     points.push({

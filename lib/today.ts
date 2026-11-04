@@ -107,15 +107,22 @@ export function repertoireDeviations(
 export function gameReview(
   game: Game,
   analysis: GameAnalysis | undefined,
-): { accuracy: number | null; firstBlunderPly: number | null; firstBlunderMove: number | null } {
+): {
+  analyzed: boolean
+  /** null too when analyzed but the user never moved. */
+  accuracy: number | null
+  firstBlunderPly: number | null
+  firstBlunderMove: number | null
+} {
   if (!analysis || !game.movesSan)
-    return { accuracy: null, firstBlunderPly: null, firstBlunderMove: null }
+    return { analyzed: false, accuracy: null, firstBlunderPly: null, firstBlunderMove: null }
   const summary = summarizeMoveQuality(analysis.evals, game.movesSan, game.initialFen)
   const mine = game.myColor === 'white' ? summary.white : summary.black
   const firstBlunder = findBlunders(analysis.evals, game.movesSan, game.initialFen).find(
     (b) => whiteToMove(b.ply, game.initialFen) === (game.myColor === 'white'),
   )
   return {
+    analyzed: true,
     accuracy: mine.accuracy,
     firstBlunderPly: firstBlunder?.ply ?? null,
     firstBlunderMove: firstBlunder ? moveNumberOfPly(firstBlunder.ply, game.initialFen) : null,

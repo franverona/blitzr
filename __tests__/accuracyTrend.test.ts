@@ -76,6 +76,12 @@ describe('buildAccuracyTrend', () => {
     const trend = buildAccuracyTrend([unparsed, unanalyzed, analyzed], analyses)
     expect(trend.map((p) => p.gameId)).toEqual([analyzed.id])
   })
+
+  it('skips a game the user never moved in', () => {
+    const timedOut = makeGame({ myColor: 'black', movesSan: ['e4'] })
+    const analyses = new Map([[timedOut.id, makeAnalysis(timedOut.id, [cp(0), cp(30)])]])
+    expect(buildAccuracyTrend([timedOut], analyses)).toEqual([])
+  })
 })
 
 describe('rollingAverageAccuracy', () => {
