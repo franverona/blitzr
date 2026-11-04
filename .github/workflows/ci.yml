@@ -83,6 +83,13 @@ jobs:
           check /games/smoke smoke-black
           check /learn/sicilian-defense 'Sicilian Defense'
           check /learn/king-and-rook-vs-king 'King and Rook vs. King'
+          # The engine Worker loads these by a name hardcoded in two places (the setup script and
+          # lib/stockfish/client.ts); a mismatch would only show as analysis failing in the browser.
+          for f in stockfish-19-lite-single.js stockfish-19-lite-single.wasm; do
+            curl -fsS -o /dev/null "http://127.0.0.1:9878/stockfish/$f" || { echo "::error::/stockfish/$f failed"; exit 1; }
+          done
+          wasm_type=$(curl -fsS -o /dev/null -w '%{content_type}' http://127.0.0.1:9878/stockfish/stockfish-19-lite-single.wasm)
+          [ "$wasm_type" = application/wasm ] || { echo "::error::the engine's wasm is served as $wasm_type"; exit 1; }
           # Every curl above uses Host 127.0.0.1, so a proxy.ts or headers() that stopped loading
           # (a Next rename, a refactor) would pass silently.
           status=$(curl -s -o /dev/null -w '%{http_code}' -H 'Host: evil.example' http://127.0.0.1:9878/)
