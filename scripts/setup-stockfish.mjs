@@ -10,9 +10,10 @@ const FILES = ['stockfish-19-lite-single.js', 'stockfish-19-lite-single.wasm']
 const srcDir = path.join(__dirname, '..', 'node_modules', 'stockfish', 'bin')
 const destDir = path.join(__dirname, '..', 'public', 'stockfish')
 
+// A runtime dependency: without it every analysis 404s in the browser, so fail the install.
 if (!fs.existsSync(srcDir)) {
-  console.warn('stockfish package not found in node_modules, skipping asset copy.')
-  process.exit(0)
+  console.error('stockfish package not found in node_modules; run pnpm install again.')
+  process.exit(1)
 }
 
 fs.mkdirSync(destDir, { recursive: true })
