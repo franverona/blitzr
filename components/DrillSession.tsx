@@ -350,7 +350,8 @@ function DrillDeck({
     lastAnswerRef.current = { answer, saved: saveAnswer(answer) }
   }
 
-  /** Resolves to null when the save failed (the answer is then in `unsaved`). */
+  /** Resolves to null when the save failed (the answer is then in `unsaved`) or the card is
+   *  gone; either way Undo has nothing to revert on the server. */
   function saveAnswer(answer: DrillAnswer): Promise<DrillUndo | null> {
     return submitDrillAnswer(answer.gameId, answer.sourceType, answer.ply, answer.correct).catch(
       (err) => {

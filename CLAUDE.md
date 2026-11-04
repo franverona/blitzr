@@ -358,7 +358,8 @@ schedules) whose ply no longer qualifies. Accepted, not a bug.
 an ease below 2.25 (two net misses), lowest first, shown under the session without their answers.
 
 **Undo** (`undoDrillAnswer()`) restores the schedule `submitDrillAnswer()` returned, only while that
-answer is still the card's `last_reviewed_at` and only before Next; the streak keeps the day.
+answer is still the card's `last_reviewed_at` and only before Next; the streak keeps the day. An answer to a
+card that's gone (a resumed session outliving its game or a deck sync) isn't saved at all.
 
 The page's only visible filter is card type; `?opening=` has no picker (Today's weak spot links to
 it) and shows as a clearable chip. The auto-advance checkbox lives on the page, not in Settings:
