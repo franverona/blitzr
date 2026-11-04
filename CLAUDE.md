@@ -359,8 +359,9 @@ strength can shift which plies count as blunders, and the deck sync deletes card
 schedules) whose ply no longer qualifies. Accepted, not a bug.
 
 **Trouble cards** (`troubleCards()`): up to 5 cards under the page's filters, due or not, with
-an ease below 2.25 (two net misses), lowest first, shown under the session without their answers.
-They link with `?hints=0`, so the game page doesn't show the engine's move either.
+an ease below 2.25 (a miss costs 0.2 and a hit gains 0.1, so 2·misses − hits ≥ 3), lowest first,
+shown under the session without their answers. They link with `?hints=0`, so the game page doesn't
+show the engine's move either.
 
 **Undo** (`undoDrillAnswer()`) restores the schedule `submitDrillAnswer()` returned, only while that
 answer is still the card's `last_reviewed_at` and only before Next; the streak keeps the day.
