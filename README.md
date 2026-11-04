@@ -26,10 +26,14 @@ implies endorsement.
 - Incremental sync of your games into SQLite, plus adding any game by pasted PGN
 - Game list with opponent search and result/color/rated/accuracy filters
 - Board replay, openings aggregated by ECO, and a user-defined repertoire with deviation detection
+  and the most-played spots where your games run past it
 - In-browser Stockfish analysis: blunders, plain-English tactical explanations, move-quality and
-  accuracy, live multi-line analysis and free-move exploration
-- Spaced-repetition drilling of your deviations, blunders, missed punishments and missed mates
-- Cross-game blunder stats with an accuracy-over-time chart and date filter
+  accuracy (split by game phase), an eval graph, live multi-line analysis and free-move exploration
+- Spaced-repetition drilling of your deviations, blunders, missed punishments and missed mates,
+  with the cards you keep missing listed as positions
+- Cross-game blunder stats (by opening, piece, tactic and game phase), how often you punished your
+  opponents' blunders, the winning positions you didn't win, and an accuracy-over-time chart, all
+  over a date range
 - Opening and endgame lessons with study and quiz modes
 - Mate-in-N puzzles you solve move by move, and defence puzzles where you stop a mate
 - A Today page: cards due, games left to analyze, last week's accuracy and the next puzzle
