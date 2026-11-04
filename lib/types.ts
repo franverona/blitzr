@@ -318,6 +318,9 @@ export interface ThrownWin {
   peakPly: number
   moveSan: string | null
   peakEval: PositionEval
+  /** The user's own move (1-indexed ply) after the peak that lost the most win chance. */
+  throwPly: number | null
+  throwSan: string | null
 }
 
 export interface DrillPrompt {

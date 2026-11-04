@@ -232,6 +232,7 @@ const en = {
         : `${thrown} of your ${analyzed} analyzed ${analyzed === 1 ? 'game' : 'games'} reached a winning position and still slipped away.`,
     peak: (evaluation: string, move: string | null) =>
       move ? `Peaked at ${evaluation} after ${move}` : `Peaked at ${evaluation} from the start`,
+    throwMove: (move: string) => `slipped with ${move}`,
     result: { draw: 'Drawn', loss: 'Lost' },
   },
   evalHelp: {
@@ -871,6 +872,7 @@ const es: Strings = {
         : `${thrown} de tus ${analyzed} ${analyzed === 1 ? 'partida analizada' : 'partidas analizadas'} llegaron a una posición ganadora y aun así se escaparon.`,
     peak: (evaluation: string, move: string | null) =>
       move ? `Máximo de ${evaluation} tras ${move}` : `Máximo de ${evaluation} desde el inicio`,
+    throwMove: (move: string) => `se escapó con ${move}`,
     result: { draw: 'Tablas', loss: 'Derrota' },
   },
   evalHelp: {
