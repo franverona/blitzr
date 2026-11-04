@@ -538,6 +538,8 @@ export async function getTodaySummary(): Promise<{
     streak: number
     /** Last 7 days, oldest first; the last entry is today. */
     week: boolean[]
+    /** `troubleCards()` over the whole deck, uncapped. */
+    troubles: number
   }
   unanalyzedGames: number
   accuracy: ReturnType<typeof recentAccuracy>
@@ -639,6 +641,7 @@ export async function getTodaySummary(): Promise<{
       sessionSize: getSessionSize((await cookies()).get('blitzr-drill-session-size')?.value),
       streak: drillStreak(reviewDays, now),
       week: drillWeek(reviewDays, now),
+      troubles: troubleCards(liveCards, Infinity).length,
     },
     unanalyzedGames: unanalyzed.length,
     accuracy: recentAccuracy(buildAccuracyTrend(games, analysesByGameId), now),
