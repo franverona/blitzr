@@ -11,6 +11,7 @@ import { AddLessonToRepertoireButton } from './AddLessonToRepertoireButton'
 import { BoardView } from './Board'
 import { BoardProvider } from './BoardContext'
 import { BoardNavControls } from './BoardNavControls'
+import { EndgamePlayout } from './EndgamePlayout'
 import { FlipBoardButton } from './FlipBoardButton'
 import { LessonQuiz } from './LessonQuiz'
 import { MoveExplanation } from './MoveExplanation'
@@ -18,9 +19,9 @@ import { useSettings } from './SettingsProvider'
 import { PageHeader } from './PageHeader'
 import { chipClass, LINK_CLASS } from './styles'
 
-type Mode = 'study' | 'quiz'
+type Mode = 'study' | 'quiz' | 'play'
 
-/** Study/Quiz toggle. `key={mode}` resets the board on every switch. */
+/** Study/Quiz (and, for endgames, Play) toggle. `key={mode}` resets the board on every switch. */
 export function LessonPractice({
   lesson,
   gameStats,
@@ -59,6 +60,14 @@ export function LessonPractice({
                 active={mode === 'quiz'}
                 onClick={() => setMode('quiz')}
               />
+              {/* Endgame lessons only (no game stats): an opening has no position to win from. */}
+              {!gameStats && (
+                <ModeTab
+                  label={s.endgamePlayout.play}
+                  active={mode === 'play'}
+                  onClick={() => setMode('play')}
+                />
+              )}
               <span className="mx-1 h-4 w-px bg-zinc-300 dark:bg-zinc-700" />
               {/* Opening lessons only (they have game stats); endgames start from a FEN. */}
               {gameStats && (
@@ -86,8 +95,10 @@ export function LessonPractice({
               </div>
             }
           />
-        ) : (
+        ) : mode === 'quiz' ? (
           <LessonQuiz sidebarExtra={<MoveExplanation moves={lesson.moves} />} />
+        ) : (
+          <EndgamePlayout lesson={lesson} />
         )}
       </div>
     </BoardProvider>
