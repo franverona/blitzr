@@ -53,6 +53,22 @@ describe('findThrownWins', () => {
     expect(result).toMatchObject([{ gameId: 'g1', result: 'loss', peakPly: 2, moveSan: 'e5' }])
   })
 
+  it("names the user's own move after the peak that lost the most", () => {
+    // White's 3.Nf3 drops +7 to -2 and 5.Bc4 drops -2 to -9 (less win %); Black's moves don't count.
+    const game = makeGame({ movesSan: ['e4', 'e5', 'Nf3', 'Nc6', 'Bc4', 'Nf6'] })
+    const evals = [cp(20), cp(300), cp(700), cp(-200), cp(-200), cp(-900), cp(-2000)]
+    expect(findThrownWins([game], analyses([['g1', evals]]))).toMatchObject([
+      { peakPly: 2, throwPly: 3, throwSan: 'Nf3' },
+    ])
+  })
+
+  it('has no throw when none of the moves after the peak lost anything', () => {
+    const game = makeGame({ movesSan: ['e4', 'e5'] })
+    expect(findThrownWins([game], analyses([['g1', [cp(0), cp(900), cp(0)]]]))).toMatchObject([
+      { peakPly: 1, throwPly: null, throwSan: null },
+    ])
+  })
+
   it("reads the user's side: Black's win chance is White's mirrored", () => {
     const game = makeGame({ myColor: 'black', myResult: 'draw' })
     expect(findThrownWins([game], analyses([['g1', [cp(0), mate(-3), cp(0)]]]))).toMatchObject([

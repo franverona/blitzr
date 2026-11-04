@@ -33,6 +33,17 @@ export function ThrownWins({ wins, analyzedGames }: { wins: ThrownWin[]; analyze
                 {s.thrownWins.peak(
                   formatEval(w.peakEval),
                   w.moveSan ? `${plyLabel(w.peakPly, w.initialFen)} ${w.moveSan}` : null,
+                )}
+                {w.throwPly !== null && w.throwSan && (
+                  <>
+                    {' · '}
+                    {/* One ply early, like the other blunder links: the position before the move. */}
+                    <Link href={`/games/${w.gameId}?ply=${w.throwPly - 1}`} className={LINK_CLASS}>
+                      {s.thrownWins.throwMove(
+                        `${plyLabel(w.throwPly, w.initialFen)} ${w.throwSan}`,
+                      )}
+                    </Link>
+                  </>
                 )}{' '}
                 · {s.thrownWins.result[w.result]}
               </span>

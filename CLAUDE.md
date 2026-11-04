@@ -396,7 +396,8 @@ uses `gamePhase()` (`lib/material.ts`): an endgame once at most 6 queens, rooks 
 are left (Lichess's divider count), else the first 10 moves (the FEN's fullmove number, so a game
 from a FEN counts from there) are the opening; listed in game order. `findThrownWins()`
 (`lib/thrownWins.ts`) lists drawn or lost games whose own win chance (`evalBarPercent()`) peaked at
-90%+, linking to that position; it renders outside `BlunderStats`' early returns, since a game can be
+90%+, linking to that position and to the own move after it with the biggest `moveWinDrop()` (one
+ply early, like the other blunder links); it renders outside `BlunderStats`' early returns, since a game can be
 thrown without a blunder.
 
 ## Today
