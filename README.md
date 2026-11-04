@@ -256,9 +256,11 @@ filter scopes the whole page.
 
 `/learn` has short lessons on 14 openings and 3 basic endgames, each a line you step through
 with a note per move. **Quiz** mode tests you on one side while the opponent's moves play
-automatically (H shows the move, R restarts). Study mode has the game page's shortcuts. Opening
-lessons show how many of your own games reached that line, and **Add to my repertoire** puts the
-line in your tree for the lesson's color, reusing the moves you already have. Content is
+automatically (H shows the move, R restarts). Endgame lessons also have **Play it out**: the same
+position against Stockfish, which defends, until you mate (or promote). Study mode has the game
+page's shortcuts. Opening lessons show how many of your own games reached that line, and **Add to
+my repertoire** puts the line in your tree for the lesson's color, reusing the moves you already
+have. Content is
 adapted, in original wording, from Wikibooks'
 [Chess Opening Theory](https://en.wikibooks.org/wiki/Chess_Opening_Theory/1._e4) and
 [Chess/The Endgame](https://en.wikibooks.org/wiki/Chess/The_Endgame) (CC BY-SA).

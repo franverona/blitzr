@@ -480,6 +480,16 @@ const en = {
     notQuiteTryAgain: 'Not quite — try again.',
     keyboardHint: 'H → Show move · R → Restart',
   },
+  endgamePlayout: {
+    play: 'Play it out',
+    yourMove: (color: string, move: number) => `Playing as ${color} — move ${move}`,
+    engineThinking: 'Stockfish is defending…',
+    won: (moves: number) => `Done in ${moves} move${moves === 1 ? '' : 's'}!`,
+    drawn: 'Drawn — the win slipped away. Restart and try again.',
+    goalMate: 'Checkmate the engine, which defends as well as it can.',
+    goalPromotion: 'Promote your pawn while the engine tries to stop it.',
+    engineFailed: "The engine couldn't start, so it can't reply. Reload the page to try again.",
+  },
   aboutOpening: {
     about: (name: string) => `About ${name}`,
     adaptedFrom: "Adapted from Wikibooks' Chess Opening Theory",
@@ -1137,6 +1147,17 @@ const es: Strings = {
       `${mistakes} ${mistakes === 1 ? 'error' : 'errores'}, ${hints} ${hints === 1 ? 'pista usada' : 'pistas usadas'}.`,
     notQuiteTryAgain: 'No exactamente — inténtalo de nuevo.',
     keyboardHint: 'H → Mostrar jugada · R → Reiniciar',
+  },
+  endgamePlayout: {
+    play: 'Jugarlo',
+    yourMove: (color: string, move: number) => `Juegas con ${color} — jugada ${move}`,
+    engineThinking: 'Stockfish defiende…',
+    won: (moves: number) => `¡Hecho en ${moves} ${moves === 1 ? 'jugada' : 'jugadas'}!`,
+    drawn: 'Tablas — se escapó la victoria. Reinicia y vuelve a intentarlo.',
+    goalMate: 'Da jaque mate al motor, que defiende lo mejor que puede.',
+    goalPromotion: 'Corona tu peón mientras el motor intenta impedirlo.',
+    engineFailed:
+      'El motor no pudo arrancar, así que no puede responder. Recarga la página para reintentarlo.',
   },
   aboutOpening: {
     about: (name: string) => `Sobre ${name}`,

@@ -65,6 +65,7 @@ components/
   TroubleCards.tsx          # /drill: the cards missed again and again, as positions
   PuzzleBoard.tsx           # manual, multi-ply mate-puzzle solving
   LessonPractice.tsx        # Study/Quiz toggle for a lesson; LessonQuiz.tsx is quiz mode
+  EndgamePlayout.tsx        # endgame lessons' Play mode: the position against Stockfish
   SettingsProvider.tsx      # per-viewer settings context (cookie-seeded)
   BulkAnalysisProvider.tsx  # "Analyze all" run state, mounted in the root layout
   SyncProvider.tsx          # sync run state + auto-sync on open, mounted in the root layout
@@ -470,7 +471,9 @@ can be an underpromotion too) and explore mode.
   `lineToRepertoireNodes()` (pure: follows matching nodes, branches after). It takes only the slug,
   so the moves come from the server's lesson data, not the client.
 - Endgame lessons have their own `initialFen` and run to mate (or promotion), covered by
-  `endgameTheory.test.ts`.
+  `endgameTheory.test.ts`. Their **Play** mode (`EndgamePlayout`) starts there with the lesson's
+  side against Stockfish (300ms a move, one search at a time); won at mate, or at promotion when
+  the lesson's line ends in one, drawn by any draw.
 
 ## Position checklist
 
