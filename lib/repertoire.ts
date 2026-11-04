@@ -130,3 +130,17 @@ export function lineToRepertoireNodes(
   }
   return added
 }
+
+/** Every root-to-leaf line of a color's tree as SAN, keeping only lines with a move of that color. */
+export function repertoireLines(nodes: RepertoireNode[], color: RepertoireColor): string[][] {
+  const index = buildRepertoireIndex(nodes)
+  const lines: string[][] = []
+  const walk = (parentId: string | null, line: string[]) => {
+    const children = index.get(parentId) ?? []
+    if (children.length === 0 && line.length > 0) lines.push(line)
+    for (const child of children) walk(child.id, [...line, child.moveSan])
+  }
+  walk(null, [])
+  // White moves on odd plies from the start position; a Black line needs at least two moves.
+  return lines.filter((line) => line.length >= (color === 'white' ? 1 : 2))
+}

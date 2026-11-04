@@ -60,6 +60,7 @@ components/
   GameAnalysisPanel.tsx     # batch Stockfish analysis + move-quality side panel
   EvalGraph.tsx             # the eval bar across a game, inside the move-quality panel
   RepertoireBoard.tsx       # editable board that builds the repertoire tree
+  RepertoireQuiz.tsx        # /repertoire?mode=quiz: one tree line from memory, via LessonQuiz
   DrillSession.tsx          # one drill card at a time
   TroubleCards.tsx          # /drill: the cards missed again and again, as positions
   PuzzleBoard.tsx           # manual, multi-ply mate-puzzle solving
@@ -289,6 +290,10 @@ what `findRepertoireGaps()` lists instead, beside the tree on `/repertoire`: the
 book plus the move played next) by game count, each jumping the board to that node. They come from
 the page as props, outside `RepertoireBoard`'s key, so adding a move re-sends them. The color
 whose tree is shown is `?color=` (`white` unless `black`).
+
+`?mode=quiz` swaps the builder for `RepertoireQuiz`: `repertoireLines()` (root-to-leaf, only lines
+with a move of that color) played through `LessonQuiz`, from the tree's first line, then a random
+one per "Next line" (not on the first render, which would hydrate differently).
 
 ## Engine analysis
 
