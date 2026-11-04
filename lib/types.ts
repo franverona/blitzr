@@ -334,6 +334,9 @@ export interface DrillPrompt {
   correctMoves: string[]
   /** Saved eval of `fen`, for grading other moves; null on deviation cards. */
   evalBefore: PositionEval | null
+  /** Punish cards: what the opponent's blunder allowed, if a simple pattern explains it. Optional
+   *  so a session stored before it existed still resumes. */
+  opponentMistake?: BlunderReason | null
   gameLabel: string
   opponentUsername: string
   /** Null if Chess.com has none or the fetch failed. */
