@@ -32,8 +32,11 @@ updates:
     cooldown:
       default-days: 2
     groups:
+      # fetch-metadata runs with the auto-merge workflow's write token, so its bumps come on their
+      # own branch, which that workflow skips (see dependabot-automerge.yml): reviewed by hand.
       actions:
         update-types: [minor, patch]
+        exclude-patterns: ['dependabot/fetch-metadata']
     commit-message:
       prefix: chore
       include: scope

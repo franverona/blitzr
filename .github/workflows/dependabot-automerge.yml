@@ -9,7 +9,9 @@ permissions:
 jobs:
   automerge:
     runs-on: ubuntu-latest
-    if: github.actor == 'dependabot[bot]'
+    # A pull_request run uses the PR's own workflow file, so a fetch-metadata bump would run its
+    # new code with this write token before anyone reviewed it. Its branch is skipped instead.
+    if: github.actor == 'dependabot[bot]' && !contains(github.head_ref, 'dependabot/fetch-metadata')
     steps:
       - name: Fetch Dependabot metadata
         id: metadata
