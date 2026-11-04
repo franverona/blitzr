@@ -61,9 +61,11 @@ export function BoardView({
     displayFen,
     exitExploring,
     attemptExploreMove,
+    hintsHidden,
   } = useBoardContext()
   const s = getStrings()
   const boardColors = useSettings()
+  const hideHints = boardColors.hideEngineHints || hintsHidden
   const { lines: liveLines, fen: liveFen } = useLiveAnalysisContext()
   useMoveSound(displayFen)
   // The eval bar uses the latest completed search even if it's for the
@@ -75,10 +77,7 @@ export function BoardView({
   // only source while exploring.
   const barEval = exploring ? liveEval : (evals?.[ply] ?? liveEval)
   // Unlike the bar, a stale arrow would point at the wrong squares.
-  const liveLine =
-    !boardColors.hideEngineHints && liveFen === displayFen
-      ? (liveLines?.[0] ?? undefined)
-      : undefined
+  const liveLine = !hideHints && liveFen === displayFen ? (liveLines?.[0] ?? undefined) : undefined
   // Unique id required: two boards on one page (this + PlanBoard) crash otherwise.
   const boardId = useId()
   // Saved suggestion only for the user's own moves, and not while exploring
@@ -174,7 +173,7 @@ export function BoardView({
       for (const arrow of checklistSquareStyles.arrows) {
         arrows.set(`${arrow.startSquare}-${arrow.endSquare}`, arrow)
       }
-      if (bestMove && !boardColors.hideEngineHints) {
+      if (bestMove && !hideHints) {
         arrows.set(`${bestMove.from}-${bestMove.to}`, {
           startSquare: bestMove.from,
           endSquare: bestMove.to,
@@ -190,7 +189,7 @@ export function BoardView({
       })
     }
     return [...arrows.values()]
-  }, [checklistSquareStyles.arrows, bestMove, exploring, liveLine, boardColors.hideEngineHints])
+  }, [checklistSquareStyles.arrows, bestMove, exploring, liveLine, hideHints])
 
   // The position shows mate/draw itself; resignations and timeouts (most
   // games) only get a badge on the recorded final ply.
@@ -258,7 +257,7 @@ export function BoardView({
         className={`flex w-full shrink-0 flex-col gap-3 ${boardMaxWidthClassName}`}
       >
         <div className="flex items-stretch gap-2">
-          {barEval && !boardColors.hideEngineHints && (
+          {barEval && !hideHints && (
             <EvalBar
               evaluation={barEval}
               boardOrientation={boardOrientation}

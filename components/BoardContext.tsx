@@ -47,6 +47,9 @@ interface BoardContextValue {
   playExploreLine: (sanMoves: string[]) => boolean
   /** Clears the explored moves and returns to ply 0 without leaving explore mode. */
   resetExploreLine: () => void
+  /** Engine hints hidden on the opening ply (`hideHintsOnInitialPly`) until the user
+   *  steps away or plays a move, regardless of the setting. */
+  hintsHidden: boolean
 }
 
 const BoardContext = createContext<BoardContextValue | null>(null)
@@ -66,6 +69,7 @@ export function BoardProvider({
   finalResults,
   evals,
   initialPly,
+  hideHintsOnInitialPly = false,
   children,
 }: {
   initialFen: string
@@ -78,6 +82,8 @@ export function BoardProvider({
   evals?: PositionEval[]
   /** Defaults to the last ply. */
   initialPly?: number
+  /** For a link to a position the user should solve (a trouble card). */
+  hideHintsOnInitialPly?: boolean
   children: React.ReactNode
 }) {
   const positions = useMemo(() => buildPositions(initialFen, movesSan), [initialFen, movesSan])
@@ -87,6 +93,10 @@ export function BoardProvider({
   const [boardOrientation, setBoardOrientation] = useState(initialBoardOrientation)
 
   const [exploring, setExploring] = useState(false)
+  // Once off it stays off: coming back to the ply doesn't hide the answer again.
+  const [hintsHidden, setHintsHidden] = useState(hideHintsOnInitialPly)
+  const [hintsPly] = useState(ply)
+  if (hintsHidden && (ply !== hintsPly || exploring)) setHintsHidden(false)
   const [exploreBaseFen, setExploreBaseFen] = useState<string | null>(null)
   const [explorePath, setExplorePathState] = useState<string[]>([])
   const [explorePly, setExplorePlyState] = useState(0)
@@ -212,6 +222,7 @@ export function BoardProvider({
         attemptExploreMove,
         playExploreLine,
         resetExploreLine,
+        hintsHidden,
       }}
     >
       {children}
