@@ -358,7 +358,8 @@ previous own ply's (same piece left en prise) is folded into that first card. A 
 the next morning's session. The deck re-syncs on every `/drill` load
 (`reconcileDrillDeck()`, pure) and serves the most-overdue cards (`blitzr-drill-session-size`
 cookie: 10/15/25, default 15, read by `getDrillDeck()` itself). `DrillSession` snapshots its prompts
-so revalidation can't reshuffle an active session, and keeps the snapshot (with position and tally)
+so revalidation can't reshuffle an active session (a missed card, `helped` included, is appended
+to it once as an ungraded `retry`: no save, tally or Undo), and keeps the snapshot (with position and tally)
 in `sessionStorage` so a reload resumes it. Only an unfinished session under the same filters resumes;
 it's read through `useSyncExternalStore`, rendering nothing until then. A blunder card also accepts a non-engine move
 when a one-off client-side eval rates it good or better (`isNearBestMove()`); if the engine fails,

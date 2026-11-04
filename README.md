@@ -223,7 +223,8 @@ blunder or missed-punishment card, a move other than the engine's still counts i
 or better; on a missed-mate card, if it still mates. Scheduling is SM-2: right answers come back later, wrong ones tomorrow. Sessions hold 15 cards by default (10 or 25 in settings), the most overdue first.
 **Hint** reveals progressively more (an answer found once it shows the piece's square is scheduled
 like a wrong one), and cards can be filtered by type (Today's weak spot also
-links to a single opening's cards). A checkbox moves on to the next card after a right answer, and reloading the page resumes the
+links to a single opening's cards). A missed card comes back once at the end of the session, as an
+ungraded second try. A checkbox moves on to the next card after a right answer, and reloading the page resumes the
 session where you left it.
 After a miss on a blunder, missed-punishment or missed-mate card, the engine's move is explained,
 with its plan on a step-through board.
