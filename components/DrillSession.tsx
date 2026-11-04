@@ -67,6 +67,11 @@ function revealArrows(
   return arrows
 }
 
+// "This leaves…" reads as the tail of "Their last move: …".
+function lowerFirst(text: string): string {
+  return text.charAt(0).toLowerCase() + text.slice(1)
+}
+
 function shuffle<T>(items: T[]): T[] {
   const result = [...items]
   for (let i = result.length - 1; i > 0; i--) {
@@ -538,6 +543,8 @@ function DrillDeck({
                 ` ${s.drill.or} `,
               ),
             )}
+            {activePrompt.opponentMistake &&
+              ` ${s.drill.theirMistake(lowerFirst(describeBlunderReason(activePrompt.opponentMistake)))}`}
           </p>
         )}
 

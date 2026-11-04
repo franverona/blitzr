@@ -4,6 +4,7 @@ export { whiteToMove }
 import { formatDate } from './dates'
 import { buildPositions } from './positions'
 import { diffGameAgainstRepertoire } from './repertoire'
+import { detectBlunderReason } from './tactics'
 import type {
   DrillCard,
   DrillPrompt,
@@ -169,7 +170,8 @@ export function buildDrillPrompt(
   analysesByGameId: Map<string, GameAnalysis>,
 ): DrillPrompt | null {
   if (!game.movesSan) return null
-  const fen = buildPositions(game.initialFen, game.movesSan)[card.ply - 1]
+  const positions = buildPositions(game.initialFen, game.movesSan)
+  const fen = positions[card.ply - 1]
   if (!fen) return null
 
   const color = game.myColor
@@ -211,6 +213,8 @@ export function buildDrillPrompt(
       : undefined
   const bestMove = evalBefore?.bestMove
   if (!evalBefore || !bestMove) return null
+  // The opponent's blunder is the ply before the card's, from the position before that.
+  const beforeBlunder = positions[card.ply - 2]
   return {
     gameId: game.id,
     sourceType: card.sourceType,
@@ -219,6 +223,11 @@ export function buildDrillPrompt(
     color,
     correctMoves: [bestMove.san],
     evalBefore,
+    ...(card.sourceType === 'punish' && {
+      opponentMistake: beforeBlunder
+        ? detectBlunderReason(beforeBlunder, fen, color === 'white' ? 'black' : 'white')
+        : null,
+    }),
     gameLabel,
     opponentUsername: opponent,
     opponentAvatarUrl: null,

@@ -218,6 +218,27 @@ describe('findPunishCandidates', () => {
     expect(buildDrillPrompt(card, game, new Map(), analyses(390))).toBeNull()
   })
 
+  it("names what the opponent's blunder allowed, for the hint", () => {
+    expect(
+      buildDrillPrompt(
+        { gameId: 'g1', sourceType: 'punish', ply: 3 },
+        game,
+        new Map(),
+        analyses(250),
+      )?.opponentMistake,
+    ).toBeNull()
+    // 2...Qg5?? hangs the queen to Nxg5; the user's 3.Nc3 let it go.
+    const hung = makeGame({ movesSan: ['e4', 'e5', 'Nf3', 'Qg5', 'Nc3'], myColor: 'white' })
+    const evals = [cp(20), cp(20), cp(20), cp(20), withBest(cp(400)), cp(250)]
+    const prompt = buildDrillPrompt(
+      { gameId: 'g1', sourceType: 'punish', ply: 5 },
+      hung,
+      new Map(),
+      new Map([['g1', { gameId: 'g1', evals, analyzedAt: '' }]]),
+    )
+    expect(prompt?.opponentMistake).toMatchObject({ kind: 'hanging-piece', square: 'g5' })
+  })
+
   it("ignores the user's own blunders", () => {
     const mine = makeGame({ movesSan: ['e4', 'f6', 'd4'], myColor: 'black' })
     expect(findPunishCandidates([mine], analyses(250))).toEqual([])

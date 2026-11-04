@@ -350,7 +350,8 @@ and the slider are debounced (400ms); selects navigate immediately.
 the move's square counts as wrong); prompts are re-derived by
 `buildDrillPrompt()` from deviations, own-move blunders and missed punishments (`findPunishCandidates()`:
 the user's reply to an opponent's blunder that wasn't `isNearBestMove()`, unless the reply was itself
-a blunder, which its blunder card covers) and missed mates (`findMissedMateCandidates()`: an own
+a blunder, which its blunder card covers; its prompt's `opponentMistake` is `detectBlunderReason()` on
+the opponent's move, shown with the first hint) and missed mates (`findMissedMateCandidates()`: an own
 move from a forced mate in 3 or fewer to no mate, on a ply no blunder or punish card covers; the
 win-% curve saturates at mate, so neither sees it, and an alternative answer must still mate,
 `keepsForcedMate()`). Deviations are one card per position

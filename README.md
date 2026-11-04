@@ -226,7 +226,8 @@ can't see (every mate is already 99% winning). Games that left your repertoire a
 blunder or missed-punishment card, a move other than the engine's still counts if a quick Stockfish check rates it good
 or better; on a missed-mate card, if it still mates. Scheduling is SM-2: right answers come back later, wrong ones tomorrow. Sessions hold 15 cards by default (10 or 25 in settings), the most overdue first.
 **Hint** reveals progressively more (an answer found once it shows the piece's square is scheduled
-like a wrong one), and cards can be filtered by type (Today's weak spot also
+like a wrong one; on a missed-punishment card the first hint also says what your opponent's move
+allowed, when a simple pattern explains it), and cards can be filtered by type (Today's weak spot also
 links to a single opening's cards). A missed card comes back once at the end of the session, as an
 ungraded second try. A checkbox moves on to the next card after a right answer, and reloading the page resumes the
 session where you left it.
