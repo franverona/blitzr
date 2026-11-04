@@ -95,7 +95,15 @@ pm2 startup   # follow the printed command to register with launchd
 Open [http://localhost:9877](http://localhost:9877). To update:
 
 ```bash
-pnpm backup && git pull && pnpm install && pnpm build && pm2 restart blitzr
+pnpm backup && git pull --ff-only && pnpm install && pnpm build && pm2 restart blitzr
+```
+
+If the build fails, the pm2 server is left reading a half-rewritten `.next/` (see below), and
+there's no complete build to restart onto. Go back to the version you had, then `git switch main`
+before the next update:
+
+```bash
+git switch --detach ORIG_HEAD && pnpm install && pnpm build && pm2 restart blitzr
 ```
 
 Other useful commands: `pm2 status`, `pm2 logs blitzr`, `pm2 stop blitzr`, `pm2 delete blitzr`.
