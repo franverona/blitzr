@@ -74,6 +74,20 @@ jobs:
             moves: JSON.stringify(['e4', 'e5', 'Bc4', 'Nc6', 'Qh5', 'Nf6', 'Qxf7#']),
             fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
           })
+          // An analysis with an own blunder (2.Bc4, Nf3 was best) and the opponent's (3...Nf6,
+          // punished by Qxf7#), so the blunder, punish, drill and trouble-card paths all render.
+          const e = (cp, mate, from, to, san) => ({ cp, mate, bestMove: from ? { from, to, san, bestLine: [] } : null })
+          db.prepare(`INSERT INTO game_analysis (game_id, evals, analyzed_at, movetime_ms)
+            VALUES ('smoke', ?, '1970-01-01T00:00:01.000Z', 150)`).run(JSON.stringify([
+            e(30, null, 'e2', 'e4', 'e4'), e(30, null, 'e7', 'e5', 'e5'), e(30, null, 'g1', 'f3', 'Nf3'),
+            e(-300, null, 'g8', 'f6', 'Nf6'), e(-300, null, 'g1', 'f3', 'Nf3'), e(-300, null, 'g7', 'g6', 'g6'),
+            e(null, 1, 'h5', 'f7', 'Qxf7#'), e(null, 1),
+          ]))
+          // Missed three times, so it's a trouble card; the deck sync keeps it as the blunder's card.
+          db.prepare(`INSERT INTO drill_cards (game_id, source_type, ply, due_at, interval_days,
+            ease_factor, repetitions, last_reviewed_at, created_at)
+            VALUES ('smoke', 'blunder', 3, '1970-01-02T00:00:00.000Z', 1, 1.9, 0,
+            '1970-01-01T00:00:01.000Z', '1970-01-01T00:00:01.000Z')`).run()
           JS
           # notFound() still answers 200 (loading.tsx streams), so check each page's content too.
           check() {
@@ -81,6 +95,12 @@ jobs:
             grep -qF "$2" <<< "$body" || { echo "::error::$1 lacks \"$2\""; exit 1; }
           }
           check /games/smoke smoke-black
+          # Only analysis data puts these there: the worst blunder, the drill card and its trouble
+          # card (in the page's RSC payload), and Today's last-game accuracy.
+          check /blunders smoke-black
+          check /drill smoke-black
+          check /drill 'Trouble cards'
+          check / '% accuracy'
           check /learn/sicilian-defense 'Sicilian Defense'
           check /learn/king-and-rook-vs-king 'King and Rook vs. King'
           # The engine Worker loads these by a name hardcoded in two places (the setup script and
