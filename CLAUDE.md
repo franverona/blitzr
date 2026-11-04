@@ -350,7 +350,9 @@ so revalidation can't reshuffle an active session, and keeps the snapshot (with 
 in `sessionStorage` so a reload resumes it. Only an unfinished session under the same filters resumes;
 it's read through `useSyncExternalStore`, rendering nothing until then. A blunder card also accepts a non-engine move
 when a one-off client-side eval rates it good or better (`isNearBestMove()`); if the engine fails,
-only the engine's move counts. **Re-analyzing a game can reset its drill progress:** another
+only the engine's move counts. After a miss, `describeBetterMove()` explains the engine's move (not
+on deviation cards) with a `PlanBoardButton`, so the session's keys ignore events from a `<dialog>`.
+**Re-analyzing a game can reset its drill progress:** another
 strength can shift which plies count as blunders, and the deck sync deletes cards (with their SM-2
 schedules) whose ply no longer qualifies. Accepted, not a bug.
 

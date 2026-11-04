@@ -217,6 +217,8 @@ or better; on a missed-mate card, if it still mates. Scheduling is SM-2: right a
 like a wrong one), and cards can be filtered by type (Today's weak spot also
 links to a single opening's cards). A checkbox moves on to the next card after a right answer, and reloading the page resumes the
 session where you left it.
+After a miss on a blunder, missed-punishment or missed-mate card, the engine's move is explained,
+with its plan on a step-through board.
 **Undo** (or U) takes back a misclicked answer, restoring the card's schedule, until you move on.
 **Trouble cards** below the session show up to 5 cards you keep missing, as positions linking to
 their games, without the answer.
