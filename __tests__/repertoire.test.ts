@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { diffGameAgainstRepertoire, findRepertoireGaps } from '@/lib/repertoire'
+import {
+  diffGameAgainstRepertoire,
+  findRepertoireGaps,
+  lineToRepertoireNodes,
+} from '@/lib/repertoire'
 import type { Game, RepertoireNode } from '@/lib/types'
 
 function node(overrides: Partial<RepertoireNode>): RepertoireNode {
@@ -115,5 +119,38 @@ describe('findRepertoireGaps', () => {
 
   it('needs a tree for the color', () => {
     expect(findRepertoireGaps([game(['e4', 'e5', 'Nf3'])], 'white', [])).toEqual([])
+  })
+})
+
+describe('lineToRepertoireNodes', () => {
+  let n = 0
+  const newId = () => `new-${++n}`
+
+  it('builds the whole line on an empty tree, chaining parents', () => {
+    n = 0
+    const nodes = lineToRepertoireNodes(['e4', 'e5', 'Nf3'], 'white', [], newId, 't')!
+    expect(nodes.map((x) => [x.id, x.parentId, x.ply, x.moveSan])).toEqual([
+      ['new-1', null, 1, 'e4'],
+      ['new-2', 'new-1', 2, 'e5'],
+      ['new-3', 'new-2', 3, 'Nf3'],
+    ])
+    expect(nodes[2].fen).toBe('rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2')
+  })
+
+  it('reuses the nodes the tree already has and branches after them', () => {
+    n = 0
+    const tree = lineToRepertoireNodes(['e4', 'e5', 'Nc3'], 'white', [], newId, 't')!
+    const added = lineToRepertoireNodes(['e4', 'e5', 'Nf3'], 'white', tree, newId, 't')!
+    expect(added.map((x) => [x.moveSan, x.parentId])).toEqual([['Nf3', tree[1].id]])
+    expect(
+      lineToRepertoireNodes(['e4', 'e5', 'Nf3'], 'white', [...tree, ...added], newId, 't'),
+    ).toEqual([])
+  })
+
+  it("ignores the other color's tree, and rejects an illegal line", () => {
+    n = 0
+    const black = lineToRepertoireNodes(['e4'], 'black', [], newId, 't')!
+    expect(lineToRepertoireNodes(['e4'], 'white', black, newId, 't')).toHaveLength(1)
+    expect(lineToRepertoireNodes(['e4', 'e4'], 'white', [], newId, 't')).toBeNull()
   })
 })

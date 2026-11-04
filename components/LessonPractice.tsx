@@ -7,6 +7,7 @@ import { getStrings } from '@/lib/i18n/strings'
 import { resolveOrientation } from '@/lib/theme'
 import type { Lesson, LessonGameStats as LessonGameStatsData } from '@/lib/types'
 import { AboutOpeningButton } from './AboutOpeningButton'
+import { AddLessonToRepertoireButton } from './AddLessonToRepertoireButton'
 import { BoardView } from './Board'
 import { BoardProvider } from './BoardContext'
 import { BoardNavControls } from './BoardNavControls'
@@ -47,7 +48,7 @@ export function LessonPractice({
         <PageHeader
           title={lesson.name[locale]}
           actions={
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <ModeTab
                 label={s.lessonPractice.study}
                 active={mode === 'study'}
@@ -59,6 +60,10 @@ export function LessonPractice({
                 onClick={() => setMode('quiz')}
               />
               <span className="mx-1 h-4 w-px bg-zinc-300 dark:bg-zinc-700" />
+              {/* Opening lessons only (they have game stats); endgames start from a FEN. */}
+              {gameStats && (
+                <AddLessonToRepertoireButton slug={lesson.slug} color={lesson.primaryColor} />
+              )}
               <FlipBoardButton />
               <AboutOpeningButton
                 name={lesson.name[locale]}
