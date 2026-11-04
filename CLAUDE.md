@@ -48,6 +48,8 @@ app/
   puzzles/[id]/page.tsx     # one puzzle
 components/
   Board.tsx                 # BoardView: the board, eval bar, move list and their overlays
+  EvalBar.tsx               # the vertical eval bar beside a board (deliberately not themed)
+  MoveList.tsx              # the move list, with saved-analysis badges and blunder details
   BoardContext.tsx          # BoardProvider + useBoardContext(): ply, explore branch, orientation
   BoardNavControls.tsx      # ◀/▶/Play/flip buttons and their keyboard shortcuts
   LiveAnalysis.tsx          # LiveAnalysisProvider + useLiveAnalysisContext()
@@ -65,8 +67,10 @@ components/
   SettingsProvider.tsx      # per-viewer settings context (cookie-seeded)
   BulkAnalysisProvider.tsx  # "Analyze all" run state, mounted in the root layout
   SyncProvider.tsx          # sync run state + auto-sync on open, mounted in the root layout
+  SyncButton.tsx            # the games page's sync button and its per-month progress
   GameSearchForm.tsx        # games list filters
   DateRangeFilter.tsx       # /blunders date range
+  BlunderStats.tsx          # /blunders: punish rate, worst blunders and the per-group tables
   AccuracyTrendChart.tsx    # hand-rolled SVG chart on /blunders
   ThrownWins.tsx            # /blunders: drawn or lost games that reached a winning position
   BoardCoordinates.tsx      # rank/file labels outside the board
@@ -77,6 +81,8 @@ components/
   Toast.tsx                 # <Toaster />: react-hot-toast rendered with our own classes
   styles.ts                 # class helpers: buttonClass(), chipClass(), navButtonClass(), tones
   Sidebar.tsx               # collapsible nav (blitzr-sidebar-collapsed cookie)
+  RouteProgressBar.tsx      # top bar during navigation (root layout); router.push() callers
+                            # call startRouteProgress(), since App Router has no start event
   PositionActions.tsx       # copy FEN / PGN, open in Lichess, under the game page's nav
   PromotionPicker.tsx       # piece picker shared by puzzles, drills and explore mode
   ...                       # smaller presentational components
