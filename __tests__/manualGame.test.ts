@@ -157,6 +157,19 @@ describe('parseManualGame', () => {
     expect(() => parseManualGame(pgn, 'A')).toThrow(/no moves/)
   })
 
+  it('drops a Link or ECOUrl that is not an https chess.com URL', () => {
+    const forged = BOT_GAME_PGN.replace(
+      'https://www.chess.com/game/computer/1917991614',
+      'https://evil.example/game/computer/1917991614',
+    )
+    expect(parseManualGame(forged, 'fverona').url).toBe('')
+    const plain = BOT_GAME_PGN.replace('https://www.chess.com/', 'http://www.chess.com/')
+    expect(parseManualGame(plain, 'fverona').url).toBe('')
+    const eco = parseManualGame(`[ECOUrl "javascript:alert(1)"]\n${BOT_GAME_PGN}`, 'fverona')
+    expect(eco.ecoUrl).toBeNull()
+    expect(eco.ecoName).toBeNull()
+  })
+
   it('localizes its error messages', () => {
     vi.stubEnv('NEXT_PUBLIC_LOCALE', 'es')
     try {
@@ -191,6 +204,16 @@ describe('findDuplicateGame', () => {
     expect(findDuplicateGame({ ...pasted, url: '' }, [rematch])).toBeUndefined()
     const sameDay = { ...pasted, id: 'same-day', url: 'https://www.chess.com/game/computer/2' }
     expect(findDuplicateGame(pasted, [sameDay])).toBeUndefined()
+  })
+
+  it('ignores a game id on another host', () => {
+    const forged = {
+      ...pasted,
+      id: 'forged',
+      movesSan: ['d4'],
+      url: pasted.url.replace('www.chess.com', 'evil.example'),
+    }
+    expect(findDuplicateGame(pasted, [forged])).toBeUndefined()
   })
 
   it('tells different games apart', () => {
