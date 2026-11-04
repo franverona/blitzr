@@ -11,12 +11,13 @@ import { legalDestinations } from '@/lib/legalMoves'
 import { hintPieceName } from '@/lib/san'
 import { StockfishEngine } from '@/lib/stockfish/client'
 import { terminalEval } from '@/lib/stockfish/analyze'
-import { describeBlunderReason, detectBlunderReason } from '@/lib/tactics'
+import { describeBetterMove, describeBlunderReason, detectBlunderReason } from '@/lib/tactics'
 import { REVEAL_ARROW_COLOR } from '@/lib/theme'
 import type { BlunderReason, DrillPrompt, DrillSourceType, DrillUndo } from '@/lib/types'
 import { useSettings, useMoveSound } from './SettingsProvider'
 import { LegalMoveSquare } from './LegalMoveSquare'
 import { ErrorText } from './ErrorText'
+import { PlanBoardButton } from './PlanBoard'
 import { PlayerAvatar } from './PlayerAvatar'
 import { PromotionPicker, type PromotionPiece } from './PromotionPicker'
 import { buttonClass, LINK_CLASS } from './styles'
@@ -227,6 +228,8 @@ function DrillDeck({
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.target instanceof HTMLElement && e.target.tagName === 'BUTTON') return
+      // The better move's plan dialog: its keys mustn't answer or advance the card behind it.
+      if (e.target instanceof Element && e.target.closest('dialog')) return
       // Like the disabled buttons: the undo's reset would land on the next card.
       if (undoing) return
       if ((e.key === ' ' || e.key === 'Enter') && feedback) {
@@ -549,6 +552,7 @@ function DrillDeck({
                 {describeBlunderReason(hangingReason)}
               </p>
             )}
+            {feedback === 'incorrect' && <BetterMove prompt={prompt} />}
             <div className="flex flex-wrap gap-2">
               <button onClick={handleNext} disabled={undoing} className={`w-fit ${buttonClass()}`}>
                 {s.drill.next}
@@ -587,5 +591,29 @@ function DrillDeck({
         </div>
       </div>
     </div>
+  )
+}
+
+/** What the engine's move does, after a miss; deviation cards have no engine move to explain. */
+function BetterMove({ prompt }: { prompt: DrillPrompt }) {
+  const s = getStrings()
+  const bestMove = prompt.evalBefore?.bestMove
+  if (!bestMove) return null
+  // '' as the played move: a miss is never the engine's move, so this always describes it.
+  const full = describeBetterMove(prompt.fen, '', bestMove, prompt.color)
+  const head = describeBetterMove(prompt.fen, '', { ...bestMove, bestLine: [] }, prompt.color)
+  if (!full || !head) return null
+  return (
+    <p className="text-sm text-zinc-600 dark:text-zinc-400">
+      {s.common.betterWas} {head}
+      {bestMove.bestLine.length > 0 && (
+        <PlanBoardButton
+          betterMove={full}
+          fenBefore={prompt.fen}
+          moves={[bestMove.san, ...bestMove.bestLine]}
+          boardOrientation={prompt.color}
+        />
+      )}
+    </p>
   )
 }
