@@ -37,9 +37,12 @@ const AUTO_ADVANCE_DELAY_MS = 1200
 // Per tab, so a reload resumes the session instead of drawing a new one.
 const SESSION_STORAGE_KEY = 'blitzr-drill-session'
 
+/** `retry`: a missed card shown once more at the end of the session, not graded again. */
+type SessionPrompt = DrillPrompt & { retry?: true }
+
 interface StoredSession {
   deckKey: string
-  prompts: DrillPrompt[]
+  prompts: SessionPrompt[]
   /** The next unanswered card. */
   index: number
   tally: { correct: number; incorrect: number }
@@ -125,7 +128,7 @@ function DrillDeck({
   // state after the last card). The setter is only for "Shuffle and restart".
   const s = getStrings()
   const boardColors = useSettings()
-  const [sessionPrompts, setSessionPrompts] = useState(resumed?.prompts ?? prompts)
+  const [sessionPrompts, setSessionPrompts] = useState<SessionPrompt[]>(resumed?.prompts ?? prompts)
   const [sessionTotalCards] = useState(totalCards)
   const [sessionDueCount] = useState(resumed?.dueCount ?? dueCount)
   const [index, setIndex] = useState(resumed?.index ?? 0)
@@ -175,7 +178,9 @@ function DrillDeck({
   }, [deckKey, sessionPrompts, index, feedback, tally, sessionDueCount])
 
   // Undefined on the session-complete screen; keeps the hooks unconditional.
-  const prompt = sessionPrompts[index] as DrillPrompt | undefined
+  const prompt = sessionPrompts[index] as SessionPrompt | undefined
+  // The tally and "more due" count cards, not the retries appended to the session.
+  const cardCount = sessionPrompts.filter((p) => !p.retry).length
   const legalMoves = useMemo(
     () => (selectedSquare && prompt ? legalDestinations(prompt.fen, selectedSquare) : []),
     [selectedSquare, prompt],
@@ -188,7 +193,7 @@ function DrillDeck({
 
   // Answers during a replay still re-grade the cards for real.
   function handleRestart() {
-    setSessionPrompts((prev) => shuffle(prev))
+    setSessionPrompts((prev) => shuffle(prev.filter((p) => !p.retry)))
     setIndex(0)
     setTally({ correct: 0, incorrect: 0 })
     setFeedback(null)
@@ -201,6 +206,10 @@ function DrillDeck({
   }
 
   const handleNext = useCallback(() => {
+    // A miss comes back once at the end, while the right move is fresh: an SRS learning step.
+    if (prompt && !prompt.retry && (feedback === 'incorrect' || feedback === 'helped')) {
+      setSessionPrompts((prev) => [...prev, { ...prompt, retry: true }])
+    }
     answeredRef.current = false
     lastAnswerRef.current = null
     setUndoError(null)
@@ -210,7 +219,7 @@ function DrillDeck({
     setCommittedFen(null)
     setSelectedSquare(null)
     setIndex((i) => i + 1)
-  }, [])
+  }, [prompt, feedback])
 
   const handleHint = useCallback(() => {
     setHintLevel((level) => Math.min(3, level + 1))
@@ -253,12 +262,12 @@ function DrillDeck({
   }
 
   if (!prompt) {
-    const moreDue = sessionDueCount - sessionPrompts.length
+    const moreDue = sessionDueCount - cardCount
     return (
       <div className="mx-auto flex w-full max-w-140 flex-col gap-3">
         <p className="text-lg font-medium">{s.drill.sessionComplete}</p>
         <p className="text-sm text-zinc-500 dark:text-zinc-400">
-          {s.drill.tally(tally.correct, tally.incorrect, sessionPrompts.length)}
+          {s.drill.tally(tally.correct, tally.incorrect, cardCount)}
         </p>
         <div className="flex flex-wrap items-center gap-3">
           <button onClick={handleRestart} className={`w-fit ${buttonClass()}`}>
@@ -338,6 +347,7 @@ function DrillDeck({
     setHangingReason(
       detectBlunderReason(move.before, move.after, move.color === 'w' ? 'white' : 'black'),
     )
+    if (activePrompt.retry) return
     setTally((t) =>
       correct ? { ...t, correct: t.correct + 1 } : { ...t, incorrect: t.incorrect + 1 },
     )
@@ -476,6 +486,7 @@ function DrillDeck({
         <div className="flex flex-col gap-1.5">
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
             {s.drill.cardOf(index + 1, sessionPrompts.length)}
+            {prompt.retry && ` · ${s.drill.retryNote}`}
           </p>
           <div className="h-1.5 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800">
             <div
@@ -552,9 +563,15 @@ function DrillDeck({
               <button onClick={handleNext} disabled={undoing} className={`w-fit ${buttonClass()}`}>
                 {s.drill.next}
               </button>
-              <button onClick={handleUndo} disabled={undoing} className={`w-fit ${buttonClass()}`}>
-                {s.drill.undo}
-              </button>
+              {!prompt.retry && (
+                <button
+                  onClick={handleUndo}
+                  disabled={undoing}
+                  className={`w-fit ${buttonClass()}`}
+                >
+                  {s.drill.undo}
+                </button>
+              )}
             </div>
             {undoError && <ErrorText>{undoError}</ErrorText>}
           </>
