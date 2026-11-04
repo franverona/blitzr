@@ -364,7 +364,8 @@ shown under the session without their answers. They link with `?hints=0`, so the
 show the engine's move either.
 
 **Undo** (`undoDrillAnswer()`) restores the schedule `submitDrillAnswer()` returned, only while that
-answer is still the card's `last_reviewed_at` and only before Next; the streak keeps the day.
+answer is still the card's `last_reviewed_at` and only before Next; the streak keeps the day. An answer to a
+card that's gone (a resumed session outliving its game or a deck sync) isn't saved at all.
 
 The page's only visible filter is card type; `?opening=` has no picker (Today's weak spot links to
 it) and shows as a clearable chip. The auto-advance checkbox lives on the page, not in Settings:

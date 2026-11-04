@@ -456,6 +456,11 @@ export async function getDrillDeck(filters?: {
   }
 }
 
+/**
+ * Grades a card and returns what Undo needs, or null when the card is gone: a session resumed
+ * from sessionStorage can outlive it (game deleted, card pruned by a deck sync elsewhere), and
+ * writing it back would hit the games FK or revive a card Undo couldn't revert.
+ */
 export async function submitDrillAnswer(
   gameId: string,
   sourceType: DrillSourceType,
@@ -465,23 +470,13 @@ export async function submitDrillAnswer(
   if (!isValidDrillAnswer(gameId, sourceType, ply, correct)) throw new Error('Invalid drill answer')
   const repo = getRepository()
   const current = await repo.getDrillCard(gameId, sourceType, ply)
+  if (!current) return null
   const now = new Date()
-  const next = scheduleReview(
-    current ?? { intervalDays: 0, easeFactor: 2.5, repetitions: 0 },
-    correct,
-    now,
-  )
-  await repo.upsertDrillCard({
-    gameId,
-    sourceType,
-    ply,
-    ...next,
-    createdAt: current?.createdAt ?? now.toISOString(),
-  })
+  const next = scheduleReview(current, correct, now)
+  await repo.upsertDrillCard({ ...current, ...next })
   await repo.recordDrillReviewDay(localDay(now))
   revalidatePath('/drill')
   revalidatePath('/')
-  if (!current) return null
   const { dueAt, intervalDays, easeFactor, repetitions, lastReviewedAt } = current
   return {
     previous: { dueAt, intervalDays, easeFactor, repetitions, lastReviewedAt },
