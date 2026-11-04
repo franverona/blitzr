@@ -212,8 +212,9 @@ backups and `polgar-mates.json` elsewhere. The `data/` paths below assume the de
   a framed page's clicks would reach Server Actions with Blitzr's own `Origin`.
 - **Content-Security-Policy** is set per request in `proxy.ts`: scripts need its nonce (Next adds
   it to its own), so injected markup can't run script against the Server Actions. Every page is
-  already dynamic (the layout reads cookies), so the nonce costs nothing. A new external resource
-  (image, sound, script) needs adding there; inline `style` attributes are allowed.
+  already dynamic (the layout reads cookies), so the nonce costs nothing. A new external sound,
+  script or font needs adding there; images already allow any `https:`, and inline `style`
+  attributes are allowed.
 
 ## Database
 
