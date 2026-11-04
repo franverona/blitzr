@@ -84,15 +84,16 @@ describe('parseManualGame', () => {
     expect(() => parseManualGame(pgn, 'fverona')).toThrow()
   })
 
-  it('stamps the header date with the current time-of-day, not midnight', () => {
-    const game = parseManualGame(BOT_GAME_PGN, 'fverona')
-    const headerMidnightUtcSec = Date.UTC(2026, 7, 10) / 1000
-    const nowSec = Math.floor(Date.now() / 1000)
-    // Same calendar day as the header, but not stuck at exactly midnight —
-    // and never later than "now".
-    expect(game.endTime).toBeGreaterThanOrEqual(headerMidnightUtcSec)
-    expect(game.endTime).toBeLessThan(headerMidnightUtcSec + 86_400)
-    expect(game.endTime).toBeLessThanOrEqual(nowSec)
+  it('stamps the header date with the current local time of day, not midnight', () => {
+    // Late evening locally: in UTC this is often already the next day, or still the previous one.
+    vi.useFakeTimers({ now: new Date(2026, 10, 4, 23, 30, 15) })
+    try {
+      const end = new Date(parseManualGame(BOT_GAME_PGN, 'fverona').endTime * 1000)
+      expect([end.getFullYear(), end.getMonth(), end.getDate()]).toEqual([2026, 7, 10])
+      expect([end.getHours(), end.getMinutes(), end.getSeconds()]).toEqual([23, 30, 15])
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('reads the result off the final position when the Result header is "*"', () => {
