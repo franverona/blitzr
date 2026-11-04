@@ -305,7 +305,8 @@ export function dueDrillCards(
   return filterDrillCards(cards, filters, openingOf).filter((c) => c.dueAt <= nowIso)
 }
 
-// Below one miss (2.3) and miss-then-hit (2.4): two net misses, 2.1 or 2.2 and down.
+// Ease is 2.5 - 0.2·misses + 0.1·hits, so this lists 2·misses - hits >= 3: two misses and
+// a hit (2.2) is in, one miss (2.3) or two misses and two hits (2.3) is out.
 const TROUBLE_EASE_BELOW = 2.25
 
 /** The cards missed again and again, lowest ease first (latest review breaks ties). */

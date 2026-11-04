@@ -169,7 +169,7 @@ const en = {
   troubleCards: {
     title: 'Trouble cards',
     tooltip:
-      'Cards you keep missing (two or more misses more than hits), the hardest first. Open the game to study the position; the answer stays hidden so they still drill.',
+      'Cards you keep missing (a miss counts double a right answer, so two misses and one right answer is enough), the hardest first. Open the game to study the position; the answer stays hidden so they still drill.',
     kind: {
       deviation: 'Deviation',
       blunder: 'Blunder',
@@ -806,7 +806,7 @@ const es: Strings = {
   troubleCards: {
     title: 'Tarjetas difíciles',
     tooltip:
-      'Tarjetas que sigues fallando (dos o más fallos más que aciertos), la más difícil primero. Abre la partida para estudiar la posición; la respuesta sigue oculta para que puedas entrenarlas.',
+      'Tarjetas que sigues fallando (un fallo cuenta el doble que un acierto, así que bastan dos fallos y un acierto), la más difícil primero. Abre la partida para estudiar la posición; la respuesta sigue oculta para que puedas entrenarlas.',
     kind: {
       deviation: 'Desviación',
       blunder: 'Error grave',
