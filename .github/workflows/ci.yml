@@ -103,6 +103,10 @@ jobs:
           check / '% accuracy'
           check /learn/sicilian-defense 'Sicilian Defense'
           check /learn/king-and-rook-vs-king 'King and Rook vs. King'
+          # A puzzle from each bundled Lichess set (the real-game one is in the loop above), and a filter.
+          check /puzzles/10001 'Lichess puzzle bjqrC'
+          check /puzzles/20002 'Lichess puzzle e1pHA'
+          check '/puzzles?kind=defend' 'href="/puzzles/20002"'
           # The engine Worker loads these by a name hardcoded in two places (the setup script and
           # lib/stockfish/client.ts); a mismatch would only show as analysis failing in the browser.
           for f in stockfish-19-lite-single.js stockfish-19-lite-single.wasm; do

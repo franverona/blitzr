@@ -136,8 +136,9 @@ pnpm build
 ```
 
 Then it starts the built app against an empty database and checks the main pages, a seeded game
-with its analysis (on the blunders, drill and Today pages too) and two lessons, the localhost-only
-check and the security headers, failing on any error in the server's log. Last, it loads the `lib/` files the scripts import under plain Node and runs
+with its analysis (on the blunders, drill and Today pages too), two lessons and a puzzle from each
+Lichess set, the localhost-only check and the security headers, failing on any error in the
+server's log. Last, it loads the `lib/` files the scripts import under plain Node and runs
 `pnpm backup`.
 
 `pnpm build` rewrites `.next/`, which a running `pnpm dev` and the pm2 server both read from: the
