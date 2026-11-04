@@ -141,11 +141,11 @@ export function parseManualGame(
   )
   const codes = resultCodes(result, termination, chess)
 
-  const ecoUrl = headers.ECOUrl ?? null
+  const ecoUrl = chesscomUrl(headers.ECOUrl)
 
   return {
     id: crypto.randomUUID(),
-    url: headers.Link ?? '',
+    url: chesscomUrl(headers.Link) ?? '',
     pgn,
     movesSan,
     initialFen: headers.FEN ?? new Chess().fen(),
@@ -172,11 +172,27 @@ export function parseManualGame(
   }
 }
 
+/**
+ * `raw` if it's an https chess.com URL, else null. A pasted PGN's `Link` and `ECOUrl` become
+ * links on the game page, and `Link`'s game id decides duplicates on its own, so a forged one
+ * pointing at a real game's id would make sync skip that game for good.
+ */
+function chesscomUrl(raw: string | undefined): string | null {
+  if (!raw || !URL.canParse(raw)) return null
+  const url = new URL(raw)
+  return url.protocol === 'https:' &&
+    (url.hostname === 'chess.com' || url.hostname === 'www.chess.com')
+    ? raw
+    : null
+}
+
 // Chess.com URLs vary: "/analysis/game/…/analysis", "?move=0"; the type and id are what match.
 const CHESSCOM_GAME_ID = /\/game\/(live|daily|computer)\/(\d+)/
 
 function chesscomGameId(game: Game): string | undefined {
-  const id = game.url.match(CHESSCOM_GAME_ID)
+  // Checked here too for a game pasted before `chesscomUrl()` filtered its link.
+  const path = chesscomUrl(game.url) && new URL(game.url).pathname
+  const id = path ? path.match(CHESSCOM_GAME_ID) : null
   return id ? `${id[1]}/${id[2]}` : undefined
 }
 
