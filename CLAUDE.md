@@ -214,8 +214,8 @@ backups and `polgar-mates.json` elsewhere. The `data/` paths below assume the de
   resignations, timeouts and agreed draws from the per-player result codes, on the final ply only.
 - **Beginner jargon is explained in place** (`<abbr title>` tooltips, `EvalHelp`), not removed.
 - **A component seeding state from props (`useState(initialX)`) needs `key={id}`** wherever it can
-  receive a different record. Exception: a filter that must survive its own navigation (the
-  accuracy popover, the search text) stays out of the key and re-syncs from props during render, as
+  receive a different record. Exception: a filter that must survive its own navigation (the games
+  list's filter form, so its side panel stays open) has no key and re-syncs from props during render, as
   does `GameAnalysisProvider` when a bulk run saves the open game (a new `analyzedAt`).
 - **Every `<dialog>` is a `Dialog`**, which names it by its visible `<h2>` (`aria-labelledby` to a
   `useId()`, since some dialogs render more than once per page). The caller owns the `ref` and
@@ -290,7 +290,7 @@ layout renders only `SetupScreen` (icon + how to set them), no sidebar or provid
 CI's smoke test runs with `LICHESS_USERNAME=smoke` (no avatar fetch) and checks that screen on a
 second server with neither. The sidebar lists one row per set username. **Lichess has no profile
 pictures**: avatars are only fetched for Chess.com games (game page, drill cards, sidebar), so
-Lichess players keep `PlayerAvatar`'s letter badge. Ratings on Today are per site and time class
+Lichess players keep `PlayerAvatar`'s letter badge. The games list's Site column is `SiteIcon`: each site's favicon, hotlinked like the move sounds (Lichess's is black, so `dark:invert`), `—` for practice games. Ratings on Today are per site and time class
 (`recentResults()`), since the two scales don't compare; the site is named only when both appear.
 
 ## Manually-added games
@@ -408,7 +408,10 @@ in a game the user played.
 
 All filters are URL params (`q`, `result`, `color`, `rated`, `site`, `accOp`, `accValue`, `practice`). The site select shows only once games come from more than one site (`getGameSites()`), or while one is set. Accuracy isn't a
 column, so an active accuracy filter becomes a `gameIds` set passed to `listGames()`. Text search
-and the slider are debounced (400ms); selects navigate immediately.
+and the slider are debounced (400ms); selects navigate immediately. Only the search box sits in the
+row: every other filter is in the side panel behind **Filters** (`Dialog` with `placement="right"`),
+which shows the active count; the site filter is a toggle of the two favicons (pressed again, it
+clears).
 
 `practice=1` lists only practice games: no rated or accuracy filter (`getGameAccuracyById()` skips
 them, so the page asks `getPracticeAccuracyById()` for the listed ones), plus checkboxes whose

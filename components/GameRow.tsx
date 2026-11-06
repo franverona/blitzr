@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { formatDate } from '@/lib/dates'
 import { getStrings } from '@/lib/i18n/strings'
 import type { Game, GameAccuracy } from '@/lib/types'
+import { SiteIcon } from './SiteIcon'
 import { Badge } from './Badge'
 import { KnightIcon } from './KnightIcon'
 import { ResultBadge } from './ResultBadge'
@@ -46,6 +47,8 @@ export function GameRow({
         {date}
       </Cell>
       <Cell href={href}>{game.isMine ? <KnightIcon color={game.myColor} /> : '—'}</Cell>
+      {/* A practice game was played here, on neither site. */}
+      <Cell href={href}>{game.practiceOf ? '—' : <SiteIcon site={game.site} />}</Cell>
       <Cell href={href}>
         {game.isMine ? opponent : `${game.whiteUsername} ${s.common.vs} ${game.blackUsername}`}
       </Cell>
