@@ -60,6 +60,7 @@ import {
   isValidAnalysis,
   isValidDrillAnswer,
   isValidDrillUndo,
+  isValidManualGame,
   isValidPracticePayload,
   normalizeRepertoireNode,
 } from '@/lib/validate'
@@ -222,6 +223,8 @@ export async function addManualGame(
 ): Promise<{ ok: true; gameId: string } | { ok: false; error: string }> {
   // Returned, not thrown: Next hides thrown Server Action messages in
   // production, and the dialog needs parseManualGame()'s reason.
+  if (!isValidManualGame(pgn, side))
+    return { ok: false, error: getStrings().manualGame.badMovetext }
   // Only 'auto' needs the username (the one for the PGN's site); an explicit side works without one.
   const site = pgnSite(pgn)
   const username = siteUsername(site)

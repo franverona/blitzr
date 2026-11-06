@@ -1,5 +1,6 @@
 import { Chess } from 'chess.js'
 import { isBotElo } from './botStrength'
+import type { ManualGameSide } from './manualGame'
 import type { PositionEval, RepertoireNode } from './types'
 
 // Server Actions are plain POST endpoints, so their arguments are untrusted.
@@ -127,4 +128,11 @@ export function decodeGameIdParam(raw: string): string | null {
   } catch {
     return null
   }
+}
+
+/** `addManualGame()`'s arguments: any string as the PGN (the parser judges it), a known side. */
+export function isValidManualGame(pgn: unknown, side: unknown): side is ManualGameSide {
+  return (
+    isString(pgn) && (side === 'auto' || side === 'white' || side === 'black' || side === 'notMine')
+  )
 }

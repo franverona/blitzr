@@ -147,7 +147,7 @@ backups and `polgar-mates.json` elsewhere. The `data/` paths below assume the de
   endpoints, so an action storing a client-built payload checks it first (`lib/validate.ts`):
   `saveGameAnalysis()` wants one well-formed eval per position, and `addRepertoireMove()` replays
   the move from its parent and stores the server's own SAN/FEN. `submitDrillAnswer()` and `markPuzzleSolved()` reject
-  malformed keys or unknown puzzle ids. With no auth, they rely on both servers binding
+  malformed keys or unknown puzzle ids, and `addManualGame()` an unknown side or a non-string PGN. With no auth, they rely on both servers binding
   `127.0.0.1` and on `proxy.ts` rejecting any other `Host` (DNS rebinding sends a matching `Origin`,
   which Next's CSRF check accepts). Hosting it anywhere (#168) means changing both.
 - **Domain types are camelCase** (`lib/types.ts`), **DB columns snake_case** (`lib/db/types.ts`);

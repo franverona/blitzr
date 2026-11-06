@@ -5,6 +5,7 @@ import {
   isValidAnalysis,
   isValidDrillAnswer,
   isValidDrillUndo,
+  isValidManualGame,
   isValidPracticePayload,
   normalizeRepertoireNode,
 } from '@/lib/validate'
@@ -129,5 +130,14 @@ describe('decodeGameIdParam', () => {
   it('decodes a percent-encoded id and rejects a malformed escape', () => {
     expect(decodeGameIdParam('lichess%3AIz4SK2xE')).toBe('lichess:Iz4SK2xE')
     expect(decodeGameIdParam('%ZZ')).toBeNull()
+  })
+})
+
+describe('isValidManualGame', () => {
+  it('takes a string PGN and a known side only', () => {
+    expect(isValidManualGame('1. e4 *', 'auto')).toBe(true)
+    expect(isValidManualGame('1. e4 *', 'notMine')).toBe(true)
+    expect(isValidManualGame('1. e4 *', 'x')).toBe(false)
+    expect(isValidManualGame(42, 'white')).toBe(false)
   })
 })
