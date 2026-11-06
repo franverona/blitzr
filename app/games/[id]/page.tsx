@@ -24,7 +24,7 @@ import { isStandardChess } from '@/lib/positions'
 import type { Game, MyColor, MyResult } from '@/lib/types'
 import { Card } from '@/components/Card'
 import { LINK_CLASS } from '@/components/styles'
-import { isBotElo } from '@/lib/botStrength'
+import { practiceBotElo, practiceRecords } from '@/lib/practiceGame'
 import { plyLabel } from '@/lib/san'
 
 function pgnResult(color: MyColor, result: MyResult): string {
@@ -250,22 +250,35 @@ function GameHeader({
   )
 }
 
-/** "Stockfish 1600" -> 1600, for Play again at the same strength. */
-function practiceElo(game: Game): number | undefined {
-  const bot = game.myColor === 'white' ? game.blackUsername : game.whiteUsername
-  const elo = Number(bot.split(' ').at(-1))
-  return isBotElo(elo) ? elo : undefined
-}
-
 function playAgainHref(game: Game & { practiceOf: NonNullable<Game['practiceOf']> }): string {
-  const elo = practiceElo(game)
+  // Again at the same strength.
+  const elo = practiceBotElo(game)
   return `/games/${game.practiceOf.gameId}/play?ply=${game.practiceOf.ply}${elo ? `&elo=${elo}` : ''}`
 }
 
 function PracticeGamesCard({ source, games }: { source: Game; games: Game[] }) {
   const s = getStrings()
+  const fromLabel = (ply: number) =>
+    ply > 0 && source.movesSan
+      ? s.gamePage.practiceFrom(`${plyLabel(ply, source.initialFen)} ${source.movesSan[ply - 1]}`)
+      : s.gamePage.practiceFromStart
+  // Whether a position is winning for the user, not just for the engine; only once there's a tally.
+  const records = games.length > 1 ? practiceRecords(games) : []
   return (
     <Card title={s.gamePage.practiceGames}>
+      {records.length > 0 && (
+        <ul className="mb-3 flex flex-col gap-1 text-sm">
+          {records.map((r) => (
+            <li key={r.ply}>
+              <span className="font-medium">{fromLabel(r.ply)}</span>{' '}
+              <span className="text-zinc-600 dark:text-zinc-400">
+                {s.gamePage.practiceRecord(r.won, r.drawn, r.lost)}
+                {r.bestWinElo !== null && <> · {s.gamePage.practiceBestWin(r.bestWinElo)}</>}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
       <ul className="flex flex-col gap-1 text-sm">
         {games.map((g) => {
           const ply = g.practiceOf?.ply ?? 0
@@ -274,11 +287,7 @@ function PracticeGamesCard({ source, games }: { source: Game; games: Game[] }) {
             <li key={g.id} className="flex flex-wrap items-center gap-x-2 gap-y-1">
               <ResultBadge result={g.myResult} />
               <Link href={`/games/${g.id}`} className={LINK_CLASS}>
-                {ply > 0 && source.movesSan
-                  ? s.gamePage.practiceFrom(
-                      `${plyLabel(ply, source.initialFen)} ${source.movesSan[ply - 1]}`,
-                    )
-                  : s.gamePage.practiceFromStart}
+                {fromLabel(ply)}
               </Link>
               <span className="text-zinc-500 dark:text-zinc-400">
                 {s.common.vs} {bot} · {formatDateTime(g.endTime)}

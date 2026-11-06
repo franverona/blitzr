@@ -690,6 +690,9 @@ const en = {
     practiceGames: 'Practice games from this one',
     practiceFrom: (move: string) => `from ${move}`,
     practiceFromStart: 'from the start',
+    practiceRecord: (won: number, drawn: number, lost: number) =>
+      `${won} won, ${drawn} drawn, ${lost} lost`,
+    practiceBestWin: (elo: number) => `beat Stockfish ${elo}`,
     deletePracticeConfirm: 'Delete this practice game and its analysis?',
     deleteGame: 'Delete game',
     deleteGameConfirm: 'Delete this pasted game, its analysis and its drill cards?',
@@ -1427,6 +1430,9 @@ const es: Strings = {
     practiceGames: 'Partidas de práctica desde esta',
     practiceFrom: (move: string) => `desde ${move}`,
     practiceFromStart: 'desde el inicio',
+    practiceRecord: (won: number, drawn: number, lost: number) =>
+      `${won} ${won === 1 ? 'ganada' : 'ganadas'}, ${drawn} en tablas, ${lost} ${lost === 1 ? 'perdida' : 'perdidas'}`,
+    practiceBestWin: (elo: number) => `ganaste a Stockfish ${elo}`,
     deletePracticeConfirm: '¿Eliminar esta partida de práctica y su análisis?',
     deleteGame: 'Eliminar partida',
     deleteGameConfirm:
