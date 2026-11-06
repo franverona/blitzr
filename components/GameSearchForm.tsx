@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { getStrings } from '@/lib/i18n/strings'
 import { Select } from './Select'
-import { INPUT_CLASS } from './styles'
+import { INPUT_CLASS, chipClass } from './styles'
 
 const SEARCH_DEBOUNCE_MS = 400
 const DEFAULT_ACCURACY_THRESHOLD = 80
@@ -18,6 +18,7 @@ export function GameSearchForm({
   rated,
   accOp,
   accValue,
+  practice,
 }: {
   defaultValue: string
   result?: string
@@ -25,6 +26,8 @@ export function GameSearchForm({
   rated?: string
   accOp?: string
   accValue?: string
+  /** `'1'`: practice games only, which have no accuracy filter (it reads stats data). */
+  practice?: string
 }) {
   const [value, setValue] = useState(defaultValue)
   const [accuracy, setAccuracy] = useState(Number(accValue) || DEFAULT_ACCURACY_THRESHOLD)
@@ -67,9 +70,10 @@ export function GameSearchForm({
     rated?: string
     accOp?: string
     accValue?: string
+    practice?: string
   }) {
     const params = new URLSearchParams()
-    const merged = { q: value.trim(), result, color, rated, accOp, accValue, ...next }
+    const merged = { q: value.trim(), result, color, rated, accOp, accValue, practice, ...next }
     for (const [key, val] of Object.entries(merged)) {
       if (val) params.set(key, val)
     }
@@ -132,23 +136,41 @@ export function GameSearchForm({
           <option value="black">{s.common.color.black}</option>
         </Select>
 
-        <Select
-          value={rated ?? ''}
-          onChange={(e) => navigate({ rated: e.target.value })}
-          className={INPUT_CLASS}
-        >
-          <option value="">{s.gamesPage.allRated}</option>
-          <option value="true">{s.gamesPage.rated}</option>
-          <option value="false">{s.gamesPage.unrated}</option>
-        </Select>
+        {/* Practice games are never rated. */}
+        {!practice && (
+          <Select
+            value={rated ?? ''}
+            onChange={(e) => navigate({ rated: e.target.value })}
+            className={INPUT_CLASS}
+          >
+            <option value="">{s.gamesPage.allRated}</option>
+            <option value="true">{s.gamesPage.rated}</option>
+            <option value="false">{s.gamesPage.unrated}</option>
+          </Select>
+        )}
 
-        <AccuracyFilterPopover
-          accOp={accOp}
-          accuracy={accuracy}
-          setAccuracy={setAccuracy}
-          onOpChange={(op) => navigate({ accOp: op, accValue: op ? String(accuracy) : '' })}
-          onAccuracyChange={(next) => debouncedNavigate({ accOp, accValue: String(next) })}
-        />
+        {!practice && (
+          <AccuracyFilterPopover
+            accOp={accOp}
+            accuracy={accuracy}
+            setAccuracy={setAccuracy}
+            onOpChange={(op) => navigate({ accOp: op, accValue: op ? String(accuracy) : '' })}
+            onAccuracyChange={(next) => debouncedNavigate({ accOp, accValue: String(next) })}
+          />
+        )}
+
+        <button
+          type="button"
+          aria-pressed={Boolean(practice)}
+          onClick={() =>
+            navigate(
+              practice ? { practice: '' } : { practice: '1', accOp: '', accValue: '', rated: '' },
+            )
+          }
+          className={chipClass(Boolean(practice))}
+        >
+          {s.gamesPage.practiceOnly}
+        </button>
       </div>
     </form>
   )

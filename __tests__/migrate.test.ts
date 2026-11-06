@@ -36,6 +36,8 @@ describe('ensureSchema', { timeout: 60_000 }, () => {
     expect(columns.map((c) => c.name)).not.toContain('is_mine')
     expect(copy.prepare('SELECT id FROM games').all()).toEqual([{ id: 'g1' }])
     copy.close()
+    const migrated = (raw.pragma('table_info(games)') as { name: string }[]).map((c) => c.name)
+    expect(migrated).toEqual(expect.arrayContaining(['is_mine', 'source_game_id', 'source_ply']))
     raw.close()
   })
 

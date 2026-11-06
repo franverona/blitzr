@@ -50,6 +50,9 @@ function rowToGame(row: GamesTable): Game {
     ecoUrl: row.eco_url,
     archiveYm: row.archive_ym,
     createdAt: row.created_at,
+    ...(row.source_game_id !== null && {
+      practiceOf: { gameId: row.source_game_id, ply: row.source_ply ?? 0 },
+    }),
   }
 }
 
@@ -80,6 +83,8 @@ function gameToRow(game: Game): GamesTable {
     eco_url: game.ecoUrl,
     archive_ym: game.archiveYm,
     created_at: game.createdAt,
+    source_game_id: game.practiceOf?.gameId ?? null,
+    source_ply: game.practiceOf?.ply ?? null,
   }
 }
 
@@ -145,6 +150,8 @@ export interface ListGamesParams {
   color?: MyColor
   rated?: boolean
   gameIds?: string[]
+  /** Only practice games instead of none (`/games?practice=1`). */
+  practice?: boolean
 }
 
 export class SqliteGameRepository {
@@ -201,8 +208,13 @@ export class SqliteGameRepository {
         eb.and([eb('my_color', '=', 'white'), contains('black_username')]),
       ])
 
-    let rowsQuery = db.selectFrom('games').selectAll()
-    let countQuery = db.selectFrom('games').select(({ fn }) => fn.countAll<number>().as('count'))
+    // Practice games only show up when asked for; see listAllGames().
+    const archiveOp = params.practice ? '=' : '!='
+    let rowsQuery = db.selectFrom('games').selectAll().where('archive_ym', archiveOp, 'practice')
+    let countQuery = db
+      .selectFrom('games')
+      .select(({ fn }) => fn.countAll<number>().as('count'))
+      .where('archive_ym', archiveOp, 'practice')
     if (opponent) {
       rowsQuery = rowsQuery.where(opponentFilter)
       countQuery = countQuery.where(opponentFilter)
@@ -238,9 +250,28 @@ export class SqliteGameRepository {
     return { games: rows.map(rowToGame), total: Number(countRow.count) }
   }
 
+  /** Every game but practice ones: every stat, the drill deck and sync read through here, so
+   *  games played against the bot never count. */
   async listAllGames(): Promise<Game[]> {
     const db = await this.ready()
-    const rows = await db.selectFrom('games').selectAll().execute()
+    const rows = await db
+      .selectFrom('games')
+      .selectAll()
+      .where('archive_ym', '!=', 'practice')
+      .execute()
+    return rows.map(rowToGame)
+  }
+
+  /** Practice games played from `sourceGameId`, newest first. */
+  async listPracticeGames(sourceGameId: string): Promise<Game[]> {
+    const db = await this.ready()
+    const rows = await db
+      .selectFrom('games')
+      .selectAll()
+      .where('archive_ym', '=', 'practice')
+      .where('source_game_id', '=', sourceGameId)
+      .orderBy('end_time', 'desc')
+      .execute()
     return rows.map(rowToGame)
   }
 

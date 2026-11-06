@@ -24,6 +24,8 @@ export interface GamesTable {
   eco_url: string | null
   archive_ym: string
   created_at: string
+  source_game_id: string | null
+  source_ply: number | null
 }
 
 export interface SyncStateTable {

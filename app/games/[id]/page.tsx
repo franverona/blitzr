@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
-import { getGame, getGameAnalysis } from '../../actions'
+import Link from 'next/link'
+import { getGame, getGameAnalysis, getPracticeGames } from '../../actions'
 import { BoardView } from '@/components/Board'
 import { BoardProvider } from '@/components/BoardContext'
 import { BoardNavControls } from '@/components/BoardNavControls'
@@ -20,7 +21,10 @@ import { formatDateTime } from '@/lib/dates'
 import { getStrings } from '@/lib/i18n/strings'
 import { isStandardChess } from '@/lib/positions'
 import type { Game, MyColor, MyResult } from '@/lib/types'
+import { Card } from '@/components/Card'
 import { LINK_CLASS } from '@/components/styles'
+import { isBotElo } from '@/lib/botStrength'
+import { plyLabel } from '@/lib/san'
 
 function pgnResult(color: MyColor, result: MyResult): string {
   if (result === 'draw') return '1/2-1/2'
@@ -54,14 +58,24 @@ export default async function GamePage({
       : 'white'
     : null
   const analysis = (await getGameAnalysis(id)) ?? null
-  const [whiteAvatar, blackAvatar] = await Promise.all([
-    botColor === 'white'
-      ? fetchBotAvatar(game.whiteUsername)
-      : fetchPlayerAvatar(game.whiteUsername),
-    botColor === 'black'
-      ? fetchBotAvatar(game.blackUsername)
-      : fetchPlayerAvatar(game.blackUsername),
+  // The bot in a practice game ("Stockfish 1600") has no Chess.com account to fetch.
+  const practiceBot: MyColor | null = game.practiceOf
+    ? game.myColor === 'white'
+      ? 'black'
+      : 'white'
+    : null
+  const avatar = (color: MyColor, username: string) =>
+    practiceBot === color
+      ? null
+      : botColor === color
+        ? fetchBotAvatar(username)
+        : fetchPlayerAvatar(username)
+  const [whiteAvatar, blackAvatar, practiceGames] = await Promise.all([
+    avatar('white', game.whiteUsername),
+    avatar('black', game.blackUsername),
+    game.practiceOf ? [] : getPracticeGames(game.id),
   ])
+  const canPractice = isStandardChess(game) && !game.practiceOf
 
   const body = (
     <div className="flex flex-col gap-4">
@@ -75,6 +89,13 @@ export default async function GamePage({
         <div className="flex flex-wrap items-center justify-end gap-4">
           {game.movesSan && isStandardChess(game) && <AnalyzeButton />}
           {game.archiveYm === 'manual' && <DeleteGameButton gameId={game.id} />}
+          {game.practiceOf && (
+            <DeleteGameButton
+              gameId={game.id}
+              redirectTo={`/games/${game.practiceOf.gameId}?ply=${game.practiceOf.ply}`}
+              confirmText={getStrings().gamePage.deletePracticeConfirm}
+            />
+          )}
         </div>
       </div>
 
@@ -90,7 +111,7 @@ export default async function GamePage({
               <BoardNavControls />
               <PositionActions
                 pgn={game.pgn}
-                playHref={isStandardChess(game) ? `/games/${game.id}/play` : undefined}
+                playHref={canPractice ? `/games/${game.id}/play` : undefined}
               />
             </div>
           }
@@ -105,6 +126,7 @@ export default async function GamePage({
           </pre>
         </div>
       )}
+      {practiceGames.length > 0 && <PracticeGamesCard source={game} games={practiceGames} />}
     </div>
   )
 
@@ -191,6 +213,24 @@ function GameHeader({
       <div className="text-xs text-zinc-500 dark:text-zinc-400">
         {formatDateTime(game.endTime)} · {timeClassLabel}
         {!game.isMine && ` · ${s.gamePage.notMine}`}
+        {game.practiceOf && (
+          <>
+            {` · ${s.gamePage.practiceNote} · `}
+            <Link
+              href={`/games/${game.practiceOf.gameId}?ply=${game.practiceOf.ply}`}
+              className={LINK_CLASS}
+            >
+              {s.gamePage.practiceSource}
+            </Link>
+            {' · '}
+            <Link
+              href={playAgainHref({ ...game, practiceOf: game.practiceOf })}
+              className={LINK_CLASS}
+            >
+              {s.gamePage.playAgain}
+            </Link>
+          </>
+        )}
         <OpeningLine game={game} />
         {game.movesSan && <MoveQualityLink />}
         {!isCoachGame && game.url && (
@@ -203,5 +243,46 @@ function GameHeader({
         )}
       </div>
     </div>
+  )
+}
+
+/** "Stockfish 1600" -> 1600, for Play again at the same strength. */
+function practiceElo(game: Game): number | undefined {
+  const bot = game.myColor === 'white' ? game.blackUsername : game.whiteUsername
+  const elo = Number(bot.split(' ').at(-1))
+  return isBotElo(elo) ? elo : undefined
+}
+
+function playAgainHref(game: Game & { practiceOf: NonNullable<Game['practiceOf']> }): string {
+  const elo = practiceElo(game)
+  return `/games/${game.practiceOf.gameId}/play?ply=${game.practiceOf.ply}${elo ? `&elo=${elo}` : ''}`
+}
+
+function PracticeGamesCard({ source, games }: { source: Game; games: Game[] }) {
+  const s = getStrings()
+  return (
+    <Card title={s.gamePage.practiceGames}>
+      <ul className="flex flex-col gap-1 text-sm">
+        {games.map((g) => {
+          const ply = g.practiceOf?.ply ?? 0
+          const bot = g.myColor === 'white' ? g.blackUsername : g.whiteUsername
+          return (
+            <li key={g.id} className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <ResultBadge result={g.myResult} />
+              <Link href={`/games/${g.id}`} className={LINK_CLASS}>
+                {ply > 0 && source.movesSan
+                  ? s.gamePage.practiceFrom(
+                      `${plyLabel(ply, source.initialFen)} ${source.movesSan[ply - 1]}`,
+                    )
+                  : s.gamePage.practiceFromStart}
+              </Link>
+              <span className="text-zinc-500 dark:text-zinc-400">
+                {s.common.vs} {bot} · {formatDateTime(g.endTime)}
+              </span>
+            </li>
+          )
+        })}
+      </ul>
+    </Card>
   )
 }

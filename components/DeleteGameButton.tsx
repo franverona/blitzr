@@ -6,17 +6,26 @@ import { deleteManualGame } from '@/app/actions'
 import { getStrings } from '@/lib/i18n/strings'
 import { startRouteProgress } from './RouteProgressBar'
 
-export function DeleteGameButton({ gameId }: { gameId: string }) {
+/** `redirectTo` and `confirmText` default to the games list and the pasted-game wording. */
+export function DeleteGameButton({
+  gameId,
+  redirectTo = '/games',
+  confirmText,
+}: {
+  gameId: string
+  redirectTo?: string
+  confirmText?: string
+}) {
   const s = getStrings()
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
   function handleClick() {
-    if (!window.confirm(s.gamePage.deleteGameConfirm)) return
+    if (!window.confirm(confirmText ?? s.gamePage.deleteGameConfirm)) return
     startTransition(async () => {
       await deleteManualGame(gameId)
       startRouteProgress()
-      router.push('/games')
+      router.push(redirectTo)
     })
   }
 

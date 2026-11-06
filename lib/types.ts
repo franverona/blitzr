@@ -31,6 +31,9 @@ export interface Game {
   ecoUrl: string | null
   archiveYm: string
   createdAt: string
+  /** A practice game (`archiveYm: 'practice'`): played against the bot from `ply` of `gameId`.
+   *  Kept out of every stat and list but its own. */
+  practiceOf?: { gameId: string; ply: number }
 }
 
 export interface ArchiveSyncStatus {

@@ -9,17 +9,39 @@ import { KnightIcon } from './KnightIcon'
 import { ResultBadge } from './ResultBadge'
 import { accuracyTone } from './styles'
 
-export function GameRow({ game, accuracy }: { game: Game; accuracy: GameAccuracy | undefined }) {
+export function GameRow({
+  game,
+  accuracy,
+  select,
+}: {
+  game: Game
+  accuracy: GameAccuracy | undefined
+  /** A leading checkbox cell, for bulk selection. */
+  select?: { checked: boolean; onToggle: () => void }
+}) {
   const s = getStrings()
   const opponent = game.myColor === 'white' ? game.blackUsername : game.whiteUsername
   const myRating = game.myColor === 'white' ? game.whiteRating : game.blackRating
   const date = formatDate(game.endTime)
   const timeClassTooltip = s.gameRow.timeClassTooltips[game.timeClass]
+  const timeClassLabel =
+    s.common.timeClass[game.timeClass as keyof typeof s.common.timeClass] ?? game.timeClass
 
   const href = `/games/${game.id}`
 
   return (
     <tr className="focus-within:bg-zinc-100 hover:bg-zinc-100 dark:focus-within:bg-zinc-900/50 dark:hover:bg-zinc-900/50">
+      {select && (
+        <td className="px-3 py-2">
+          <input
+            type="checkbox"
+            className="block"
+            aria-label={s.gameList.selectGame}
+            checked={select.checked}
+            onChange={select.onToggle}
+          />
+        </td>
+      )}
       <Cell href={href} className="whitespace-nowrap" tabbable>
         {date}
       </Cell>
@@ -69,14 +91,7 @@ export function GameRow({ game, accuracy }: { game: Game; accuracy: GameAccuracy
         )}
       </Cell>
       <Cell href={href} className="text-zinc-400">
-        {timeClassTooltip ? (
-          <abbr title={timeClassTooltip}>
-            {s.common.timeClass[game.timeClass as keyof typeof s.common.timeClass] ??
-              game.timeClass}
-          </abbr>
-        ) : (
-          game.timeClass
-        )}
+        {timeClassTooltip ? <abbr title={timeClassTooltip}>{timeClassLabel}</abbr> : timeClassLabel}
       </Cell>
     </tr>
   )

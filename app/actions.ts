@@ -27,6 +27,7 @@ import {
   selectSessionCards,
 } from '@/lib/drill'
 import type { DrillCandidate } from '@/lib/drill'
+import type { BotElo } from '@/lib/botStrength'
 import { findDuplicateGame, parseManualGame, type ManualGameSide } from '@/lib/manualGame'
 import { summarizeMoveQuality } from '@/lib/moveQuality'
 import { buildOpeningFamilies, ecoFamilyLabel, unknownOpeningLabel } from '@/lib/openings'
@@ -39,6 +40,7 @@ import {
   startsFromStandardPosition,
 } from '@/lib/positions'
 import { plyLabel } from '@/lib/san'
+import { PracticeGameError, buildPracticeGame, practiceStart } from '@/lib/practiceGame'
 import { findRepertoireGaps, lineToRepertoireNodes } from '@/lib/repertoire'
 import { isSyncStale, listPendingArchives, syncArchive } from '@/lib/sync'
 import { describeBlunderReason } from '@/lib/tactics'
@@ -57,6 +59,7 @@ import {
   isValidAnalysis,
   isValidDrillAnswer,
   isValidDrillUndo,
+  isValidPracticePayload,
   normalizeRepertoireNode,
 } from '@/lib/validate'
 import type {
@@ -220,13 +223,73 @@ export async function addManualGame(
   return { ok: true, gameId: game.id }
 }
 
-/** Synced games aren't deletable: the next sync would bring them back. */
+/** Synced games aren't deletable: the next sync would bring them back. Practice games are. */
 export async function deleteManualGame(id: string): Promise<void> {
   const repo = getRepository()
   const game = await repo.getGame(id)
-  if (game?.archiveYm !== 'manual') return
+  if (game?.archiveYm !== 'manual' && game?.archiveYm !== 'practice') return
   await repo.deleteGame(id)
+  if (game.practiceOf) revalidatePath(`/games/${game.practiceOf.gameId}`)
   for (const path of ['/', '/games', '/openings', '/blunders', '/drill']) revalidatePath(path)
+}
+
+/** Deletes the given practice games; any other id is ignored. Returns how many went. */
+export async function deletePracticeGames(gameIds: string[]): Promise<number> {
+  if (!Array.isArray(gameIds) || !gameIds.every((id) => typeof id === 'string')) return 0
+  const repo = getRepository()
+  let deleted = 0
+  for (const id of new Set(gameIds)) {
+    const game = await repo.getGame(id)
+    if (game?.archiveYm !== 'practice') continue
+    await repo.deleteGame(id)
+    if (game.practiceOf) revalidatePath(`/games/${game.practiceOf.gameId}`)
+    deleted++
+  }
+  revalidatePath('/games')
+  return deleted
+}
+
+/** Practice games played from `sourceGameId`, newest first. */
+export async function getPracticeGames(sourceGameId: string): Promise<Game[]> {
+  return getRepository().listPracticeGames(sourceGameId)
+}
+
+/**
+ * Stores a finished game against the bot. The client sends only its moves: the start comes from
+ * the stored source game, and the builder replays every move.
+ */
+export async function savePracticeGame(
+  sourceGameId: string,
+  ply: number,
+  movesSan: string[],
+  elo: BotElo,
+  resigned: boolean,
+): Promise<{ ok: true; gameId: string } | { ok: false; error: string }> {
+  const error = getStrings().playBot.saveFailed
+  if (!isValidPracticePayload(sourceGameId, ply, movesSan, elo, resigned)) {
+    return { ok: false, error }
+  }
+  const repo = getRepository()
+  const source = await repo.getGame(sourceGameId)
+  if (!source) return { ok: false, error }
+  const { myColor } = practiceStart(source, Math.min(ply, source.movesSan?.length ?? 0))
+  const myName = source.isMine
+    ? myColor === 'white'
+      ? source.whiteUsername
+      : source.blackUsername
+    : hasChesscomUsername()
+      ? getChesscomUsername()
+      : getStrings().playBot.you
+  let game: Game
+  try {
+    game = buildPracticeGame({ source, ply, movesSan, myName, elo, resigned, now: new Date() })
+  } catch (err) {
+    if (err instanceof PracticeGameError) return { ok: false, error }
+    throw err
+  }
+  await repo.upsertGames([game])
+  revalidatePath(`/games/${sourceGameId}`)
+  return { ok: true, gameId: game.id }
 }
 
 export async function exportDatabaseBackup(): Promise<
@@ -371,6 +434,26 @@ export async function getGameAccuracyById(): Promise<Record<string, GameAccuracy
     cachedMyStandardGames(),
     cachedListAllGameAnalyses(),
   ])
+  return accuracyById(games, analyses)
+}
+
+/** The same for practice games, which every stat (so the call above) leaves out. */
+export async function getPracticeAccuracyById(
+  gameIds: string[],
+): Promise<Record<string, GameAccuracy>> {
+  if (!Array.isArray(gameIds) || !gameIds.every((id) => typeof id === 'string')) return {}
+  const repo = getRepository()
+  const [games, analyses] = await Promise.all([
+    Promise.all(gameIds.map((id) => repo.getGame(id))),
+    cachedListAllGameAnalyses(),
+  ])
+  return accuracyById(
+    games.filter((g): g is Game => g?.archiveYm === 'practice'),
+    analyses,
+  )
+}
+
+function accuracyById(games: Game[], analyses: GameAnalysis[]): Record<string, GameAccuracy> {
   const analysesByGameId = new Map(analyses.map((a) => [a.gameId, a]))
 
   const result: Record<string, GameAccuracy> = {}

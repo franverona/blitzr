@@ -4,6 +4,7 @@ import {
   isValidAnalysis,
   isValidDrillAnswer,
   isValidDrillUndo,
+  isValidPracticePayload,
   normalizeRepertoireNode,
 } from '@/lib/validate'
 
@@ -104,5 +105,21 @@ describe('isValidDrillUndo', () => {
       false,
     )
     expect(isValidDrillUndo({ previous: { ...previous, easeFactor: NaN }, reviewedAt })).toBe(false)
+  })
+})
+
+describe('isValidPracticePayload', () => {
+  it('accepts a well-formed payload', () => {
+    expect(isValidPracticePayload('g1', 4, ['e4', 'e5'], 1600, false)).toBe(true)
+  })
+
+  it('rejects bad shapes and unknown levels', () => {
+    expect(isValidPracticePayload(1, 4, ['e4'], 1600, false)).toBe(false)
+    expect(isValidPracticePayload('g1', -1, ['e4'], 1600, false)).toBe(false)
+    expect(isValidPracticePayload('g1', 1.5, ['e4'], 1600, false)).toBe(false)
+    expect(isValidPracticePayload('g1', 4, 'e4', 1600, false)).toBe(false)
+    expect(isValidPracticePayload('g1', 4, [1], 1600, false)).toBe(false)
+    expect(isValidPracticePayload('g1', 4, ['e4'], 1500, false)).toBe(false)
+    expect(isValidPracticePayload('g1', 4, ['e4'], 1600, 'yes')).toBe(false)
   })
 })

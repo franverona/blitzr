@@ -13,7 +13,13 @@ const en = {
     betterWas: 'Better was',
     color: { white: 'White', black: 'Black' },
     result: { win: 'Win', draw: 'Draw', loss: 'Loss' },
-    timeClass: { bullet: 'Bullet', blitz: 'Blitz', rapid: 'Rapid', daily: 'Daily' },
+    timeClass: {
+      bullet: 'Bullet',
+      blitz: 'Blitz',
+      rapid: 'Rapid',
+      daily: 'Daily',
+      practice: 'Practice',
+    },
     pawns: (n: number) => `${n.toFixed(1)} pawns`,
   },
   nav: {
@@ -183,6 +189,13 @@ const en = {
   gameList: {
     empty: 'No games synced yet. Click "Sync games" to fetch your Chess.com history.',
     noMatches: 'No games match these filters.',
+    noPractice: 'No practice games yet. Use "Play from here" on any game to play one.',
+    selectAll: 'Select every game on this page',
+    selectGame: 'Select this game',
+    deleteSelected: (n: number) => `Delete ${n} selected`,
+    deleteSelectedConfirm: (n: number) =>
+      `Delete ${n} practice game${n === 1 ? '' : 's'} and ${n === 1 ? 'its' : 'their'} analysis?`,
+    deleted: (n: number) => `Deleted ${n} practice game${n === 1 ? '' : 's'}.`,
     headers: {
       date: 'Date',
       color: 'Color',
@@ -507,6 +520,10 @@ const en = {
     lost: 'You lost.',
     resign: 'Resign',
     takeBack: 'Take back',
+    saved: 'Game saved.',
+    analyzeIt: 'Analyze it →',
+    saveFailed: "Couldn't save this game.",
+    you: 'You',
     restart: 'Restart',
   },
   aboutOpening: {
@@ -551,6 +568,7 @@ const en = {
     allRated: 'Rated & unrated',
     rated: 'Rated only',
     unrated: 'Unrated only',
+    practiceOnly: 'Practice games',
     anyAccuracy: 'Any accuracy',
     accuracyAtLeast: 'Accuracy ≥',
     accuracyAtMost: 'Accuracy ≤',
@@ -650,6 +668,13 @@ const en = {
     viewOnChessCom: 'View on Chess.com',
     unparsedMoves: `This game's moves couldn't be parsed (likely a non-standard variant) — showing the raw PGN instead.`,
     notMine: 'not your game — kept out of your stats',
+    practiceNote: 'practice vs the bot — kept out of your stats',
+    practiceSource: 'original game',
+    playAgain: 'Play again',
+    practiceGames: 'Practice games from this one',
+    practiceFrom: (move: string) => `from ${move}`,
+    practiceFromStart: 'from the start',
+    deletePracticeConfirm: 'Delete this practice game and its analysis?',
     deleteGame: 'Delete game',
     deleteGameConfirm: 'Delete this pasted game, its analysis and its drill cards?',
   },
@@ -689,7 +714,13 @@ const es: Strings = {
     betterWas: 'Mejor era',
     color: { white: 'Blancas', black: 'Negras' },
     result: { win: 'Victoria', draw: 'Tablas', loss: 'Derrota' },
-    timeClass: { bullet: 'Bala', blitz: 'Blitz', rapid: 'Rápidas', daily: 'Diaria' },
+    timeClass: {
+      bullet: 'Bala',
+      blitz: 'Blitz',
+      rapid: 'Rápidas',
+      daily: 'Diaria',
+      practice: 'Práctica',
+    },
     pawns: (n: number) => `${n.toFixed(1)} peones`,
   },
   nav: {
@@ -867,6 +898,14 @@ const es: Strings = {
     empty:
       'Aún no hay partidas sincronizadas. Haz clic en "Sincronizar partidas" para traer tu historial de Chess.com.',
     noMatches: 'Ninguna partida coincide con estos filtros.',
+    noPractice: 'Aún no hay partidas de práctica. Usa "Jugar desde aquí" en cualquier partida.',
+    selectAll: 'Seleccionar todas las partidas de esta página',
+    selectGame: 'Seleccionar esta partida',
+    deleteSelected: (n: number) => `Eliminar ${n} seleccionada${n === 1 ? '' : 's'}`,
+    deleteSelectedConfirm: (n: number) =>
+      `¿Eliminar ${n} partida${n === 1 ? '' : 's'} de práctica y su análisis?`,
+    deleted: (n: number) =>
+      `${n} partida${n === 1 ? '' : 's'} de práctica eliminada${n === 1 ? '' : 's'}.`,
     headers: {
       date: 'Fecha',
       color: 'Color',
@@ -1196,6 +1235,10 @@ const es: Strings = {
     lost: 'Has perdido.',
     resign: 'Rendirse',
     takeBack: 'Deshacer',
+    saved: 'Partida guardada.',
+    analyzeIt: 'Analizarla →',
+    saveFailed: 'No se pudo guardar la partida.',
+    you: 'Tú',
     restart: 'Reiniciar',
   },
   aboutOpening: {
@@ -1242,6 +1285,7 @@ const es: Strings = {
     allRated: 'Clasificadas y no clasificadas',
     rated: 'Solo clasificadas',
     unrated: 'Solo no clasificadas',
+    practiceOnly: 'Partidas de práctica',
     anyAccuracy: 'Cualquier precisión',
     accuracyAtLeast: 'Precisión ≥',
     accuracyAtMost: 'Precisión ≤',
@@ -1344,6 +1388,13 @@ const es: Strings = {
     unparsedMoves:
       'No se pudieron interpretar las jugadas de esta partida (probablemente una variante no estándar) — mostrando el PGN sin procesar en su lugar.',
     notMine: 'no es tu partida — fuera de tus estadísticas',
+    practiceNote: 'práctica contra el bot — fuera de tus estadísticas',
+    practiceSource: 'partida original',
+    playAgain: 'Jugar de nuevo',
+    practiceGames: 'Partidas de práctica desde esta',
+    practiceFrom: (move: string) => `desde ${move}`,
+    practiceFromStart: 'desde el inicio',
+    deletePracticeConfirm: '¿Eliminar esta partida de práctica y su análisis?',
     deleteGame: 'Eliminar partida',
     deleteGameConfirm:
       '¿Eliminar esta partida pegada, su análisis y sus tarjetas de entrenamiento?',

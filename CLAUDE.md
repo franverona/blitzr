@@ -156,6 +156,8 @@ backups and `polgar-mates.json` elsewhere. The `data/` paths below assume the de
   table. New columns are added after a `PRAGMA table_info` check, through `alter()`, which first
   copies an existing database to `data/backups/pre-migration-<time>.db`. Once per server process,
   so a migration that keeps failing and retrying doesn't pile up copies.
+  `getRepository()` keeps its instance on `globalThis` but replaces one from an older class, so a
+  hot reload of the repository or its migrations takes effect in a running `pnpm dev`.
 - **`moves_san` and `game_analysis.evals` are JSON array columns**, walked in app code.
 - **Aggregations, repertoire diffing and blunder detection are pure functions**, not repository
   methods — backend-agnostic and unit-testable.
@@ -285,7 +287,7 @@ keeping the pasted copy (with its analysis and drill cards). A `Variant` header 
 player matches). **"Not me"** stores `isMine: false` (`myColor` is then only the board
 orientation): such games are skipped by every stat in `app/actions.ts` (`cachedMyStandardGames`,
 `cachedStandardStartGames`), by the repertoire diff, and by the games list's result/color filters.
-Only manual games can be deleted (`deleteManualGame()`); FKs cascade to analysis and drill cards.
+Only manual and practice games can be deleted (`deleteManualGame()`); FKs cascade to analysis and drill cards.
 
 ## Repertoire
 
@@ -363,13 +365,35 @@ is disabled from the user's first move until the game ends, since changing it re
 With a sidebar, `PlayoutBoard` also moves the status line and its buttons (icons, labels as
 `aria-label`/tooltip) there, so the board column is only the board; the page skips `PageHeader` for
 one quiet line, letting the board grow to the viewport height. **Take back** returns to the user's last move, dropping the engine's reply or its running search
-(`gameRef`); only mid-game: a finished game is final. Nothing is saved yet.
+(`gameRef`); only mid-game: a finished game is final.
+
+### Practice games
+
+A game against the bot is saved when it ends (`savePracticeGame()`), unless the user never moved.
+The client sends only the source game id, ply, moves, Elo and whether it resigned:
+`buildPracticeGame()` (`lib/practiceGame.ts`, pure) rebuilds the start with `practiceStart()` (also
+the play page's position and side), replays every move, and runs the PGN through
+`parseManualGame()` for result codes. It's a `Game` with `archiveYm: 'practice'`, `timeClass:
+'practice'` and `practiceOf` (`source_game_id` + `source_ply`, `ON DELETE CASCADE` to the source).
+
+**They count nowhere**: `listAllGames()` and `listGames()` leave them out, and every stat, the drill
+deck, Today, `getUnanalyzedGames()` (so "Analyze all"), sync's duplicate check and the games list
+read through those two. Never read `games` around them. `getGame()` still finds them (game page,
+analysis, delete). They show on their source game's page (`listPracticeGames()`), under
+`/games?practice=1`, and on their own page, which links back and to Play again; a practice game
+can't be practiced from (`Play from here` is hidden, the play page 404s), since its positions aren't
+in a game the user played.
 
 ## Games list filters
 
-All filters are URL params (`q`, `result`, `color`, `rated`, `accOp`, `accValue`). Accuracy isn't a
+All filters are URL params (`q`, `result`, `color`, `rated`, `accOp`, `accValue`, `practice`). Accuracy isn't a
 column, so an active accuracy filter becomes a `gameIds` set passed to `listGames()`. Text search
 and the slider are debounced (400ms); selects navigate immediately.
+
+`practice=1` lists only practice games: no rated or accuracy filter (`getGameAccuracyById()` skips
+them, so the page asks `getPracticeAccuracyById()` for the listed ones), plus checkboxes whose
+selection turns the header into a "Delete N selected" (`deletePracticeGames()`, which ignores any
+id that isn't a practice game). The labels stay, transparent, so the columns don't move.
 
 ## Drilling
 
