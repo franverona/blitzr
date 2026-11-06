@@ -92,5 +92,6 @@ export function normalizeGame(raw: ChesscomGame, username: string, archiveYm: st
     ecoUrl,
     archiveYm,
     createdAt: new Date().toISOString(),
+    site: 'chesscom',
   }
 }

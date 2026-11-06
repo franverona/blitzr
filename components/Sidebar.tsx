@@ -8,19 +8,25 @@ import { BulkAnalysisIndicator } from '@/components/BulkAnalysisIndicator'
 import { NavLinks } from '@/components/NavLinks'
 import { PlayerAvatar } from '@/components/PlayerAvatar'
 import { getStrings } from '@/lib/i18n/strings'
+import type { GameSite } from '@/lib/types'
 import { ChevronLeftIcon, SettingsIcon } from './NavIcons'
 
 // Duplicated in app/layout.tsx; see SettingsProvider.tsx for why.
 const COLLAPSED_COOKIE = 'blitzr-sidebar-collapsed'
 
+export interface SidebarAccount {
+  site: GameSite
+  username: string
+  avatarUrl: string | null
+}
+
 // Below `md` the sidebar is always icon-only; `collapsed` only affects md+.
 export function Sidebar({
-  username,
-  avatarUrl,
+  accounts,
   initialCollapsed,
 }: {
-  username: string | null
-  avatarUrl: string | null
+  /** One per site with a username set. */
+  accounts: SidebarAccount[]
   initialCollapsed: boolean
 }) {
   const [collapsed, setCollapsed] = useState(initialCollapsed)
@@ -72,15 +78,26 @@ export function Sidebar({
             <SettingsIcon className={`size-5 shrink-0 ${settingsActive ? 'text-accent' : ''}`} />
             <span className={labelClassName}>{s.settings.trigger}</span>
           </Link>
-          {username && (
-            <div className="flex items-center gap-2 border-t border-zinc-200 px-1 pt-3 dark:border-zinc-800">
-              <PlayerAvatar username={username} avatarUrl={avatarUrl} />
-              <span
-                className={`min-w-0 truncate text-sm font-medium text-zinc-700 dark:text-zinc-300 ${labelClassName}`}
-              >
-                {username}
-              </span>
-            </div>
+          {accounts.length > 0 && (
+            <ul className="flex flex-col gap-2 border-t border-zinc-200 px-1 pt-3 dark:border-zinc-800">
+              {accounts.map(({ site, username, avatarUrl }) => (
+                <li
+                  key={site}
+                  title={`${username} · ${s.common.site[site]}`}
+                  className="flex items-center gap-2"
+                >
+                  <PlayerAvatar username={username} avatarUrl={avatarUrl} />
+                  <span className={`min-w-0 leading-tight ${labelClassName}`}>
+                    <span className="block truncate text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                      {username}
+                    </span>
+                    <span className="block truncate text-xs text-zinc-500 dark:text-zinc-400">
+                      {s.common.site[site]}
+                    </span>
+                  </span>
+                </li>
+              ))}
+            </ul>
           )}
         </div>
       </aside>

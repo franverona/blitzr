@@ -105,6 +105,11 @@ async function runMigrations(db: Kysely<DbSchema>): Promise<void> {
     await alter(sql`ALTER TABLE games ADD COLUMN is_mine INTEGER NOT NULL DEFAULT 1`)
   }
 
+  // Every game before Lichess support came from Chess.com.
+  if (!gameColumns.rows.some((c) => c.name === 'site')) {
+    await alter(sql`ALTER TABLE games ADD COLUMN site TEXT NOT NULL DEFAULT 'chesscom'`)
+  }
+
   // Practice games (archive_ym 'practice') point at the game they were played from.
   if (!gameColumns.rows.some((c) => c.name === 'source_game_id')) {
     await alter(

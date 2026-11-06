@@ -4,7 +4,15 @@ import { moveNumberOfPly } from './san'
 import { startsFromStandardPosition } from './positions'
 import { diffGameAgainstRepertoire } from './repertoire'
 import { countGamesReachingLine } from './openingTheory'
-import type { Game, GameAnalysis, Lesson, MyResult, RepertoireColor, RepertoireNode } from './types'
+import type {
+  Game,
+  GameAnalysis,
+  GameSite,
+  Lesson,
+  MyResult,
+  RepertoireColor,
+  RepertoireNode,
+} from './types'
 
 const DAY_SECONDS = 24 * 60 * 60
 
@@ -16,6 +24,7 @@ export function localDay(date: Date): string {
 }
 
 export interface RatingChange {
+  site: GameSite
   timeClass: string
   rating: number
   change: number
@@ -33,26 +42,31 @@ export function recentResults(
 ): { wins: number; losses: number; draws: number; ratings: RatingChange[] } {
   const since = now.getTime() / 1000 - days * DAY_SECONDS
   const counts: Record<MyResult, number> = { win: 0, loss: 0, draw: 0 }
-  const byClass = new Map<string, { baseline?: number; first?: number; last?: number }>()
+  // Per site too: a Lichess rating isn't on Chess.com's scale.
+  const byClass = new Map<
+    string,
+    { site: GameSite; timeClass: string; baseline?: number; first?: number; last?: number }
+  >()
 
   for (const game of [...games].sort((a, b) => a.endTime - b.endTime)) {
     const rating = game.myColor === 'white' ? game.whiteRating : game.blackRating
     const inWindow = game.endTime >= since
     if (inWindow) counts[game.myResult]++
     if (!game.rated || rating === null) continue
-    const entry = byClass.get(game.timeClass) ?? {}
+    const key = `${game.site}:${game.timeClass}`
+    const entry = byClass.get(key) ?? { site: game.site, timeClass: game.timeClass }
     if (!inWindow) entry.baseline = rating
     else {
       entry.first ??= rating
       entry.last = rating
     }
-    byClass.set(game.timeClass, entry)
+    byClass.set(key, entry)
   }
 
   const ratings: RatingChange[] = []
-  for (const [timeClass, { baseline, first, last }] of byClass) {
+  for (const { site, timeClass, baseline, first, last } of byClass.values()) {
     if (last === undefined || first === undefined) continue
-    ratings.push({ timeClass, rating: last, change: last - (baseline ?? first) })
+    ratings.push({ site, timeClass, rating: last, change: last - (baseline ?? first) })
   }
   return { wins: counts.win, losses: counts.loss, draws: counts.draw, ratings }
 }

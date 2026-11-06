@@ -2,6 +2,7 @@ import type { Locale } from './i18n/locale'
 
 export type MyColor = 'white' | 'black'
 export type MyResult = 'win' | 'draw' | 'loss'
+export type GameSite = 'chesscom' | 'lichess'
 
 export interface Game {
   id: string
@@ -31,6 +32,8 @@ export interface Game {
   ecoUrl: string | null
   archiveYm: string
   createdAt: string
+  /** Where it was played; a practice game takes its source game's. */
+  site: GameSite
   /** A practice game (`archiveYm: 'practice'`): played against the bot from `ply` of `gameId`.
    *  Kept out of every stat and list but its own. */
   practiceOf?: { gameId: string; ply: number }

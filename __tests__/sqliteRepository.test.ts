@@ -37,6 +37,7 @@ function game(id: string, white: string, black: string, myColor: Game['myColor']
     ecoName: null,
     ecoUrl: null,
     archiveYm: '2026-09',
+    site: 'chesscom',
     createdAt: '2026-09-01T00:00:00.000Z',
   }
 }
@@ -263,5 +264,18 @@ describe('SqliteGameRepository practice games', () => {
   it('deletes them with their source game', async () => {
     await repo.deleteGame('src')
     expect(await repo.getGame('p1')).toBeUndefined()
+  })
+})
+
+// Last, since it adds a game the other suites' counts don't expect.
+describe('SqliteGameRepository.listGames site filter', () => {
+  it('lists only the asked site', async () => {
+    await repo.upsertGames([{ ...game('lichess-1', 'fverona', 'zed', 'white'), site: 'lichess' }])
+    expect((await repo.listGames({ site: 'lichess' })).games.map((g) => g.id)).toEqual([
+      'lichess-1',
+    ])
+    const chesscom = (await repo.listGames({ site: 'chesscom' })).games.map((g) => g.id)
+    expect(chesscom).toContain('1')
+    expect(chesscom).not.toContain('lichess-1')
   })
 })

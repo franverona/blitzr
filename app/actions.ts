@@ -7,7 +7,7 @@ import { buildAccuracyTrend, recentAccuracy } from '@/lib/accuracyTrend'
 import { buildBlunderStats } from '@/lib/blunders'
 import { ChesscomApiError, fetchPlayerAvatar } from '@/lib/chesscom/client'
 import { endOfDaySeconds, formatDate, startOfDaySeconds } from '@/lib/dates'
-import { getChesscomUsername, hasChesscomUsername } from '@/lib/config'
+import { getChesscomUsername, hasChesscomUsername, siteUsername } from '@/lib/config'
 import { getRepository } from '@/lib/db'
 import { getLocale } from '@/lib/i18n/locale'
 import { getStrings } from '@/lib/i18n/strings'
@@ -28,7 +28,7 @@ import {
 } from '@/lib/drill'
 import type { DrillCandidate } from '@/lib/drill'
 import type { BotElo } from '@/lib/botStrength'
-import { findDuplicateGame, parseManualGame, type ManualGameSide } from '@/lib/manualGame'
+import { findDuplicateGame, parseManualGame, pgnSite, type ManualGameSide } from '@/lib/manualGame'
 import { summarizeMoveQuality } from '@/lib/moveQuality'
 import { buildOpeningFamilies, ecoFamilyLabel, unknownOpeningLabel } from '@/lib/openings'
 import { allMateProblems, getMateProblem } from '@/lib/puzzleSet'
@@ -69,6 +69,7 @@ import type {
   DrillSourceType,
   DrillUndo,
   Game,
+  GameSite,
   GameAccuracy,
   GameAnalysis,
   LessonGameStats,
@@ -118,6 +119,11 @@ export async function listGames(
   params: ListGamesParams = {},
 ): Promise<{ games: Game[]; total: number }> {
   return getRepository().listGames(params)
+}
+
+/** The sites the user's games come from, for the games list's site filter. */
+export async function getGameSites(): Promise<GameSite[]> {
+  return [...new Set((await cachedListAllGames()).map((g) => g.site))]
 }
 
 export async function getGame(id: string): Promise<Game | undefined> {
@@ -205,13 +211,16 @@ export async function addManualGame(
 ): Promise<{ ok: true; gameId: string } | { ok: false; error: string }> {
   // Returned, not thrown: Next hides thrown Server Action messages in
   // production, and the dialog needs parseManualGame()'s reason.
-  // Only 'auto' needs the username; an explicit side works without one.
-  if (side === 'auto' && !hasChesscomUsername()) {
-    return { ok: false, error: getStrings().sync.noUsername }
+  // Only 'auto' needs the username (the one for the PGN's site); an explicit side works without one.
+  const site = pgnSite(pgn)
+  const username = siteUsername(site)
+  if (side === 'auto' && !username) {
+    const s = getStrings().sync
+    return { ok: false, error: site === 'lichess' ? s.noLichessUsername : s.noUsername }
   }
   let game: Game
   try {
-    game = parseManualGame(pgn, side === 'auto' ? getChesscomUsername() : '', side)
+    game = parseManualGame(pgn, side === 'auto' ? (username ?? '') : '', side)
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : '' }
   }
@@ -277,9 +286,7 @@ export async function savePracticeGame(
     ? myColor === 'white'
       ? source.whiteUsername
       : source.blackUsername
-    : hasChesscomUsername()
-      ? getChesscomUsername()
-      : getStrings().playBot.you
+    : (siteUsername(source.site) ?? getStrings().playBot.you)
   let game: Game
   try {
     game = buildPracticeGame({ source, ply, movesSan, myName, elo, resigned, now: new Date() })
@@ -545,8 +552,14 @@ export async function getDrillDeck(filters?: {
     })
     .filter((p): p is DrillPrompt => p !== null)
 
-  // Fetched once per unique opponent; buildDrillPrompt() stays pure.
-  const opponentUsernames = [...new Set(rawPrompts.map((p) => p.opponentUsername))]
+  // Fetched once per unique opponent; buildDrillPrompt() stays pure. Lichess has no avatars.
+  const opponentUsernames = [
+    ...new Set(
+      rawPrompts
+        .filter((p) => gamesById.get(p.gameId)?.site === 'chesscom')
+        .map((p) => p.opponentUsername),
+    ),
+  ]
   const avatarEntries = await Promise.all(
     opponentUsernames.map(
       async (username) => [username, await fetchPlayerAvatar(username)] as const,

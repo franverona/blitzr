@@ -273,13 +273,23 @@ backups and `polgar-mates.json` elsewhere. The `data/` paths below assume the de
   user. `fetchBotAvatar()` tries the undocumented `<Name>-BOT` account instead. Coach names are
   real accounts and need no special handling.
 
+## Sites
+
+Every game has a `site` (`chesscom` | `lichess`; the column defaults existing rows to `chesscom`; a
+practice game takes its source's). Sync is Chess.com only for now; Lichess games come in by PGN.
+`siteUsername(site)` (`lib/config.ts`) reads `CHESSCOM_USERNAME` / `LICHESS_USERNAME`; either or
+both can be set, and the sidebar lists one row per set username. **Lichess has no profile
+pictures**: avatars are only fetched for Chess.com games (game page, drill cards, sidebar), so
+Lichess players keep `PlayerAvatar`'s letter badge. Ratings on Today are per site and time class
+(`recentResults()`), since the two scales don't compare; the site is named only when both appear.
+
 ## Manually-added games
 
 `parseManualGame()` builds a `Game` from a pasted PGN's headers and throws on bad movetext or
-missing players (a manual game exists to be analyzed). Its per-player result codes are Chess.com's (`resigned`, `timeout`, `agreed`…), read from the final position, then the (possibly Spanish) `Termination` header, falling back to `loss`/`draw`. It gets a fresh `crypto.randomUUID()` and
+missing players (a manual game exists to be analyzed). Its per-player result codes are Chess.com's (`resigned`, `timeout`, `agreed`…), read from the final position, then the (possibly Spanish) `Termination` header, falling back to `loss`/`draw`. A `Site` header that's a lichess.org game (`/<id>` or the API's `/game/<id>`) makes it a Lichess game, with the canonical `https://lichess.org/<id>` as its link, Lichess's `Opening` header as `ecoName`, and its user picked by `LICHESS_USERNAME` (`pgnSite()` decides which username `addManualGame()` passes). It gets a fresh `crypto.randomUUID()` and
 `archiveYm: 'manual'`; since `upsertGames()` is `ON CONFLICT (id) DO NOTHING`, sync can never
 overwrite it. The random id also defeats `ON CONFLICT` as a duplicate check, so `findDuplicateGame()`
-matches on the Chess.com game id in the URL (any of its forms; two ids decide alone, so the paste's
+matches on the site's game id in the URL (Chess.com's in any of its forms, or Lichess's first 8 characters, prefixed by site so they never cross; two ids decide alone, so the paste's
 `Link` and `ECOUrl` are kept only as https chess.com URLs) or on players
 plus moves ending within a day or so (bot rematches repeat moves): a paste
 that matches an existing game is rejected, and sync skips a game that matches a pasted one,
@@ -386,7 +396,7 @@ in a game the user played.
 
 ## Games list filters
 
-All filters are URL params (`q`, `result`, `color`, `rated`, `accOp`, `accValue`, `practice`). Accuracy isn't a
+All filters are URL params (`q`, `result`, `color`, `rated`, `site`, `accOp`, `accValue`, `practice`). The site select shows only once games come from more than one site (`getGameSites()`), or while one is set. Accuracy isn't a
 column, so an active accuracy filter becomes a `gameIds` set passed to `listGames()`. Text search
 and the slider are debounced (400ms); selects navigate immediately.
 

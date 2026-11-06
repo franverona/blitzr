@@ -17,6 +17,7 @@ import type {
   Game,
   GameAnalysis,
   MyColor,
+  GameSite,
   MyResult,
   RepertoireColor,
   RepertoireNode,
@@ -50,6 +51,7 @@ function rowToGame(row: GamesTable): Game {
     ecoUrl: row.eco_url,
     archiveYm: row.archive_ym,
     createdAt: row.created_at,
+    site: row.site as GameSite,
     ...(row.source_game_id !== null && {
       practiceOf: { gameId: row.source_game_id, ply: row.source_ply ?? 0 },
     }),
@@ -83,6 +85,7 @@ function gameToRow(game: Game): GamesTable {
     eco_url: game.ecoUrl,
     archive_ym: game.archiveYm,
     created_at: game.createdAt,
+    site: game.site,
     source_game_id: game.practiceOf?.gameId ?? null,
     source_ply: game.practiceOf?.ply ?? null,
   }
@@ -149,6 +152,7 @@ export interface ListGamesParams {
   result?: MyResult
   color?: MyColor
   rated?: boolean
+  site?: GameSite
   gameIds?: string[]
   /** Only practice games instead of none (`/games?practice=1`). */
   practice?: boolean
@@ -236,6 +240,10 @@ export class SqliteGameRepository {
       const rated = params.rated ? 1 : 0
       rowsQuery = rowsQuery.where('rated', '=', rated)
       countQuery = countQuery.where('rated', '=', rated)
+    }
+    if (params.site) {
+      rowsQuery = rowsQuery.where('site', '=', params.site)
+      countQuery = countQuery.where('site', '=', params.site)
     }
     if (params.gameIds) {
       rowsQuery = rowsQuery.where('id', 'in', params.gameIds)

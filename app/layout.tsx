@@ -6,11 +6,11 @@ import { getArchiveSyncStatus } from './actions'
 import { SettingsProvider } from '@/components/SettingsProvider'
 import { BulkAnalysisProvider } from '@/components/BulkAnalysisProvider'
 import { RouteProgressBar } from '@/components/RouteProgressBar'
-import { Sidebar } from '@/components/Sidebar'
+import { Sidebar, type SidebarAccount } from '@/components/Sidebar'
 import { Toaster } from '@/components/Toast'
 import { SyncProvider } from '@/components/SyncProvider'
 import { fetchPlayerAvatar } from '@/lib/chesscom/client'
-import { getChesscomUsername } from '@/lib/config'
+import { siteUsername } from '@/lib/config'
 import { getSessionSize } from '@/lib/drill'
 import { getLocale } from '@/lib/i18n/locale'
 import { getStrings } from '@/lib/i18n/strings'
@@ -40,13 +40,17 @@ export const viewport: Viewport = {
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   // Fail soft: a missing username shouldn't break every page.
-  let username: string | null
-  try {
-    username = getChesscomUsername()
-  } catch {
-    username = null
-  }
-  const avatarUrl = username ? await fetchPlayerAvatar(username) : null
+  const username = siteUsername('chesscom') ?? null
+  const lichessUsername = siteUsername('lichess')
+  const accounts: SidebarAccount[] = [
+    ...(username
+      ? [{ site: 'chesscom' as const, username, avatarUrl: await fetchPlayerAvatar(username) }]
+      : []),
+    // Lichess has no profile pictures.
+    ...(lichessUsername
+      ? [{ site: 'lichess' as const, username: lichessUsername, avatarUrl: null }]
+      : []),
+  ]
   let autoSync = false
   if (username && autoSyncMinutes() > 0) {
     try {
@@ -98,11 +102,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         >
           <BulkAnalysisProvider>
             <SyncProvider autoSync={autoSync}>
-              <Sidebar
-                username={username}
-                avatarUrl={avatarUrl}
-                initialCollapsed={sidebarCollapsed}
-              />
+              <Sidebar accounts={accounts} initialCollapsed={sidebarCollapsed} />
               <main
                 id="main-scroll"
                 className="min-w-0 flex-1 overflow-y-auto px-6 pt-6 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-6"

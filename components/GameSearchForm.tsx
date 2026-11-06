@@ -9,13 +9,15 @@ import { INPUT_CLASS, chipClass } from './styles'
 const SEARCH_DEBOUNCE_MS = 400
 const DEFAULT_ACCURACY_THRESHOLD = 80
 
-/** Opponent search plus result/color/rated/accuracy filters, all in the URL.
+/** Opponent search plus result/color/rated/site/accuracy filters, all in the URL.
  *  Text and slider changes are debounced; selects navigate immediately. */
 export function GameSearchForm({
   defaultValue,
   result,
   color,
   rated,
+  site,
+  showSite,
   accOp,
   accValue,
   practice,
@@ -24,6 +26,9 @@ export function GameSearchForm({
   result?: string
   color?: string
   rated?: string
+  site?: string
+  /** Only once games come from more than one site. */
+  showSite: boolean
   accOp?: string
   accValue?: string
   /** `'1'`: practice games only, which have no accuracy filter (it reads stats data). */
@@ -68,12 +73,23 @@ export function GameSearchForm({
     result?: string
     color?: string
     rated?: string
+    site?: string
     accOp?: string
     accValue?: string
     practice?: string
   }) {
     const params = new URLSearchParams()
-    const merged = { q: value.trim(), result, color, rated, accOp, accValue, practice, ...next }
+    const merged = {
+      q: value.trim(),
+      result,
+      color,
+      rated,
+      site,
+      accOp,
+      accValue,
+      practice,
+      ...next,
+    }
     for (const [key, val] of Object.entries(merged)) {
       if (val) params.set(key, val)
     }
@@ -149,6 +165,19 @@ export function GameSearchForm({
           </Select>
         )}
 
+        {/* Practice games are played here, not on either site. */}
+        {!practice && showSite && (
+          <Select
+            value={site ?? ''}
+            onChange={(e) => navigate({ site: e.target.value })}
+            className={INPUT_CLASS}
+          >
+            <option value="">{s.gamesPage.allSites}</option>
+            <option value="chesscom">{s.common.site.chesscom}</option>
+            <option value="lichess">{s.common.site.lichess}</option>
+          </Select>
+        )}
+
         {!practice && (
           <AccuracyFilterPopover
             accOp={accOp}
@@ -164,7 +193,9 @@ export function GameSearchForm({
           aria-pressed={Boolean(practice)}
           onClick={() =>
             navigate(
-              practice ? { practice: '' } : { practice: '1', accOp: '', accValue: '', rated: '' },
+              practice
+                ? { practice: '' }
+                : { practice: '1', accOp: '', accValue: '', rated: '', site: '' },
             )
           }
           className={chipClass(Boolean(practice))}

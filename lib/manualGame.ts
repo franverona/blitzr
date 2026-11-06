@@ -1,7 +1,7 @@
 import { Chess } from 'chess.js'
 import { ecoNameFromUrl, parsePgnHeaders } from './chesscom/normalize'
 import { getStrings } from './i18n/strings'
-import type { Game, MyColor, MyResult } from './types'
+import type { Game, GameSite, MyColor, MyResult } from './types'
 
 // Builds a Game from a pasted PGN's headers. Unlike normalizeGame(), invalid
 // movetext throws: a manual game exists to be analyzed.
@@ -97,6 +97,11 @@ function ratingFromHeader(value: string | undefined): number | null {
   return Number.isNaN(rating) ? null : rating
 }
 
+/** Lichess when the PGN's `Site` is a Lichess game, else Chess.com (what pasted games always were). */
+export function pgnSite(pgn: string): GameSite {
+  return lichessUrl(parsePgnHeaders(pgn).Site) ? 'lichess' : 'chesscom'
+}
+
 /** 'auto' matches the username against the PGN's players. */
 export type ManualGameSide = 'auto' | MyColor | 'notMine'
 
@@ -142,10 +147,11 @@ export function parseManualGame(
   const codes = resultCodes(result, termination, chess)
 
   const ecoUrl = chesscomUrl(headers.ECOUrl)
+  const lichessLink = lichessUrl(headers.Site)
 
   return {
     id: crypto.randomUUID(),
-    url: chesscomUrl(headers.Link) ?? '',
+    url: lichessLink ?? chesscomUrl(headers.Link) ?? '',
     pgn,
     movesSan,
     initialFen: headers.FEN ?? new Chess().fen(),
@@ -165,10 +171,12 @@ export function parseManualGame(
     myResult,
     isMine: side !== 'notMine',
     ecoCode: headers.ECO ?? null,
-    ecoName: ecoUrl ? ecoNameFromUrl(ecoUrl) : null,
+    // Lichess names the opening itself; Chess.com only in its ECOUrl.
+    ecoName: ecoUrl ? ecoNameFromUrl(ecoUrl) : (headers.Opening ?? null),
     ecoUrl,
     archiveYm: 'manual',
     createdAt: new Date().toISOString(),
+    site: lichessLink ? 'lichess' : 'chesscom',
   }
 }
 
@@ -186,10 +194,27 @@ function chesscomUrl(raw: string | undefined): string | null {
     : null
 }
 
+// "https://lichess.org/AbCd1234" (the API's exports: "/game/AbCd1234"), maybe with a player
+// suffix or "/black": the first 8 are the id.
+const LICHESS_GAME_ID = /^\/(?:game\/)?([A-Za-z0-9]{8})(?:[A-Za-z0-9]{4})?(?:\/|$)/
+
+/** The game's canonical https lichess.org URL, else null. Same reasoning as `chesscomUrl()`. */
+function lichessUrl(raw: string | undefined): string | null {
+  if (!raw || !URL.canParse(raw)) return null
+  const url = new URL(raw)
+  const id = url.pathname.match(LICHESS_GAME_ID)
+  return url.protocol === 'https:' && url.hostname === 'lichess.org' && id
+    ? `https://lichess.org/${id[1]}`
+    : null
+}
+
 // Chess.com URLs vary: "/analysis/game/…/analysis", "?move=0"; the type and id are what match.
 const CHESSCOM_GAME_ID = /\/game\/(live|daily|computer)\/(\d+)/
 
-function chesscomGameId(game: Game): string | undefined {
+/** The site's own game id, prefixed with the site, so ids from the two sites never match. */
+function siteGameId(game: Game): string | undefined {
+  const lichess = lichessUrl(game.url) && new URL(game.url).pathname.match(LICHESS_GAME_ID)
+  if (lichess) return `lichess/${lichess[1]}`
   // Checked here too for a game pasted before `chesscomUrl()` filtered its link.
   const path = chesscomUrl(game.url) && new URL(game.url).pathname
   const id = path ? path.match(CHESSCOM_GAME_ID) : null
@@ -206,15 +231,15 @@ const SAME_GAME_MAX_SECONDS_APART = 2 * 24 * 60 * 60
 
 /**
  * A game in `existing` that is the same game as `game`. A pasted copy has a
- * random id, so the id-based ON CONFLICT can't catch it; this can. Two Chess.com
+ * random id, so the id-based ON CONFLICT can't catch it; this can. Two site game
  * ids decide on their own; otherwise the same players and moves must also end within
  * a day or so, since bot rematches and quick repetition draws replay the same moves.
  */
 export function findDuplicateGame(game: Game, existing: Game[]): Game | undefined {
-  const id = chesscomGameId(game)
+  const id = siteGameId(game)
   const key = playersAndMoves(game)
   return existing.find((other) => {
-    const otherId = chesscomGameId(other)
+    const otherId = siteGameId(other)
     if (id && otherId) return id === otherId
     return (
       playersAndMoves(other) === key &&

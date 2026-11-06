@@ -13,6 +13,7 @@ const en = {
     betterWas: 'Better was',
     color: { white: 'White', black: 'Black' },
     result: { win: 'Win', draw: 'Draw', loss: 'Loss' },
+    site: { chesscom: 'Chess.com', lichess: 'Lichess' },
     timeClass: {
       bullet: 'Bullet',
       blitz: 'Blitz',
@@ -413,6 +414,8 @@ const en = {
     rateLimited: 'Chess.com is rate-limiting requests — try again in a few minutes.',
     userNotFound: (username: string) => `Chess.com has no player named "${username}".`,
     noUsername: 'CHESSCOM_USERNAME is not set. Copy .env.example to .env.local and fill it in.',
+    noLichessUsername:
+      'This is a Lichess game and LICHESS_USERNAME is not set — set it in .env.local, or pick the side you played.',
     synced: (archives: number, games: number) =>
       `Synced ${archives} archive${archives === 1 ? '' : 's'}, ${games} game${games === 1 ? '' : 's'} added.`,
     analyzeNew: 'Analyze them',
@@ -566,6 +569,7 @@ const en = {
     allResults: 'All results',
     allColors: 'All colors',
     allRated: 'Rated & unrated',
+    allSites: 'All sites',
     rated: 'Rated only',
     unrated: 'Unrated only',
     practiceOnly: 'Practice games',
@@ -666,6 +670,7 @@ const en = {
       'ECO code — a standard reference number for this opening, used to group games by opening regardless of the exact move order',
     learnMoreAboutOpening: 'Learn more about this opening',
     viewOnChessCom: 'View on Chess.com',
+    viewOnLichess: 'View on Lichess',
     unparsedMoves: `This game's moves couldn't be parsed (likely a non-standard variant) — showing the raw PGN instead.`,
     notMine: 'not your game — kept out of your stats',
     practiceNote: 'practice vs the bot — kept out of your stats',
@@ -714,6 +719,7 @@ const es: Strings = {
     betterWas: 'Mejor era',
     color: { white: 'Blancas', black: 'Negras' },
     result: { win: 'Victoria', draw: 'Tablas', loss: 'Derrota' },
+    site: { chesscom: 'Chess.com', lichess: 'Lichess' },
     timeClass: {
       bullet: 'Bala',
       blitz: 'Blitz',
@@ -1126,6 +1132,8 @@ const es: Strings = {
     userNotFound: (username: string) => `Chess.com no tiene ningún jugador llamado "${username}".`,
     noUsername:
       'CHESSCOM_USERNAME no está configurado. Copia .env.example a .env.local y rellénalo.',
+    noLichessUsername:
+      'Es una partida de Lichess y LICHESS_USERNAME no está configurado — configúralo en .env.local, o elige con qué color jugaste.',
     synced: (archives: number, games: number) =>
       `${archives} ${archives === 1 ? 'archivo sincronizado' : 'archivos sincronizados'}, ${games} ${games === 1 ? 'partida añadida' : 'partidas añadidas'}.`,
     analyzeNew: 'Analizarlas',
@@ -1283,6 +1291,7 @@ const es: Strings = {
     allResults: 'Todos los resultados',
     allColors: 'Todos los colores',
     allRated: 'Clasificadas y no clasificadas',
+    allSites: 'Todos los sitios',
     rated: 'Solo clasificadas',
     unrated: 'Solo no clasificadas',
     practiceOnly: 'Partidas de práctica',
@@ -1385,6 +1394,7 @@ const es: Strings = {
       'Código ECO — un número de referencia estándar para esta apertura, usado para agrupar partidas por apertura sin importar el orden exacto de jugadas',
     learnMoreAboutOpening: 'Aprender más sobre esta apertura',
     viewOnChessCom: 'Ver en Chess.com',
+    viewOnLichess: 'Ver en Lichess',
     unparsedMoves:
       'No se pudieron interpretar las jugadas de esta partida (probablemente una variante no estándar) — mostrando el PGN sin procesar en su lugar.',
     notMine: 'no es tu partida — fuera de tus estadísticas',

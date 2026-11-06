@@ -127,8 +127,11 @@ export default async function TodayPage() {
             <p className="text-sm">{s.today.record(results.wins, results.losses, results.draws)}</p>
           )}
           {results.ratings.map((r) => (
-            <p key={r.timeClass} className="text-sm">
-              {s.common.timeClass[r.timeClass as keyof typeof s.common.timeClass] ?? r.timeClass}{' '}
+            <p key={`${r.site}:${r.timeClass}`} className="text-sm">
+              {/* Named only once both sites have ratings, so a single-site setup reads as before. */}
+              {new Set(results.ratings.map((x) => x.site)).size > 1 && `${s.common.site[r.site]} `}
+              {s.common.timeClass[r.timeClass as keyof typeof s.common.timeClass] ??
+                r.timeClass}{' '}
               {r.rating}{' '}
               <span
                 className={

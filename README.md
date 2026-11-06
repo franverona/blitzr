@@ -60,7 +60,7 @@ import as is; `pnpm install` refuses older versions.
 ```bash
 npm install -g pnpm          # any recent pnpm runs the version package.json pins
 pnpm install
-cp .env.example .env.local   # set CHESSCOM_USERNAME
+cp .env.example .env.local   # set CHESSCOM_USERNAME (and LICHESS_USERNAME, if you play there)
 pnpm dev
 ```
 
@@ -174,7 +174,10 @@ download). See [Puzzles](#puzzles) for what each set contains.
 Requests send a descriptive `User-Agent`, archives are fetched serially (the button shows
 month-by-month progress, and games appear as each month lands), and 429s are retried with backoff. Games Chess.com's API never exposes (e.g. "Play Bots" games) can be added with
 **Add game by PGN**; they get their own id, so a later sync never touches them. A game that's
-already in Blitzr, synced or pasted, can't be added twice. Pick which side
+already in Blitzr, synced or pasted, can't be added twice. Lichess games can be pasted too
+(set `LICHESS_USERNAME` so your side is picked for you): they keep their Lichess link and opening
+name, their ratings are kept apart from Chess.com's on Today, and once you have games from both
+sites the games list can filter by site. Pick which side
 you played, or **Not me** for a game you only want to study: it can still be replayed and
 analyzed, but stays out of your openings, blunders, accuracy and drills. Pasted games can be
 deleted from their game page.
