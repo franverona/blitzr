@@ -10,7 +10,8 @@ export function EvalBar({
   boardOrientation: 'white' | 'black'
   className?: string
 }) {
-  const whitePercent = evalBarPercent(evaluation)
+  // Rounded: Node's and the browser's Math.exp can differ in the last bit, which would break hydration.
+  const whitePercent = Math.round(evalBarPercent(evaluation) * 100) / 100
   // Anchor the white fill to White's side of the board.
   const justify = boardOrientation === 'white' ? 'justify-end' : 'justify-start'
 

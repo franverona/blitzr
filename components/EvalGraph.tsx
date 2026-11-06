@@ -13,8 +13,9 @@ function xFor(index: number, count: number): number {
   return count <= 1 ? WIDTH / 2 : (index / (count - 1)) * WIDTH
 }
 
+// Rounded: Node's and the browser's Math.exp can differ in the last bit, which would break hydration.
 function yFor(evaluation: PositionEval): number {
-  return (1 - evalBarPercent(evaluation) / 100) * HEIGHT
+  return Math.round((1 - evalBarPercent(evaluation) / 100) * HEIGHT * 100) / 100
 }
 
 /**
