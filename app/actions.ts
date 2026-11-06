@@ -6,8 +6,9 @@ import { cache } from 'react'
 import { buildAccuracyTrend, recentAccuracy } from '@/lib/accuracyTrend'
 import { buildBlunderStats } from '@/lib/blunders'
 import { ChesscomApiError, fetchPlayerAvatar } from '@/lib/chesscom/client'
+import { LichessApiError } from '@/lib/lichess/client'
 import { endOfDaySeconds, formatDate, startOfDaySeconds } from '@/lib/dates'
-import { getChesscomUsername, hasChesscomUsername, siteUsername } from '@/lib/config'
+import { hasAnyUsername, siteUsername } from '@/lib/config'
 import { getRepository } from '@/lib/db'
 import { getLocale } from '@/lib/i18n/locale'
 import { getStrings } from '@/lib/i18n/strings'
@@ -42,7 +43,7 @@ import {
 import { plyLabel } from '@/lib/san'
 import { PracticeGameError, buildPracticeGame, practiceStart } from '@/lib/practiceGame'
 import { findRepertoireGaps, lineToRepertoireNodes } from '@/lib/repertoire'
-import { isSyncStale, listPendingArchives, syncArchive } from '@/lib/sync'
+import { isArchiveKey, isSyncStale, listPendingArchives, syncArchive } from '@/lib/sync'
 import { describeBlunderReason } from '@/lib/tactics'
 import { findThrownWins } from '@/lib/thrownWins'
 import {
@@ -172,7 +173,13 @@ function syncError(err: unknown): SyncError {
     return { ok: false, error: s.sync.rateLimited }
   }
   if (err instanceof ChesscomApiError && err.status === 404) {
-    return { ok: false, error: s.sync.userNotFound(getChesscomUsername()) }
+    return { ok: false, error: s.sync.userNotFound(siteUsername('chesscom') ?? '') }
+  }
+  if (err instanceof LichessApiError && err.status === 429) {
+    return { ok: false, error: s.sync.lichessRateLimited }
+  }
+  if (err instanceof LichessApiError && err.status === 404) {
+    return { ok: false, error: s.sync.lichessUserNotFound(siteUsername('lichess') ?? '') }
   }
   return { ok: false, error: s.sync.failed }
 }
@@ -180,7 +187,7 @@ function syncError(err: unknown): SyncError {
 /** Step 1 of a sync; the client then calls syncArchiveMonth() per month to
  *  show progress. Errors are returned, not thrown, as in addManualGame(). */
 export async function listArchivesToSync(): Promise<{ ok: true; archives: string[] } | SyncError> {
-  if (!hasChesscomUsername()) return { ok: false, error: getStrings().sync.noUsername }
+  if (!hasAnyUsername()) return { ok: false, error: getStrings().setup.message }
   try {
     return { ok: true, archives: await listPendingArchives() }
   } catch (err) {
@@ -191,7 +198,7 @@ export async function listArchivesToSync(): Promise<{ ok: true; archives: string
 export async function syncArchiveMonth(
   archiveYm: string,
 ): Promise<{ ok: true; gamesUpserted: number } | SyncError> {
-  if (!/^\d{4}-\d{2}$/.test(archiveYm)) return { ok: false, error: getStrings().sync.failed }
+  if (!isArchiveKey(archiveYm)) return { ok: false, error: getStrings().sync.failed }
   try {
     const gamesUpserted = await syncArchive(archiveYm)
     // Per month, so a first sync fills the list as it goes.
@@ -653,7 +660,6 @@ export async function undoDrillAnswer(
 /** Everything the Today page (`/`) shows. Each recent stat covers the last 7 days. */
 export async function getTodaySummary(): Promise<{
   hasGames: boolean
-  hasUsername: boolean
   drill: {
     due: number
     dueDeviations: number
@@ -758,7 +764,6 @@ export async function getTodaySummary(): Promise<{
 
   return {
     hasGames: allGames.length > 0,
-    hasUsername: hasChesscomUsername(),
     drill: {
       due: due.length,
       dueDeviations: due.filter((c) => c.sourceType === 'deviation').length,

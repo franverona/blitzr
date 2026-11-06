@@ -247,8 +247,7 @@ backups and `polgar-mates.json` elsewhere. The `data/` paths below assume the de
 ## Chess.com ingestion
 
 - `https://api.chess.com/pub`, no API key. Always send a descriptive `User-Agent`.
-- A missing `CHESSCOM_USERNAME` fails soft (`hasChesscomUsername()`): the games page shows a setup
-  notice instead, then an "Analyze all" hint while games exist but none is analyzed.
+- Once games exist but none is analyzed, the games page shows an "Analyze all" hint.
 - Archives are fetched **serially**; 429s retry with backoff honoring `Retry-After`. The client
   drives a sync (`listArchivesToSync()`, then `syncArchiveMonth()` per month) so `SyncButton` can
   show progress; each month revalidates `/games`, and a failed month leaves earlier ones saved.
@@ -258,7 +257,16 @@ backups and `polgar-mates.json` elsewhere. The `data/` paths below assume the de
   first manual sync), silently unless it finds games. A sync that adds games offers "Analyze them".
 - Incremental: `sync_state` marks months `complete`/`partial`. The current month, and the previous
   one until a full UTC day has passed (`oldestOpenArchiveYm()`), are always re-fetched.
-- Ingestion is unfiltered (variants, daily, everything). Filtering happens in `app/actions.ts`:
+- **Lichess** (`lib/lichess/`, `https://lichess.org/api`, no token) has no monthly archives, so
+  `listPendingArchives()` makes them: `lichess:YYYY-MM` keys (in `sync_state` and `archive_ym`;
+  Chess.com's stay bare) from the account's `createdAt`, each fetched as NDJSON with `since`/`until`
+  on the game's _start_, `ongoing=true`. A month with an unfinished game stays `partial`, or that
+  (correspondence) game would be missed. `normalizeLichessGame()` runs the PGN through
+  `parseManualGame()` and takes `status` (resign/outoftime/timeout/draw → result codes), `speed`
+  (`ultraBullet` → `bullet`), `rated` and `lastMoveAt` from the export; ids are `lichess:<id>`.
+  Aborted games and variants chess.js rejects (Horde, Racing Kings, Crazyhouse) are skipped. A 429
+  waits a full minute, as Lichess asks. Chess.com's months sync first, then Lichess's, in one run.
+- Ingestion is otherwise unfiltered (variants, daily, everything). Filtering happens in `app/actions.ts`:
   engine features need `isStandardChess()`; opening features also need
   `startsFromStandardPosition()`.
 - Avatars aren't stored — fetched live (2s timeout, no 429 retries, cached in memory per
@@ -276,9 +284,11 @@ backups and `polgar-mates.json` elsewhere. The `data/` paths below assume the de
 ## Sites
 
 Every game has a `site` (`chesscom` | `lichess`; the column defaults existing rows to `chesscom`; a
-practice game takes its source's). Sync is Chess.com only for now; Lichess games come in by PGN.
-`siteUsername(site)` (`lib/config.ts`) reads `CHESSCOM_USERNAME` / `LICHESS_USERNAME`; either or
-both can be set, and the sidebar lists one row per set username. **Lichess has no profile
+practice game takes its source's). `siteUsername(site)` (`lib/config.ts`) reads `CHESSCOM_USERNAME` /
+`LICHESS_USERNAME`; **at least one is required**: without either (`hasAnyUsername()`), the root
+layout renders only `SetupScreen` (icon + how to set them), no sidebar or providers, on every route.
+CI's smoke test runs with `LICHESS_USERNAME=smoke` (no avatar fetch) and checks that screen on a
+second server with neither. The sidebar lists one row per set username. **Lichess has no profile
 pictures**: avatars are only fetched for Chess.com games (game page, drill cards, sidebar), so
 Lichess players keep `PlayerAvatar`'s letter badge. Ratings on Today are per site and time class
 (`recentResults()`), since the two scales don't compare; the site is named only when both appear.
