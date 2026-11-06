@@ -45,7 +45,11 @@ export function ThrownWins({ wins, analyzedGames }: { wins: ThrownWin[]; analyze
                     </Link>
                   </>
                 )}{' '}
-                · {s.thrownWins.result[w.result]}
+                · {s.thrownWins.result[w.result]} ·{' '}
+                {/* From the peak itself: the winning position, to convert this time. */}
+                <Link href={`/games/${w.gameId}/play?ply=${w.peakPly}`} className={LINK_CLASS}>
+                  {s.thrownWins.playOut}
+                </Link>
               </span>
             </li>
           ))}

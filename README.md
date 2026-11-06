@@ -250,7 +250,8 @@ After a miss on a blunder, missed-punishment or missed-mate card, the engine's m
 with its plan on a step-through board.
 **Undo** (or U) takes back a misclicked answer, restoring the card's schedule, until you move on.
 **Trouble cards** below the session show up to 5 cards you keep missing, as positions linking to
-their games, without the answer (the game opens with the engine's hints hidden until you move).
+their games, without the answer (the game opens with the engine's hints hidden until you move), and
+all but deviations with a link to play that position out against the bot.
 Shortcuts: Space/Enter for the next card, H for a hint, U to undo. Re-analyzing a game at another strength can change
 which moves count as blunders, so its blunder cards (and their review history) may be replaced.
 
@@ -262,7 +263,7 @@ blunders across analyzed games by opening family, by piece, by tactic
 endgame), with a top-10 worst list (each opening its game at that move) and an accuracy trend
 (per-game dots plus a 10-game rolling average). **Won positions not won** lists the games you drew
 or lost after your winning chances reached 90%, each linking to your best position and to your own
-move after it that cost the most. A date range
+move after it that cost the most, and to play the winning position out against the bot. A date range
 filter scopes the whole page.
 
 ### Learn
