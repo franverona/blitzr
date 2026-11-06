@@ -264,8 +264,8 @@ backups and `polgar-mates.json` elsewhere. The `data/` paths below assume the de
   (correspondence) game would be missed. `normalizeLichessGame()` runs the PGN through
   `parseManualGame()` and takes `status` (resign/outoftime/timeout/draw → result codes), `speed`
   (`ultraBullet` → `bullet`), `rated` and `lastMoveAt` from the export; ids are `lichess:<id>`.
-  Next hands `[id]` params over percent-encoded (`lichess%3A…`), so both game routes
-  `decodeURIComponent()` theirs; CI's smoke test seeds a `lichess:` game to keep it that way.
+  Next hands `[id]` params over percent-encoded (`lichess%3A…`), so both game routes decode
+  theirs (`decodeGameIdParam()`: a malformed escape 404s); CI's smoke test seeds a `lichess:` game to keep it that way.
   Aborted games and variants chess.js rejects (Horde, Racing Kings, Crazyhouse) are skipped. A 429
   waits a full minute, as Lichess asks. Chess.com's months sync first, then Lichess's, in one run; a site that fails to list its months gets its own error toast while the other's still sync.
 - Ingestion is otherwise unfiltered (variants, daily, everything). Filtering happens in `app/actions.ts`:

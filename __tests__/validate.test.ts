@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { RepertoireNode } from '@/lib/types'
 import {
+  decodeGameIdParam,
   isValidAnalysis,
   isValidDrillAnswer,
   isValidDrillUndo,
@@ -121,5 +122,12 @@ describe('isValidPracticePayload', () => {
     expect(isValidPracticePayload('g1', 4, [1], 1600, false)).toBe(false)
     expect(isValidPracticePayload('g1', 4, ['e4'], 1500, false)).toBe(false)
     expect(isValidPracticePayload('g1', 4, ['e4'], 1600, 'yes')).toBe(false)
+  })
+})
+
+describe('decodeGameIdParam', () => {
+  it('decodes a percent-encoded id and rejects a malformed escape', () => {
+    expect(decodeGameIdParam('lichess%3AIz4SK2xE')).toBe('lichess:Iz4SK2xE')
+    expect(decodeGameIdParam('%ZZ')).toBeNull()
   })
 })
