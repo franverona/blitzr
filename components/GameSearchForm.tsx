@@ -25,6 +25,12 @@ type Filters = {
   practice?: string
 }
 
+/** The URL's accuracy, or the default when unset; 0 is a value, not unset. */
+function sliderAccuracy(accValue: string | undefined): number {
+  const n = accValue ? Number(accValue) : NaN
+  return Number.isFinite(n) ? n : DEFAULT_ACCURACY_THRESHOLD
+}
+
 /** Opponent search, plus a Filters button whose side panel holds the rest, all in the URL.
  *  Text and slider changes are debounced; everything else navigates immediately, panel open. */
 export function GameSearchForm({
@@ -51,7 +57,7 @@ export function GameSearchForm({
   practice?: string
 }) {
   const [value, setValue] = useState(defaultValue)
-  const [accuracy, setAccuracy] = useState(Number(accValue) || DEFAULT_ACCURACY_THRESHOLD)
+  const [accuracy, setAccuracy] = useState(sliderAccuracy(accValue))
   const router = useRouter()
   const s = getStrings()
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -65,7 +71,7 @@ export function GameSearchForm({
   const [prevAccValue, setPrevAccValue] = useState(accValue)
   if (accValue !== prevAccValue) {
     setPrevAccValue(accValue)
-    setAccuracy(Number(accValue) || DEFAULT_ACCURACY_THRESHOLD)
+    setAccuracy(sliderAccuracy(accValue))
   }
 
   // Our own search navigations are skipped: they can land after more was typed.
