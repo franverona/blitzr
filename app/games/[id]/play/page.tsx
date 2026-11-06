@@ -17,7 +17,8 @@ export default async function PlayBotPage({
   searchParams: Promise<{ ply?: string; elo?: string }>
 }) {
   const s = getStrings()
-  const { id } = await params
+  // Percent-encoded, like the game page's (`lichess:<id>`).
+  const id = decodeURIComponent((await params).id)
   const query = await searchParams
   const game = await getGame(id)
   // A practice game isn't practiced again: its own positions aren't in a game the user played.

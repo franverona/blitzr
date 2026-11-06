@@ -75,6 +75,18 @@ jobs:
             moves: JSON.stringify(['e4', 'e5', 'Bc4', 'Nc6', 'Qh5', 'Nf6', 'Qxf7#']),
             fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
           })
+          // A synced Lichess game: its id has a ":", which reaches the page percent-encoded.
+          // Older than "smoke", so Today's last game stays that one.
+          db.prepare(`INSERT INTO games (id, url, pgn, moves_san, initial_fen, time_control,
+            time_class, rules, rated, end_time, white_username, white_result, black_username,
+            black_result, my_color, my_result, archive_ym, created_at, site)
+            VALUES ('lichess:smoke123', 'https://lichess.org/smoke123', @pgn, @moves, @fen, '180+0',
+            'blitz', 'chess', 0, 0, 'smoke-lichess', 'win', 'smoke-black', 'checkmated', 'white',
+            'win', 'lichess:1970-01', '', 'lichess')`).run({
+            pgn: '1. e4 e5 2. Bc4 Nc6 3. Qh5 Nf6 4. Qxf7# 1-0',
+            moves: JSON.stringify(['e4', 'e5', 'Bc4', 'Nc6', 'Qh5', 'Nf6', 'Qxf7#']),
+            fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+          })
           // An analysis with an own blunder (2.Bc4, Nf3 was best) and the opponent's (3...Nf6,
           // punished by Qxf7#), so the blunder, punish, drill and trouble-card paths all render.
           const e = (cp, mate, from, to, san) => ({ cp, mate, bestMove: from ? { from, to, san, bestLine: [] } : null })
@@ -111,6 +123,8 @@ jobs:
           }
           check /games/smoke smoke-black
           check '/games/smoke/play?ply=2&elo=1600' 'Bot strength'
+          check /games/lichess:smoke123 'View on Lichess'
+          check '/games/lichess:smoke123/play?ply=2&elo=1600' 'Bot strength'
           # Practice games count nowhere but their own lists.
           check /games/smoke 'Practice games from this one'
           check '/games?practice=1' 'Stockfish 1600'
