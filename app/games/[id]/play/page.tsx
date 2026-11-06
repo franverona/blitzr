@@ -4,7 +4,7 @@ import { decodeGameIdParam } from '@/lib/validate'
 import { getGame } from '../../../actions'
 import { BotPlayout } from '@/components/BotPlayout'
 import { LINK_CLASS } from '@/components/styles'
-import { DEFAULT_BOT_ELO, isBotElo } from '@/lib/botStrength'
+import { isBotElo, nearestBotElo } from '@/lib/botStrength'
 import { getStrings } from '@/lib/i18n/strings'
 import { isStandardChess } from '@/lib/positions'
 import { practiceStart } from '@/lib/practiceGame'
@@ -31,7 +31,11 @@ export default async function PlayBotPage({
   // Rebuilt from the stored game, never taken from the URL.
   const { fen, myColor } = practiceStart(game, ply)
   const eloParam = Number(query.elo)
-  const elo = isBotElo(eloParam) ? eloParam : DEFAULT_BOT_ELO
+  // Without a pick, an opponent about as strong as the user was in that game (a starting point:
+  // Lichess ratings run higher than Chess.com's, and neither is Stockfish's scale).
+  const elo = isBotElo(eloParam)
+    ? eloParam
+    : nearestBotElo(myColor === 'white' ? game.whiteRating : game.blackRating)
 
   return (
     <div className="flex flex-col gap-4">

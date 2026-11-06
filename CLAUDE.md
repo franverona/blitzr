@@ -380,7 +380,8 @@ one per "Next line" (not on the first render, which would hydrate differently).
 FEN) and plays it in `PlayoutBoard` against Stockfish, the user on `myColor` (a "not me" game: the
 side to move); the engine moves first when it's its turn. `BOT_ELOS` (`lib/botStrength.ts`):
 1400+ is `UCI_LimitStrength` + `UCI_Elo` (Stockfish's floor is 1320); 800/1000/1200 use
-`Skill Level` with a guessed mapping, labeled `~`. `StockfishEngine.configure()` sends the options
+`Skill Level` with a guessed mapping, labeled `~`. Without `?elo=`, the level is `nearestBotElo()` of
+the user's rating in that game (1200 without one). `StockfishEngine.configure()` sends the options
 once, before the first search. The picker sits in `PlayoutBoard`'s sidebar above the move list
 (click a move, ◀/▶ under it or ←/→/Home/End to look back; moving needs the live position) and
 is disabled from the user's first move until the game ends, since changing it reloads the page.
