@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import { decodeGameIdParam } from '@/lib/validate'
 import Link from 'next/link'
 import { getGame, getGameAnalysis, getPracticeGames } from '../../actions'
 import { BoardView } from '@/components/Board'
@@ -40,7 +41,8 @@ export default async function GamePage({
   searchParams: Promise<{ ply?: string; hints?: string }>
 }) {
   // Next hands params over percent-encoded, which turns Lichess's `lichess:<id>` into `%3A`.
-  const id = decodeURIComponent((await params).id)
+  const id = decodeGameIdParam((await params).id)
+  if (id === null) notFound()
   const query = await searchParams
   // `?ply=` deep-links a position (e.g. from Today's worst blunder); BoardProvider clamps it.
   // `?hints=0` keeps the engine's answer off that position (trouble cards link to it).

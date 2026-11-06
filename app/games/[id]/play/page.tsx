@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { decodeGameIdParam } from '@/lib/validate'
 import { getGame } from '../../../actions'
 import { BotPlayout } from '@/components/BotPlayout'
 import { LINK_CLASS } from '@/components/styles'
@@ -18,7 +19,8 @@ export default async function PlayBotPage({
 }) {
   const s = getStrings()
   // Percent-encoded, like the game page's (`lichess:<id>`).
-  const id = decodeURIComponent((await params).id)
+  const id = decodeGameIdParam((await params).id)
+  if (id === null) notFound()
   const query = await searchParams
   const game = await getGame(id)
   // A practice game isn't practiced again: its own positions aren't in a game the user played.

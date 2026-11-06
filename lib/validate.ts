@@ -119,3 +119,12 @@ export function normalizeRepertoireNode(
     return null
   }
 }
+
+/** A game route's `[id]`, which Next hands over percent-encoded; null for a malformed escape. */
+export function decodeGameIdParam(raw: string): string | null {
+  try {
+    return decodeURIComponent(raw)
+  } catch {
+    return null
+  }
+}
