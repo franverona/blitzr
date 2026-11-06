@@ -4,17 +4,18 @@
 
 <h3>Blitzr</h3>
 
-Train on your own blunders, not generic puzzles — a local chess trainer built from your real Chess.com games.
+Train on your own blunders, not generic puzzles — a local chess trainer built from your real Chess.com and Lichess games.
 
 </div>
 
 ## What this is
 
 Blitzr is a **personal side project**, not a product: it runs on one machine, for one person,
-against that person's Chess.com history. No hosted version, no accounts, no multi-user support.
+against that person's Chess.com and/or Lichess history. No hosted version, no accounts, no multi-user support.
 
 It syncs your games via Chess.com's public [Published-Data
-API](https://www.chess.com/news/view/published-data-api), shows which openings you play, flags
+API](https://www.chess.com/news/view/published-data-api) and [Lichess's API](https://lichess.org/api)
+(either or both), shows which openings you play, flags
 where you leave a repertoire you define, runs Stockfish in your browser to find your blunders,
 drills you on those positions with spaced repetition, and aggregates what keeps going wrong.
 
@@ -138,9 +139,10 @@ pnpm build
 ```
 
 Then it starts the built app against an empty database and checks the main pages, a seeded game
-with its analysis (on the blunders, drill and Today pages too), two lessons and a puzzle from each
-Lichess set, the localhost-only check and the security headers, failing on any error in the
-server's log. Last, it loads the `lib/` files the scripts import under plain Node and runs
+with its analysis (on the blunders, drill and Today pages too), a synced Lichess game, the play
+page for both, a practice game, two lessons and a puzzle from each Lichess set, the localhost-only
+check, the security headers and the setup screen without a username, failing on any error in the
+server's log (which it prints when a check fails). Last, it loads the `lib/` files the scripts import under plain Node and runs
 `pnpm backup`.
 
 `pnpm build` rewrites `.next/`, which a running `pnpm dev` and the pm2 server both read from: the
@@ -179,7 +181,9 @@ month-by-month progress, and games appear as each month lands), and 429s are ret
 stays open while a game started in it is still being played. Lichess has no profile pictures, so
 its players show their initial. Ratings on Today are kept per site. Variants chess.js can't replay
 (Horde, Racing Kings, Crazyhouse…) aren't stored. Games Chess.com's API never exposes (e.g. "Play Bots" games) can be added with
-**Add game by PGN**; they get their own id, so a later sync never touches them. A game that's
+**Add game by PGN**; they get their own id, so a later sync never touches them. A PGN exported
+from lichess.org (its `Site` header) becomes a Lichess game, with its link and opening name, and
+`LICHESS_USERNAME` picks your side in it. A game that's
 already in Blitzr, synced or pasted, can't be added twice. Pick which side
 you played, or **Not me** for a game you only want to study: it can still be replayed and
 analyzed, but stays out of your openings, blunders, accuracy and drills. Pasted games can be

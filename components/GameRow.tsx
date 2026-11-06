@@ -24,7 +24,7 @@ export function GameRow({
   const opponent = game.myColor === 'white' ? game.blackUsername : game.whiteUsername
   const myRating = game.myColor === 'white' ? game.whiteRating : game.blackRating
   const date = formatDate(game.endTime)
-  const timeClassTooltip = s.gameRow.timeClassTooltips[game.timeClass]
+  const timeClassTooltip = s.gameRow.timeClassTooltips[game.site][game.timeClass]
   const timeClassLabel =
     s.common.timeClass[game.timeClass as keyof typeof s.common.timeClass] ?? game.timeClass
 
