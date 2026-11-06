@@ -31,7 +31,7 @@ import type { DrillCandidate } from '@/lib/drill'
 import type { BotElo } from '@/lib/botStrength'
 import { findDuplicateGame, parseManualGame, pgnSite, type ManualGameSide } from '@/lib/manualGame'
 import { summarizeMoveQuality } from '@/lib/moveQuality'
-import { buildOpeningFamilies, ecoFamilyLabel, unknownOpeningLabel } from '@/lib/openings'
+import { buildOpeningFamilies, openingFamilyLabel, openingFamilyLabels } from '@/lib/openings'
 import { allMateProblems, getMateProblem } from '@/lib/puzzleSet'
 import { OPENING_LESSONS, countGamesReachingLine } from '@/lib/openingTheory'
 import {
@@ -96,6 +96,8 @@ const cachedStandardGames = cache(async () => (await cachedListAllGames()).filte
 const cachedMyStandardGames = cache(async () =>
   (await cachedStandardGames()).filter((g) => g.isMine),
 )
+// From every own game, so /blunders' date range, Today's week and /drill?opening= name alike.
+const cachedFamilyLabels = cache(async () => openingFamilyLabels(await cachedMyStandardGames()))
 const cachedStandardStartGames = cache(async () =>
   (await cachedListAllGames()).filter((g) => g.isMine && startsFromStandardPosition(g)),
 )
@@ -146,14 +148,15 @@ export async function getBlunderStats(filters?: {
   from?: string
   to?: string
 }): Promise<BlunderStats> {
-  const [allGames, analyses] = await Promise.all([
+  const [allGames, analyses, familyLabels] = await Promise.all([
     cachedMyStandardGames(),
     cachedListAllGameAnalyses(),
+    cachedFamilyLabels(),
   ])
   const games = filterByDateRange(allGames, filters)
   const analysesByGameId = new Map(analyses.map((a) => [a.gameId, a]))
   return {
-    ...buildBlunderStats(games, analysesByGameId),
+    ...buildBlunderStats(games, analysesByGameId, undefined, familyLabels),
     trend: buildAccuracyTrend(games, analysesByGameId),
     thrownWins: findThrownWins(games, analysesByGameId),
   }
@@ -493,10 +496,6 @@ function accuracyById(games: Game[], analyses: GameAnalysis[]): Record<string, G
   return result
 }
 
-function openingLabel(game: Game): string {
-  return game.ecoName ? ecoFamilyLabel(game.ecoName) : unknownOpeningLabel()
-}
-
 /** Adds new drill candidates and prunes stale cards; every deck read goes through it. */
 async function reconcileDrillCards() {
   const repo = getRepository()
@@ -551,9 +550,10 @@ export async function getDrillDeck(filters?: {
   const { liveCards, gamesById, repertoireByColor, analysesByGameId, now } =
     await reconcileDrillCards()
 
+  const familyLabels = await cachedFamilyLabels()
   const openingOf = (gameId: string) => {
     const game = gamesById.get(gameId)
-    return game && openingLabel(game)
+    return game && openingFamilyLabel(game, familyLabels)
   }
   const filteredDue = dueDrillCards(liveCards, now, filters, openingOf)
   const sessionSize = getSessionSize((await cookies()).get('blitzr-drill-session-size')?.value)
@@ -742,7 +742,8 @@ export async function getTodaySummary(): Promise<{
   const since = now.getTime() / 1000 - 7 * 24 * 60 * 60
   const recentGames = newestFirst.filter((g) => g.endTime >= since)
 
-  const recentStats = buildBlunderStats(recentGames, analysesByGameId)
+  const familyLabels = await cachedFamilyLabels()
+  const recentStats = buildBlunderStats(recentGames, analysesByGameId, undefined, familyLabels)
   const worstOpening = recentStats.byOpening[0]
   const worst = recentStats.worst[0]
   const suggested = suggestLesson(
@@ -756,7 +757,7 @@ export async function getTodaySummary(): Promise<{
         // The drill's opening filter would come up empty without a card for it.
         drillable: liveCards.some((c) => {
           const game = gamesById.get(c.gameId)
-          return game !== undefined && openingLabel(game) === worstOpening.label
+          return game !== undefined && openingFamilyLabel(game, familyLabels) === worstOpening.label
         }),
       }
     : null

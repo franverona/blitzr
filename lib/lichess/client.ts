@@ -89,6 +89,8 @@ export async function fetchLichessGames(
       sort: 'dateAsc',
       pgnInJson: 'true',
       ongoing: 'true',
+      // Off by default: without it the PGN has no ECO or Opening header.
+      opening: 'true',
       clocks: 'false',
       evals: 'false',
     })

@@ -34,6 +34,38 @@ export function ecoFamilyLabel(ecoName: string): string {
   return ecoName.split(':')[0].trim()
 }
 
+/**
+ * One family label per ECO code: the most common `ecoFamilyLabel()` among `games` with that code.
+ * Chess.com and Lichess name the same opening differently ("Closed Sicilian Defense Grand Prix
+ * Attack" vs "Sicilian Defense: Closed Variation…"), so labelling by code keeps them one group.
+ */
+export function openingFamilyLabels(games: Game[]): Map<string, string> {
+  const counts = new Map<string, Map<string, number>>()
+  for (const game of games) {
+    if (!game.ecoCode || !game.ecoName) continue
+    const label = ecoFamilyLabel(game.ecoName)
+    const byLabel = counts.get(game.ecoCode) ?? new Map<string, number>()
+    byLabel.set(label, (byLabel.get(label) ?? 0) + 1)
+    counts.set(game.ecoCode, byLabel)
+  }
+  const labels = new Map<string, string>()
+  for (const [code, byLabel] of counts) {
+    const [best] = [...byLabel].reduce((a, b) => (b[1] > a[1] ? b : a))
+    labels.set(code, best)
+  }
+  return labels
+}
+
+/** A game's family label: its ECO code's in `labels`, else its own name's. */
+export function openingFamilyLabel(
+  game: Game,
+  labels: Map<string, string>,
+  locale: Locale = getLocale(),
+): string {
+  const byCode = game.ecoCode ? labels.get(game.ecoCode) : undefined
+  return byCode ?? (game.ecoName ? ecoFamilyLabel(game.ecoName) : unknownOpeningLabel(locale))
+}
+
 /** Groups games by 3-char ECO family, with named lines nested underneath. */
 export function buildOpeningFamilies(games: Game[], locale: Locale = getLocale()): OpeningFamily[] {
   const families = new Map<
