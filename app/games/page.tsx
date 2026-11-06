@@ -1,6 +1,11 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { getGameAccuracyById, getUnanalyzedGames, listGames } from '../actions'
+import {
+  getGameAccuracyById,
+  getPracticeAccuracyById,
+  getUnanalyzedGames,
+  listGames,
+} from '../actions'
 import { AddPgnButton } from '@/components/AddPgnButton'
 import { BulkAnalyzeButton } from '@/components/BulkAnalyzeButton'
 import { GameList } from '@/components/GameList'
@@ -21,6 +26,7 @@ type GamesSearchParams = {
   rated?: string
   accOp?: string
   accValue?: string
+  practice?: string
 }
 
 export default async function GamesPage({
@@ -28,7 +34,9 @@ export default async function GamesPage({
 }: {
   searchParams: Promise<GamesSearchParams>
 }) {
-  const { page: pageParam, q, result, color, rated, accOp, accValue } = await searchParams
+  const { page: pageParam, q, result, color, rated, accOp, accValue, practice } = await searchParams
+  // Practice games only; they have no accuracy filter, since getGameAccuracyById() skips them.
+  const practiceOnly = practice === '1'
   const page = Math.max(1, Number(pageParam) || 1)
   const opponent = q?.trim() || undefined
 
@@ -40,7 +48,7 @@ export default async function GamesPage({
   // `Number('')` is 0, and a malformed value is NaN, which would match no game.
   const accuracyThreshold = accValue ? Number(accValue) : NaN
   const gameIds =
-    (accOp === 'gte' || accOp === 'lte') && Number.isFinite(accuracyThreshold)
+    !practiceOnly && (accOp === 'gte' || accOp === 'lte') && Number.isFinite(accuracyThreshold)
       ? Object.entries(accuracyByGameId)
           .filter(([, acc]) =>
             accOp === 'gte' ? acc.accuracy >= accuracyThreshold : acc.accuracy <= accuracyThreshold,
@@ -56,9 +64,15 @@ export default async function GamesPage({
     color: color as MyColor | undefined,
     rated: rated ? rated === 'true' : undefined,
     gameIds,
+    practice: practiceOnly,
   })
+  const accuracies = practiceOnly
+    ? await getPracticeAccuracyById(games.map((g) => g.id))
+    : accuracyByGameId
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
-  const filters = { q, result, color, rated, accOp, accValue }
+  const filters = practiceOnly
+    ? { q, result, color, practice }
+    : { q, result, color, rated, accOp, accValue }
   const filtered = Object.values(filters).some((v) => v !== undefined && v !== '')
   // A stale or hand-typed page past the end would otherwise show "no games".
   if (page > totalPages) redirect(pageHref(totalPages, filters))
@@ -90,16 +104,27 @@ export default async function GamesPage({
 
       <GameSearchForm
         // q/accOp/accValue excluded so typing and the accuracy popover survive their own navigations.
-        key={`${result ?? ''}-${color ?? ''}-${rated ?? ''}`}
+        key={`${result ?? ''}-${color ?? ''}-${rated ?? ''}-${practice ?? ''}`}
         defaultValue={q ?? ''}
         result={result}
         color={color}
         rated={rated}
         accOp={accOp}
         accValue={accValue}
+        practice={practiceOnly ? '1' : undefined}
       />
 
-      <GameList games={games} accuracyByGameId={accuracyByGameId} filtered={filtered} />
+      <GameList
+        games={games}
+        accuracyByGameId={accuracies}
+        filtered={filtered}
+        selectable={practiceOnly}
+        emptyText={
+          practiceOnly && !opponent && !result && !color && !rated
+            ? s.gameList.noPractice
+            : undefined
+        }
+      />
 
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-4 text-sm">

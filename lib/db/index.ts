@@ -6,6 +6,10 @@ const globalForDb = globalThis as typeof globalThis & {
 }
 
 export function getRepository(): SqliteGameRepository {
-  globalForDb.repository ??= new SqliteGameRepository(getSqliteDb())
+  // instanceof, not ??=: after a dev hot reload the cached instance is the old module's class, so
+  // this swaps in the new code (and its migrations) without a restart. The connection is kept.
+  if (!(globalForDb.repository instanceof SqliteGameRepository)) {
+    globalForDb.repository = new SqliteGameRepository(getSqliteDb())
+  }
   return globalForDb.repository
 }

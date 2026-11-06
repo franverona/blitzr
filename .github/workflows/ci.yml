@@ -88,14 +88,33 @@ jobs:
             ease_factor, repetitions, last_reviewed_at, created_at)
             VALUES ('smoke', 'blunder', 3, '1970-01-02T00:00:00.000Z', 1, 1.9, 0,
             '1970-01-01T00:00:01.000Z', '1970-01-01T00:00:01.000Z')`).run()
+          // A practice game played from it: listed only on its source and under ?practice=1.
+          db.prepare(`INSERT INTO games (id, url, pgn, moves_san, initial_fen, time_control,
+            time_class, rules, rated, end_time, white_username, white_result, black_username,
+            black_result, my_color, my_result, archive_ym, created_at, source_game_id, source_ply)
+            VALUES ('smoke-practice', '', '', @moves, @fen, '', 'practice', 'chess', 0, 2,
+            'smoke-white', 'win', 'Stockfish 1600', 'checkmated', 'white', 'win', 'practice', '',
+            'smoke', 4)`).run({
+            moves: JSON.stringify(['Qh5', 'Nf6', 'Qxf7#']),
+            fen: 'r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/8/PPPP1PPP/RNBQK1NR w KQkq - 2 3',
+          })
           JS
           # notFound() still answers 200 (loading.tsx streams), so check each page's content too.
           check() {
             body=$(curl -fsS "http://127.0.0.1:9878$1") || { echo "::error::$1 failed"; exit 1; }
             grep -qF "$2" <<< "$body" || { echo "::error::$1 lacks \"$2\""; exit 1; }
           }
+          check_absent() {
+            body=$(curl -fsS "http://127.0.0.1:9878$1") || { echo "::error::$1 failed"; exit 1; }
+            ! grep -qF "$2" <<< "$body" || { echo "::error::$1 shows \"$2\""; exit 1; }
+          }
           check /games/smoke smoke-black
           check '/games/smoke/play?ply=2&elo=1600' 'Bot strength'
+          # Practice games count nowhere but their own lists.
+          check /games/smoke 'Practice games from this one'
+          check '/games?practice=1' 'Stockfish 1600'
+          check_absent /games 'Stockfish 1600'
+          check /games/smoke-practice 'practice vs the bot'
           # Only analysis data puts these there: the worst blunder, the drill card and its trouble
           # card (in the page's RSC payload), and Today's last-game accuracy.
           check /blunders smoke-black
@@ -144,12 +163,12 @@ jobs:
             console.log([...files].join('\\n'))
           "
 
-      # The smoke test left a database with one game to back up.
+      # The smoke test left a database with its seeded games to back up; the 'smoke' one must be in it.
       - name: Backup script
         run: |
           pnpm backup
           node -e "
             const [file] = require('fs').readdirSync('data/backups').filter((f) => f.startsWith('blitzr-'))
             const db = new (require('better-sqlite3'))('data/backups/' + file, { readonly: true })
-            if (db.prepare('SELECT count(*) AS n FROM games').get().n !== 1) process.exit(1)
+            if (!db.prepare(\"SELECT 1 FROM games WHERE id = 'smoke'\").get()) process.exit(1)
           "

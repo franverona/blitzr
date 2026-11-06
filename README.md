@@ -220,7 +220,9 @@ A game page also has:
 - **Play from here**: play the position on screen out against Stockfish at a strength you pick
   (~800 to 2500 Elo; under 1320 the rating is a rough guess), with the moves listed beside the
   board (step back with ◀/▶ or ←/→) and **Take back** for your last move. The strength is locked
-  once you've moved, until the game ends. Not saved yet.
+  once you've moved, until the game ends. A finished game is saved as a **practice game**: it never
+  counts in your stats, shows under **Practice games** on the original game and on the games page
+  (where you can select several to delete), and can be analyzed like any other.
 - Hanging pieces, forks, pins and skewers in the current position, marked on the board.
 
 ### Drilling

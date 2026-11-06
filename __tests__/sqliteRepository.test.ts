@@ -6,8 +6,9 @@ import type { DbSchema } from '@/lib/db/types'
 import type { Game } from '@/lib/types'
 
 // In-memory SQLite: exercises the real SQL, never touches data/blitzr.db.
+const sqlite = new Database(':memory:')
 const repo = new SqliteGameRepository(
-  new Kysely<DbSchema>({ dialect: new SqliteDialect({ database: new Database(':memory:') }) }),
+  new Kysely<DbSchema>({ dialect: new SqliteDialect({ database: sqlite }) }),
 )
 
 function game(id: string, white: string, black: string, myColor: Game['myColor']): Game {
@@ -219,5 +220,48 @@ describe('SqliteGameRepository.exportBackup', { timeout: 60_000 }, () => {
     expect(count).toBeGreaterThan(0)
     expect(count).toBe((await repo.listAllGames()).length)
     restored.close()
+  })
+})
+
+describe('SqliteGameRepository practice games', () => {
+  const practice: Game = {
+    ...game('p1', 'fverona', 'Stockfish 1600', 'white'),
+    archiveYm: 'practice',
+    endTime: 2,
+    practiceOf: { gameId: 'src', ply: 4 },
+  }
+  let totalBefore = 0
+
+  beforeAll(async () => {
+    // As connection.ts sets it, for the cascade. ensureSchema() runs once per module, so this
+    // shares the file's database.
+    sqlite.pragma('foreign_keys = ON')
+    await repo.upsertGames([{ ...game('src', 'fverona', 'alice', 'white'), archiveYm: 'manual' }])
+    totalBefore = (await repo.listGames()).total
+    await repo.upsertGames([practice])
+  })
+
+  it('keeps them out of listAllGames() and listGames()', async () => {
+    expect((await repo.listAllGames()).map((g) => g.id)).not.toContain('p1')
+    const { games, total } = await repo.listGames()
+    expect(games.map((g) => g.id)).not.toContain('p1')
+    expect(total).toBe(totalBefore)
+  })
+
+  it('lists only them with practice: true', async () => {
+    const { games, total } = await repo.listGames({ practice: true })
+    expect(games.map((g) => g.id)).toEqual(['p1'])
+    expect(total).toBe(1)
+  })
+
+  it('still finds them by id and by source', async () => {
+    expect(await repo.getGame('p1')).toEqual(practice)
+    expect((await repo.listPracticeGames('src')).map((g) => g.id)).toEqual(['p1'])
+    expect((await repo.getGame('src'))?.practiceOf).toBeUndefined()
+  })
+
+  it('deletes them with their source game', async () => {
+    await repo.deleteGame('src')
+    expect(await repo.getGame('p1')).toBeUndefined()
   })
 })

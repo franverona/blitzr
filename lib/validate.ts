@@ -1,4 +1,5 @@
 import { Chess } from 'chess.js'
+import { isBotElo } from './botStrength'
 import type { PositionEval, RepertoireNode } from './types'
 
 // Server Actions are plain POST endpoints, so their arguments are untrusted.
@@ -31,6 +32,26 @@ export function isValidAnalysis(evals: unknown, moveCount: number, movetimeMs: u
     typeof movetimeMs === 'number' &&
     Number.isInteger(movetimeMs) &&
     movetimeMs > 0
+  )
+}
+
+/** `savePracticeGame()`'s payload shape; the moves themselves are replayed by the builder. */
+export function isValidPracticePayload(
+  sourceGameId: unknown,
+  ply: unknown,
+  movesSan: unknown,
+  elo: unknown,
+  resigned: unknown,
+): boolean {
+  return (
+    isString(sourceGameId) &&
+    typeof ply === 'number' &&
+    Number.isInteger(ply) &&
+    ply >= 0 &&
+    Array.isArray(movesSan) &&
+    movesSan.every(isString) &&
+    isBotElo(elo) &&
+    typeof resigned === 'boolean'
   )
 }
 

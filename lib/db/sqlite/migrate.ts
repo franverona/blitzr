@@ -105,6 +105,17 @@ async function runMigrations(db: Kysely<DbSchema>): Promise<void> {
     await alter(sql`ALTER TABLE games ADD COLUMN is_mine INTEGER NOT NULL DEFAULT 1`)
   }
 
+  // Practice games (archive_ym 'practice') point at the game they were played from.
+  if (!gameColumns.rows.some((c) => c.name === 'source_game_id')) {
+    await alter(
+      sql`ALTER TABLE games ADD COLUMN source_game_id TEXT REFERENCES games(id) ON DELETE CASCADE`,
+    )
+    await alter(sql`ALTER TABLE games ADD COLUMN source_ply INTEGER`)
+  }
+  await sql`CREATE INDEX IF NOT EXISTS games_source_game_id_idx ON games (source_game_id)`.execute(
+    db,
+  )
+
   const analysisColumns = await sql<{ name: string }>`PRAGMA table_info(game_analysis)`.execute(db)
   if (!analysisColumns.rows.some((c) => c.name === 'movetime_ms')) {
     await alter(sql`ALTER TABLE game_analysis ADD COLUMN movetime_ms INTEGER`)

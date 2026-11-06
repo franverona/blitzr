@@ -1,6 +1,9 @@
 'use client'
 
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import toast from 'react-hot-toast'
+import { savePracticeGame } from '@/app/actions'
 import {
   BOT_ELOS,
   botMovetimeMs,
@@ -13,7 +16,11 @@ import type { MyColor } from '@/lib/types'
 import { PlayoutBoard } from './PlayoutBoard'
 import { startRouteProgress } from './RouteProgressBar'
 import { Select } from './Select'
-import { INPUT_CLASS } from './styles'
+import { INPUT_CLASS, LINK_CLASS } from './styles'
+
+const TOAST_ID = 'practice-save'
+// Long enough to reach the link.
+const SAVED_TOAST_DURATION_MS = 10_000
 
 /** A position from one of the user's games played out against Stockfish at `elo`. */
 export function BotPlayout({
@@ -70,8 +77,30 @@ export function BotPlayout({
     </label>
   )
 
+  // Saved once it ends, unless the user never moved (the server refuses those too).
+  async function handleGameOver(movesSan: string[], _outcome: unknown, resigned: boolean) {
+    const startsWithMe = initialFen.split(' ')[1] === myColor[0]
+    const myMoves = startsWithMe ? Math.ceil(movesSan.length / 2) : Math.floor(movesSan.length / 2)
+    if (myMoves === 0) return
+    const result = await savePracticeGame(gameId, ply, movesSan, elo, resigned)
+    if (!result.ok) {
+      toast.error(result.error, { id: TOAST_ID })
+      return
+    }
+    toast(
+      <span>
+        {s.playBot.saved}{' '}
+        <Link href={`/games/${result.gameId}`} className={LINK_CLASS}>
+          {s.playBot.analyzeIt}
+        </Link>
+      </span>,
+      { id: TOAST_ID, duration: SAVED_TOAST_DURATION_MS },
+    )
+  }
+
   return (
     <PlayoutBoard
+      onGameOver={handleGameOver}
       initialFen={initialFen}
       myColor={myColor}
       engineOptions={botUciOptions(elo)}
