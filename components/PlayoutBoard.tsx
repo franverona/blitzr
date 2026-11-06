@@ -10,6 +10,7 @@ import { StockfishEngine } from '@/lib/stockfish/client'
 import type { MyColor } from '@/lib/types'
 import { BoardCoordinates } from './BoardCoordinates'
 import { ErrorText } from './ErrorText'
+import { NavButton, NavIcon } from './BoardNavControls'
 import { LegalMoveSquare } from './LegalMoveSquare'
 import { MoveList } from './MoveList'
 import { PromotionPicker, type PromotionPiece } from './PromotionPicker'
@@ -229,6 +230,49 @@ export function PlayoutBoard({
     end(movesSan, 'lost', true)
   }
 
+  // Back to the user's last move, dropping the engine's reply (or its search still running).
+  function handleTakeBack() {
+    let ply = movesSan.length - 1
+    while (ply >= 0 && new Chess(positions[ply]).turn() !== myTurnLetter) ply--
+    if (ply < 0) return
+    gameRef.current++
+    setThinking(false)
+    setFen(positions[ply])
+    setMovesSan(movesSan.slice(0, ply))
+    setViewPly(null)
+    setSelectedSquare(null)
+  }
+
+  const shownPly = viewPly ?? movesSan.length
+  const goTo = (p: number) => {
+    setSelectedSquare(null)
+    setViewPly(p >= movesSan.length ? null : Math.max(0, p))
+  }
+
+  // ←/→ and Home/End, as on the game page, while the move list is shown.
+  useEffect(() => {
+    if (!sidebar) return
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.metaKey || e.ctrlKey || e.altKey) return
+      if (e.target instanceof HTMLElement && e.target.closest('input, select, textarea')) return
+      const target =
+        e.key === 'ArrowLeft'
+          ? shownPly - 1
+          : e.key === 'ArrowRight'
+            ? shownPly + 1
+            : e.key === 'Home'
+              ? 0
+              : e.key === 'End'
+                ? movesSan.length
+                : null
+      if (target === null) return
+      e.preventDefault()
+      goTo(target)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  })
+
   function handleSquareClick({ square, piece }: { square: string; piece: unknown | null }) {
     if (!myTurn) return
     if (selectedSquare) {
@@ -267,9 +311,18 @@ export function PlayoutBoard({
         </p>
         <div className="flex shrink-0 gap-2">
           {allowResign && !outcome && (
-            <button onClick={handleResign} className={buttonClass()}>
-              {s.playBot.resign}
-            </button>
+            <>
+              <button
+                onClick={handleTakeBack}
+                disabled={myMoves === 0 || Boolean(pendingPromotion)}
+                className={buttonClass()}
+              >
+                {s.playBot.takeBack}
+              </button>
+              <button onClick={handleResign} className={buttonClass()}>
+                {s.playBot.resign}
+              </button>
+            </>
           )}
           <button onClick={handleRestart} className={buttonClass()}>
             {s.lessonQuiz.restart}
@@ -315,19 +368,49 @@ export function PlayoutBoard({
     <div className="flex flex-col gap-4 lg:flex-row lg:justify-center">
       {boardColumn}
       {/* The content is absolute at lg+, so the move list can't grow the row past the board. */}
-      <div className={`relative w-full ${sidebar.className}`}>
+      {/* mb-7: end level with the board, not the file labels under it. */}
+      <div
+        className={`relative w-full ${boardColors.showCoordinates ? 'lg:mb-7' : ''} ${sidebar.className}`}
+      >
         <div className="flex flex-col gap-3 lg:absolute lg:inset-0">
           {sidebar.top?.(myMoves > 0 && !outcome)}
           <MoveList
             movesSan={movesSan}
-            ply={viewPly ?? movesSan.length}
-            onSelect={(p) => {
-              setSelectedSquare(null)
-              setViewPly(p === movesSan.length ? null : p)
-            }}
+            ply={shownPly}
+            onSelect={goTo}
             positions={positions}
             myColor={myColor}
           />
+          <div className="flex shrink-0 items-center gap-2">
+            <NavButton
+              onClick={() => goTo(0)}
+              disabled={shownPly === 0}
+              label={s.board.navLabels.start}
+            >
+              <NavIcon d="M7 5v14M18 6l-6 6 6 6" />
+            </NavButton>
+            <NavButton
+              onClick={() => goTo(shownPly - 1)}
+              disabled={shownPly === 0}
+              label={s.board.navLabels.previous}
+            >
+              <NavIcon d="M15 6l-6 6 6 6" />
+            </NavButton>
+            <NavButton
+              onClick={() => goTo(shownPly + 1)}
+              disabled={viewPly === null}
+              label={s.board.navLabels.next}
+            >
+              <NavIcon d="M9 6l6 6-6 6" />
+            </NavButton>
+            <NavButton
+              onClick={() => goTo(movesSan.length)}
+              disabled={viewPly === null}
+              label={s.board.navLabels.end}
+            >
+              <NavIcon d="M17 5v14M6 6l6 6-6 6" />
+            </NavButton>
+          </div>
         </div>
       </div>
     </div>

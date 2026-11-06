@@ -219,7 +219,8 @@ A game page also has:
   Nothing is saved.
 - **Play from here**: play the position on screen out against Stockfish at a strength you pick
   (~800 to 2500 Elo; under 1320 the rating is a rough guess), with the moves listed beside the
-  board. The strength is locked once you've moved, until the game ends. Not saved yet.
+  board (step back with ◀/▶ or ←/→) and **Take back** for your last move. The strength is locked
+  once you've moved, until the game ends. Not saved yet.
 - Hanging pieces, forks, pins and skewers in the current position, marked on the board.
 
 ### Drilling

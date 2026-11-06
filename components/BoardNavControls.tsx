@@ -206,7 +206,7 @@ export function BoardNavControls() {
   )
 }
 
-function NavIcon({ d }: { d: string }) {
+export function NavIcon({ d }: { d: string }) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -223,7 +223,7 @@ function NavIcon({ d }: { d: string }) {
   )
 }
 
-function NavButton({
+export function NavButton({
   onClick,
   disabled,
   label,

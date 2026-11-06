@@ -506,6 +506,7 @@ const en = {
     drawn: 'Draw.',
     lost: 'You lost.',
     resign: 'Resign',
+    takeBack: '↶ Take back',
   },
   aboutOpening: {
     about: (name: string) => `About ${name}`,
@@ -1193,6 +1194,7 @@ const es: Strings = {
     drawn: 'Tablas.',
     lost: 'Has perdido.',
     resign: 'Rendirse',
+    takeBack: '↶ Deshacer',
   },
   aboutOpening: {
     about: (name: string) => `Sobre ${name}`,

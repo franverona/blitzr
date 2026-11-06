@@ -358,8 +358,10 @@ side to move); the engine moves first when it's its turn. `BOT_ELOS` (`lib/botSt
 1400+ is `UCI_LimitStrength` + `UCI_Elo` (Stockfish's floor is 1320); 800/1000/1200 use
 `Skill Level` with a guessed mapping, labeled `~`. `StockfishEngine.configure()` sends the options
 once, before the first search. The picker sits in `PlayoutBoard`'s sidebar above the move list
-(click a move to look back; moving needs the live position) and is disabled from the user's first
-move until the game ends, since changing it reloads the page. Nothing is saved yet.
+(click a move, ◀/▶ under it or ←/→/Home/End to look back; moving needs the live position) and
+is disabled from the user's first move until the game ends, since changing it reloads the page.
+**Take back** returns to the user's last move, dropping the engine's reply or its running search
+(`gameRef`); only mid-game: a finished game is final. Nothing is saved yet.
 
 ## Games list filters
 
