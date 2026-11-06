@@ -89,6 +89,8 @@ export function pendingArchiveYms(
 /** Every `lichess:YYYY-MM` from the account's creation (ms) to `now`, in UTC like Lichess. */
 export function lichessArchiveYms(createdAt: number, now: Date = new Date()): string[] {
   const keys: string[] = []
+  // NaN would never reach the break below.
+  if (!Number.isFinite(createdAt)) return keys
   const cursor = new Date(createdAt)
   for (let y = cursor.getUTCFullYear(), m = cursor.getUTCMonth(); ; m++) {
     if (m === 12) {

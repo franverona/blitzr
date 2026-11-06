@@ -197,6 +197,10 @@ describe('lichessArchiveYms', () => {
       'lichess:2026-02',
     ])
   })
+
+  it('lists nothing for a creation date that is not a number', () => {
+    expect(lichessArchiveYms(NaN)).toEqual([])
+  })
 })
 
 describe('isArchiveKey', () => {
