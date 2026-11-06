@@ -186,10 +186,14 @@ function syncError(err: unknown): SyncError {
 
 /** Step 1 of a sync; the client then calls syncArchiveMonth() per month to
  *  show progress. Errors are returned, not thrown, as in addManualGame(). */
-export async function listArchivesToSync(): Promise<{ ok: true; archives: string[] } | SyncError> {
+export async function listArchivesToSync(): Promise<
+  // `error`: the site that failed to list, while the other's months still sync.
+  { ok: true; archives: string[]; error?: string } | SyncError
+> {
   if (!hasAnyUsername()) return { ok: false, error: getStrings().setup.message }
   try {
-    return { ok: true, archives: await listPendingArchives() }
+    const { archives, error } = await listPendingArchives()
+    return { ok: true, archives, ...(error ? { error: syncError(error).error } : {}) }
   } catch (err) {
     return syncError(err)
   }

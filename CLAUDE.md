@@ -267,7 +267,7 @@ backups and `polgar-mates.json` elsewhere. The `data/` paths below assume the de
   Next hands `[id]` params over percent-encoded (`lichess%3A…`), so both game routes
   `decodeURIComponent()` theirs; CI's smoke test seeds a `lichess:` game to keep it that way.
   Aborted games and variants chess.js rejects (Horde, Racing Kings, Crazyhouse) are skipped. A 429
-  waits a full minute, as Lichess asks. Chess.com's months sync first, then Lichess's, in one run.
+  waits a full minute, as Lichess asks. Chess.com's months sync first, then Lichess's, in one run; a site that fails to list its months gets its own error toast while the other's still sync.
 - Ingestion is otherwise unfiltered (variants, daily, everything). Filtering happens in `app/actions.ts`:
   engine features need `isStandardChess()`; opening features also need
   `startsFromStandardPosition()`.

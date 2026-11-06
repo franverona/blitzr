@@ -259,11 +259,13 @@ describe('listPendingArchives', () => {
     repo.getArchiveSyncStatus.mockResolvedValueOnce([
       { archiveYm: 'lichess:2026-08', status: 'complete' },
     ])
-    expect(await listPendingArchives()).toEqual(['2026-09', 'lichess:2026-09'])
+    expect(await listPendingArchives()).toEqual({ archives: ['2026-09', 'lichess:2026-09'] })
 
     usernames.chesscom = undefined
     vi.mocked(fetchArchives).mockClear()
-    expect(await listPendingArchives()).toEqual(['lichess:2026-08', 'lichess:2026-09'])
+    expect(await listPendingArchives()).toEqual({
+      archives: ['lichess:2026-08', 'lichess:2026-09'],
+    })
     expect(fetchArchives).not.toHaveBeenCalled()
     usernames.chesscom = 'me'
     usernames.lichess = undefined
@@ -277,8 +279,24 @@ describe('listPendingArchives', () => {
         (ym) => `https://api.chess.com/pub/player/me/games/${ym.replace('-', '/')}`,
       ),
     )
-    expect(await listPendingArchives()).toEqual(['2026-08'])
+    expect(await listPendingArchives()).toEqual({ archives: ['2026-08'] })
     expect(fetchArchives).toHaveBeenCalledWith('me')
+    vi.useRealTimers()
+  })
+
+  it("lists one site's months when the other fails, and throws only when both do", async () => {
+    vi.useFakeTimers({ now: new Date('2026-09-15T12:00:00Z') })
+    usernames.lichess = 'lich'
+    const down = new Error('lichess down')
+    vi.mocked(fetchArchives).mockResolvedValue([
+      'https://api.chess.com/pub/player/me/games/2026/09',
+    ])
+    vi.mocked(fetchLichessCreatedAt).mockRejectedValue(down)
+    expect(await listPendingArchives()).toEqual({ archives: ['2026-09'], error: down })
+
+    vi.mocked(fetchArchives).mockRejectedValue(new Error('chess.com down'))
+    await expect(listPendingArchives()).rejects.toThrow('chess.com down')
+    usernames.lichess = undefined
     vi.useRealTimers()
   })
 })
