@@ -62,7 +62,12 @@ async function get(url: string, accept: string, attempt = 1): Promise<string> {
 /** When the account was created (ms), the first month a sync needs. */
 export async function fetchLichessCreatedAt(username: string): Promise<number> {
   const body = await get(`${BASE_URL}/user/${encodeURIComponent(username)}`, 'application/json')
-  return (JSON.parse(body) as { createdAt: number }).createdAt
+  const { createdAt } = JSON.parse(body) as { createdAt?: unknown }
+  // A closed account answers without it; reported like a missing user.
+  if (typeof createdAt !== 'number' || !Number.isFinite(createdAt)) {
+    throw new LichessApiError(`Lichess user has no creation date: ${username}`, 404)
+  }
+  return createdAt
 }
 
 /** Games created in [since, until] (ms), ongoing ones included so the caller can tell. */
