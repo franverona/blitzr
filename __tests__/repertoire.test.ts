@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest'
 import {
   diffGameAgainstRepertoire,
   findRepertoireGaps,
+  lineGameCounts,
   lineToRepertoireNodes,
   repertoireLines,
+  weightedLineIndex,
 } from '@/lib/repertoire'
 import type { Game, RepertoireNode } from '@/lib/types'
 
@@ -178,5 +180,36 @@ describe('repertoireLines', () => {
     ]
     expect(repertoireLines(nodes, 'black')).toEqual([['d4', 'd5']])
     expect(repertoireLines([], 'white')).toEqual([])
+  })
+})
+
+describe('lineGameCounts', () => {
+  const lines = [
+    ['e4', 'e5', 'Nf3'],
+    ['e4', 'c5', 'Nf3'],
+    ['d4', 'd5'],
+  ]
+  const game = (moves: string[], myColor: 'white' | 'black' = 'white') =>
+    ({ movesSan: moves, myColor }) as Game
+
+  it('credits each game to the line it shares the longest prefix with, ties to all', () => {
+    const games = [
+      game(['e4', 'c5', 'Nc3']),
+      game(['e4', 'c5', 'Nf3', 'd6']),
+      game(['e4', 'e6']),
+      game(['c4', 'e5']),
+      game(['d4', 'd5'], 'black'),
+    ]
+    expect(lineGameCounts(lines, games, 'white')).toEqual([1, 3, 0])
+  })
+})
+
+describe('weightedLineIndex', () => {
+  it('draws by count + 1 and never the current line', () => {
+    // Weights [1, 4, 0 (current)]: r in [0, 1) is line 0, [1, 5) line 1.
+    expect(weightedLineIndex([0, 3, 9], 2, () => 0.1)).toBe(0)
+    expect(weightedLineIndex([0, 3, 9], 2, () => 0.5)).toBe(1)
+    expect(weightedLineIndex([0, 3, 9], 2, () => 0.999)).toBe(1)
+    expect(weightedLineIndex([5], 0)).toBe(0)
   })
 })

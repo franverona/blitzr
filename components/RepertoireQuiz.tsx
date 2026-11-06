@@ -1,33 +1,31 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { getStrings } from '@/lib/i18n/strings'
 import { START_FEN } from '@/lib/positions'
-import { repertoireLines } from '@/lib/repertoire'
-import type { RepertoireColor, RepertoireNode } from '@/lib/types'
+import { weightedLineIndex } from '@/lib/repertoire'
+import type { RepertoireColor } from '@/lib/types'
 import { BoardProvider } from './BoardContext'
 import { LessonQuiz } from './LessonQuiz'
 import { PageHeader } from './PageHeader'
 import { buttonClass, chipClass } from './styles'
 
-function randomIndex(n: number, not?: number): number {
-  if (n <= 1) return 0
-  let i = Math.floor(Math.random() * n)
-  if (i === not) i = (i + 1) % n
-  return i
-}
-
-/** Plays one root-to-leaf line of the tree from memory, a different one on each "Next line". */
+/**
+ * Plays one root-to-leaf line of the tree from memory, a different one on each "Next line",
+ * drawn more often the more of the user's games it's the closest line to.
+ */
 export function RepertoireQuiz({
   color,
-  nodes,
+  lines,
+  gameCounts,
 }: {
   color: RepertoireColor
-  nodes: RepertoireNode[]
+  lines: string[][]
+  /** Per line, `lineGameCounts()`. */
+  gameCounts: number[]
 }) {
   const s = getStrings()
-  const lines = useMemo(() => repertoireLines(nodes, color), [nodes, color])
   // The first line in tree order: a random start would differ between the server and hydration.
   const [lineIndex, setLineIndex] = useState(0)
   // Bumped on every "Next line", so the quiz resets even if it draws the same line.
@@ -43,7 +41,7 @@ export function RepertoireQuiz({
           <div className="flex flex-wrap items-center gap-2 text-sm">
             <button
               onClick={() => {
-                setLineIndex((i) => randomIndex(lines.length, i))
+                setLineIndex((i) => weightedLineIndex(gameCounts, i))
                 setRun((r) => r + 1)
               }}
               disabled={lines.length < 2}

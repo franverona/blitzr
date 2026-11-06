@@ -144,3 +144,42 @@ export function repertoireLines(nodes: RepertoireNode[], color: RepertoireColor)
   // White moves on odd plies from the start position; a Black line needs at least two moves.
   return lines.filter((line) => line.length >= (color === 'white' ? 1 : 2))
 }
+
+/**
+ * How many of `games` (the user's, as `color`) each line is the closest one to: the longest shared
+ * move prefix, at least a move; a tie credits every tied line.
+ */
+export function lineGameCounts(lines: string[][], games: Game[], color: RepertoireColor): number[] {
+  const counts = lines.map(() => 0)
+  for (const game of games) {
+    if (game.myColor !== color || !game.movesSan) continue
+    const shared = lines.map((line) => {
+      let n = 0
+      while (n < line.length && line[n] === game.movesSan![n]) n++
+      return n
+    })
+    const best = Math.max(0, ...shared)
+    if (best === 0) continue
+    shared.forEach((n, i) => {
+      if (n === best) counts[i]++
+    })
+  }
+  return counts
+}
+
+/** A random line, weighted by `counts` + 1 so unplayed lines still come up, never `not`. */
+export function weightedLineIndex(
+  counts: number[],
+  not?: number,
+  random: () => number = Math.random,
+): number {
+  const weights = counts.map((c, i) => (i === not ? 0 : c + 1))
+  const total = weights.reduce((a, b) => a + b, 0)
+  if (total === 0) return 0
+  let r = random() * total
+  for (let i = 0; i < weights.length; i++) {
+    r -= weights[i]
+    if (r < 0) return i
+  }
+  return weights.findLastIndex((w) => w > 0)
+}

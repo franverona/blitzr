@@ -322,7 +322,9 @@ whose tree is shown is `?color=` (`white` unless `black`).
 
 `?mode=quiz` swaps the builder for `RepertoireQuiz`: `repertoireLines()` (root-to-leaf, only lines
 with a move of that color) played through `LessonQuiz`, from the tree's first line, then a random
-one per "Next line" (not on the first render, which would hydrate differently).
+one per "Next line" (not on the first render, which would hydrate differently), weighted by
+`lineGameCounts()` + 1: how many own games of that color are closest to each line (longest shared
+prefix), so the lines that come up over the board come up more.
 
 ## Engine analysis
 
