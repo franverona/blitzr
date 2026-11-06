@@ -1,5 +1,5 @@
 import { Chess } from 'chess.js'
-import type { BotElo } from './botStrength'
+import { isBotElo, type BotElo } from './botStrength'
 import { parseManualGame } from './manualGame'
 import { buildPositions, isStandardChess } from './positions'
 import type { Game, MyColor } from './types'
@@ -93,4 +93,41 @@ export function buildPracticeGame({
     site: source.site,
     practiceOf: { gameId: source.id, ply },
   }
+}
+
+/** "Stockfish 1600" -> 1600: the bot a practice game was played against. */
+export function practiceBotElo(game: Game): BotElo | undefined {
+  const bot = game.myColor === 'white' ? game.blackUsername : game.whiteUsername
+  const elo = Number(bot.split(' ').at(-1))
+  return isBotElo(elo) ? elo : undefined
+}
+
+export interface PracticeRecord {
+  /** The source game's ply the games started from. */
+  ply: number
+  played: number
+  won: number
+  drawn: number
+  lost: number
+  /** The strongest bot beaten from there, if any. */
+  bestWinElo: BotElo | null
+}
+
+/** A source game's practice games, per start position, in game order. */
+export function practiceRecords(games: Game[]): PracticeRecord[] {
+  const byPly = new Map<number, PracticeRecord>()
+  for (const game of games) {
+    if (!game.practiceOf) continue
+    const { ply } = game.practiceOf
+    const record = byPly.get(ply) ?? { ply, played: 0, won: 0, drawn: 0, lost: 0, bestWinElo: null }
+    record.played++
+    if (game.myResult === 'win') {
+      record.won++
+      const elo = practiceBotElo(game)
+      if (elo && (record.bestWinElo === null || elo > record.bestWinElo)) record.bestWinElo = elo
+    } else if (game.myResult === 'draw') record.drawn++
+    else record.lost++
+    byPly.set(ply, record)
+  }
+  return [...byPly.values()].sort((a, b) => a.ply - b.ply)
 }

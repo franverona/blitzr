@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { PracticeGameError, buildPracticeGame } from '@/lib/practiceGame'
+import {
+  PracticeGameError,
+  buildPracticeGame,
+  practiceBotElo,
+  practiceRecords,
+} from '@/lib/practiceGame'
 import type { Game } from '@/lib/types'
 
 const START = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
@@ -102,5 +107,31 @@ describe('buildPracticeGame', () => {
     expect(() =>
       buildPracticeGame({ ...base, source: practice, ply: 0, movesSan: ['Nf6', 'Qxf7#'] }),
     ).toThrow(PracticeGameError)
+  })
+})
+
+describe('practiceRecords', () => {
+  const practice = (ply: number, myResult: Game['myResult'], bot: string) =>
+    ({
+      practiceOf: { gameId: 'src', ply },
+      myResult,
+      myColor: 'white',
+      whiteUsername: 'me',
+      blackUsername: bot,
+    }) as Game
+
+  it('tallies each start position and its strongest bot beaten', () => {
+    const records = practiceRecords([
+      practice(24, 'win', 'Stockfish 1400'),
+      practice(10, 'loss', 'Stockfish 1600'),
+      practice(24, 'win', 'Stockfish 1800'),
+      practice(24, 'draw', 'Stockfish 2000'),
+    ])
+    expect(records).toEqual([
+      { ply: 10, played: 1, won: 0, drawn: 0, lost: 1, bestWinElo: null },
+      { ply: 24, played: 3, won: 2, drawn: 1, lost: 0, bestWinElo: 1800 },
+    ])
+    expect(practiceBotElo(practice(1, 'win', 'Stockfish 2500'))).toBe(2500)
+    expect(practiceBotElo(practice(1, 'win', 'someone'))).toBeUndefined()
   })
 })

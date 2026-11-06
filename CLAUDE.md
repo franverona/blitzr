@@ -401,7 +401,8 @@ the play page's position and side), replays every move, and runs the PGN through
 **They count nowhere**: `listAllGames()` and `listGames()` leave them out, and every stat, the drill
 deck, Today, `getUnanalyzedGames()` (so "Analyze all"), sync's duplicate check and the games list
 read through those two. Never read `games` around them. `getGame()` still finds them (game page,
-analysis, delete). They show on their source game's page (`listPracticeGames()`), under
+analysis, delete). They show on their source game's page (`listPracticeGames()`; from two on, with
+`practiceRecords()`' per-start-ply tally and strongest bot beaten), under
 `/games?practice=1`, and on their own page, which links back and to Play again; a practice game
 can't be practiced from (`Play from here` is hidden, the play page 404s), since its positions aren't
 in a game the user played.
