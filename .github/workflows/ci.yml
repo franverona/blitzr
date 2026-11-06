@@ -163,12 +163,12 @@ jobs:
             console.log([...files].join('\\n'))
           "
 
-      # The smoke test left a database with one game to back up.
+      # The smoke test left a database with its seeded games to back up; the 'smoke' one must be in it.
       - name: Backup script
         run: |
           pnpm backup
           node -e "
             const [file] = require('fs').readdirSync('data/backups').filter((f) => f.startsWith('blitzr-'))
             const db = new (require('better-sqlite3'))('data/backups/' + file, { readonly: true })
-            if (db.prepare('SELECT count(*) AS n FROM games').get().n !== 1) process.exit(1)
+            if (!db.prepare(\"SELECT 1 FROM games WHERE id = 'smoke'\").get()) process.exit(1)
           "
