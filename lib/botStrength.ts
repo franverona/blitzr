@@ -9,6 +9,14 @@ const MIN_UCI_ELO = 1320
 // a level plays clearly off.
 const SKILL_LEVELS: Partial<Record<BotElo, number>> = { 800: 0, 1000: 3, 1200: 6 }
 
+/** The level closest to `rating` (the lower on a tie), or the default without one. */
+export function nearestBotElo(rating: number | null): BotElo {
+  if (rating === null || !Number.isFinite(rating)) return DEFAULT_BOT_ELO
+  return BOT_ELOS.reduce((best, elo) =>
+    Math.abs(elo - rating) < Math.abs(best - rating) ? elo : best,
+  )
+}
+
 export function isBotElo(value: unknown): value is BotElo {
   return BOT_ELOS.includes(value as BotElo)
 }

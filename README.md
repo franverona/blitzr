@@ -224,7 +224,8 @@ A game page also has:
   following along. Esc or "Back to game" returns to the recorded game.
   Nothing is saved.
 - **Play from here**: play the position on screen out against Stockfish at a strength you pick
-  (~800 to 2500 Elo; under 1320 the rating is a rough guess), with the moves listed beside the
+  (~800 to 2500 Elo, starting nearest your rating in that game; under 1320 the rating is a rough
+  guess), with the moves listed beside the
   board (step back with ◀/▶ or ←/→) and **Take back** for your last move. The strength is locked
   once you've moved, until the game ends. A finished game is saved as a **practice game**: it never
   counts in your stats, shows under **Practice games** on the original game and on the games page

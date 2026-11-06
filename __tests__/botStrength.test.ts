@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { BOT_ELOS, botUciOptions, isApproximateElo, isBotElo } from '@/lib/botStrength'
+import {
+  BOT_ELOS,
+  botUciOptions,
+  isApproximateElo,
+  isBotElo,
+  nearestBotElo,
+} from '@/lib/botStrength'
 
 describe('botUciOptions', () => {
   it('uses Skill Level under the UCI_Elo floor', () => {
@@ -25,5 +31,15 @@ describe('isBotElo', () => {
     expect(isBotElo(1400)).toBe(true)
     expect(isBotElo(1500)).toBe(false)
     expect(isBotElo('1400')).toBe(false)
+  })
+})
+
+describe('nearestBotElo', () => {
+  it('picks the closest level, the lower on a tie, and the default without a rating', () => {
+    expect(nearestBotElo(1530)).toBe(1600)
+    expect(nearestBotElo(1500)).toBe(1400)
+    expect(nearestBotElo(300)).toBe(800)
+    expect(nearestBotElo(3100)).toBe(2500)
+    expect(nearestBotElo(null)).toBe(1200)
   })
 })
