@@ -188,6 +188,7 @@ const en = {
       punish: 'Missed punishment',
       mate: 'Missed mate',
     },
+    playOut: 'Play it out',
   },
   gameList: {
     empty: 'No games synced yet. Click "Sync games" to fetch your Chess.com history.',
@@ -253,6 +254,7 @@ const en = {
     peak: (evaluation: string, move: string | null) =>
       move ? `Peaked at ${evaluation} after ${move}` : `Peaked at ${evaluation} from the start`,
     throwMove: (move: string) => `slipped with ${move}`,
+    playOut: 'play it out against the bot',
     result: { draw: 'Drawn', loss: 'Lost' },
   },
   evalHelp: {
@@ -910,6 +912,7 @@ const es: Strings = {
       punish: 'Sin castigar',
       mate: 'Mate perdido',
     },
+    playOut: 'Jugarla',
   },
   gameList: {
     empty:
@@ -978,6 +981,7 @@ const es: Strings = {
     peak: (evaluation: string, move: string | null) =>
       move ? `Máximo de ${evaluation} tras ${move}` : `Máximo de ${evaluation} desde el inicio`,
     throwMove: (move: string) => `se escapó con ${move}`,
+    playOut: 'juégala contra el bot',
     result: { draw: 'Tablas', loss: 'Derrota' },
   },
   evalHelp: {

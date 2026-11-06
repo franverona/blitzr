@@ -451,7 +451,8 @@ schedules) whose ply no longer qualifies. Accepted, not a bug.
 **Trouble cards** (`troubleCards()`): up to 5 cards under the page's filters, due or not, with
 an ease below 2.25 (a miss costs 0.2 and a hit gains 0.1, so 2·misses − hits ≥ 3), lowest first,
 shown under the session without their answers. They link with `?hints=0`, so the game page doesn't
-show the engine's move either.
+show the engine's move either. Every kind but a deviation (opening prep) also links to
+`/games/<id>/play` from the same position.
 
 **Undo** (`undoDrillAnswer()`) restores the schedule `submitDrillAnswer()` returned, only while that
 answer is still the card's `last_reviewed_at` and only before Next; the streak keeps the day. An answer to a
@@ -478,7 +479,7 @@ are left (Lichess's divider count), else the first 10 moves (the FEN's fullmove 
 from a FEN counts from there) are the opening; listed in game order. `findThrownWins()`
 (`lib/thrownWins.ts`) lists drawn or lost games whose own win chance (`evalBarPercent()`) peaked at
 90%+, linking to that position and to the own move after it with the biggest `moveWinDrop()` (one
-ply early, like the other blunder links); it renders outside `BlunderStats`' early returns, since a game can be
+ply early, like the other blunder links), and to `/games/<id>/play?ply=` from the peak; it renders outside `BlunderStats`' early returns, since a game can be
 thrown without a blunder.
 
 ## Today

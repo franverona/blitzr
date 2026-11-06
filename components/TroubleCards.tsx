@@ -32,6 +32,15 @@ export function TroubleCards({ troubles }: { troubles: DrillPrompt[] }) {
               {/* `fen` is the position before the move, so it numbers ply 1 from there. */}
               {s.troubleCards.kind[t.sourceType]} · {plyLabel(1, t.fen)}
             </span>
+            {/* A deviation is opening prep, not a position to play out. */}
+            {t.sourceType !== 'deviation' && (
+              <Link
+                href={`/games/${t.gameId}/play?ply=${t.ply - 1}`}
+                className={`text-xs ${LINK_CLASS}`}
+              >
+                {s.troubleCards.playOut}
+              </Link>
+            )}
           </li>
         ))}
       </ul>
