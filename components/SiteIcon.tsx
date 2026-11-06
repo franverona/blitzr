@@ -11,16 +11,17 @@ const ICONS: Record<GameSite, { src: string; className: string }> = {
   },
 }
 
-/** The site a game was played on, as its favicon, named by tooltip and alt text. */
-export function SiteIcon({ site }: { site: GameSite }) {
+/** The site a game was played on, as its favicon, named by tooltip and alt text unless
+ *  `decorative` (beside a visible name, which would read it twice). */
+export function SiteIcon({ site, decorative = false }: { site: GameSite; decorative?: boolean }) {
   const name = getStrings().common.site[site]
   const { src, className } = ICONS[site]
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src={src}
-      alt={name}
-      title={name}
+      alt={decorative ? '' : name}
+      title={decorative ? undefined : name}
       width={16}
       height={16}
       className={`size-4 ${className}`}
