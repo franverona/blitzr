@@ -202,6 +202,7 @@ const en = {
     headers: {
       date: 'Date',
       color: 'Color',
+      site: 'Site',
       opponent: 'Opponent',
       result: 'Result',
       rating: 'Rating',
@@ -924,6 +925,7 @@ const es: Strings = {
     headers: {
       date: 'Fecha',
       color: 'Color',
+      site: 'Sitio',
       opponent: 'Rival',
       result: 'Resultado',
       rating: 'Puntuación',

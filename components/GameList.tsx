@@ -97,6 +97,7 @@ export function GameList({
           {(
             [
               ['color', ''],
+              ['site', ''],
               ['opponent', ''],
               ['result', ''],
               ['rating', 'text-right'],

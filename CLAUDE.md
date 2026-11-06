@@ -290,7 +290,7 @@ layout renders only `SetupScreen` (icon + how to set them), no sidebar or provid
 CI's smoke test runs with `LICHESS_USERNAME=smoke` (no avatar fetch) and checks that screen on a
 second server with neither. The sidebar lists one row per set username. **Lichess has no profile
 pictures**: avatars are only fetched for Chess.com games (game page, drill cards, sidebar), so
-Lichess players keep `PlayerAvatar`'s letter badge. Ratings on Today are per site and time class
+Lichess players keep `PlayerAvatar`'s letter badge. The games list's Site column is `SiteIcon`: each site's favicon, hotlinked like the move sounds (Lichess's is black, so `dark:invert`), `—` for practice games. Ratings on Today are per site and time class
 (`recentResults()`), since the two scales don't compare; the site is named only when both appear.
 
 ## Manually-added games
