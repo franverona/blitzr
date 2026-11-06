@@ -177,9 +177,12 @@ export function PlayoutBoard({
   useEffect(() => {
     if (!engineOpens) return
     let cancelled = false
+    // gameRef too: a resignation during this search ends the game without a restart.
+    const game = gameRef.current
+    const live = () => !cancelled && game === gameRef.current
     searchMove(initialFen).then(
-      (san) => !cancelled && applyEngineMove([], san),
-      () => !cancelled && engineFailure(),
+      (san) => live() && applyEngineMove([], san),
+      () => live() && engineFailure(),
     )
     return () => {
       cancelled = true
