@@ -57,11 +57,13 @@ jobs:
       - name: Smoke test
         run: |
           log="$RUNNER_TEMP/server.log"
+          # A failed check exits before the ⨯ grep below, so print the log there too: it holds the error.
+          trap '[ $? -eq 0 ] || { echo "::group::server log"; cat "$log"; echo "::endgroup::"; }' EXIT
           # Without either username every page is the setup screen. Lichess, since it fetches no avatar.
           LICHESS_USERNAME=smoke pnpm start -p 9878 > "$log" 2>&1 &
           curl -fsS -o /dev/null --retry 30 --retry-connrefused --retry-delay 1 http://127.0.0.1:9878/
           for route in / /games /openings /learn /settings /repertoire /drill /blunders /puzzles /puzzles/1; do
-            curl -fsS -o /dev/null "http://127.0.0.1:9878$route" || { echo "::error::$route failed"; exit 1; }
+            curl -fsS --max-time 30 -o /dev/null "http://127.0.0.1:9878$route" || { echo "::error::$route failed"; exit 1; }
           done
           # One game, inserted after the app created the schema, for a real /games/[id].
           node <<'JS'
@@ -114,11 +116,11 @@ jobs:
           JS
           # notFound() still answers 200 (loading.tsx streams), so check each page's content too.
           check() {
-            body=$(curl -fsS "http://127.0.0.1:9878$1") || { echo "::error::$1 failed"; exit 1; }
+            body=$(curl -fsS --max-time 30 "http://127.0.0.1:9878$1") || { echo "::error::$1 failed"; exit 1; }
             grep -qF "$2" <<< "$body" || { echo "::error::$1 lacks \"$2\""; exit 1; }
           }
           check_absent() {
-            body=$(curl -fsS "http://127.0.0.1:9878$1") || { echo "::error::$1 failed"; exit 1; }
+            body=$(curl -fsS --max-time 30 "http://127.0.0.1:9878$1") || { echo "::error::$1 failed"; exit 1; }
             ! grep -qF "$2" <<< "$body" || { echo "::error::$1 shows \"$2\""; exit 1; }
           }
           check /games/smoke smoke-black
