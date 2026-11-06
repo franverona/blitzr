@@ -131,6 +131,22 @@ export class StockfishEngine {
     })
   }
 
+  /** Sends `setoption` commands (e.g. `botUciOptions()`); call before the first search. */
+  async configure(options: string[]): Promise<void> {
+    await this.readyPromise
+    const ready = new Promise<void>((resolve) => {
+      const onMessage = (event: MessageEvent<string>) => {
+        if (event.data !== 'readyok') return
+        this.worker.removeEventListener('message', onMessage)
+        resolve()
+      }
+      this.worker.addEventListener('message', onMessage)
+      for (const option of options) this.worker.postMessage(option)
+      this.worker.postMessage('isready')
+    })
+    return Promise.race([ready, this.failure])
+  }
+
   async evaluate(fen: string, movetimeMs = 300): Promise<PositionEval> {
     await this.readyPromise
     const whiteToMove = isWhiteToMove(fen)

@@ -95,6 +95,7 @@ jobs:
             grep -qF "$2" <<< "$body" || { echo "::error::$1 lacks \"$2\""; exit 1; }
           }
           check /games/smoke smoke-black
+          check '/games/smoke/play?ply=2&elo=1600' 'Bot strength'
           # Only analysis data puts these there: the worst blunder, the drill card and its trouble
           # card (in the page's RSC payload), and Today's last-game accuracy.
           check /blunders smoke-black
