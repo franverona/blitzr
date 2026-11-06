@@ -65,26 +65,38 @@ export async function fetchLichessCreatedAt(username: string): Promise<number> {
   return (JSON.parse(body) as { createdAt: number }).createdAt
 }
 
+// At ~20 games a second, a page takes under a minute, well inside REQUEST_TIMEOUT_MS.
+const PAGE_SIZE = 1000
+
 /** Games created in [since, until] (ms), ongoing ones included so the caller can tell. */
 export async function fetchLichessGames(
   username: string,
   since: number,
   until: number,
 ): Promise<LichessGame[]> {
-  const params = new URLSearchParams({
-    since: String(since),
-    until: String(until),
-    pgnInJson: 'true',
-    ongoing: 'true',
-    clocks: 'false',
-    evals: 'false',
-  })
-  const body = await get(
-    `${BASE_URL}/games/user/${encodeURIComponent(username)}?${params}`,
-    'application/x-ndjson',
-  )
-  return body
-    .split('\n')
-    .filter((line) => line.trim())
-    .map((line) => JSON.parse(line) as LichessGame)
+  const games: LichessGame[] = []
+  // Oldest first, a page at a time: one request for a busy month would outlast the timeout.
+  for (let from = since; ;) {
+    const params = new URLSearchParams({
+      since: String(from),
+      until: String(until),
+      max: String(PAGE_SIZE),
+      sort: 'dateAsc',
+      pgnInJson: 'true',
+      ongoing: 'true',
+      clocks: 'false',
+      evals: 'false',
+    })
+    const body = await get(
+      `${BASE_URL}/games/user/${encodeURIComponent(username)}?${params}`,
+      'application/x-ndjson',
+    )
+    const page = body
+      .split('\n')
+      .filter((line) => line.trim())
+      .map((line) => JSON.parse(line) as LichessGame)
+    games.push(...page)
+    if (page.length < PAGE_SIZE) return games
+    from = page[page.length - 1].createdAt + 1
+  }
 }

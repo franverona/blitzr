@@ -259,7 +259,7 @@ backups and `polgar-mates.json` elsewhere. The `data/` paths below assume the de
   one until a full UTC day has passed (`oldestOpenArchiveYm()`), are always re-fetched.
 - **Lichess** (`lib/lichess/`, `https://lichess.org/api`, no token) has no monthly archives, so
   `listPendingArchives()` makes them: `lichess:YYYY-MM` keys (in `sync_state` and `archive_ym`;
-  Chess.com's stay bare) from the account's `createdAt`, each fetched as NDJSON with `since`/`until`
+  Chess.com's stay bare) from the account's `createdAt`, each fetched as NDJSON, 1000 games a request oldest first (one request for a busy month outlasts the timeout), with `since`/`until`
   on the game's _start_, `ongoing=true`. A month with an unfinished game stays `partial`, or that
   (correspondence) game would be missed. `normalizeLichessGame()` runs the PGN through
   `parseManualGame()` and takes `status` (resign/outoftime/timeout/draw → result codes), `speed`
