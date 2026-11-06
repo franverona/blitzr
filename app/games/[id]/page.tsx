@@ -39,7 +39,8 @@ export default async function GamePage({
   params: Promise<{ id: string }>
   searchParams: Promise<{ ply?: string; hints?: string }>
 }) {
-  const { id } = await params
+  // Next hands params over percent-encoded, which turns Lichess's `lichess:<id>` into `%3A`.
+  const id = decodeURIComponent((await params).id)
   const query = await searchParams
   // `?ply=` deep-links a position (e.g. from Today's worst blunder); BoardProvider clamps it.
   // `?hints=0` keeps the engine's answer off that position (trouble cards link to it).
