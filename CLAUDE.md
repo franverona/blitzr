@@ -2,7 +2,7 @@
 
 ## What this is
 
-A local, single-user chess repertoire trainer built from the owner's own Chess.com games. Public
+A local, single-user chess repertoire trainer built from the owner's own Chess.com and Lichess games. Public
 and open-source, but scoped for one person on their own machine: no accounts, no hosted version,
 no multi-user support.
 
@@ -50,6 +50,7 @@ app/
 components/
   Board.tsx                 # BoardView: the board, eval bar, move list and their overlays
   EvalBar.tsx               # the vertical eval bar beside a board (deliberately not themed)
+  EvalHelp.tsx              # collapsible glossary of eval and move-quality terms
   MoveList.tsx              # the move list, with saved-analysis badges and blunder details
   BoardContext.tsx          # BoardProvider + useBoardContext(): ply, explore branch, orientation
   BoardNavControls.tsx      # ◀/▶/Play/flip buttons and their keyboard shortcuts
@@ -57,7 +58,7 @@ components/
   GameEndBadge.tsx          # mate/flag/draw badges drawn on the final position
   LiveAnalysisPanel.tsx     # live MultiPV engine lines
   MoveSequence.tsx          # SAN line rendered with piece icons
-  PlanBoard.tsx             # step-through board for an engine plan
+  PlanBoard.tsx             # step-through board for an engine plan; PlanBoardButton opens it in a dialog
   GameAnalysisPanel.tsx     # batch Stockfish analysis + move-quality side panel
   EvalGraph.tsx             # the eval bar across a game, inside the move-quality panel
   RepertoireBoard.tsx       # editable board that builds the repertoire tree
@@ -86,6 +87,8 @@ components/
   Toast.tsx                 # <Toaster />: react-hot-toast rendered with our own classes
   styles.ts                 # class helpers: buttonClass(), chipClass(), navButtonClass(), tones
   Sidebar.tsx               # collapsible nav (blitzr-sidebar-collapsed cookie)
+  SetupScreen.tsx           # every page while neither username is set
+  SiteIcon.tsx / PlayerAvatar.tsx  # a game's site favicon; an avatar or initial-letter badge
   RouteProgressBar.tsx      # top bar during navigation (root layout); router.push() callers
                             # call startRouteProgress(), since App Router has no start event
   PositionActions.tsx       # copy FEN / PGN, open in Lichess, under the game page's nav
@@ -109,6 +112,7 @@ lib/
   realGameMates.ts / lichessMates.json / lichessDefenses.json  # the bundled puzzles
   forcedMate.ts             # isForcedMate(), forcedMateWithin(), shared with the import scripts
   manualGame.ts             # pasted PGN -> Game
+  practiceGame.ts           # practice games vs the bot: start position, rebuild, per-position tally
   sync.ts                   # listPendingArchives(), syncArchive()
   validate.ts               # checks on Server Action payloads the client builds
   dataDir.ts                # dataDir(): BLITZR_DATA_DIR or ./data, shared with scripts/
@@ -116,12 +120,13 @@ lib/
   san.ts                    # SAN helpers: piece names, move labels, plain-English moves
   gameEnd.ts                # gameEndBadges()
   share.ts                  # linePgn(), lichessAnalysisUrl()
-  dates.ts / config.ts      # date formatting and bounds; CHESSCOM_USERNAME
+  dates.ts / config.ts      # date formatting and bounds; siteUsername(), hasAnyUsername()
   material.ts / legalMoves.ts / moveSound.ts  # material balance, a square's moves, which sound
   clock.ts                  # per-ply clocks from a PGN's [%clk] comments
   localHost.ts              # isLoopbackHost(), for proxy.ts
   i18n/                     # locale + string dictionary
   chesscom/                 # API client + normalization
+  lichess/                  # API client + normalization (via parseManualGame())
   stockfish/                # UCI wrapper + batch analysis
   db/                       # getRepository(), row types, sqlite repository + migrations
 scripts/
@@ -413,16 +418,17 @@ in a game the user played.
 
 ## Games list filters
 
-All filters are URL params (`q`, `result`, `color`, `rated`, `site`, `accOp`, `accValue`, `practice`). The site select shows only once games come from more than one site (`getGameSites()`), or while one is set. Accuracy isn't a
+All filters are URL params (`q`, `result`, `color`, `rated`, `site`, `accOp`, `accValue`, `practice`). The site toggle shows only once games come from more than one site (`getGameSites()`), or while one is set. Accuracy isn't a
 column, so an active accuracy filter becomes a `gameIds` set passed to `listGames()`. Text search
 and the slider are debounced (400ms); selects navigate immediately. Only the search box sits in the
 row: every other filter is in the side panel behind **Filters** (`Dialog` with `placement="right"`),
 which shows the active count; the site filter is a toggle of the two favicons (pressed again, it
 clears).
 
-`practice=1` lists only practice games: no rated or accuracy filter (`getGameAccuracyById()` skips
-them, so the page asks `getPracticeAccuracyById()` for the listed ones), plus checkboxes whose
-selection turns the header into a "Delete N selected" (`deletePracticeGames()`, which ignores any
+`practice=1` lists only practice games: no rated, site or accuracy filter (turning it on clears
+them; `getGameAccuracyById()` skips practice games, so the page asks
+`getPracticeAccuracyById()` for the listed ones), plus checkboxes whose selection turns the header
+into a "Delete N selected" (`deletePracticeGames()`, which ignores any
 id that isn't a practice game). The labels stay, transparent, so the columns don't move.
 
 ## Drilling
@@ -577,7 +583,8 @@ since Next redacts thrown messages in production.
 - **Vitest** (`pnpm test`). Tests live in `__tests__/`, one file per `lib/` module, against
   fixtures — no DB, network or browser, except `sqliteRepository.test.ts` (in-memory SQLite) and
   `migrate.test.ts` (a SQLite file in a temp dir, for the pre-migration backup).
-  `sync.test.ts` stubs the Chess.com client and repository with `vi.mock`.
+  `sync.test.ts` stubs both sites' clients and the repository with `vi.mock`; `lichessClient.test.ts`
+  stubs `fetch` with `vi.stubGlobal`.
 - Worker-driven code (`evaluate()`, `analyzeGame()`) isn't unit-tested; its pure parsers are.
 
 ## Before considering a feature or fix done
@@ -592,12 +599,14 @@ pnpm build
 
 CI (`.github/workflows/ci.yml`) runs the same five on pushes to `main` and on PRs, after
 `pnpm audit --prod` (dev tooling's advisories don't block). Then it smoke-tests `pnpm start`: the
-main routes must return 2xx against an empty database, a seeded `/games/smoke`, two lessons and a
-puzzle from each Lichess set must show their content, the game's seeded analysis and trouble card
-must show on `/blunders`, `/drill` and `/`, a foreign `Host` must get 403 and `/` must send
-`X-Frame-Options` and a CSP
-nonce, and the server log must have no `⨯` errors (a page that throws still answers 200, since
-`loading.tsx` streams). Then it loads every `lib/` file a script imports under plain Node (type
+main routes must return 2xx against an empty database; a seeded `/games/smoke` and its play page, a
+synced `lichess:` game and its play page, a practice game (on its source, its own page and only under
+`/games?practice=1`), two lessons and a puzzle from each Lichess set must show their content; the
+game's seeded analysis and trouble card must show on `/blunders`, `/drill` and `/`; a foreign `Host`
+must get 403 and `/` must send `X-Frame-Options` and a CSP nonce; a second server with no username
+must show only the setup screen; and the server log must have no `⨯` errors (a page that throws
+still answers 200, since `loading.tsx` streams). Every seeded game is a Lichess one, so no page
+under test fetches a Chess.com avatar, and a failed check prints the server log. Then it loads every `lib/` file a script imports under plain Node (type
 stripping rejects enums, parameter properties and imports without `.ts`, which tsc allows), and
 `pnpm backup` backs up that database. Each push to `main` gets its own full run; a PR's newer push
 cancels its older one.
