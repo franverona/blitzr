@@ -287,48 +287,52 @@ export function PlayoutBoard({
     if (piece) setSelectedSquare(square)
   }
 
+  const status = (
+    <p
+      className={
+        outcome === 'won'
+          ? 'text-lg font-medium text-emerald-600 dark:text-emerald-400'
+          : outcome === 'lost'
+            ? 'text-lg font-medium text-red-600 dark:text-red-400'
+            : 'text-sm text-zinc-500 dark:text-zinc-400'
+      }
+    >
+      {outcome === 'won'
+        ? messages.won(myMoves)
+        : outcome === 'drawn'
+          ? messages.drawn
+          : outcome === 'lost'
+            ? messages.lost
+            : thinking
+              ? messages.thinking
+              : s.endgamePlayout.yourMove(s.common.color[myColor], Number(fen.split(' ')[5]))}
+    </p>
+  )
+  const canTakeBack = myMoves > 0 && !pendingPromotion
+
   const boardColumn = (
     <div className={`flex w-full shrink-0 flex-col gap-3 ${boardMaxWidthClassName}`}>
-      <div className="flex min-h-9 flex-wrap items-center justify-between gap-2">
-        <p
-          className={
-            outcome === 'won'
-              ? 'text-lg font-medium text-emerald-600 dark:text-emerald-400'
-              : outcome === 'lost'
-                ? 'text-lg font-medium text-red-600 dark:text-red-400'
-                : 'text-sm text-zinc-500 dark:text-zinc-400'
-          }
-        >
-          {outcome === 'won'
-            ? messages.won(myMoves)
-            : outcome === 'drawn'
-              ? messages.drawn
-              : outcome === 'lost'
-                ? messages.lost
-                : thinking
-                  ? messages.thinking
-                  : s.endgamePlayout.yourMove(s.common.color[myColor], Number(fen.split(' ')[5]))}
-        </p>
-        <div className="flex shrink-0 gap-2">
-          {allowResign && !outcome && (
-            <>
-              <button
-                onClick={handleTakeBack}
-                disabled={myMoves === 0 || Boolean(pendingPromotion)}
-                className={buttonClass()}
-              >
-                {s.playBot.takeBack}
-              </button>
-              <button onClick={handleResign} className={buttonClass()}>
-                {s.playBot.resign}
-              </button>
-            </>
-          )}
-          <button onClick={handleRestart} className={buttonClass()}>
-            {s.lessonQuiz.restart}
-          </button>
+      {/* With a sidebar, the status and buttons live there instead. */}
+      {!sidebar && (
+        <div className="flex min-h-9 flex-wrap items-center justify-between gap-2">
+          {status}
+          <div className="flex shrink-0 gap-2">
+            {allowResign && !outcome && (
+              <>
+                <button onClick={handleTakeBack} disabled={!canTakeBack} className={buttonClass()}>
+                  {s.playBot.takeBack}
+                </button>
+                <button onClick={handleResign} className={buttonClass()}>
+                  {s.playBot.resign}
+                </button>
+              </>
+            )}
+            <button onClick={handleRestart} className={buttonClass()}>
+              {s.lessonQuiz.restart}
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       <BoardCoordinates show={boardColors.showCoordinates} orientation={myColor} className="w-full">
         <div className="relative w-full overflow-hidden rounded shadow-lg">
@@ -374,6 +378,7 @@ export function PlayoutBoard({
       >
         <div className="flex flex-col gap-3 lg:absolute lg:inset-0">
           {sidebar.top?.(myMoves > 0 && !outcome)}
+          {status}
           <MoveList
             movesSan={movesSan}
             ply={shownPly}
@@ -409,6 +414,25 @@ export function PlayoutBoard({
               label={s.board.navLabels.end}
             >
               <NavIcon d="M17 5v14M6 6l6 6-6 6" />
+            </NavButton>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            {allowResign && !outcome && (
+              <>
+                <NavButton
+                  onClick={handleTakeBack}
+                  disabled={!canTakeBack}
+                  label={s.playBot.takeBack}
+                >
+                  <NavIcon d="M9 14 4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3" />
+                </NavButton>
+                <NavButton onClick={handleResign} disabled={false} label={s.playBot.resign}>
+                  <NavIcon d="M5 21V4h12l-2 4 2 4H5" />
+                </NavButton>
+              </>
+            )}
+            <NavButton onClick={handleRestart} disabled={false} label={s.playBot.restart}>
+              <NavIcon d="M3 12a9 9 0 1 0 3-6.7M3 3v5h5" />
             </NavButton>
           </div>
         </div>

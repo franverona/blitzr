@@ -360,7 +360,9 @@ side to move); the engine moves first when it's its turn. `BOT_ELOS` (`lib/botSt
 once, before the first search. The picker sits in `PlayoutBoard`'s sidebar above the move list
 (click a move, ◀/▶ under it or ←/→/Home/End to look back; moving needs the live position) and
 is disabled from the user's first move until the game ends, since changing it reloads the page.
-**Take back** returns to the user's last move, dropping the engine's reply or its running search
+With a sidebar, `PlayoutBoard` also moves the status line and its buttons (icons, labels as
+`aria-label`/tooltip) there, so the board column is only the board; the page skips `PageHeader` for
+one quiet line, letting the board grow to the viewport height. **Take back** returns to the user's last move, dropping the engine's reply or its running search
 (`gameRef`); only mid-game: a finished game is final. Nothing is saved yet.
 
 ## Games list filters

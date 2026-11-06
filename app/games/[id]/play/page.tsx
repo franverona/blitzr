@@ -2,7 +2,6 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getGame } from '../../../actions'
 import { BotPlayout } from '@/components/BotPlayout'
-import { PageHeader } from '@/components/PageHeader'
 import { LINK_CLASS } from '@/components/styles'
 import { DEFAULT_BOT_ELO, isBotElo } from '@/lib/botStrength'
 import { getStrings } from '@/lib/i18n/strings'
@@ -34,21 +33,20 @@ export default async function PlayBotPage({
 
   return (
     <div className="flex flex-col gap-4">
-      <PageHeader
-        title={s.playBot.title}
-        subtitle={
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            {ply > 0
-              ? s.playBot.subtitle(`${plyLabel(ply, game.initialFen)} ${game.movesSan[ply - 1]}`)
-              : s.playBot.fromStart}
-          </p>
-        }
-        actions={
-          <Link href={`/games/${game.id}?ply=${ply}`} className={`text-sm ${LINK_CLASS}`}>
-            {s.playBot.backToGame}
-          </Link>
-        }
-      />
+      {/* One quiet line instead of PageHeader, so the board gets the height. */}
+      <div className="flex flex-wrap items-baseline gap-x-2 text-sm text-zinc-500 dark:text-zinc-400">
+        <Link href={`/games/${game.id}?ply=${ply}`} className={LINK_CLASS}>
+          {s.playBot.backToGame}
+        </Link>
+        <span aria-hidden>·</span>
+        <h1 className="font-medium text-zinc-700 dark:text-zinc-300">{s.playBot.title}</h1>
+        <span aria-hidden>·</span>
+        <span>
+          {ply > 0
+            ? s.playBot.subtitle(`${plyLabel(ply, game.initialFen)} ${game.movesSan[ply - 1]}`)
+            : s.playBot.fromStart}
+        </span>
+      </div>
       <BotPlayout
         key={`${elo}-${ply}`}
         gameId={game.id}

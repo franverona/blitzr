@@ -51,7 +51,22 @@ export function BotPlayout({
           </option>
         ))}
       </Select>
-      {inProgress && <span className="text-xs">{s.playBot.strengthLocked}</span>}
+      {inProgress && (
+        <span title={s.playBot.strengthLocked}>
+          <svg
+            viewBox="0 0 24 24"
+            className="size-4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            aria-hidden
+          >
+            <rect x="5" y="11" width="14" height="10" rx="2" />
+            <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+          </svg>
+          <span className="sr-only">{s.playBot.strengthLocked}</span>
+        </span>
+      )}
     </label>
   )
 
@@ -69,8 +84,9 @@ export function BotPlayout({
         drawn: s.playBot.drawn,
         lost: s.playBot.lost,
       }}
-      // lg+: 11rem ≈ the header, status row and coordinates around the board.
-      boardMaxWidthClassName="max-w-160 lg:max-w-[min(40rem,calc(100dvh-11rem))] xl:max-w-[min(43rem,calc(100dvh-11rem))] 2xl:max-w-[min(46rem,calc(100dvh-11rem))]"
+      // lg+: 5.5rem ≈ the one-line header and the coordinates under the board. The width caps
+      // leave the sidebar its room; height is what binds on a 13" laptop.
+      boardMaxWidthClassName="max-w-160 lg:max-w-[min(42rem,calc(100dvh-5.5rem))] xl:max-w-[min(50rem,calc(100dvh-5.5rem))] 2xl:max-w-[min(56rem,calc(100dvh-5.5rem))]"
     />
   )
 }
