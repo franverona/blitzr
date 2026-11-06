@@ -59,7 +59,8 @@ jobs:
           log="$RUNNER_TEMP/server.log"
           # A failed check exits before the ⨯ grep below, so print the log there too: it holds the error.
           trap '[ $? -eq 0 ] || { echo "::group::server log"; cat "$log"; echo "::endgroup::"; }' EXIT
-          # Without either username every page is the setup screen. Lichess, since it fetches no avatar.
+          # Without either username every page is the setup screen. Lichess, since it fetches no avatar
+          # (and every seeded game is a Lichess one, so no page under test calls api.chess.com).
           LICHESS_USERNAME=smoke pnpm start -p 9878 > "$log" 2>&1 &
           curl -fsS -o /dev/null --retry 30 --retry-connrefused --retry-delay 1 http://127.0.0.1:9878/
           for route in / /games /openings /learn /settings /repertoire /drill /blunders /puzzles /puzzles/1; do
@@ -70,9 +71,9 @@ jobs:
           const db = new (require('better-sqlite3'))('data/blitzr.db')
           db.prepare(`INSERT INTO games (id, url, pgn, moves_san, initial_fen, time_control,
             time_class, rules, rated, end_time, white_username, white_result, black_username,
-            black_result, my_color, my_result, archive_ym, created_at)
+            black_result, my_color, my_result, archive_ym, created_at, site)
             VALUES ('smoke', '', @pgn, @moves, @fen, '180', 'blitz', 'chess', 0, 1, 'smoke-white',
-            'win', 'smoke-black', 'checkmated', 'white', 'win', 'manual', '')`).run({
+            'win', 'smoke-black', 'checkmated', 'white', 'win', 'manual', '', 'lichess')`).run({
             pgn: '1. e4 e5 2. Bc4 Nc6 3. Qh5 Nf6 4. Qxf7# 1-0',
             moves: JSON.stringify(['e4', 'e5', 'Bc4', 'Nc6', 'Qh5', 'Nf6', 'Qxf7#']),
             fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
@@ -106,10 +107,11 @@ jobs:
           // A practice game played from it: listed only on its source and under ?practice=1.
           db.prepare(`INSERT INTO games (id, url, pgn, moves_san, initial_fen, time_control,
             time_class, rules, rated, end_time, white_username, white_result, black_username,
-            black_result, my_color, my_result, archive_ym, created_at, source_game_id, source_ply)
+            black_result, my_color, my_result, archive_ym, created_at, source_game_id, source_ply,
+            site)
             VALUES ('smoke-practice', '', '', @moves, @fen, '', 'practice', 'chess', 0, 2,
             'smoke-white', 'win', 'Stockfish 1600', 'checkmated', 'white', 'win', 'practice', '',
-            'smoke', 4)`).run({
+            'smoke', 4, 'lichess')`).run({
             moves: JSON.stringify(['Qh5', 'Nf6', 'Qxf7#']),
             fen: 'r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/8/PPPP1PPP/RNBQK1NR w KQkq - 2 3',
           })
