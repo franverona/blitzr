@@ -1,4 +1,4 @@
-import { getRepertoireGaps, listRepertoire } from '../actions'
+import { getRepertoireGaps, getRepertoireQuizLines, listRepertoire } from '../actions'
 import { RepertoireBoard } from '@/components/RepertoireBoard'
 import { RepertoireQuiz } from '@/components/RepertoireQuiz'
 import type { RepertoireColor } from '@/lib/types'
@@ -11,7 +11,8 @@ export default async function RepertoirePage({
   const { color: colorParam, mode } = await searchParams
   const color: RepertoireColor = colorParam === 'black' ? 'black' : 'white'
   if (mode === 'quiz') {
-    return <RepertoireQuiz key={color} color={color} nodes={await listRepertoire(color)} />
+    const { lines, gameCounts } = await getRepertoireQuizLines(color)
+    return <RepertoireQuiz key={color} color={color} lines={lines} gameCounts={gameCounts} />
   }
   const [nodes, gaps] = await Promise.all([listRepertoire(color), getRepertoireGaps(color)])
 

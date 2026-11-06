@@ -42,7 +42,12 @@ import {
 } from '@/lib/positions'
 import { plyLabel } from '@/lib/san'
 import { PracticeGameError, buildPracticeGame, practiceStart } from '@/lib/practiceGame'
-import { findRepertoireGaps, lineToRepertoireNodes } from '@/lib/repertoire'
+import {
+  findRepertoireGaps,
+  lineGameCounts,
+  lineToRepertoireNodes,
+  repertoireLines,
+} from '@/lib/repertoire'
 import { isArchiveKey, isSyncStale, listPendingArchives, syncArchive } from '@/lib/sync'
 import { describeBlunderReason } from '@/lib/tactics'
 import { findThrownWins } from '@/lib/thrownWins'
@@ -338,6 +343,19 @@ export async function getRepertoireGaps(color: RepertoireColor): Promise<Reperto
     getRepository().listRepertoireNodes(color),
   ])
   return findRepertoireGaps(games, color, nodes)
+}
+
+/** The quiz's lines, each with how many of the user's games it's the closest line to. */
+export async function getRepertoireQuizLines(
+  color: RepertoireColor,
+): Promise<{ lines: string[][]; gameCounts: number[] }> {
+  if (color !== 'white' && color !== 'black') return { lines: [], gameCounts: [] }
+  const [games, nodes] = await Promise.all([
+    cachedStandardStartGames(),
+    getRepository().listRepertoireNodes(color),
+  ])
+  const lines = repertoireLines(nodes, color)
+  return { lines, gameCounts: lineGameCounts(lines, games, color) }
 }
 
 export async function addRepertoireMove(node: RepertoireNode): Promise<ActionResult> {
