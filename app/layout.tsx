@@ -6,11 +6,12 @@ import { getArchiveSyncStatus } from './actions'
 import { SettingsProvider } from '@/components/SettingsProvider'
 import { BulkAnalysisProvider } from '@/components/BulkAnalysisProvider'
 import { RouteProgressBar } from '@/components/RouteProgressBar'
+import { SetupScreen } from '@/components/SetupScreen'
 import { Sidebar, type SidebarAccount } from '@/components/Sidebar'
 import { Toaster } from '@/components/Toast'
 import { SyncProvider } from '@/components/SyncProvider'
 import { fetchPlayerAvatar } from '@/lib/chesscom/client'
-import { siteUsername } from '@/lib/config'
+import { hasAnyUsername, siteUsername } from '@/lib/config'
 import { getSessionSize } from '@/lib/drill'
 import { getLocale } from '@/lib/i18n/locale'
 import { getStrings } from '@/lib/i18n/strings'
@@ -39,7 +40,6 @@ export const viewport: Viewport = {
 }
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  // Fail soft: a missing username shouldn't break every page.
   const username = siteUsername('chesscom') ?? null
   const lichessUsername = siteUsername('lichess')
   const accounts: SidebarAccount[] = [
@@ -52,7 +52,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       : []),
   ]
   let autoSync = false
-  if (username && autoSyncMinutes() > 0) {
+  if (hasAnyUsername() && autoSyncMinutes() > 0) {
     try {
       autoSync = isSyncStale((await getArchiveSyncStatus()).map((a) => a.syncedAt))
     } catch {
@@ -82,37 +82,47 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       {/* dvh: on phones, h-full can reach behind the browser toolbar, which never hides
           because the page itself doesn't scroll (main does). */}
       <body className="flex h-dvh overflow-hidden bg-zinc-100 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
-        <Suspense fallback={null}>
-          <RouteProgressBar />
-        </Suspense>
-        <SettingsProvider
-          initialTheme={theme}
-          initialPresetId={boardColorPreset.id}
-          initialAnalysisStrength={(await cookies()).get('blitzr-analysis-strength')?.value}
-          initialHideEngineHints={(await cookies()).get('blitzr-hide-engine-hints')?.value === '1'}
-          initialShowCoordinates={(await cookies()).get('blitzr-show-coordinates')?.value !== '0'}
-          initialMoveSounds={(await cookies()).get('blitzr-move-sounds')?.value !== '0'}
-          initialTrainingOrientation={getTrainingOrientation(
-            (await cookies()).get('blitzr-training-orientation')?.value,
-          )}
-          initialPlaySpeed={getPlaySpeed((await cookies()).get('blitzr-play-speed')?.value)}
-          initialDrillSessionSize={getSessionSize(
-            (await cookies()).get('blitzr-drill-session-size')?.value,
-          )}
-        >
-          <BulkAnalysisProvider>
-            <SyncProvider autoSync={autoSync}>
-              <Sidebar accounts={accounts} initialCollapsed={sidebarCollapsed} />
-              <main
-                id="main-scroll"
-                className="min-w-0 flex-1 overflow-y-auto px-6 pt-6 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-6"
-              >
-                <div className="mx-auto max-w-7xl">{children}</div>
-              </main>
-            </SyncProvider>
-            <Toaster />
-          </BulkAnalysisProvider>
-        </SettingsProvider>
+        {!hasAnyUsername() ? (
+          <SetupScreen />
+        ) : (
+          <>
+            <Suspense fallback={null}>
+              <RouteProgressBar />
+            </Suspense>
+            <SettingsProvider
+              initialTheme={theme}
+              initialPresetId={boardColorPreset.id}
+              initialAnalysisStrength={(await cookies()).get('blitzr-analysis-strength')?.value}
+              initialHideEngineHints={
+                (await cookies()).get('blitzr-hide-engine-hints')?.value === '1'
+              }
+              initialShowCoordinates={
+                (await cookies()).get('blitzr-show-coordinates')?.value !== '0'
+              }
+              initialMoveSounds={(await cookies()).get('blitzr-move-sounds')?.value !== '0'}
+              initialTrainingOrientation={getTrainingOrientation(
+                (await cookies()).get('blitzr-training-orientation')?.value,
+              )}
+              initialPlaySpeed={getPlaySpeed((await cookies()).get('blitzr-play-speed')?.value)}
+              initialDrillSessionSize={getSessionSize(
+                (await cookies()).get('blitzr-drill-session-size')?.value,
+              )}
+            >
+              <BulkAnalysisProvider>
+                <SyncProvider autoSync={autoSync}>
+                  <Sidebar accounts={accounts} initialCollapsed={sidebarCollapsed} />
+                  <main
+                    id="main-scroll"
+                    className="min-w-0 flex-1 overflow-y-auto px-6 pt-6 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-6"
+                  >
+                    <div className="mx-auto max-w-7xl">{children}</div>
+                  </main>
+                </SyncProvider>
+                <Toaster />
+              </BulkAnalysisProvider>
+            </SettingsProvider>
+          </>
+        )}
       </body>
     </html>
   )

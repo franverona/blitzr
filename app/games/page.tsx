@@ -12,7 +12,6 @@ import { BulkAnalyzeButton } from '@/components/BulkAnalyzeButton'
 import { GameList } from '@/components/GameList'
 import { GameSearchForm } from '@/components/GameSearchForm'
 import { SyncButton } from '@/components/SyncButton'
-import { hasChesscomUsername } from '@/lib/config'
 import { getStrings } from '@/lib/i18n/strings'
 import type { MyColor, MyResult } from '@/lib/types'
 import { PageHeader } from '@/components/PageHeader'
@@ -107,7 +106,6 @@ export default async function GamesPage({
       />
 
       <SetupNotice
-        hasUsername={hasChesscomUsername()}
         // Unfiltered, games without accuracy are unanalyzed, so none analyzed means a fresh sync.
         suggestAnalyze={
           !filtered &&
@@ -161,22 +159,16 @@ export default async function GamesPage({
   )
 }
 
-/** First-run steps: set the username, then (after a sync) analyze. */
-function SetupNotice({
-  hasUsername,
-  suggestAnalyze,
-}: {
-  hasUsername: boolean
-  suggestAnalyze: boolean
-}) {
+/** After a first sync, a nudge to analyze. (A missing username is the layout's setup screen.) */
+function SetupNotice({ suggestAnalyze }: { suggestAnalyze: boolean }) {
   const s = getStrings()
-  if (hasUsername && !suggestAnalyze) return null
+  if (!suggestAnalyze) return null
   return (
     <div
       role="status"
       className="rounded-md border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-100"
     >
-      {hasUsername ? s.gamesPage.setupAnalyze : s.gamesPage.setupUsername}
+      {s.gamesPage.setupAnalyze}
     </div>
   )
 }

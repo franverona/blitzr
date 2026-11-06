@@ -57,7 +57,8 @@ jobs:
       - name: Smoke test
         run: |
           log="$RUNNER_TEMP/server.log"
-          pnpm start -p 9878 > "$log" 2>&1 &
+          # Without either username every page is the setup screen. Lichess, since it fetches no avatar.
+          LICHESS_USERNAME=smoke pnpm start -p 9878 > "$log" 2>&1 &
           curl -fsS -o /dev/null --retry 30 --retry-connrefused --retry-delay 1 http://127.0.0.1:9878/
           for route in / /games /openings /learn /settings /repertoire /drill /blunders /puzzles /puzzles/1; do
             curl -fsS -o /dev/null "http://127.0.0.1:9878$route" || { echo "::error::$route failed"; exit 1; }
@@ -141,6 +142,11 @@ jobs:
           headers=$(curl -fsS -D - -o /dev/null http://127.0.0.1:9878/)
           grep -qi '^x-frame-options: DENY' <<< "$headers" || { echo "::error::no X-Frame-Options"; exit 1; }
           grep -qi "^content-security-policy: .*'nonce-" <<< "$headers" || { echo "::error::no CSP nonce"; exit 1; }
+          # With no username at all, any page is the setup screen and nothing else.
+          CHESSCOM_USERNAME= LICHESS_USERNAME= pnpm start -p 9879 >> "$log" 2>&1 &
+          setup=$(curl -fsS --retry 30 --retry-connrefused --retry-delay 1 http://127.0.0.1:9879/games)
+          grep -q 'LICHESS_USERNAME' <<< "$setup" || { echo "::error::no setup screen without a username"; exit 1; }
+          if grep -q 'href="/settings"' <<< "$setup"; then echo "::error::the setup screen shows the sidebar"; exit 1; fi
           # Next logs a server-side render or action error as "⨯ …", even when the page recovers.
           if grep -F '⨯' "$log"; then
             echo "::error::the server logged errors (above)"

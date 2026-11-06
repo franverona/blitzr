@@ -19,6 +19,8 @@ const en = {
       blitz: 'Blitz',
       rapid: 'Rapid',
       daily: 'Daily',
+      classical: 'Classical',
+      correspondence: 'Correspondence',
       practice: 'Practice',
     },
     pawns: (n: number) => `${n.toFixed(1)} pawns`,
@@ -406,6 +408,10 @@ const en = {
     notInGame: (username: string) =>
       `Neither player is ${username} — pick the side you played, or "Not me" to keep it out of your stats.`,
   },
+  setup: {
+    message:
+      'To get started, copy .env.example to .env.local and set CHESSCOM_USERNAME, LICHESS_USERNAME or both to your usernames there, then restart Blitzr.',
+  },
   sync: {
     button: 'Sync games',
     syncing: 'Syncing…',
@@ -413,7 +419,10 @@ const en = {
     failed: 'Sync failed.',
     rateLimited: 'Chess.com is rate-limiting requests — try again in a few minutes.',
     userNotFound: (username: string) => `Chess.com has no player named "${username}".`,
-    noUsername: 'CHESSCOM_USERNAME is not set. Copy .env.example to .env.local and fill it in.',
+    noUsername:
+      'This is a Chess.com game and CHESSCOM_USERNAME is not set — set it in .env.local, or pick the side you played.',
+    lichessRateLimited: 'Lichess is rate-limiting requests — try again in a few minutes.',
+    lichessUserNotFound: (username: string) => `Lichess has no player named "${username}".`,
     noLichessUsername:
       'This is a Lichess game and LICHESS_USERNAME is not set — set it in .env.local, or pick the side you played.',
     synced: (archives: number, games: number) =>
@@ -576,8 +585,6 @@ const en = {
     anyAccuracy: 'Any accuracy',
     accuracyAtLeast: 'Accuracy ≥',
     accuracyAtMost: 'Accuracy ≤',
-    setupUsername:
-      'To get started, copy .env.example to .env.local, set CHESSCOM_USERNAME to your Chess.com username, restart Blitzr, then click "Sync games".',
     setupAnalyze:
       'Next, click "Analyze all" to find your blunders. Stockfish runs in this browser tab and keeps going while you browse other pages.',
   },
@@ -725,6 +732,8 @@ const es: Strings = {
       blitz: 'Blitz',
       rapid: 'Rápidas',
       daily: 'Diaria',
+      classical: 'Clásica',
+      correspondence: 'Por correspondencia',
       practice: 'Práctica',
     },
     pawns: (n: number) => `${n.toFixed(1)} peones`,
@@ -1123,6 +1132,10 @@ const es: Strings = {
     notInGame: (username: string) =>
       `Ninguno de los jugadores es ${username} — elige con qué color jugaste, o "No soy yo" para dejarla fuera de tus estadísticas.`,
   },
+  setup: {
+    message:
+      'Para empezar, copia .env.example a .env.local y pon tus usuarios en CHESSCOM_USERNAME, LICHESS_USERNAME o ambos, luego reinicia Blitzr.',
+  },
   sync: {
     button: 'Sincronizar partidas',
     syncing: 'Sincronizando…',
@@ -1131,7 +1144,11 @@ const es: Strings = {
     rateLimited: 'Chess.com está limitando las peticiones — inténtalo de nuevo en unos minutos.',
     userNotFound: (username: string) => `Chess.com no tiene ningún jugador llamado "${username}".`,
     noUsername:
-      'CHESSCOM_USERNAME no está configurado. Copia .env.example a .env.local y rellénalo.',
+      'Es una partida de Chess.com y CHESSCOM_USERNAME no está configurado — configúralo en .env.local, o elige con qué color jugaste.',
+    lichessRateLimited:
+      'Lichess está limitando las peticiones — inténtalo de nuevo en unos minutos.',
+    lichessUserNotFound: (username: string) =>
+      `Lichess no tiene ningún jugador llamado "${username}".`,
     noLichessUsername:
       'Es una partida de Lichess y LICHESS_USERNAME no está configurado — configúralo en .env.local, o elige con qué color jugaste.',
     synced: (archives: number, games: number) =>
@@ -1298,8 +1315,6 @@ const es: Strings = {
     anyAccuracy: 'Cualquier precisión',
     accuracyAtLeast: 'Precisión ≥',
     accuracyAtMost: 'Precisión ≤',
-    setupUsername:
-      'Para empezar, copia .env.example a .env.local, pon tu usuario de Chess.com en CHESSCOM_USERNAME, reinicia Blitzr y haz clic en "Sincronizar partidas".',
     setupAnalyze:
       'Ahora haz clic en "Analizar todas" para encontrar tus errores. Stockfish se ejecuta en esta pestaña del navegador y sigue mientras navegas por otras páginas.',
   },

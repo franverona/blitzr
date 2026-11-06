@@ -62,8 +62,7 @@ export default async function TodayPage() {
 
       {!today.hasGames && (
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          {/* Without a username, syncing can't work yet, so say how to set it first. */}
-          {today.hasUsername ? s.today.noGames : s.gamesPage.setupUsername}{' '}
+          {s.today.noGames}{' '}
           <Link href="/games" className={LINK_CLASS}>
             {s.today.goToGames}
           </Link>

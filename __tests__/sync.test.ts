@@ -1,8 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { fetchArchiveMonth, fetchArchives } from '@/lib/chesscom/client'
+import { fetchLichessCreatedAt, fetchLichessGames } from '@/lib/lichess/client'
 import {
   autoSyncMinutes,
+  isArchiveKey,
   isSyncStale,
+  lichessArchiveYms,
   listPendingArchives,
   oldestOpenArchiveYm,
   pendingArchiveYms,
@@ -16,7 +19,35 @@ const repo = vi.hoisted(() => ({
   listManualGames: vi.fn(async (): Promise<unknown[]> => []),
 }))
 vi.mock('@/lib/db', () => ({ getRepository: () => repo }))
-vi.mock('@/lib/config', () => ({ getChesscomUsername: () => 'me' }))
+const usernames = vi.hoisted(() => ({
+  chesscom: 'me' as string | undefined,
+  lichess: undefined as string | undefined,
+}))
+vi.mock('@/lib/config', () => ({
+  siteUsername: (site: 'chesscom' | 'lichess') => usernames[site],
+}))
+vi.mock('@/lib/lichess/client', () => ({
+  fetchLichessCreatedAt: vi.fn(),
+  fetchLichessGames: vi.fn(),
+}))
+vi.mock('@/lib/lichess/normalize', () => ({
+  isOngoing: (raw: { status: string }) => raw.status === 'started',
+  normalizeLichessGame: (
+    raw: { id: string; status: string },
+    _username: string,
+    archiveYm: string,
+  ) =>
+    raw.status === 'started'
+      ? null
+      : {
+          id: `lichess:${raw.id}`,
+          archiveYm,
+          url: `https://lichess.org/${raw.id}`,
+          whiteUsername: 'me',
+          blackUsername: 'them',
+          movesSan: [raw.id],
+        },
+}))
 vi.mock('@/lib/chesscom/client', () => ({ fetchArchives: vi.fn(), fetchArchiveMonth: vi.fn() }))
 vi.mock('@/lib/chesscom/normalize', () => ({
   normalizeGame: (raw: { uuid: string; url?: string }, _username: string, archiveYm: string) => ({
@@ -156,7 +187,85 @@ describe('syncArchive', () => {
   })
 })
 
+describe('lichessArchiveYms', () => {
+  it('lists every month from the account creation to now, in UTC', () => {
+    const createdAt = Date.UTC(2025, 10, 30, 23)
+    expect(lichessArchiveYms(createdAt, new Date('2026-02-01T00:30:00Z'))).toEqual([
+      'lichess:2025-11',
+      'lichess:2025-12',
+      'lichess:2026-01',
+      'lichess:2026-02',
+    ])
+  })
+})
+
+describe('isArchiveKey', () => {
+  it("accepts both sites' keys and nothing else", () => {
+    expect(isArchiveKey('2026-08')).toBe(true)
+    expect(isArchiveKey('lichess:2026-08')).toBe(true)
+    expect(isArchiveKey('lichess:2026-8')).toBe(false)
+    expect(isArchiveKey('chesscom:2026-08')).toBe(false)
+  })
+})
+
+describe('syncArchive for Lichess', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ now: new Date('2026-09-15T12:00:00Z') })
+    vi.clearAllMocks()
+    usernames.lichess = 'lich'
+  })
+  afterEach(() => {
+    vi.useRealTimers()
+    usernames.lichess = undefined
+  })
+
+  it("fetches the month's UTC bounds and marks a closed month complete", async () => {
+    vi.mocked(fetchLichessGames).mockResolvedValue([{ id: 'x', status: 'mate' }] as never)
+    await syncArchive('lichess:2026-08')
+    expect(fetchLichessGames).toHaveBeenCalledWith(
+      'lich',
+      Date.UTC(2026, 7, 1),
+      Date.UTC(2026, 8, 1) - 1,
+    )
+    expect(repo.upsertGames).toHaveBeenCalledWith([
+      expect.objectContaining({ id: 'lichess:x', archiveYm: 'lichess:2026-08' }),
+    ])
+    expect(repo.markArchiveSynced).toHaveBeenCalledWith('lichess:2026-08', 'complete', 1)
+  })
+
+  it('keeps a closed month open while one of its games is still being played', async () => {
+    vi.mocked(fetchLichessGames).mockResolvedValue([
+      { id: 'x', status: 'mate' },
+      { id: 'y', status: 'started' },
+    ] as never)
+    await syncArchive('lichess:2026-08')
+    expect(repo.upsertGames).toHaveBeenCalledWith([expect.objectContaining({ id: 'lichess:x' })])
+    expect(repo.markArchiveSynced).toHaveBeenCalledWith('lichess:2026-08', 'partial', 2)
+  })
+})
+
 describe('listPendingArchives', () => {
+  it('lists Chess.com months, then Lichess ones, for the usernames set', async () => {
+    vi.useFakeTimers({ now: new Date('2026-09-15T12:00:00Z') })
+    usernames.lichess = 'lich'
+    vi.mocked(fetchArchives).mockResolvedValue([
+      'https://api.chess.com/pub/player/me/games/2026/09',
+    ])
+    vi.mocked(fetchLichessCreatedAt).mockResolvedValue(Date.UTC(2026, 7, 10))
+    repo.getArchiveSyncStatus.mockResolvedValueOnce([
+      { archiveYm: 'lichess:2026-08', status: 'complete' },
+    ])
+    expect(await listPendingArchives()).toEqual(['2026-09', 'lichess:2026-09'])
+
+    usernames.chesscom = undefined
+    vi.mocked(fetchArchives).mockClear()
+    expect(await listPendingArchives()).toEqual(['lichess:2026-08', 'lichess:2026-09'])
+    expect(fetchArchives).not.toHaveBeenCalled()
+    usernames.chesscom = 'me'
+    usernames.lichess = undefined
+    vi.useRealTimers()
+  })
+
   it("skips the user's complete months", async () => {
     vi.useFakeTimers({ now: new Date('2026-09-15T12:00:00Z') })
     vi.mocked(fetchArchives).mockResolvedValue(

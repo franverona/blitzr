@@ -18,13 +18,14 @@ API](https://www.chess.com/news/view/published-data-api), shows which openings y
 where you leave a repertoire you define, runs Stockfish in your browser to find your blunders,
 drills you on those positions with spaced repetition, and aggregates what keeps going wrong.
 
-**Blitzr is unaffiliated with Chess.com** and doesn't use its name, logos or marks in any way that
+**Blitzr is unaffiliated with Chess.com and Lichess** and doesn't use their names, logos or marks in any way that
 implies endorsement.
 
 ## Features
 
-- Incremental sync of your games into SQLite, plus adding any game by pasted PGN
-- Game list with opponent search and result/color/rated/accuracy filters
+- Incremental sync of your Chess.com and Lichess games into SQLite (either or both), plus adding
+  any game by pasted PGN
+- Game list with opponent search and result/color/rated/site/accuracy filters
 - Board replay, openings aggregated by ECO, and a user-defined repertoire with deviation detection
   and the most-played spots where your games run past it
 - In-browser Stockfish analysis: blunders, plain-English tactical explanations, move-quality and
@@ -60,7 +61,7 @@ import as is; `pnpm install` refuses older versions.
 ```bash
 npm install -g pnpm          # any recent pnpm runs the version package.json pins
 pnpm install
-cp .env.example .env.local   # set CHESSCOM_USERNAME (and LICHESS_USERNAME, if you play there)
+cp .env.example .env.local   # set CHESSCOM_USERNAME, LICHESS_USERNAME or both
 pnpm dev
 ```
 
@@ -171,13 +172,15 @@ download). See [Puzzles](#puzzles) for what each set contains.
 
 ### Sync
 
-Requests send a descriptive `User-Agent`, archives are fetched serially (the button shows
-month-by-month progress, and games appear as each month lands), and 429s are retried with backoff. Games Chess.com's API never exposes (e.g. "Play Bots" games) can be added with
+**Sync games** fetches from every site with a username set, Chess.com first, then Lichess.
+Requests send a descriptive `User-Agent`, months are fetched serially (the button shows
+month-by-month progress, and games appear as each month lands), and 429s are retried with backoff
+(a full minute for Lichess, as it asks). Lichess months run from your account's creation, and one
+stays open while a game started in it is still being played. Lichess has no profile pictures, so
+its players show their initial. Ratings on Today are kept per site. Variants chess.js can't replay
+(Horde, Racing Kings, Crazyhouse…) aren't stored. Games Chess.com's API never exposes (e.g. "Play Bots" games) can be added with
 **Add game by PGN**; they get their own id, so a later sync never touches them. A game that's
-already in Blitzr, synced or pasted, can't be added twice. Lichess games can be pasted too
-(set `LICHESS_USERNAME` so your side is picked for you): they keep their Lichess link and opening
-name, their ratings are kept apart from Chess.com's on Today, and once you have games from both
-sites the games list can filter by site. Pick which side
+already in Blitzr, synced or pasted, can't be added twice. Pick which side
 you played, or **Not me** for a game you only want to study: it can still be replayed and
 analyzed, but stays out of your openings, blunders, accuracy and drills. Pasted games can be
 deleted from their game page.
