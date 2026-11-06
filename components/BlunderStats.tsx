@@ -133,6 +133,25 @@ export function BlunderStats({ stats }: { stats: BlunderStatsData }) {
         </div>
       </section>
 
+      {stats.byClock.length > 0 && (
+        <section className="flex flex-col gap-2">
+          <SectionLabel>
+            <abbr title={s.blunderStats.byClockTooltip}>{s.blunderStats.byClock}</abbr>
+          </SectionLabel>
+          <div className="flex flex-wrap gap-2">
+            {stats.byClock.map((group) => (
+              <div
+                key={group.key}
+                className="flex items-center gap-1.5 rounded-md border border-zinc-200 px-2.5 py-1.5 text-sm dark:border-zinc-800"
+              >
+                <span className="font-medium">{group.label}</span>
+                <span className="text-zinc-500 dark:text-zinc-400">×{group.count}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       <section className="flex flex-col gap-2">
         <SectionLabel>{s.blunderStats.worstBlunders}</SectionLabel>
         <ul className="flex flex-col gap-1.5 text-sm">

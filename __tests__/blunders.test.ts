@@ -180,6 +180,23 @@ describe('buildBlunderStats', () => {
     expect(buildBlunderStats([early], analyses, 'es').byPhase[0].label).toBe('Apertura')
   })
 
+  it('groups own blunders by the clock left before the move, only in clocked games', () => {
+    const pgn = '1. e4 {[%clk 0:00:30]} 1... e5 {[%clk 0:03:00]} 2. a4 {[%clk 0:00:20]} *'
+    const evals = [cp(0), cp(0), cp(0), cp(-260)]
+    const clocked = makeGame({ id: 'clocked', pgn, movesSan: ['e4', 'e5', 'a4'] })
+    const daily = makeGame({ id: 'daily', pgn, timeControl: '-', movesSan: ['e4', 'e5', 'a4'] })
+    const analyses = new Map([
+      [clocked.id, makeAnalysis(clocked.id, evals)],
+      [daily.id, makeAnalysis(daily.id, evals)],
+    ])
+
+    // 30s of 180 left before 2.a4.
+    expect(buildBlunderStats([clocked, daily], analyses).byClock).toEqual([
+      { key: 'short', label: 'Under a fifth', count: 1, avgSwingCp: 260 },
+    ])
+    expect(buildBlunderStats([daily], analyses).byClock).toEqual([])
+  })
+
   it('excludes blunders on the opponent’s plies', () => {
     // ply 1 is white (the pawn move, fine); ply 2 is black — but this game's
     // myColor is white, so black's blunder shouldn't count.

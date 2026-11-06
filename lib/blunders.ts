@@ -1,5 +1,6 @@
 import type { PieceSymbol } from 'chess.js'
 import { findBlunders } from './analysis'
+import { clockShareBeforePly, initialClockSeconds, plyClocks } from './clock'
 import { formatDate } from './dates'
 import { isNearBestMove, whiteToMove } from './drill'
 import { getLocale } from './i18n/locale'
@@ -88,6 +89,21 @@ const PHASE_LABELS: Record<Locale, Record<GamePhase, string>> = {
 }
 const PHASE_ORDER: GamePhase[] = ['opening', 'middlegame', 'endgame']
 
+type ClockBucket = 'plenty' | 'some' | 'short'
+const CLOCK_ORDER: ClockBucket[] = ['plenty', 'some', 'short']
+const CLOCK_LABELS: Record<Locale, Record<ClockBucket, string>> = {
+  en: { plenty: 'Over half your time', some: 'A fifth to half', short: 'Under a fifth' },
+  es: {
+    plenty: 'Más de la mitad del tiempo',
+    some: 'De un quinto a la mitad',
+    short: 'Menos de un quinto',
+  },
+}
+
+function clockBucket(share: number): ClockBucket {
+  return share > 0.5 ? 'plenty' : share >= 0.2 ? 'some' : 'short'
+}
+
 /**
  * Cross-game aggregate of the user's own blunders over analyzed games. The
  * caller merges in `trend`.
@@ -103,6 +119,7 @@ export function buildBlunderStats(
   const byPiece = new Map<string, GroupAcc>()
   const byReason = new Map<string, GroupAcc>()
   const byPhase = new Map<string, GroupAcc>()
+  const byClock = new Map<string, GroupAcc>()
   const worst: BlunderCandidate[] = []
   let analyzedGames = 0
   let totalBlunders = 0
@@ -117,6 +134,8 @@ export function buildBlunderStats(
     const opponent = game.myColor === 'white' ? game.blackUsername : game.whiteUsername
     const gameLabel = `vs ${opponent} · ${formatDate(game.endTime)}`
     let positions: string[] | undefined
+    const initialClock = initialClockSeconds(game.timeControl)
+    const clocks = initialClock ? plyClocks(game.pgn, game.movesSan.length) : null
 
     for (const blunder of findBlunders(analysis.evals, game.movesSan, game.initialFen)) {
       const isMine = whiteToMove(blunder.ply, game.initialFen) === (game.myColor === 'white')
@@ -150,6 +169,10 @@ export function buildBlunderStats(
       accumulate(byReason, reasonKind, reasonLabel, blunder.swingCp, isMateSwing)
       const phase = gamePhase(positions[blunder.ply - 1])
       accumulate(byPhase, phase, PHASE_LABELS[locale][phase], blunder.swingCp, isMateSwing)
+      if (clocks && initialClock) {
+        const bucket = clockBucket(clockShareBeforePly(clocks, blunder.ply, initialClock))
+        accumulate(byClock, bucket, CLOCK_LABELS[locale][bucket], blunder.swingCp, isMateSwing)
+      }
 
       worst.push({
         gameId: game.id,
@@ -205,6 +228,11 @@ export function buildBlunderStats(
     // Game order, not count order: the point is where in the game they happen.
     byPhase: toGroupStats(byPhase).sort(
       (a, b) => PHASE_ORDER.indexOf(a.key as GamePhase) - PHASE_ORDER.indexOf(b.key as GamePhase),
+    ),
+    // Most time left first; only games whose PGN has a clock for every move.
+    byClock: toGroupStats(byClock).sort(
+      (a, b) =>
+        CLOCK_ORDER.indexOf(a.key as ClockBucket) - CLOCK_ORDER.indexOf(b.key as ClockBucket),
     ),
     worst: topWorst,
   }

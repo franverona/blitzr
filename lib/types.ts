@@ -308,6 +308,8 @@ export interface BlunderStats {
   byReason: BlunderGroupStat[]
   /** Opening, middlegame, endgame (`gamePhase()`), in that order. */
   byPhase: BlunderGroupStat[]
+  /** By the share of the starting clock left before the move; empty without clocked games. */
+  byClock: BlunderGroupStat[]
   worst: WorstBlunder[]
   /** Oldest first, one point per analyzed game in scope. */
   trend: AccuracyTrendPoint[]

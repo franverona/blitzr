@@ -91,7 +91,8 @@ export async function fetchLichessGames(
       ongoing: 'true',
       // Off by default: without it the PGN has no ECO or Opening header.
       opening: 'true',
-      clocks: 'false',
+      // `[%clk]` per move, for /blunders' time left.
+      clocks: 'true',
       evals: 'false',
     })
     const body = await get(
