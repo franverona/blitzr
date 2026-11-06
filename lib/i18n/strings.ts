@@ -498,6 +498,7 @@ const en = {
     fromStart: 'From your game, at the start',
     backToGame: '← Back to the game',
     strength: 'Bot strength',
+    strengthLocked: 'Resign or restart to change it.',
     eloLabel: (elo: number, approximate: boolean) => `${approximate ? '~' : ''}${elo}`,
     approximateHelp: "Levels under 1320 use Stockfish's Skill Level, so their rating is a guess.",
     thinking: 'Stockfish is thinking…',
@@ -1183,6 +1184,7 @@ const es: Strings = {
     fromStart: 'Desde tu partida, al inicio',
     backToGame: '← Volver a la partida',
     strength: 'Fuerza del bot',
+    strengthLocked: 'Ríndete o reinicia para cambiarla.',
     eloLabel: (elo: number, approximate: boolean) => `${approximate ? '~' : ''}${elo}`,
     approximateHelp:
       'Los niveles por debajo de 1320 usan el Skill Level de Stockfish, así que su Elo es aproximado.',

@@ -5,11 +5,13 @@ import { Chess } from 'chess.js'
 import { Chessboard } from 'react-chessboard'
 import { getStrings } from '@/lib/i18n/strings'
 import { legalDestinations } from '@/lib/legalMoves'
+import { buildPositions } from '@/lib/positions'
 import { StockfishEngine } from '@/lib/stockfish/client'
 import type { MyColor } from '@/lib/types'
 import { BoardCoordinates } from './BoardCoordinates'
 import { ErrorText } from './ErrorText'
 import { LegalMoveSquare } from './LegalMoveSquare'
+import { MoveList } from './MoveList'
 import { PromotionPicker, type PromotionPiece } from './PromotionPicker'
 import { useMoveSound, useSettings } from './SettingsProvider'
 import { buttonClass } from './styles'
@@ -48,6 +50,7 @@ export function PlayoutBoard({
   messages,
   onGameOver,
   boardMaxWidthClassName,
+  sidebar,
   footer,
 }: {
   initialFen: string
@@ -60,6 +63,9 @@ export function PlayoutBoard({
   messages: PlayoutMessages
   onGameOver?: (movesSan: string[], outcome: PlayoutOutcome, resigned: boolean) => void
   boardMaxWidthClassName: string
+  /** Adds a sidebar with the move list, `sidebar.top` above it. `inProgress`: the user has
+   *  moved and the game hasn't ended. */
+  sidebar?: { top?: (inProgress: boolean) => React.ReactNode; className: string }
   footer?: React.ReactNode
 }) {
   const s = getStrings()
@@ -79,6 +85,10 @@ export function PlayoutBoard({
   const [pendingPromotion, setPendingPromotion] = useState<{ from: string; to: string } | null>(
     null,
   )
+  // A ply picked in the move list to look back at; null follows the game.
+  const [viewPly, setViewPly] = useState<number | null>(null)
+  const positions = useMemo(() => buildPositions(initialFen, movesSan), [initialFen, movesSan])
+  const shownFen = viewPly === null ? fen : positions[viewPly]
   // Bumped on restart, so a reply still in flight for the old game is dropped.
   const gameRef = useRef(0)
   const [gameCount, setGameCount] = useState(0)
@@ -94,9 +104,9 @@ export function PlayoutBoard({
     },
     [],
   )
-  useMoveSound(fen)
+  useMoveSound(shownFen)
 
-  const myTurn = !outcome && !thinking && new Chess(fen).turn() === myTurnLetter
+  const myTurn = viewPly === null && !outcome && !thinking && new Chess(fen).turn() === myTurnLetter
   const myMoves = startsWithMe ? Math.ceil(movesSan.length / 2) : Math.floor(movesSan.length / 2)
   const legalMoves = useMemo(
     () => (selectedSquare ? legalDestinations(fen, selectedSquare) : []),
@@ -137,6 +147,7 @@ export function PlayoutBoard({
     const next = [...line, move.san]
     setFen(chess.fen())
     setMovesSan(next)
+    setViewPly(null)
     end(next, finished(chess, myColor, false, goalIsPromotion))
   }
 
@@ -169,7 +180,8 @@ export function PlayoutBoard({
   }, [gameCount])
 
   function attemptMove(from: string, to: string, promotion?: PromotionPiece): boolean {
-    if (!myTurn || pendingPromotion) return false
+    // choosePromotion() calls this in the same render, while pendingPromotion is still set.
+    if (!myTurn || (pendingPromotion && !promotion)) return false
     if (!promotion && legalDestinations(fen, from).some((m) => m.to === to && m.isPromotion)) {
       setPendingPromotion({ from, to })
       return false
@@ -208,6 +220,7 @@ export function PlayoutBoard({
     setEngineFailed(false)
     setSelectedSquare(null)
     setPendingPromotion(null)
+    setViewPly(null)
   }
 
   function handleResign() {
@@ -230,7 +243,7 @@ export function PlayoutBoard({
     if (piece) setSelectedSquare(square)
   }
 
-  return (
+  const boardColumn = (
     <div className={`flex w-full shrink-0 flex-col gap-3 ${boardMaxWidthClassName}`}>
       <div className="flex min-h-9 flex-wrap items-center justify-between gap-2">
         <p
@@ -250,7 +263,7 @@ export function PlayoutBoard({
                 ? messages.lost
                 : thinking
                   ? messages.thinking
-                  : s.endgamePlayout.yourMove(s.common.color[myColor], myMoves + 1)}
+                  : s.endgamePlayout.yourMove(s.common.color[myColor], Number(fen.split(' ')[5]))}
         </p>
         <div className="flex shrink-0 gap-2">
           {allowResign && !outcome && (
@@ -268,7 +281,7 @@ export function PlayoutBoard({
         <div className="relative w-full overflow-hidden rounded shadow-lg">
           <Chessboard
             options={{
-              position: fen,
+              position: shownFen,
               boardOrientation: myColor,
               allowDragging: myTurn && !pendingPromotion,
               onPieceDrop: ({ sourceSquare, targetSquare }) =>
@@ -294,6 +307,29 @@ export function PlayoutBoard({
 
       {footer}
       {engineFailed && <ErrorText>{s.endgamePlayout.engineFailed}</ErrorText>}
+    </div>
+  )
+
+  if (!sidebar) return boardColumn
+  return (
+    <div className="flex flex-col gap-4 lg:flex-row lg:justify-center">
+      {boardColumn}
+      {/* The content is absolute at lg+, so the move list can't grow the row past the board. */}
+      <div className={`relative w-full ${sidebar.className}`}>
+        <div className="flex flex-col gap-3 lg:absolute lg:inset-0">
+          {sidebar.top?.(myMoves > 0 && !outcome)}
+          <MoveList
+            movesSan={movesSan}
+            ply={viewPly ?? movesSan.length}
+            onSelect={(p) => {
+              setSelectedSquare(null)
+              setViewPly(p === movesSan.length ? null : p)
+            }}
+            positions={positions}
+            myColor={myColor}
+          />
+        </div>
+      </div>
     </div>
   )
 }

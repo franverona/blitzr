@@ -32,40 +32,45 @@ export function BotPlayout({
   const s = getStrings()
   const router = useRouter()
 
-  return (
-    <div className="flex flex-col items-center gap-3">
-      <label className="flex items-center gap-2 self-start text-sm text-zinc-600 lg:self-center dark:text-zinc-400">
-        <abbr title={s.playBot.approximateHelp}>{s.playBot.strength}</abbr>
-        <Select
-          value={elo}
-          onChange={(e) => {
-            startRouteProgress()
-            router.push(`/games/${gameId}/play?ply=${ply}&elo=${e.target.value}`)
-          }}
-          className={INPUT_CLASS}
-        >
-          {BOT_ELOS.map((level) => (
-            <option key={level} value={level}>
-              {s.playBot.eloLabel(level, isApproximateElo(level))}
-            </option>
-          ))}
-        </Select>
-      </label>
-      <PlayoutBoard
-        initialFen={initialFen}
-        myColor={myColor}
-        engineOptions={botUciOptions(elo)}
-        movetimeMs={botMovetimeMs(elo)}
-        allowResign
-        messages={{
-          thinking: s.playBot.thinking,
-          won: s.playBot.won,
-          drawn: s.playBot.drawn,
-          lost: s.playBot.lost,
+  // Changing it reloads the page, so it's locked mid-game rather than discarding the game.
+  const strengthPicker = (inProgress: boolean) => (
+    <label className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+      <abbr title={s.playBot.approximateHelp}>{s.playBot.strength}</abbr>
+      <Select
+        value={elo}
+        disabled={inProgress}
+        onChange={(e) => {
+          startRouteProgress()
+          router.push(`/games/${gameId}/play?ply=${ply}&elo=${e.target.value}`)
         }}
-        // lg+: 17rem ≈ the header, strength picker and status row around the board.
-        boardMaxWidthClassName="max-w-140 lg:max-w-[min(35rem,calc(100dvh-17rem))]"
-      />
-    </div>
+        className={INPUT_CLASS}
+      >
+        {BOT_ELOS.map((level) => (
+          <option key={level} value={level}>
+            {s.playBot.eloLabel(level, isApproximateElo(level))}
+          </option>
+        ))}
+      </Select>
+      {inProgress && <span className="text-xs">{s.playBot.strengthLocked}</span>}
+    </label>
+  )
+
+  return (
+    <PlayoutBoard
+      initialFen={initialFen}
+      myColor={myColor}
+      engineOptions={botUciOptions(elo)}
+      movetimeMs={botMovetimeMs(elo)}
+      allowResign
+      sidebar={{ top: strengthPicker, className: 'lg:max-w-xs xl:max-w-sm' }}
+      messages={{
+        thinking: s.playBot.thinking,
+        won: s.playBot.won,
+        drawn: s.playBot.drawn,
+        lost: s.playBot.lost,
+      }}
+      // lg+: 11rem ≈ the header, status row and coordinates around the board.
+      boardMaxWidthClassName="max-w-160 lg:max-w-[min(40rem,calc(100dvh-11rem))] xl:max-w-[min(43rem,calc(100dvh-11rem))] 2xl:max-w-[min(46rem,calc(100dvh-11rem))]"
+    />
   )
 }
