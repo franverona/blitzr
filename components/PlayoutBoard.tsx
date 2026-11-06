@@ -140,10 +140,17 @@ export function PlayoutBoard({
     return (await search).bestMove?.san ?? null
   }
 
-  function applyEngineMove(afterFen: string, line: string[], san: string | null) {
+  // The whole line, not the latest FEN: a FEN has no history, so it can't see threefold repetition.
+  function replay(line: string[]): Chess {
+    const chess = new Chess(initialFen)
+    for (const san of line) chess.move(san)
+    return chess
+  }
+
+  function applyEngineMove(line: string[], san: string | null) {
     setThinking(false)
     if (!san) return
-    const chess = new Chess(afterFen)
+    const chess = replay(line)
     const move = chess.move(san)
     const next = [...line, move.san]
     setFen(chess.fen())
@@ -161,7 +168,7 @@ export function PlayoutBoard({
     const game = gameRef.current
     setThinking(true)
     searchMove(afterFen).then(
-      (san) => game === gameRef.current && applyEngineMove(afterFen, line, san),
+      (san) => game === gameRef.current && applyEngineMove(line, san),
       () => game === gameRef.current && engineFailure(),
     )
   }
@@ -171,7 +178,7 @@ export function PlayoutBoard({
     if (!engineOpens) return
     let cancelled = false
     searchMove(initialFen).then(
-      (san) => !cancelled && applyEngineMove(initialFen, [], san),
+      (san) => !cancelled && applyEngineMove([], san),
       () => !cancelled && engineFailure(),
     )
     return () => {
@@ -187,7 +194,7 @@ export function PlayoutBoard({
       setPendingPromotion({ from, to })
       return false
     }
-    const chess = new Chess(fen)
+    const chess = replay(movesSan)
     let move
     try {
       move = chess.move({ from, to, promotion })
