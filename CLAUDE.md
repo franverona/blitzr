@@ -260,7 +260,7 @@ backups and `polgar-mates.json` elsewhere. The `data/` paths below assume the de
 - **Lichess** (`lib/lichess/`, `https://lichess.org/api`, no token) has no monthly archives, so
   `listPendingArchives()` makes them: `lichess:YYYY-MM` keys (in `sync_state` and `archive_ym`;
   Chess.com's stay bare) from the account's `createdAt`, each fetched as NDJSON, 1000 games a request oldest first (one request for a busy month outlasts the timeout), with `since`/`until`
-  on the game's _start_, `ongoing=true`. A month with an unfinished game stays `partial`, or that
+  on the game's _start_, `ongoing=true`, `opening=true` (else the PGN has no ECO or Opening). A month with an unfinished game stays `partial`, or that
   (correspondence) game would be missed. `normalizeLichessGame()` runs the PGN through
   `parseManualGame()` and takes `status` (resign/outoftime/timeout/draw → result codes), `speed`
   (`ultraBullet` → `bullet`), `rated` and `lastMoveAt` from the export; ids are `lichess:<id>`.
@@ -465,7 +465,9 @@ spot links to it) and shows as a clearable chip. The auto-advance checkbox lives
 
 `buildBlunderStats()`, `buildAccuracyTrend()` and `findThrownWins()` are pure aggregations merged by
 `getBlunderStats()`, which applies the `?from=&to=` date range (local calendar days) to every
-section. The trend chart's x-axis is game index, not date, because sessions are bursty. `byReason`
+section. `byOpening` groups by family label, each ECO code named by its most common one over every own
+game (`openingFamilyLabels()`), so Chess.com's and Lichess's names for an opening meet; `/drill?opening=`
+and Today's weak spot use the same labels. The trend chart's x-axis is game index, not date, because sessions are bursty. `byReason`
 runs `detectBlunderReason()` on every own blunder (the worst list only on its top 10), so it's as
 narrow as that detector: most blunders land in "no simple pattern". `punish` counts the
 opponent's blunders the user got to answer and the replies `isNearBestMove()` accepts, the same

@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { buildOpeningFamilies, ecoFamilyLabel } from '@/lib/openings'
+import {
+  buildOpeningFamilies,
+  ecoFamilyLabel,
+  openingFamilyLabel,
+  openingFamilyLabels,
+} from '@/lib/openings'
 import type { Game } from '@/lib/types'
 
 function makeGame(overrides: Partial<Game>): Game {
@@ -41,6 +46,34 @@ describe('ecoFamilyLabel', () => {
 
   it('returns the whole string when there is no colon', () => {
     expect(ecoFamilyLabel('Italian Game')).toBe('Italian Game')
+  })
+})
+
+describe('openingFamilyLabels', () => {
+  it("names each ECO code by its most common label, whichever site's game it is", () => {
+    const chesscom = { ecoCode: 'B23', ecoName: 'Closed Sicilian Defense Grand Prix Attack' }
+    const lichess = {
+      ecoCode: 'B23',
+      ecoName: 'Sicilian Defense: Closed Variation, Grand Prix Attack',
+    }
+    const games = [makeGame(chesscom), makeGame(lichess), makeGame(lichess)]
+    const labels = openingFamilyLabels(games)
+    expect(labels.get('B23')).toBe('Sicilian Defense')
+    expect(games.map((g) => openingFamilyLabel(g, labels))).toEqual([
+      'Sicilian Defense',
+      'Sicilian Defense',
+      'Sicilian Defense',
+    ])
+  })
+
+  it("falls back to the game's own name, then unknown, without a labelled code", () => {
+    const labels = openingFamilyLabels([])
+    expect(openingFamilyLabel(makeGame({ ecoCode: null, ecoName: 'Italian Game' }), labels)).toBe(
+      'Italian Game',
+    )
+    expect(openingFamilyLabel(makeGame({ ecoCode: null, ecoName: null }), labels, 'en')).toBe(
+      'Unknown opening',
+    )
   })
 })
 

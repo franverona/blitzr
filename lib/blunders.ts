@@ -5,7 +5,7 @@ import { isNearBestMove, whiteToMove } from './drill'
 import { getLocale } from './i18n/locale'
 import type { Locale } from './i18n/locale'
 import { gamePhase, type GamePhase } from './material'
-import { ecoFamilyLabel, unknownOpeningLabel } from './openings'
+import { openingFamilyLabel, openingFamilyLabels } from './openings'
 import { buildPositions } from './positions'
 import { describeMove, pieceName, splitSanPiece } from './san'
 import { describeBetterMove, detectBlunderReason } from './tactics'
@@ -96,6 +96,8 @@ export function buildBlunderStats(
   games: Game[],
   analysesByGameId: Map<string, GameAnalysis>,
   locale: Locale = getLocale(),
+  /** `openingFamilyLabels()` of every game, so a date range can't rename an opening. */
+  familyLabels: Map<string, string> = openingFamilyLabels(games),
 ): Omit<BlunderStats, 'trend' | 'thrownWins'> {
   const byOpening = new Map<string, GroupAcc>()
   const byPiece = new Map<string, GroupAcc>()
@@ -133,8 +135,8 @@ export function buildBlunderStats(
       const isMateSwing = blunder.evalBefore.mate !== null || blunder.evalAfter.mate !== null
 
       // By name, not ECO code: one family spans several codes, and /drill?opening= (linked
-      // from Today's weak spot) filters by this same label.
-      const ecoLabel = game.ecoName ? ecoFamilyLabel(game.ecoName) : unknownOpeningLabel(locale)
+      // from Today's weak spot) filters by this same label. Named per code, so sites agree.
+      const ecoLabel = openingFamilyLabel(game, familyLabels, locale)
       accumulate(byOpening, ecoLabel, ecoLabel, blunder.swingCp, isMateSwing)
 
       const { key, label } = pieceKey(blunder.moveSan, locale)
