@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { findDuplicateGame, parseManualGame } from '@/lib/manualGame'
+import { findDuplicateGame, parseManualGame, pgnSite } from '@/lib/manualGame'
 
 // Exact PGN from issue #62 — a "Play vs Bot" game, the case the public
 // Chess.com API never exposes at all.
@@ -179,6 +179,63 @@ describe('parseManualGame', () => {
     } finally {
       vi.unstubAllEnvs()
     }
+  })
+})
+
+const LICHESS_PGN = `[Event "Rated blitz game"]
+[Site "https://lichess.org/AbCd1234"]
+[Date "2026.10.01"]
+[White "franv"]
+[Black "someone"]
+[Result "1-0"]
+[WhiteElo "1650"]
+[BlackElo "1640"]
+[ECO "C20"]
+[Opening "King's Pawn Game"]
+[Termination "Time forfeit"]
+
+1. e4 e5 2. Qh5 Nc6 3. Bc4 Nf6 4. Qxf7# 1-0`
+
+describe('Lichess PGNs', () => {
+  it('keeps the site, link and opening name', () => {
+    const game = parseManualGame(LICHESS_PGN, 'franv')
+    expect(pgnSite(LICHESS_PGN)).toBe('lichess')
+    expect(game.site).toBe('lichess')
+    expect(game.url).toBe('https://lichess.org/AbCd1234')
+    expect(game.ecoName).toBe("King's Pawn Game")
+    expect(game.myColor).toBe('white')
+  })
+
+  it('treats anything else as Chess.com', () => {
+    expect(pgnSite(BOT_GAME_PGN)).toBe('chesscom')
+    expect(parseManualGame(BOT_GAME_PGN, 'fverona').site).toBe('chesscom')
+    const forged = LICHESS_PGN.replace('https://lichess.org', 'https://lichess.org.evil.example')
+    expect(pgnSite(forged)).toBe('chesscom')
+    expect(parseManualGame(forged, 'franv').url).toBe('')
+  })
+
+  it("reads the API export's /game/ link, keeping the canonical one", () => {
+    const exported = LICHESS_PGN.replace('lichess.org/AbCd1234', 'lichess.org/game/AbCd1234')
+    expect(parseManualGame(exported, 'franv').site).toBe('lichess')
+    expect(parseManualGame(exported, 'franv').url).toBe('https://lichess.org/AbCd1234')
+  })
+
+  it('matches the same Lichess game by id, whatever the URL form', () => {
+    const pasted = parseManualGame(LICHESS_PGN, 'franv')
+    const again = {
+      ...pasted,
+      id: 'again',
+      movesSan: ['d4'],
+      url: 'https://lichess.org/AbCd1234wxyz',
+    }
+    expect(findDuplicateGame(pasted, [again])).toBe(again)
+    const black = { ...again, url: 'https://lichess.org/AbCd1234/black' }
+    expect(findDuplicateGame(pasted, [black])).toBe(black)
+    const exported = { ...again, url: 'https://lichess.org/game/AbCd1234' }
+    expect(findDuplicateGame(pasted, [exported])).toBe(exported)
+    expect(findDuplicateGame(pasted, [black])).toBe(black)
+    const other = { ...pasted, id: 'other', url: 'https://lichess.org/Zzzz9999' }
+    expect(findDuplicateGame(pasted, [other])).toBeUndefined()
   })
 })
 

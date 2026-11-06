@@ -64,8 +64,9 @@ export default async function GamePage({
       ? 'black'
       : 'white'
     : null
+  // Lichess has no profile pictures, so its players keep the initial-letter badge.
   const avatar = (color: MyColor, username: string) =>
-    practiceBot === color
+    practiceBot === color || game.site !== 'chesscom'
       ? null
       : botColor === color
         ? fetchBotAvatar(username)
@@ -237,7 +238,7 @@ function GameHeader({
           <>
             {' · '}
             <a href={game.url} target="_blank" rel="noopener noreferrer" className={LINK_CLASS}>
-              {s.gamePage.viewOnChessCom}
+              {game.site === 'lichess' ? s.gamePage.viewOnLichess : s.gamePage.viewOnChessCom}
             </a>
           </>
         )}

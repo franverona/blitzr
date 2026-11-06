@@ -40,6 +40,7 @@ function game(overrides: Partial<Game>): Game {
     ecoName: null,
     ecoUrl: null,
     archiveYm: '2026-10',
+    site: 'chesscom',
     createdAt: '',
     ...overrides,
   }
@@ -65,10 +66,21 @@ describe('recentResults', () => {
       losses: 1,
       draws: 1,
       ratings: [
-        { timeClass: 'blitz', rating: 1205, change: 25 },
-        { timeClass: 'rapid', rating: 1500, change: 0 },
+        { site: 'chesscom', timeClass: 'blitz', rating: 1205, change: 25 },
+        { site: 'chesscom', timeClass: 'rapid', rating: 1500, change: 0 },
       ],
     })
+  })
+
+  it("keeps each site's ratings apart", () => {
+    const games = [
+      game({ id: 'c', endTime: daysAgo(2), whiteRating: 1200 }),
+      game({ id: 'l', site: 'lichess', endTime: daysAgo(1), whiteRating: 1600 }),
+    ]
+    expect(recentResults(games, now).ratings).toEqual([
+      { site: 'chesscom', timeClass: 'blitz', rating: 1200, change: 0 },
+      { site: 'lichess', timeClass: 'blitz', rating: 1600, change: 0 },
+    ])
   })
 
   it('skips time classes not played recently', () => {

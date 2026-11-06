@@ -90,6 +90,7 @@ export function buildPracticeGame({
     ecoUrl: null,
     archiveYm: 'practice',
     createdAt: now.toISOString(),
+    site: source.site,
     practiceOf: { gameId: source.id, ply },
   }
 }

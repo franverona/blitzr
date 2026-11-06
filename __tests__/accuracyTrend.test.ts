@@ -32,6 +32,7 @@ function makeGame(overrides: Partial<Game>): Game {
     ecoName: null,
     ecoUrl: null,
     archiveYm: '2023-11',
+    site: 'chesscom',
     createdAt: '',
     ...overrides,
   }

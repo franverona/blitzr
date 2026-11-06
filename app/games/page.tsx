@@ -4,6 +4,7 @@ import {
   getGameAccuracyById,
   getPracticeAccuracyById,
   getUnanalyzedGames,
+  getGameSites,
   listGames,
 } from '../actions'
 import { AddPgnButton } from '@/components/AddPgnButton'
@@ -24,6 +25,7 @@ type GamesSearchParams = {
   result?: string
   color?: string
   rated?: string
+  site?: string
   accOp?: string
   accValue?: string
   practice?: string
@@ -34,16 +36,28 @@ export default async function GamesPage({
 }: {
   searchParams: Promise<GamesSearchParams>
 }) {
-  const { page: pageParam, q, result, color, rated, accOp, accValue, practice } = await searchParams
+  const {
+    page: pageParam,
+    q,
+    result,
+    color,
+    rated,
+    site: siteParam,
+    accOp,
+    accValue,
+    practice,
+  } = await searchParams
+  const site = siteParam === 'chesscom' || siteParam === 'lichess' ? siteParam : undefined
   // Practice games only; they have no accuracy filter, since getGameAccuracyById() skips them.
   const practiceOnly = practice === '1'
   const page = Math.max(1, Number(pageParam) || 1)
   const opponent = q?.trim() || undefined
 
   // Accuracy isn't a column, so the filter narrows to an id set first.
-  const [accuracyByGameId, unanalyzedGames] = await Promise.all([
+  const [accuracyByGameId, unanalyzedGames, sites] = await Promise.all([
     getGameAccuracyById(),
     getUnanalyzedGames(),
+    getGameSites(),
   ])
   // `Number('')` is 0, and a malformed value is NaN, which would match no game.
   const accuracyThreshold = accValue ? Number(accValue) : NaN
@@ -63,6 +77,7 @@ export default async function GamesPage({
     result: result as MyResult | undefined,
     color: color as MyColor | undefined,
     rated: rated ? rated === 'true' : undefined,
+    site: practiceOnly ? undefined : site,
     gameIds,
     practice: practiceOnly,
   })
@@ -72,7 +87,7 @@ export default async function GamesPage({
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
   const filters = practiceOnly
     ? { q, result, color, practice }
-    : { q, result, color, rated, accOp, accValue }
+    : { q, result, color, rated, site, accOp, accValue }
   const filtered = Object.values(filters).some((v) => v !== undefined && v !== '')
   // A stale or hand-typed page past the end would otherwise show "no games".
   if (page > totalPages) redirect(pageHref(totalPages, filters))
@@ -104,11 +119,14 @@ export default async function GamesPage({
 
       <GameSearchForm
         // q/accOp/accValue excluded so typing and the accuracy popover survive their own navigations.
-        key={`${result ?? ''}-${color ?? ''}-${rated ?? ''}-${practice ?? ''}`}
+        key={`${result ?? ''}-${color ?? ''}-${rated ?? ''}-${site ?? ''}-${practice ?? ''}`}
         defaultValue={q ?? ''}
         result={result}
         color={color}
         rated={rated}
+        site={site}
+        // A set filter stays visible so it can be cleared.
+        showSite={sites.length > 1 || site !== undefined}
         accOp={accOp}
         accValue={accValue}
         practice={practiceOnly ? '1' : undefined}

@@ -30,6 +30,7 @@ const source: Game = {
   ecoName: 'Bishops Opening',
   ecoUrl: null,
   archiveYm: '2026-09',
+  site: 'chesscom',
   createdAt: '',
 }
 
