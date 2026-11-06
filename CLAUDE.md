@@ -37,6 +37,7 @@ app/
   layout.tsx                # sidebar nav + main content, reads settings cookies
   error.tsx / not-found.tsx / loading.tsx  # root fallbacks; loading streams, so `notFound()` returns 200
   games/[id]/page.tsx       # single game — replay, analysis
+  games/[id]/play/page.tsx  # one of its positions played against Stockfish at a chosen Elo
   openings/page.tsx         # ECO family aggregation
   learn/page.tsx            # lesson index
   learn/[slug]/page.tsx     # one lesson
@@ -65,7 +66,9 @@ components/
   TroubleCards.tsx          # /drill: the cards missed again and again, as positions
   PuzzleBoard.tsx           # manual, multi-ply mate-puzzle solving
   LessonPractice.tsx        # Study/Quiz toggle for a lesson; LessonQuiz.tsx is quiz mode
+  PlayoutBoard.tsx          # a position played out against Stockfish (EndgamePlayout, BotPlayout)
   EndgamePlayout.tsx        # endgame lessons' Play mode: the position against Stockfish
+  BotPlayout.tsx            # /games/[id]/play: the strength picker + PlayoutBoard
   SettingsProvider.tsx      # per-viewer settings context (cookie-seeded)
   BulkAnalysisProvider.tsx  # "Analyze all" run state, mounted in the root layout
   SyncProvider.tsx          # sync run state + auto-sync on open, mounted in the root layout
@@ -86,12 +89,13 @@ components/
   RouteProgressBar.tsx      # top bar during navigation (root layout); router.push() callers
                             # call startRouteProgress(), since App Router has no start event
   PositionActions.tsx       # copy FEN / PGN, open in Lichess, under the game page's nav
-  PromotionPicker.tsx       # piece picker shared by puzzles, drills and explore mode
+  PromotionPicker.tsx       # piece picker shared by puzzles, drills, playouts and explore mode
   ...                       # smaller presentational components
 lib/
   types.ts                  # domain types (camelCase)
   theme.ts                  # board color presets, arrow colors, animation duration
   analysis.ts               # findBlunders(), moveSwingCp(), formatEval()
+  botStrength.ts            # bot Elo levels -> Stockfish setoption commands
   moveQuality.ts            # per-move tiers + Lichess-style accuracy
   tactics.ts / hangingPiece.ts  # tactical detectors and their descriptions
   checklist.ts              # static per-position tactic scan
@@ -341,8 +345,19 @@ one per "Next line" (not on the first render, which would hydrate differently).
   board leaves it.
 - `PositionActions` (game page, under the nav controls) copies the FEN on screen and the game's
   PGN, or the explored line's PGN (`linePgn()`) while exploring, and links to Lichess analysis.
+  Its **Play from here** (recorded plies only, not on a finished position) opens
+  `/games/<id>/play?ply=`.
 - `useLiveAnalysisContext()` returns an empty default without a provider, so `/learn` can render
   `BoardView` without spinning up an engine.
+
+### Play vs bot
+
+`/games/[id]/play?ply=&elo=` rebuilds the position from the stored game (the URL never carries a
+FEN) and plays it in `PlayoutBoard` against Stockfish, the user on `myColor` (a "not me" game: the
+side to move); the engine moves first when it's its turn. `BOT_ELOS` (`lib/botStrength.ts`):
+1400+ is `UCI_LimitStrength` + `UCI_Elo` (Stockfish's floor is 1320); 800/1000/1200 use
+`Skill Level` with a guessed mapping, labeled `~`. `StockfishEngine.configure()` sends the options
+once, before the first search. Nothing is saved yet.
 
 ## Games list filters
 

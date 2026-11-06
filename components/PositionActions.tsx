@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { Chess } from 'chess.js'
 import { getStrings } from '@/lib/i18n/strings'
 import { lichessAnalysisUrl, linePgn } from '@/lib/share'
 import { useBoardContext } from './BoardContext'
@@ -11,8 +13,9 @@ const COPIED_FEEDBACK_MS = 1500
 const BUTTON_CLASS = buttonClass({ size: 'xs' })
 
 /** Copy FEN/PGN and open in Lichess for the position on screen. While
- *  exploring, the PGN is the explored line instead of the recorded game. */
-export function PositionActions({ pgn }: { pgn: string }) {
+ *  exploring, the PGN is the explored line instead of the recorded game.
+ *  `playHref` (a `?ply=` is appended) links to playing the position against the bot. */
+export function PositionActions({ pgn, playHref }: { pgn: string; playHref?: string }) {
   const s = getStrings()
   const {
     displayFen,
@@ -65,6 +68,12 @@ export function PositionActions({ pgn }: { pgn: string }) {
       >
         {s.positionActions.openInLichess}
       </a>
+      {/* shortcut: recorded plies only; an explored line would need its moves replayed server-side. */}
+      {playHref && !exploring && !new Chess(displayFen).isGameOver() && (
+        <Link href={`${playHref}?ply=${ply}`} className={BUTTON_CLASS}>
+          {s.positionActions.playFromHere}
+        </Link>
+      )}
     </div>
   )
 }

@@ -35,6 +35,7 @@ implies endorsement.
   opponents' blunders, the winning positions you didn't win, and an accuracy-over-time chart, all
   over a date range
 - Opening and endgame lessons with study and quiz modes
+- Play any position from your games against Stockfish, at about 800 to 2500 Elo
 - Mate-in-N puzzles you solve move by move, and defence puzzles where you stop a mate
 - A Today page: cards due, games left to analyze, last week's accuracy and the next puzzle
 - Settings: light/dark theme, board colors, analysis strength, hide engine hints, coordinates,
@@ -216,6 +217,8 @@ A game page also has:
 - **Explore moves**: try your own moves from any point (just move a piece), with the engine
   following along. Esc or "Back to game" returns to the recorded game.
   Nothing is saved.
+- **Play from here**: play the position on screen out against Stockfish at a strength you pick
+  (~800 to 2500 Elo; under 1320 the rating is a rough guess). Not saved yet.
 - Hanging pieces, forks, pins and skewers in the current position, marked on the board.
 
 ### Drilling

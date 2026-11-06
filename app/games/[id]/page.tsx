@@ -88,7 +88,10 @@ export default async function GamePage({
           sidebarExtra={
             <div className="flex shrink-0 flex-col gap-3">
               <BoardNavControls />
-              <PositionActions pgn={game.pgn} />
+              <PositionActions
+                pgn={game.pgn}
+                playHref={isStandardChess(game) ? `/games/${game.id}/play` : undefined}
+              />
             </div>
           }
         />
