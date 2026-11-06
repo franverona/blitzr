@@ -234,6 +234,9 @@ const en = {
     byPhase: 'By game phase',
     byPhaseTooltip:
       'Endgame: at most 6 queens, rooks, bishops and knights left on the board. Before that, the first 10 moves count as the opening.',
+    byClock: 'By time left',
+    byClockTooltip:
+      'Your blunders in games with a clock on every move, by how much of your starting time you had left before the move.',
     worstBlunders: 'Worst blunders',
     punishTitle: 'Punishing their blunders',
     punishTooltip:
@@ -964,6 +967,9 @@ const es: Strings = {
     byPhase: 'Por fase de la partida',
     byPhaseTooltip:
       'Final: como mucho 6 damas, torres, alfiles y caballos en el tablero. Antes, las primeras 10 jugadas cuentan como apertura.',
+    byClock: 'Por tiempo restante',
+    byClockTooltip:
+      'Tus errores graves en partidas con reloj en cada jugada, según cuánto de tu tiempo inicial te quedaba antes de la jugada.',
     worstBlunders: 'Peores errores',
     punishTitle: 'Castigar sus errores',
     punishTooltip:

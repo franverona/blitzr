@@ -118,6 +118,7 @@ lib/
   share.ts                  # linePgn(), lichessAnalysisUrl()
   dates.ts / config.ts      # date formatting and bounds; CHESSCOM_USERNAME
   material.ts / legalMoves.ts / moveSound.ts  # material balance, a square's moves, which sound
+  clock.ts                  # per-ply clocks from a PGN's [%clk] comments
   localHost.ts              # isLoopbackHost(), for proxy.ts
   i18n/                     # locale + string dictionary
   chesscom/                 # API client + normalization
@@ -260,7 +261,7 @@ backups and `polgar-mates.json` elsewhere. The `data/` paths below assume the de
 - **Lichess** (`lib/lichess/`, `https://lichess.org/api`, no token) has no monthly archives, so
   `listPendingArchives()` makes them: `lichess:YYYY-MM` keys (in `sync_state` and `archive_ym`;
   Chess.com's stay bare) from the account's `createdAt`, each fetched as NDJSON, 1000 games a request oldest first (one request for a busy month outlasts the timeout), with `since`/`until`
-  on the game's _start_, `ongoing=true`, `opening=true` (else the PGN has no ECO or Opening). A month with an unfinished game stays `partial`, or that
+  on the game's _start_, `ongoing=true`, `opening=true` (else the PGN has no ECO or Opening), `clocks=true`. A month with an unfinished game stays `partial`, or that
   (correspondence) game would be missed. `normalizeLichessGame()` runs the PGN through
   `parseManualGame()` and takes `status` (resign/outoftime/timeout/draw → result codes), `speed`
   (`ultraBullet` → `bullet`), `rated` and `lastMoveAt` from the export; ids are `lichess:<id>`.
@@ -480,7 +481,11 @@ bar as `findPunishCandidates()` (which also leaves out replies that were blunder
 it finds fewer). `byPhase`
 uses `gamePhase()` (`lib/material.ts`): an endgame once at most 6 queens, rooks and minor pieces
 are left (Lichess's divider count), else the first 10 moves (the FEN's fullmove number, so a game
-from a FEN counts from there) are the opening; listed in game order. `findThrownWins()`
+from a FEN counts from there) are the opening; listed in game order. `byClock` buckets by the share
+of the starting time (`initialClockSeconds()`, `lib/clock.ts`) the user had before the move (over
+half, a fifth to half, under a fifth), only for games whose PGN has a `[%clk]` for every ply
+(`plyClocks()`): Chess.com's live games, and Lichess's since sync asks for `clocks=true`; hidden
+without any. `findThrownWins()`
 (`lib/thrownWins.ts`) lists drawn or lost games whose own win chance (`evalBarPercent()`) peaked at
 90%+, linking to that position and to the own move after it with the biggest `moveWinDrop()` (one
 ply early, like the other blunder links), and to `/games/<id>/play?ply=` from the peak; it renders outside `BlunderStats`' early returns, since a game can be
