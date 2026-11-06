@@ -20,6 +20,8 @@ const SyncContext = createContext<SyncContextValue | null>(null)
 
 // One toast at a time: a new sync's replaces the last one's.
 const TOAST_ID = 'sync'
+// Its own toast, so the other site's result still shows.
+const SITE_ERROR_TOAST_ID = 'sync-site-error'
 
 /**
  * Root-layout sync state, so a sync started on open (`autoSync`, set by the
@@ -38,6 +40,7 @@ export function SyncProvider({
 
   function sync({ quiet = false } = {}) {
     toast.dismiss(TOAST_ID)
+    toast.dismiss(SITE_ERROR_TOAST_ID)
     startTransition(async () => {
       try {
         const pending = await listArchivesToSync()
@@ -45,6 +48,7 @@ export function SyncProvider({
           toast.error(pending.error, { id: TOAST_ID })
           return
         }
+        if (pending.error) toast.error(pending.error, { id: SITE_ERROR_TOAST_ID })
         let gamesUpserted = 0
         for (const [i, archiveYm] of pending.archives.entries()) {
           setProgress({ done: i, total: pending.archives.length })
