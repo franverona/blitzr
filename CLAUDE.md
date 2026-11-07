@@ -250,44 +250,56 @@ backups and `polgar-mates.json` elsewhere. The `data/` paths below assume the de
   `puzzle_progress` (solved puzzle ids), `puzzle_reveals` (revealed ones, Today's retry queue;
   the puzzles themselves are hardcoded).
 
-## Chess.com and Lichess ingestion
+## Ingestion
 
-- `https://api.chess.com/pub`, no API key. Always send a descriptive `User-Agent`.
+Both sites sync the same way, month by month; only fetching a month differs (below).
+
 - Once games exist but none is analyzed, the games page shows an "Analyze all" hint.
-- Archives are fetched **serially**; 429s retry with backoff honoring `Retry-After`. The client
-  drives a sync (`listArchivesToSync()`, then `syncArchiveMonth()` per month) so `SyncButton` can
-  show progress; each month revalidates `/games`, and a failed month leaves earlier ones saved.
+- Archives are fetched **serially**; 429s retry with backoff. The client drives a sync
+  (`listArchivesToSync()`, then `syncArchiveMonth()` per month) so `SyncButton` can show progress;
+  each month revalidates `/games`, and a failed month leaves earlier ones saved. Chess.com's months
+  sync first, then Lichess's, in one run; a site that fails to list its months gets its own error
+  toast while the other's still sync.
 - Sync state lives in `SyncProvider` (root layout, inside `BulkAnalysisProvider`). Opening the app
   syncs once if the newest `sync_state.synced_at` is over an hour old (`isSyncStale()`; `BLITZR_AUTO_SYNC_MINUTES` changes the hour, `0` turns
   auto-sync off but keeps the hour for Today's stale badge; never before a
   first manual sync), silently unless it finds games. A sync that adds games offers "Analyze them".
 - Incremental: `sync_state` marks months `complete`/`partial`. The current month, and the previous
   one until a full UTC day has passed (`oldestOpenArchiveYm()`), are always re-fetched.
-- **Lichess** (`lib/lichess/`, `https://lichess.org/api`, no token) has no monthly archives, so
-  `listPendingArchives()` makes them: `lichess:YYYY-MM` keys (in `sync_state` and `archive_ym`;
-  Chess.com's stay bare) from the account's `createdAt`, each fetched as NDJSON, 1000 games a request oldest first (one request for a busy month outlasts the timeout), with `since`/`until`
-  on the game's _start_, `ongoing=true`, `opening=true` (else the PGN has no ECO or Opening), `clocks=true`. A month with an unfinished game stays `partial`, or that
-  (correspondence) game would be missed. `normalizeLichessGame()` runs the PGN through
-  `parseManualGame()` and takes `status` (resign/outoftime/timeout/draw → result codes), `speed`
-  (`ultraBullet` → `bullet`), `rated` and `lastMoveAt` from the export; ids are `lichess:<id>`.
-  Next hands `[id]` params over percent-encoded (`lichess%3A…`), so both game routes decode
-  theirs (`decodeGameIdParam()`: a malformed escape 404s); CI's smoke test seeds a `lichess:` game to keep it that way.
-  Aborted games and variants chess.js rejects (Horde, Racing Kings, Crazyhouse) are skipped. A 429
-  waits a full minute, as Lichess asks. Chess.com's months sync first, then Lichess's, in one run; a site that fails to list its months gets its own error toast while the other's still sync.
 - Ingestion is otherwise unfiltered (variants, daily, everything). Filtering happens in `app/actions.ts`:
   engine features need `isStandardChess()`; opening features also need
   `startsFromStandardPosition()`.
+
+### Chess.com
+
+- `https://api.chess.com/pub`, no API key. Always send a descriptive `User-Agent`. Its monthly
+  archives are the months; their keys (in `sync_state` and `archive_ym`) are bare `YYYY-MM`. A 429
+  honors `Retry-After`.
 - Avatars aren't stored — fetched live (2s timeout, no 429 retries, cached in memory per
   username), failing soft to an initial-letter badge.
-
-### API quirks
-
 - **"Play vs Coach"** games have a `[Link]` to an unrelated game — the "View on Chess.com" link is
   hidden for them.
 - **"Play Bots"** personality games never appear in the API (use "Add game by PGN").
 - **"Play vs Bot"** PGNs hold a bare bot display name (e.g. "Hans") that can collide with a real
   user. `fetchBotAvatar()` tries the undocumented `<Name>-BOT` account instead. Coach names are
   real accounts and need no special handling.
+
+### Lichess
+
+- `lib/lichess/`, `https://lichess.org/api`, no token. It has no monthly archives, so
+  `listPendingArchives()` makes them: `lichess:YYYY-MM` keys from the account's `createdAt`, each
+  fetched as NDJSON, 1000 games a request oldest first (one request for a busy month outlasts the
+  timeout), with `since`/`until` on the game's _start_, `ongoing=true`, `opening=true` (else the
+  PGN has no ECO or Opening), `clocks=true`. A month with an unfinished game stays `partial`, or
+  that (correspondence) game would be missed. A 429 waits a full minute, as Lichess asks.
+- `normalizeLichessGame()` runs the PGN through `parseManualGame()` and takes `status`
+  (resign/outoftime/timeout/draw → result codes), `speed` (`ultraBullet` → `bullet`), `rated` and
+  `lastMoveAt` from the export. Aborted games and variants chess.js rejects (Horde, Racing Kings,
+  Crazyhouse) are skipped.
+- Ids are `lichess:<id>`. Next hands `[id]` params over percent-encoded (`lichess%3A…`), so both
+  game routes decode theirs (`decodeGameIdParam()`: a malformed escape 404s); CI's smoke test seeds
+  a `lichess:` game to keep it that way.
+- No avatars: Lichess has no profile pictures (see Sites).
 
 ## Sites
 
