@@ -1,6 +1,6 @@
 # Contributing
 
-Blitzr is a personal project: a local trainer for one person's own Chess.com games. It's public so
+Blitzr is a personal project: a local trainer for one person's own Chess.com and/or Lichess games. It's public so
 others can read it, fork it and run it for themselves, not to grow into a product.
 
 ## Issues
@@ -9,7 +9,7 @@ Bug reports are welcome. Please include:
 
 - what you did, what you expected and what happened instead
 - your Node version and OS, and the browser if it's a UI problem
-- for a game that syncs, imports or analyzes wrongly, its PGN (or Chess.com link)
+- for a game that syncs, imports or analyzes wrongly, its PGN (or Chess.com or Lichess link)
 
 Feature requests are fine too, but anything that needs accounts, hosting or several users is out
 of scope (see [What this is](README.md#what-this-is)).

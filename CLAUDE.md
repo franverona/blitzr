@@ -250,7 +250,7 @@ backups and `polgar-mates.json` elsewhere. The `data/` paths below assume the de
   `puzzle_progress` (solved puzzle ids), `puzzle_reveals` (revealed ones, Today's retry queue;
   the puzzles themselves are hardcoded).
 
-## Chess.com ingestion
+## Chess.com and Lichess ingestion
 
 - `https://api.chess.com/pub`, no API key. Always send a descriptive `User-Agent`.
 - Once games exist but none is analyzed, the games page shows an "Analyze all" hint.
@@ -502,7 +502,7 @@ thrown without a blunder.
 `getTodaySummary()` feeds `/`, the landing page (the games list is `/games`). "Recent" means the
 last 7 days, except for the repertoire rate; the pure parts live in `lib/today.ts`. The due count goes through the same
 `reconcileDrillCards()` as `getDrillDeck()`, so it matches `/drill`, and is shown against the
-session size. Ratings change per time class (`recentResults()`; Chess.com never mixes them). The
+session size. Ratings change per site and time class (`recentResults()`; neither site mixes them). The
 weak spot is the top opening family from `buildBlunderStats()` over recent games, linking to
 `/drill?opening=` only if the deck has a card for it. Focus also lists the week's worst blunder
 (`buildBlunderStats().worst[0]`), the deck's trouble-card count (`troubleCards()` uncapped, linking
@@ -554,7 +554,7 @@ can be an underpromotion too) and explore mode.
 - Content is hand-authored in `lib/openingTheory.ts` / `lib/endgameTheory.ts`. Every `sourceUrl`
   must be read live before citing. **Summaries are paraphrased, never copied** (Wikibooks is
   CC BY-SA, this repo is MIT).
-- `countGamesReachingLine()` matches the lesson's exact SAN prefix, not Chess.com's ECO tag.
+- `countGamesReachingLine()` matches the lesson's exact SAN prefix, not the site's ECO tag.
 - `addLessonToRepertoire(slug)` adds an opening lesson's line to its `primaryColor` tree through
   `lineToRepertoireNodes()` (pure: follows matching nodes, branches after). It takes only the slug,
   so the moves come from the server's lesson data, not the client.
@@ -573,7 +573,7 @@ by a fork/skewer. Findings are only drawn on the board (no text panel), and not 
 
 English and Spanish via `NEXT_PUBLIC_LOCALE` (rebuild to change). `es` is typed against
 `typeof en`, so missing keys fail `tsc`. Parameterized strings are functions. SAN, square names
-and Chess.com's `ecoName` are never translated. Description generators take an optional trailing
+and a game's `ecoName` (from either site) are never translated. Description generators take an optional trailing
 `locale` param; Spanish articles go through `pieceWithArticle()`. User-facing errors come from the
 dictionary too, and Server Actions **return** them (`{ ok: false, error }`) rather than throw,
 since Next redacts thrown messages in production.
