@@ -17,7 +17,7 @@ import { PlayerAvatar } from '@/components/PlayerAvatar'
 import { PositionActions } from '@/components/PositionActions'
 import { ResultBadge } from '@/components/ResultBadge'
 import { fetchBotAvatar, fetchPlayerAvatar } from '@/lib/chesscom/client'
-import { isBareBotNameEvent, parsePgnHeaders } from '@/lib/chesscom/normalize'
+import { coachRating, isBareBotNameEvent, parsePgnHeaders } from '@/lib/chesscom/normalize'
 import { formatDateTime } from '@/lib/dates'
 import { getStrings } from '@/lib/i18n/strings'
 import { isStandardChess } from '@/lib/positions'
@@ -202,15 +202,23 @@ function GameHeader({
   const s = getStrings()
   const timeClassLabel =
     s.common.timeClass[game.timeClass as keyof typeof s.common.timeClass] ?? game.timeClass
+  const coachElo = coachRating(game)
+  const rating = (color: MyColor) =>
+    coachElo != null &&
+    color !== game.myColor && (
+      <span className="text-sm font-normal text-zinc-500">({coachElo})</span>
+    )
   return (
     // flex-1 + basis: a long opening name wraps here instead of overflowing the button row.
     <div className="flex flex-1 basis-64 flex-col gap-1.5">
       <h1 className="flex items-center gap-2 text-xl font-semibold">
         <PlayerAvatar username={game.whiteUsername} avatarUrl={whiteAvatar} />
         {game.whiteUsername}
+        {rating('white')}
         <span className="text-sm font-normal text-zinc-500">{s.common.vs}</span>
         <PlayerAvatar username={game.blackUsername} avatarUrl={blackAvatar} />
         {game.blackUsername}
+        {rating('black')}
         {game.isMine && <ResultBadge result={game.myResult} />}
       </h1>
       {/* A div, not a <p>: MoveQualityLink renders an <aside>. */}

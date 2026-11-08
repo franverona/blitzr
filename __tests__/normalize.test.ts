@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  coachRating,
   ecoNameFromUrl,
   isBareBotNameEvent,
   normalizeGame,
@@ -56,6 +57,21 @@ describe('parsePgnHeaders', () => {
 
   it('returns an empty object when there are no headers', () => {
     expect(parsePgnHeaders('1. e4 e5 *')).toEqual({})
+  })
+})
+
+describe('coachRating', () => {
+  const coachPgn = '[Event "Play vs Coach"]\n[White "fverona"]\n[Black "Coach-David"]\n\n1. e4 *'
+
+  it("returns the coach's rating, on the side the user didn't play", () => {
+    const ratings = { whiteRating: 800, blackRating: 900 }
+    expect(coachRating({ pgn: coachPgn, myColor: 'white', ...ratings })).toBe(900)
+    expect(coachRating({ pgn: coachPgn, myColor: 'black', ...ratings })).toBe(800)
+  })
+
+  it('returns null outside "Play vs Coach"', () => {
+    const pgn = '[Event "Live Chess"]\n\n1. e4 *'
+    expect(coachRating({ pgn, myColor: 'white', whiteRating: 800, blackRating: 900 })).toBeNull()
   })
 })
 
