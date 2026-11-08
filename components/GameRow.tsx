@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { coachRating } from '@/lib/chesscom/normalize'
 import { formatDate } from '@/lib/dates'
 import { getStrings } from '@/lib/i18n/strings'
 import type { Game, GameAccuracy } from '@/lib/types'
@@ -21,7 +22,8 @@ export function GameRow({
   select?: { checked: boolean; onToggle: () => void }
 }) {
   const s = getStrings()
-  const opponent = game.myColor === 'white' ? game.blackUsername : game.whiteUsername
+  const coachElo = coachRating(game)
+  const opponent = `${game.myColor === 'white' ? game.blackUsername : game.whiteUsername}${coachElo != null ? ` (${coachElo})` : ''}`
   const myRating = game.myColor === 'white' ? game.whiteRating : game.blackRating
   const date = formatDate(game.endTime)
   const timeClassTooltip = s.gameRow.timeClassTooltips[game.site][game.timeClass]

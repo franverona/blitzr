@@ -47,6 +47,14 @@ export function isBareBotNameEvent(event: string | undefined): boolean {
   return event !== undefined && BARE_BOT_NAME_EVENTS.has(event)
 }
 
+/** A "Play vs Coach" game's coach rating: set per game, and its name ("Coach-David") doesn't show it. */
+export function coachRating(
+  game: Pick<Game, 'pgn' | 'myColor' | 'whiteRating' | 'blackRating'>,
+): number | null {
+  if (parsePgnHeaders(game.pgn).Event !== 'Play vs Coach') return null
+  return game.myColor === 'white' ? game.blackRating : game.whiteRating
+}
+
 export function normalizeGame(raw: ChesscomGame, username: string, archiveYm: string): Game {
   const headers = parsePgnHeaders(raw.pgn)
   const isWhite = raw.white.username.toLowerCase() === username.toLowerCase()
