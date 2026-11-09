@@ -75,6 +75,8 @@ export async function analyzeGame(
 }
 
 export interface BulkAnalysisProgress {
+  /** The game being analyzed now. */
+  gameId: string
   gamesDone: number
   gamesTotal: number
   positionsDone: number
@@ -101,6 +103,7 @@ export async function analyzeGames(
       const positions = buildPositions(game.initialFen, game.movesSan)
       const evals = await analyzePositions(engines, positions, movetimeMs, (done, total) => {
         onProgress?.({
+          gameId: game.id,
           gamesDone: g,
           gamesTotal: games.length,
           positionsDone: done,

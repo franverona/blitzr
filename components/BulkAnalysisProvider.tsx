@@ -54,7 +54,13 @@ export function BulkAnalysisProvider({ children }: { children: React.ReactNode }
         return
       }
 
-      setProgress({ gamesDone: 0, gamesTotal: games.length, positionsDone: 0, positionsTotal: 0 })
+      setProgress({
+        gameId: games[0].id,
+        gamesDone: 0,
+        gamesTotal: games.length,
+        positionsDone: 0,
+        positionsTotal: 0,
+      })
       let analyzed = 0
       let failed = 0
       const movetimeMs = ANALYSIS_STRENGTHS[analysisStrength]
