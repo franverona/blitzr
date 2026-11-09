@@ -234,7 +234,10 @@ const en = {
       wdl: 'W / D / L',
       asWhite: 'As White',
       asBlack: 'As Black',
+      accuracy: 'Accuracy',
     },
+    accuracyTooltip:
+      "Your average accuracy in the analyzed games of this opening (how many in brackets). Unlike the results, it doesn't depend on how strong your opponents were.",
   },
   blunderStats: {
     emptyNoAnalyzed:
@@ -982,7 +985,10 @@ const es: Strings = {
       wdl: 'V / T / D',
       asWhite: 'Con blancas',
       asBlack: 'Con negras',
+      accuracy: 'Precisión',
     },
+    accuracyTooltip:
+      'Tu precisión media en las partidas analizadas de esta apertura (cuántas, entre paréntesis). A diferencia de los resultados, no depende de lo fuertes que fueran tus rivales.',
   },
   blunderStats: {
     emptyNoAnalyzed:

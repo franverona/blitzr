@@ -36,6 +36,9 @@ export function OpeningsTable({ families }: { families: OpeningFamily[] }) {
           <th className="px-3 py-2">{s.openingsTable.headers.wdl}</th>
           <th className="px-3 py-2">{s.openingsTable.headers.asWhite}</th>
           <th className="px-3 py-2">{s.openingsTable.headers.asBlack}</th>
+          <th className="px-3 py-2">
+            <abbr title={s.openingsTable.accuracyTooltip}>{s.openingsTable.headers.accuracy}</abbr>
+          </th>
         </>
       }
     >
@@ -65,6 +68,11 @@ export function OpeningsTable({ families }: { families: OpeningFamily[] }) {
               <td className="px-3 py-2 text-zinc-600 dark:text-zinc-400">
                 {family.blackGames > 0 ? `${pct(family.blackScore)} (${family.blackGames})` : '—'}
               </td>
+              <td className="px-3 py-2 text-zinc-600 dark:text-zinc-400">
+                {family.avgAccuracy === null
+                  ? '—'
+                  : `${family.avgAccuracy.toFixed(1)}% (${family.analyzedGames})`}
+              </td>
             </tr>
             {isOpen &&
               family.lines.map((line) => (
@@ -73,7 +81,7 @@ export function OpeningsTable({ families }: { families: OpeningFamily[] }) {
                     {line.ecoName}
                   </td>
                   <td className="py-1.5 pr-3 text-zinc-600 dark:text-zinc-400">{line.games}</td>
-                  <td className="py-1.5 pr-3 text-zinc-600 dark:text-zinc-400" colSpan={3}>
+                  <td className="py-1.5 pr-3 text-zinc-600 dark:text-zinc-400" colSpan={4}>
                     {line.wins} / {line.draws} / {line.losses}
                   </td>
                 </tr>
