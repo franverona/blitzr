@@ -114,6 +114,7 @@ export function timeClassFromControl(timeControl: string | undefined, site: Game
   const match = timeControl?.match(/^(\d+)(?:\+(\d+))?$/)
   if (!match) return 'unknown'
   const seconds = Number(match[1]) + 40 * Number(match[2] ?? 0)
+  if (site === 'lichess' && seconds < 30) return 'ultraBullet'
   if (seconds < 180) return 'bullet'
   if (site === 'chesscom') return seconds < 600 ? 'blitz' : 'rapid'
   return seconds < 480 ? 'blitz' : seconds < 1500 ? 'rapid' : 'classical'

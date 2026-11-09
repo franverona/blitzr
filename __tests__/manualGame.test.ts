@@ -291,6 +291,8 @@ describe('timeClassFromControl', () => {
     expect(timeClassFromControl('300+3', 'chesscom')).toBe('blitz')
     expect(timeClassFromControl('600', 'chesscom')).toBe('rapid')
     expect(timeClassFromControl('1/86400', 'chesscom')).toBe('daily')
+    expect(timeClassFromControl('15+0', 'lichess')).toBe('ultraBullet')
+    expect(timeClassFromControl('15+0', 'chesscom')).toBe('bullet')
     expect(timeClassFromControl('600+0', 'lichess')).toBe('rapid')
     expect(timeClassFromControl('1800+0', 'lichess')).toBe('classical')
     expect(timeClassFromControl('-', 'lichess')).toBe('correspondence')
