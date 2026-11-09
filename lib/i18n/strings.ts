@@ -268,6 +268,9 @@ const en = {
     byClock: 'By time left',
     byClockTooltip:
       'Your blunders in games with a clock on every move, by how much of your starting time you had left before the move.',
+    byThinkTime: 'By time spent',
+    byThinkTimeTooltip:
+      'Your blunders in games with a clock on every move, by how long you spent on the move. Quick ones call for slowing down; long ones, for calculating better.',
     worstBlunders: 'Worst blunders',
     punishTitle: 'Punishing their blunders',
     punishTooltip:
@@ -1035,6 +1038,9 @@ const es: Strings = {
     byClock: 'Por tiempo restante',
     byClockTooltip:
       'Tus errores graves en partidas con reloj en cada jugada, según cuánto de tu tiempo inicial te quedaba antes de la jugada.',
+    byThinkTime: 'Por tiempo pensado',
+    byThinkTimeTooltip:
+      'Tus errores graves en partidas con reloj en cada jugada, según cuánto pensaste la jugada. Los rápidos piden ir más despacio; los largos, calcular mejor.',
     worstBlunders: 'Peores errores',
     punishTitle: 'Castigar sus errores',
     punishTooltip:
