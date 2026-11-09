@@ -82,7 +82,10 @@ export function BotPlayout({
     const startsWithMe = initialFen.split(' ')[1] === myColor[0]
     const myMoves = startsWithMe ? Math.ceil(movesSan.length / 2) : Math.floor(movesSan.length / 2)
     if (myMoves === 0) return
-    const result = await savePracticeGame(gameId, ply, movesSan, elo, resigned)
+    // A rejected action (a restarting server, say) would otherwise lose the game silently.
+    const result = await savePracticeGame(gameId, ply, movesSan, elo, resigned).catch(
+      () => ({ ok: false, error: s.playBot.saveFailed }) as const,
+    )
     if (!result.ok) {
       toast.error(result.error, { id: TOAST_ID })
       return
