@@ -51,7 +51,7 @@ export function normalizeLichessGame(
     // Prefixed: Chess.com's uuids and Lichess's ids are different shapes, but nothing promises it.
     id: `lichess:${raw.id}`,
     timeControl: raw.clock ? `${raw.clock.initial}+${raw.clock.increment}` : '',
-    timeClass: raw.speed === 'ultraBullet' ? 'bullet' : raw.speed,
+    timeClass: raw.speed,
     rated: raw.rated,
     endTime: Math.floor(raw.lastMoveAt / 1000),
     whiteResult,

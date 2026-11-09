@@ -15,6 +15,7 @@ const en = {
     result: { win: 'Win', draw: 'Draw', loss: 'Loss' },
     site: { chesscom: 'Chess.com', lichess: 'Lichess' },
     timeClass: {
+      ultraBullet: 'UltraBullet',
       bullet: 'Bullet',
       blitz: 'Blitz',
       rapid: 'Rapid',
@@ -157,7 +158,8 @@ const en = {
         daily: 'Daily — correspondence chess, days per move rather than a running clock',
       } as Record<string, string>,
       lichess: {
-        bullet: 'Bullet — under 3 minutes, counting 40 moves of increment',
+        ultraBullet: 'UltraBullet — under 30 seconds, counting 40 moves of increment',
+        bullet: 'Bullet — 30 seconds to 3 minutes, counting 40 moves of increment',
         blitz: 'Blitz — 3 to 8 minutes, counting 40 moves of increment',
         rapid: 'Rapid — 8 to 25 minutes, counting 40 moves of increment',
         classical: 'Classical — 25 minutes or more, counting 40 moves of increment',
@@ -751,6 +753,7 @@ const es: Strings = {
     result: { win: 'Victoria', draw: 'Tablas', loss: 'Derrota' },
     site: { chesscom: 'Chess.com', lichess: 'Lichess' },
     timeClass: {
+      ultraBullet: 'UltraBullet',
       bullet: 'Bala',
       blitz: 'Blitz',
       rapid: 'Rápidas',
@@ -900,7 +903,8 @@ const es: Strings = {
           'Por correspondencia — ajedrez por correo, días por jugada en vez de un reloj corriendo',
       } as Record<string, string>,
       lichess: {
-        bullet: 'Bala — menos de 3 minutos, contando 40 jugadas de incremento',
+        ultraBullet: 'UltraBullet — menos de 30 segundos, contando 40 jugadas de incremento',
+        bullet: 'Bala — de 30 segundos a 3 minutos, contando 40 jugadas de incremento',
         blitz: 'Blitz — de 3 a 8 minutos, contando 40 jugadas de incremento',
         rapid: 'Rápidas — de 8 a 25 minutos, contando 40 jugadas de incremento',
         classical: 'Clásicas — 25 minutos o más, contando 40 jugadas de incremento',

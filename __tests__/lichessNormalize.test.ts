@@ -75,13 +75,14 @@ describe('normalizeLichessGame', () => {
     expect(normalizeLichessGame(flag, 'franverona', 'k')?.blackResult).toBe('timevsinsufficient')
   })
 
-  it('maps speeds and clocks to Chess.com-style time classes and controls', () => {
+  it('maps speeds and clocks to time classes and Chess.com-style controls', () => {
     const game = normalizeLichessGame(
       raw({ speed: 'ultraBullet', clock: { initial: 15, increment: 0 }, rated: true }),
       'franverona',
       'k',
     )
-    expect(game).toMatchObject({ timeClass: 'bullet', timeControl: '15+0', rated: true })
+    // UltraBullet keeps its own class: it's a separate rating pool from bullet.
+    expect(game).toMatchObject({ timeClass: 'ultraBullet', timeControl: '15+0', rated: true })
   })
 
   it("skips games that aren't over, were aborted, or can't be replayed", () => {
