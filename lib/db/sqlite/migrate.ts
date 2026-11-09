@@ -60,6 +60,14 @@ async function runMigrations(db: Kysely<DbSchema>): Promise<void> {
     )
   `.execute(db)
 
+  // Lichess UltraBullet used to be filed as bullet. Its time control is always `<base>+<inc>`.
+  await sql`
+    UPDATE games SET time_class = 'ultraBullet'
+    WHERE id LIKE 'lichess:%' AND time_class = 'bullet' AND time_control LIKE '%+%'
+      AND CAST(time_control AS INTEGER)
+        + 40 * CAST(substr(time_control, instr(time_control, '+') + 1) AS INTEGER) < 30
+  `.execute(db)
+
   await sql`CREATE INDEX IF NOT EXISTS games_end_time_idx ON games (end_time DESC)`.execute(db)
   await sql`CREATE INDEX IF NOT EXISTS games_eco_code_idx ON games (eco_code)`.execute(db)
   await sql`CREATE INDEX IF NOT EXISTS games_archive_ym_idx ON games (archive_ym)`.execute(db)
