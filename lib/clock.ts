@@ -46,6 +46,8 @@ export function thinkSecondsForPly(
 ): number {
   const berserked = isBerserked(clocks, ply, initial)
   const before = ply > 2 ? clocks[ply - 3] : berserked ? initial / 2 : initial
+  // Lichess neither runs the clock nor adds the increment on a player's first move.
+  if (ply <= 2 && clocks[ply - 1] >= before) return 0
   return Math.max(0, before - clocks[ply - 1] + (berserked ? 0 : increment))
 }
 

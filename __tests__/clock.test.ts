@@ -65,6 +65,13 @@ describe('thinkSecondsForPly', () => {
     expect(thinkSecondsForPly(clocks, 4, 180, 2)).toBe(6)
   })
 
+  it("counts a first move that left the clock untouched as instant, as Lichess's are", () => {
+    const clocks = [300, 300, 302, 301]
+    expect(thinkSecondsForPly(clocks, 1, 300, 3)).toBe(0)
+    expect(thinkSecondsForPly(clocks, 2, 300, 3)).toBe(0)
+    expect(thinkSecondsForPly(clocks, 3, 300, 3)).toBe(1)
+  })
+
   it('starts a berserker on half the time, with no increment', () => {
     const clocks = [182, 90, 170, 80]
     expect(thinkSecondsForPly(clocks, 2, 180, 2)).toBe(0)
