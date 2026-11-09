@@ -128,7 +128,8 @@ pnpm backup          # copy the database into data/backups/
 
 ### Before merging
 
-CI runs these five on every PR, after `pnpm audit --prod`:
+CI runs these five on every PR (and weekly on `main`, to catch new advisories), after
+`pnpm audit --prod`:
 
 ```bash
 pnpm format:check

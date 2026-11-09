@@ -4,6 +4,9 @@ on:
   push:
     branches: [main]
   pull_request:
+  # Weekly on main too, so a new advisory (pnpm audit) shows up before it fails an unrelated PR.
+  schedule:
+    - cron: '0 6 * * 1'
 
 # A new push to a PR replaces its run, but every merge to main gets its own group and full run:
 # back-to-back merges would otherwise cancel each other (even a queued run is cancelled when a
