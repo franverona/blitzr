@@ -312,11 +312,11 @@ export async function savePracticeGame(
   let game: Game
   try {
     game = buildPracticeGame({ source, ply, movesSan, myName, elo, resigned, now: new Date() })
+    await repo.upsertGames([game])
   } catch (err) {
-    if (err instanceof PracticeGameError) return { ok: false, error }
-    throw err
+    if (!(err instanceof PracticeGameError)) console.error(err)
+    return { ok: false, error }
   }
-  await repo.upsertGames([game])
   revalidatePath(`/games/${sourceGameId}`)
   return { ok: true, gameId: game.id }
 }
