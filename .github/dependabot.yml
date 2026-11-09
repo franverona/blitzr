@@ -13,7 +13,8 @@ updates:
       - dependency-name: '@types/node'
         update-types: ['version-update:semver-major']
     groups:
-      # Never auto-merged. Next's minors change APIs and defaults; kysely is 0.x, so its minors
+      # Never auto-merged (dependabot-automerge.yml repeats this list for ungrouped security
+      # updates). Next's minors change APIs and defaults; kysely is 0.x, so its minors
       # (0.29 -> 0.30) can break, and it backs the whole data layer.
       framework:
         patterns: ['next', 'eslint-config-next', 'react', 'react-dom', 'kysely']
