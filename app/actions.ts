@@ -234,11 +234,18 @@ export async function addManualGame(
   if (!isValidManualGame(pgn, side))
     return { ok: false, error: getStrings().manualGame.badMovetext }
   // Only 'auto' needs the username (the one for the PGN's site); an explicit side works without one.
+  // A PGN from neither site is matched against whichever username is set.
   const site = pgnSite(pgn)
-  const username = siteUsername(site)
+  const username = site ? siteUsername(site) : (siteUsername('chesscom') ?? siteUsername('lichess'))
   if (side === 'auto' && !username) {
     const s = getStrings().sync
-    return { ok: false, error: site === 'lichess' ? s.noLichessUsername : s.noUsername }
+    const error =
+      site === 'lichess'
+        ? s.noLichessUsername
+        : site === 'chesscom'
+          ? s.noUsername
+          : s.noAnyUsername
+    return { ok: false, error }
   }
   let game: Game
   try {

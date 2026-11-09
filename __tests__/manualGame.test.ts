@@ -206,11 +206,11 @@ describe('Lichess PGNs', () => {
     expect(game.myColor).toBe('white')
   })
 
-  it('treats anything else as Chess.com', () => {
+  it('tells Chess.com PGNs from ones of neither site', () => {
     expect(pgnSite(BOT_GAME_PGN)).toBe('chesscom')
     expect(parseManualGame(BOT_GAME_PGN, 'fverona').site).toBe('chesscom')
     const forged = LICHESS_PGN.replace('https://lichess.org', 'https://lichess.org.evil.example')
-    expect(pgnSite(forged)).toBe('chesscom')
+    expect(pgnSite(forged)).toBeNull()
     expect(parseManualGame(forged, 'franv').url).toBe('')
   })
 
