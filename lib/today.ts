@@ -80,15 +80,16 @@ export interface RatingGapScores {
 }
 
 /**
- * Per site, the score against opponents rated more than `margin` above the user, within it, and
- * more than it below. A game without both ratings is skipped; sites keep their own scales.
+ * Per site, the score in rated games against opponents rated more than `margin` above the user,
+ * within it, and more than it below. Unrated games are skipped: bot and coach games carry
+ * ratings too. Sites keep their own scales.
  */
 export function scoreByRatingGap(games: Game[], margin = 100): RatingGapScores[] {
   const bySite = new Map<GameSite, Record<RatingGap, { games: number; points: number }>>()
   for (const game of games) {
     const mine = game.myColor === 'white' ? game.whiteRating : game.blackRating
     const theirs = game.myColor === 'white' ? game.blackRating : game.whiteRating
-    if (mine === null || theirs === null) continue
+    if (!game.rated || mine === null || theirs === null) continue
     const gap: RatingGap =
       theirs - mine > margin ? 'stronger' : mine - theirs > margin ? 'weaker' : 'similar'
     const site = bySite.get(game.site) ?? {

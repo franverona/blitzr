@@ -197,7 +197,8 @@ describe('scoreByRatingGap', () => {
     theirs: number | null,
     myResult: Game['myResult'],
     site: Game['site'] = 'chesscom',
-  ) => game({ myColor: 'white', whiteRating: mine, blackRating: theirs, myResult, site })
+  ) =>
+    game({ myColor: 'white', whiteRating: mine, blackRating: theirs, myResult, site, rated: true })
 
   it('scores games against stronger, similar and weaker opponents, per site', () => {
     const [chesscom, lichess] = scoreByRatingGap([
@@ -222,5 +223,7 @@ describe('scoreByRatingGap', () => {
 
   it('lists no site without rated games', () => {
     expect(scoreByRatingGap([vs(1500, null, 'win')])).toEqual([])
+    // A bot or coach game carries ratings but isn't rated.
+    expect(scoreByRatingGap([{ ...vs(1500, 2000, 'win'), rated: false }])).toEqual([])
   })
 })

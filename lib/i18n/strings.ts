@@ -64,7 +64,7 @@ const en = {
     ratingGapLabel: 'Score by rating gap',
     ratingGaps: { stronger: 'Stronger', similar: 'Similar', weaker: 'Weaker' },
     ratingGapDetail:
-      'All your games, against opponents rated over 100 above you, within 100, and over 100 below (games in brackets).',
+      'Your rated games, against opponents rated over 100 above you, within 100, and over 100 below (games in brackets).',
     accuracyVsAverage: (games: number, overall: number) =>
       `Accuracy over ${games} game${games === 1 ? '' : 's'}, against ${overall}% on average`,
     noRecentGames: 'No analyzed games in the last 7 days.',
@@ -807,7 +807,7 @@ const es: Strings = {
     ratingGapLabel: 'Resultado según el rival',
     ratingGaps: { stronger: 'Más fuertes', similar: 'Parecidos', weaker: 'Más débiles' },
     ratingGapDetail:
-      'Todas tus partidas, contra rivales con más de 100 puntos por encima de ti, a menos de 100 y más de 100 por debajo (partidas entre paréntesis).',
+      'Tus partidas puntuables, contra rivales con más de 100 puntos por encima de ti, a menos de 100 y más de 100 por debajo (partidas entre paréntesis).',
     accuracyVsAverage: (games: number, overall: number) =>
       `Precisión en ${games} ${games === 1 ? 'partida' : 'partidas'}, frente a un ${overall}% de media`,
     noRecentGames: 'No hay partidas analizadas en los últimos 7 días.',

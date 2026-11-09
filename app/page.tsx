@@ -322,12 +322,16 @@ export default async function TodayPage() {
                 {today.ratingGaps.map(({ site, scores }) => (
                   <p key={site} className="text-sm">
                     {/* Named only with both sites, as the ratings above. */}
-                    {today.ratingGaps.length > 1 && `${s.common.site[site]}: `}
+                    {today.ratingGaps.length > 1 && (
+                      <span className="text-zinc-500 dark:text-zinc-400">
+                        {s.common.site[site]}:{' '}
+                      </span>
+                    )}
                     {(['stronger', 'similar', 'weaker'] as const)
-                      .map((gap) =>
-                        scores[gap].games > 0
-                          ? `${s.today.ratingGaps[gap]} ${Math.round(scores[gap].score * 100)}% (${scores[gap].games})`
-                          : `${s.today.ratingGaps[gap]} —`,
+                      .filter((gap) => scores[gap].games > 0)
+                      .map(
+                        (gap) =>
+                          `${s.today.ratingGaps[gap]} ${Math.round(scores[gap].score * 100)}% (${scores[gap].games})`,
                       )
                       .join(' · ')}
                   </p>
