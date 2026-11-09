@@ -97,9 +97,11 @@ function ratingFromHeader(value: string | undefined): number | null {
   return Number.isNaN(rating) ? null : rating
 }
 
-/** Lichess when the PGN's `Site` is a Lichess game, else Chess.com (what pasted games always were). */
-export function pgnSite(pgn: string): GameSite {
-  return lichessUrl(parsePgnHeaders(pgn).Site) ? 'lichess' : 'chesscom'
+/** The site the PGN was exported from, or null for any other source (OTB, another server). */
+export function pgnSite(pgn: string): GameSite | null {
+  const headers = parsePgnHeaders(pgn)
+  if (lichessUrl(headers.Site)) return 'lichess'
+  return headers.Site === 'Chess.com' || chesscomUrl(headers.Link) ? 'chesscom' : null
 }
 
 /** 'auto' matches the username against the PGN's players. */
@@ -185,7 +187,7 @@ export function parseManualGame(
  * links on the game page, and `Link`'s game id decides duplicates on its own, so a forged one
  * pointing at a real game's id would make sync skip that game for good.
  */
-function chesscomUrl(raw: string | undefined): string | null {
+export function chesscomUrl(raw: string | undefined): string | null {
   if (!raw || !URL.canParse(raw)) return null
   const url = new URL(raw)
   return url.protocol === 'https:' &&

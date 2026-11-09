@@ -437,6 +437,8 @@ const en = {
     userNotFound: (username: string) => `Chess.com has no player named "${username}".`,
     noUsername:
       'This is a Chess.com game and CHESSCOM_USERNAME is not set — set it in .env.local, or pick the side you played.',
+    noAnyUsername:
+      'Neither CHESSCOM_USERNAME nor LICHESS_USERNAME is set — set one in .env.local, or pick the side you played.',
     lichessRateLimited: 'Lichess is rate-limiting requests — try again in a few minutes.',
     lichessUserNotFound: (username: string) => `Lichess has no player named "${username}".`,
     noLichessUsername:
@@ -1181,6 +1183,8 @@ const es: Strings = {
     userNotFound: (username: string) => `Chess.com no tiene ningún jugador llamado "${username}".`,
     noUsername:
       'Es una partida de Chess.com y CHESSCOM_USERNAME no está configurado — configúralo en .env.local, o elige con qué color jugaste.',
+    noAnyUsername:
+      'Ni CHESSCOM_USERNAME ni LICHESS_USERNAME están configurados — configura uno en .env.local, o elige con qué color jugaste.',
     lichessRateLimited:
       'Lichess está limitando las peticiones — inténtalo de nuevo en unos minutos.',
     lichessUserNotFound: (username: string) =>

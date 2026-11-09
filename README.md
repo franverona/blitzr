@@ -183,7 +183,8 @@ its players show their initial. Ratings on Today are kept per site. Variants che
 (Horde, Racing Kings, Crazyhouse…) aren't stored. Games Chess.com's API never exposes (e.g. "Play Bots" games) can be added with
 **Add game by PGN**; they get their own id, so a later sync never touches them. A PGN exported
 from lichess.org (its `Site` header) becomes a Lichess game, with its link and opening name, and
-`LICHESS_USERNAME` picks your side in it. A game that's
+`LICHESS_USERNAME` picks your side in it. One from neither site (an over-the-board game, say) is
+matched against whichever username is set, and shows no profile pictures. A game that's
 already in Blitzr, synced or pasted, can't be added twice. Pick which side
 you played, or **Not me** for a game you only want to study: it can still be replayed and
 analyzed, but stays out of your openings, blunders, accuracy and drills. Pasted games can be
