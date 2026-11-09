@@ -22,7 +22,13 @@ export function normalizeResult(raw: string): MyResult {
 // "Closed Sicilian Defense Grand Prix Attack: 3...g6"
 export function ecoNameFromUrl(url: string): string {
   const slug = url.split('/').filter(Boolean).pop() ?? url
-  const decoded = decodeURIComponent(slug).replace(/-/g, ' ')
+  let decoded: string
+  try {
+    decoded = decodeURIComponent(slug)
+  } catch {
+    decoded = slug // a malformed `%` escape
+  }
+  decoded = decoded.replace(/-/g, ' ')
   const words = decoded.split(' ')
   const moveIndex = words.findIndex((word) => /^\d/.test(word))
   if (moveIndex <= 0) return decoded
