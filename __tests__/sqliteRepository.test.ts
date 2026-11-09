@@ -279,3 +279,24 @@ describe('SqliteGameRepository.listGames site filter', () => {
     expect(chesscom).not.toContain('lichess-1')
   })
 })
+
+describe('SqliteGameRepository.upsertGames on an existing id', () => {
+  it("refreshes a Lichess game's PGN and opening, and counts only new games", async () => {
+    const stale = { ...game('lichess:abc', 'fverona', 'yan', 'white'), site: 'lichess' as const }
+    expect(await repo.upsertGames([stale])).toBe(1)
+    const fresh = { ...stale, pgn: '[%clk 0:03:00]', ecoCode: 'C50', ecoName: 'Italian Game' }
+    expect(await repo.upsertGames([fresh])).toBe(0)
+    expect(await repo.getGame('lichess:abc')).toMatchObject({
+      pgn: '[%clk 0:03:00]',
+      ecoName: 'Italian Game',
+    })
+    await repo.deleteGame('lichess:abc')
+  })
+
+  it('leaves other games as stored', async () => {
+    expect(await repo.upsertGames([{ ...game('1', 'fverona', 'alice', 'white'), pgn: 'x' }])).toBe(
+      0,
+    )
+    expect((await repo.getGame('1'))?.pgn).toBe('')
+  })
+})

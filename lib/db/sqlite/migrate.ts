@@ -72,6 +72,12 @@ async function runMigrations(db: Kysely<DbSchema>): Promise<void> {
       synced_at TEXT NOT NULL
     )
   `.execute(db)
+  // Lichess months synced before #383 shipped (openings came in #378, clocks then) are fetched
+  // once more, so upsertGames() refreshes their games. Later syncs are past the cutoff.
+  await sql`
+    DELETE FROM sync_state
+    WHERE archive_ym LIKE 'lichess:%' AND synced_at < '2026-11-06T15:11:11.000Z'
+  `.execute(db)
 
   await sql`
     CREATE TABLE IF NOT EXISTS repertoire_moves (

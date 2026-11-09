@@ -41,6 +41,25 @@ describe('ensureSchema', { timeout: 60_000 }, () => {
     raw.close()
   })
 
+  it('forgets Lichess months synced before openings and clocks were fetched', async () => {
+    const raw = new Database(':memory:')
+    raw.exec(`
+      CREATE TABLE sync_state (archive_ym TEXT PRIMARY KEY, status TEXT NOT NULL,
+        game_count INTEGER NOT NULL, synced_at TEXT NOT NULL);
+      INSERT INTO sync_state VALUES
+        ('lichess:2026-09', 'complete', 3, '2026-11-01T00:00:00.000Z'),
+        ('lichess:2026-10', 'complete', 3, '2026-11-07T00:00:00.000Z'),
+        ('2026-09', 'complete', 3, '2026-11-01T00:00:00.000Z');
+    `)
+    const ensureSchema = await freshEnsureSchema()
+    await ensureSchema(new Kysely<DbSchema>({ dialect: new SqliteDialect({ database: raw }) }))
+    expect(raw.prepare('SELECT archive_ym FROM sync_state ORDER BY archive_ym').all()).toEqual([
+      { archive_ym: '2026-09' },
+      { archive_ym: 'lichess:2026-10' },
+    ])
+    raw.close()
+  })
+
   it('copies only once when a migration keeps failing', async () => {
     const dir2 = fs.mkdtempSync(path.join(dir, 'failing-'))
     const raw = new Database(path.join(dir2, 'blitzr.db'))

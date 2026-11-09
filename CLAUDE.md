@@ -109,8 +109,10 @@ Every game has a `site` (`chesscom` | `lichess`). `siteUsername(site)` reads `CH
   Bot" PGNs hold a bare bot name that can collide with a real user (`fetchBotAvatar()`).
 - **Lichess** (`https://lichess.org/api`) has no monthly archives, so `listPendingArchives()` makes
   `lichess:YYYY-MM` keys. A month with an unfinished (correspondence) game stays `partial`. A 429
-  waits a full minute, as Lichess asks. No profile pictures. Game ids are `lichess:<id>`, and Next
-  hands `[id]` params over percent-encoded, so game routes decode them (`decodeGameIdParam()`).
+  waits a full minute, as Lichess asks. Re-fetching a Lichess game refreshes its PGN, opening and
+  time class (`upsertGames()`); every other game is insert-only. No profile pictures. Game ids are
+  `lichess:<id>`, and Next hands `[id]` params over percent-encoded, so game routes decode them
+  (`decodeGameIdParam()`).
 
 ## Games that aren't synced
 
