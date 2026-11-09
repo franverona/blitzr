@@ -9,6 +9,8 @@ import { SiteIcon } from './SiteIcon'
 import { Badge } from './Badge'
 import { KnightIcon } from './KnightIcon'
 import { ResultBadge } from './ResultBadge'
+import { Spinner } from './Spinner'
+import { useBulkAnalysis } from './BulkAnalysisProvider'
 import { accuracyTone } from './styles'
 
 export function GameRow({
@@ -22,6 +24,8 @@ export function GameRow({
   select?: { checked: boolean; onToggle: () => void }
 }) {
   const s = getStrings()
+  const { progress } = useBulkAnalysis()
+  const analyzing = progress?.gameId === game.id
   const coachElo = coachRating(game)
   const opponent = `${game.myColor === 'white' ? game.blackUsername : game.whiteUsername}${coachElo != null ? ` (${coachElo})` : ''}`
   const myRating = game.myColor === 'white' ? game.whiteRating : game.blackRating
@@ -70,6 +74,15 @@ export function GameRow({
           <Badge tone={accuracyTone(accuracy.accuracy)} shape="pill" className="tabular-nums">
             {accuracy.accuracy}
           </Badge>
+        ) : analyzing ? (
+          <Spinner
+            role="status"
+            aria-label={s.bulkAnalyze.analyzingProgress(
+              progress.gamesDone + 1,
+              progress.gamesTotal,
+            )}
+            title={s.bulkAnalyze.analyzingProgress(progress.gamesDone + 1, progress.gamesTotal)}
+          />
         ) : (
           <span className="text-zinc-300 dark:text-zinc-700">—</span>
         )}
