@@ -34,6 +34,7 @@ import type { BotElo } from '@/lib/botStrength'
 import { findDuplicateGame, parseManualGame, pgnSite, type ManualGameSide } from '@/lib/manualGame'
 import { summarizeMoveQuality } from '@/lib/moveQuality'
 import { buildOpeningFamilies, openingFamilyLabel, openingFamilyLabels } from '@/lib/openings'
+import { nextPuzzleByRating } from '@/lib/mateProblems'
 import { allMateProblems, getMateProblem } from '@/lib/puzzleSet'
 import { OPENING_LESSONS, countGamesReachingLine } from '@/lib/openingTheory'
 import {
@@ -849,7 +850,7 @@ export async function getTodaySummary(): Promise<{
       repertoireByColor,
     ),
     puzzles: {
-      nextId: retryId ?? problems.find((p) => !solvedIds.has(p.id))?.id ?? null,
+      nextId: retryId ?? nextPuzzleByRating(problems, solved, revealed)?.id ?? null,
       retry: retryId !== undefined,
       // Only puzzles in this set: progress can include ones missing from it (local Polgár).
       solved: problems.filter((p) => solvedIds.has(p.id)).length,
