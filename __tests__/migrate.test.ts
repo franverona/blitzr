@@ -61,15 +61,16 @@ describe('ensureSchema', { timeout: 60_000 }, () => {
     raw.close()
   })
 
-  it('files Lichess UltraBullet games stored as bullet as UltraBullet', async () => {
+  it('files Lichess UltraBullet games stored as bullet, synced or pasted, as UltraBullet', async () => {
     const raw = new Database(':memory:')
     raw.exec(`
       CREATE TABLE games (id TEXT PRIMARY KEY, end_time INTEGER, eco_code TEXT, archive_ym TEXT,
-        time_control TEXT, time_class TEXT);
-      INSERT INTO games (id, time_control, time_class) VALUES
-        ('lichess:ultra', '15+0', 'bullet'),
-        ('lichess:bullet', '60+0', 'bullet'),
-        ('cc', '15', 'bullet');
+        time_control TEXT, time_class TEXT, site TEXT NOT NULL DEFAULT 'chesscom');
+      INSERT INTO games (id, time_control, time_class, site) VALUES
+        ('lichess:ultra', '15+0', 'bullet', 'lichess'),
+        ('pasted-ultra', '15+0', 'bullet', 'lichess'),
+        ('lichess:bullet', '60+0', 'bullet', 'lichess'),
+        ('cc', '15+0', 'bullet', 'chesscom');
     `)
     const ensureSchema = await freshEnsureSchema()
     await ensureSchema(new Kysely<DbSchema>({ dialect: new SqliteDialect({ database: raw }) }))
@@ -77,6 +78,7 @@ describe('ensureSchema', { timeout: 60_000 }, () => {
       { id: 'cc', time_class: 'bullet' },
       { id: 'lichess:bullet', time_class: 'bullet' },
       { id: 'lichess:ultra', time_class: 'ultraBullet' },
+      { id: 'pasted-ultra', time_class: 'ultraBullet' },
     ])
     raw.close()
   })
