@@ -66,6 +66,9 @@ export interface OpeningFamily {
   whiteScore: number
   blackGames: number
   blackScore: number
+  /** Games with an accuracy (analyzed), and their mean own-side accuracy; null with none. */
+  analyzedGames: number
+  avgAccuracy: number | null
   lines: OpeningLine[]
 }
 

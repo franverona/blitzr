@@ -97,6 +97,20 @@ describe('buildOpeningFamilies', () => {
     expect(family.blackScore).toBeCloseTo(0)
   })
 
+  it("averages the accuracy of a family's analyzed games", () => {
+    const analyzed = makeGame({ ecoCode: 'C50' })
+    const other = makeGame({ ecoCode: 'C50' })
+    const unanalyzed = makeGame({ ecoCode: 'C50' })
+    const accuracy = (value: number) => ({ accuracy: value, mistakes: 0, blunders: 0 })
+    const [family] = buildOpeningFamilies([analyzed, other, unanalyzed], {
+      [analyzed.id]: accuracy(80),
+      [other.id]: accuracy(70),
+    })
+    expect(family.analyzedGames).toBe(2)
+    expect(family.avgAccuracy).toBe(75)
+    expect(buildOpeningFamilies([unanalyzed])[0].avgAccuracy).toBeNull()
+  })
+
   it('nests distinct named lines under their shared ECO code', () => {
     const games = [
       makeGame({ ecoCode: 'C50', ecoName: 'Italian Game: 3...Bc5', myResult: 'win' }),

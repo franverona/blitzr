@@ -1,6 +1,6 @@
 import { getLocale } from './i18n/locale'
 import type { Locale } from './i18n/locale'
-import type { Game, MyResult, OpeningFamily, OpeningLine } from './types'
+import type { Game, GameAccuracy, MyResult, OpeningFamily, OpeningLine } from './types'
 
 /** Display label for games with no ECO code. */
 export function unknownOpeningLabel(locale: Locale = getLocale()): string {
@@ -66,14 +66,23 @@ export function openingFamilyLabel(
   return byCode ?? (game.ecoName ? ecoFamilyLabel(game.ecoName) : unknownOpeningLabel(locale))
 }
 
-/** Groups games by 3-char ECO family, with named lines nested underneath. */
-export function buildOpeningFamilies(games: Game[], locale: Locale = getLocale()): OpeningFamily[] {
+/**
+ * Groups games by 3-char ECO family, with named lines nested underneath. Each family also averages
+ * the own-side accuracy of its games in `accuracyByGameId` (the analyzed ones).
+ */
+export function buildOpeningFamilies(
+  games: Game[],
+  accuracyByGameId: Record<string, GameAccuracy> = {},
+  locale: Locale = getLocale(),
+): OpeningFamily[] {
   const families = new Map<
     string,
     {
       overall: ScoreAcc
       white: ScoreAcc
       black: ScoreAcc
+      accuracySum: number
+      analyzedGames: number
       labelCounts: Map<string, number>
       lines: Map<string, { ecoUrl: string | null; acc: ScoreAcc }>
     }
@@ -86,6 +95,8 @@ export function buildOpeningFamilies(games: Game[], locale: Locale = getLocale()
         overall: emptyScore(),
         white: emptyScore(),
         black: emptyScore(),
+        accuracySum: 0,
+        analyzedGames: 0,
         labelCounts: new Map(),
         lines: new Map(),
       })
@@ -93,6 +104,11 @@ export function buildOpeningFamilies(games: Game[], locale: Locale = getLocale()
     const family = families.get(code)!
     addResult(family.overall, game.myResult)
     addResult(game.myColor === 'white' ? family.white : family.black, game.myResult)
+    const accuracy = accuracyByGameId[game.id]?.accuracy
+    if (accuracy !== undefined) {
+      family.accuracySum += accuracy
+      family.analyzedGames++
+    }
 
     const label = game.ecoName ? ecoFamilyLabel(game.ecoName) : unknownOpeningLabel(locale)
     family.labelCounts.set(label, (family.labelCounts.get(label) ?? 0) + 1)
@@ -137,6 +153,8 @@ export function buildOpeningFamilies(games: Game[], locale: Locale = getLocale()
       whiteScore: score(family.white),
       blackGames: family.black.games,
       blackScore: score(family.black),
+      analyzedGames: family.analyzedGames,
+      avgAccuracy: family.analyzedGames > 0 ? family.accuracySum / family.analyzedGames : null,
       lines,
     })
   }

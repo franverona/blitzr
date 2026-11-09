@@ -143,8 +143,11 @@ export async function getGame(id: string): Promise<Game | undefined> {
 }
 
 export async function listOpenings(): Promise<OpeningFamily[]> {
-  const games = await cachedStandardStartGames()
-  return buildOpeningFamilies(games)
+  const [games, accuracyByGameId] = await Promise.all([
+    cachedStandardStartGames(),
+    getGameAccuracyById(),
+  ])
+  return buildOpeningFamilies(games, accuracyByGameId)
 }
 
 export async function getLessonGameStats(moves: string[]): Promise<LessonGameStats> {
