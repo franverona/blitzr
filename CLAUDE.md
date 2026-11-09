@@ -86,8 +86,7 @@ install/runtime and gitignored. `BLITZR_DATA_DIR` moves `data/` (`lib/dataDir.ts
 - **react-chessboard:** a unique `options.id` (`useId()`) when two boards share a page; arrows are
   keyed by start/end square only, so dedupe them. `showNotation` is always `false`
   (`BoardCoordinates` draws them outside; a sibling like `EvalBar` then needs `mb-7`).
-- **`BoardNavControls`** binds its keys globally, ignoring form fields and `<dialog>`s without
-  `data-board-shortcuts`.
+- **`BoardNavControls`** binds its keys globally, ignoring form fields and `<dialog>`s.
 - **Move sounds and site favicons** are hotlinked from the sites' CDNs (not redistributed).
 - **Beginner jargon is explained in place** (`<abbr title>` tooltips, `EvalHelp`), not removed.
 - **Docs:** update README.md alongside this file.
@@ -101,7 +100,9 @@ Every game has a `site` (`chesscom` | `lichess`). `siteUsername(site)` reads `CH
   `syncArchiveMonth()`), so a failed month leaves earlier ones saved. `sync_state` marks months
   `complete`/`partial`; the current month (and the previous, for a day) is always re-fetched.
   Auto-sync on open is `SyncProvider` (`BLITZR_AUTO_SYNC_MINUTES`, `0` turns it off).
-- Ingestion is unfiltered (variants, daily, everything). Filtering happens in `app/actions.ts`:
+- Ingestion keeps daily games and variants: Chess.com stores one chess.js can't replay with
+  `movesSan: null`, while Lichess skips it (Horde, Crazyhouse…) since its parser needs the moves.
+  Filtering happens in `app/actions.ts`:
   engine features need `isStandardChess()`; opening features also need `startsFromStandardPosition()`.
 - **Chess.com** (`https://api.chess.com/pub`): always send a descriptive `User-Agent`. Avatars are
   fetched live, never stored, failing soft to a letter badge. Quirks: "Play vs Coach" games link to
@@ -176,10 +177,12 @@ pnpm test
 pnpm build
 ```
 
-CI (`.github/workflows/ci.yml`) runs these, then smoke-tests `pnpm start`. A page that throws still
-answers 200 (`loading.tsx` streams), so the smoke test checks the server log for `⨯` errors. It
-also loads every `lib/` file a script imports under plain Node, whose type stripping rejects enums,
-parameter properties and imports without `.ts` (which tsc allows).
+CI (`.github/workflows/ci.yml`) runs these on every PR and weekly, after `pnpm audit --prod`, then
+smoke-tests `pnpm start`. A page that throws still answers 200 (`loading.tsx` streams), so the smoke
+test checks the server log for `⨯` errors; it also checks the Stockfish `.wasm` is served as
+`application/wasm` and every page's scripts carry the CSP nonce. It then loads every `lib/` file a
+script imports under plain Node, whose type stripping rejects enums, parameter properties and
+imports without `.ts` (which tsc allows), and runs `pnpm backup` against the smoke database.
 
 ## Running
 

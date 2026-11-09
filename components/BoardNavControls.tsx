@@ -85,9 +85,8 @@ export function BoardNavControls() {
       if (e.metaKey || e.ctrlKey || e.altKey) return
       if (e.target instanceof HTMLElement) {
         if (e.target.isContentEditable || e.target.closest('input, select, textarea')) return
-        // Dialogs block shortcuts unless they opt in with data-board-shortcuts.
-        const dialog = e.target.closest('dialog')
-        if (dialog && !dialog.hasAttribute('data-board-shortcuts')) return
+        // A board in a dialog has no nav controls of its own, so its keys stay the dialog's.
+        if (e.target.closest('dialog')) return
       }
       // A focused button already handles Space natively; avoid toggling twice.
       if (e.key === ' ' && e.target instanceof HTMLElement && e.target.tagName === 'BUTTON') {

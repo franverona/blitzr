@@ -143,8 +143,9 @@ Then it starts the built app against an empty database and checks the main pages
 and checks them again: a game with its analysis and clocks (on the blunders, drill and Today pages
 too), a synced Lichess game, the play page for both, a thrown win and its play page (bot level
 from the game's rating), a repertoire quiz line, a practice game, two lessons and a puzzle from each Lichess set, the localhost-only
-check, the security headers (and that every page's scripts carry the CSP nonce) and the setup screen without a username, failing on any error in the
-server's log (which it prints when a check fails). Last, it loads the `lib/` files the scripts import under plain Node and runs
+check, the security headers (and that every page's scripts carry the CSP nonce), that the engine's
+`.wasm` is served as `application/wasm`, and the setup screen without a username, failing on any
+error in the server's log (which it prints when a check fails). Last, it loads the `lib/` files the scripts import under plain Node and runs
 `pnpm backup`.
 
 `pnpm build` rewrites `.next/`, which a running `pnpm dev` and the pm2 server both read from: the
@@ -183,7 +184,8 @@ month-by-month progress, and games appear as each month lands), and 429s are ret
 stays open while a game started in it is still being played. Lichess games synced before openings
 and clocks were fetched get them from one more fetch of their months. Lichess has no profile
 pictures, so its players show their initial. Ratings on Today are kept per site. Variants chess.js can't replay
-(Horde, Racing Kings, Crazyhouse…) aren't stored. Games Chess.com's API never exposes (e.g. "Play Bots" games) can be added with
+(Horde, Crazyhouse…) are stored from Chess.com, to list but not replay or analyze, and skipped from
+Lichess. Games Chess.com's API never exposes (e.g. "Play Bots" games) can be added with
 **Add game by PGN**; they get their own id, so a later sync never touches them. A PGN exported
 from lichess.org (its `Site` header) becomes a Lichess game, with its link and opening name, and
 `LICHESS_USERNAME` picks your side in it. One from neither site (an over-the-board game, say) is
@@ -235,7 +237,8 @@ A game page also has:
 - **Play from here**: play the position on screen out against Stockfish at a strength you pick
   (~800 to 2500 Elo, starting nearest your rating in that game; under 1320 the rating is a rough
   guess), with the moves listed beside the
-  board (step back with ◀/▶ or ←/→) and **Take back** for your last move. The strength is locked
+  board (step back with ◀/▶ or ←/→, Home/End for the start and the latest move) and **Take back**
+  for your last move. The strength is locked
   once you've moved, until the game ends. A finished game is saved as a **practice game**: it never
   counts in your stats, shows under **Practice games** on the original game (with your wins, draws and
   losses from each start position and the strongest bot you beat there) and on the games page
