@@ -8,6 +8,7 @@ import {
   isValidManualGame,
   isValidPracticePayload,
   normalizeRepertoireNode,
+  replayBestMoves,
 } from '@/lib/validate'
 
 const evalOk = { cp: 20, mate: null, bestMove: { from: 'e2', to: 'e4', san: 'e4', bestLine: [] } }
@@ -25,6 +26,41 @@ describe('isValidAnalysis', () => {
     expect(isValidAnalysis([evalOk, { cp: 1, mate: null, bestMove: { san: 1 } }], 1, 300)).toBe(
       false,
     )
+  })
+})
+
+describe('replayBestMoves', () => {
+  const start = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+
+  it('keeps legal best moves and lines, rebuilt from the position', () => {
+    const evals = [
+      { cp: 20, mate: null, bestMove: { from: 'x', to: 'y', san: 'e4', bestLine: ['e5', 'Nf3'] } },
+      { cp: 20, mate: null, bestMove: { from: 'e7', to: 'e5', san: 'e5', bestLine: [] } },
+    ]
+    expect(replayBestMoves(start, ['e4'], evals)).toEqual([
+      {
+        cp: 20,
+        mate: null,
+        bestMove: { from: 'e2', to: 'e4', san: 'e4', bestLine: ['e5', 'Nf3'] },
+      },
+      evals[1],
+    ])
+  })
+
+  it('drops an illegal best move, and cuts a line at its first illegal move and its cap', () => {
+    const evals = [
+      { cp: 0, mate: null, bestMove: { from: 'e2', to: 'e4', san: 'Qx9', bestLine: [] } },
+      {
+        cp: 0,
+        mate: null,
+        bestMove: { from: 'e7', to: 'e5', san: 'e5', bestLine: ['Nf3', 'Nc6', 'Bb5', 'a6', 'Ba4'] },
+      },
+    ]
+    const [first, second] = replayBestMoves(start, ['e4'], evals)
+    expect(first.bestMove).toBeNull()
+    expect(second.bestMove?.bestLine).toEqual(['Nf3', 'Nc6', 'Bb5', 'a6'])
+    const bad = { ...evals[1], bestMove: { ...evals[1].bestMove, bestLine: ['Nf3', 'Ke8'] } }
+    expect(replayBestMoves(start, ['e4'], [evals[0], bad])[1].bestMove?.bestLine).toEqual(['Nf3'])
   })
 })
 

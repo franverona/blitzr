@@ -6,7 +6,7 @@ import type { BestMove, EngineLine, PositionEval } from '../types'
 const ENGINE_URL = '/stockfish/stockfish-19-lite-single.js'
 
 // Plies of the PV kept after the best move itself.
-const BEST_LINE_PLIES = 4
+export const BEST_LINE_PLIES = 4
 
 function isWhiteToMove(fen: string): boolean {
   return fen.split(' ')[1] === 'w'
