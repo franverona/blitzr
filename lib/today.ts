@@ -71,6 +71,52 @@ export function recentResults(
   return { wins: counts.win, losses: counts.loss, draws: counts.draw, ratings }
 }
 
+export type RatingGap = 'stronger' | 'similar' | 'weaker'
+
+export interface RatingGapScores {
+  site: GameSite
+  /** `score`: a win 1, a draw ½, over `games`. */
+  scores: Record<RatingGap, { games: number; score: number }>
+}
+
+/**
+ * Per site, the score against opponents rated more than `margin` above the user, within it, and
+ * more than it below. A game without both ratings is skipped; sites keep their own scales.
+ */
+export function scoreByRatingGap(games: Game[], margin = 100): RatingGapScores[] {
+  const bySite = new Map<GameSite, Record<RatingGap, { games: number; points: number }>>()
+  for (const game of games) {
+    const mine = game.myColor === 'white' ? game.whiteRating : game.blackRating
+    const theirs = game.myColor === 'white' ? game.blackRating : game.whiteRating
+    if (mine === null || theirs === null) continue
+    const gap: RatingGap =
+      theirs - mine > margin ? 'stronger' : mine - theirs > margin ? 'weaker' : 'similar'
+    const site = bySite.get(game.site) ?? {
+      stronger: { games: 0, points: 0 },
+      similar: { games: 0, points: 0 },
+      weaker: { games: 0, points: 0 },
+    }
+    site[gap].games++
+    site[gap].points += game.myResult === 'win' ? 1 : game.myResult === 'draw' ? 0.5 : 0
+    bySite.set(game.site, site)
+  }
+  return (['chesscom', 'lichess'] as const)
+    .filter((site) => bySite.has(site))
+    .map((site) => {
+      const counts = bySite.get(site)!
+      const scores = Object.fromEntries(
+        (['stronger', 'similar', 'weaker'] as const).map((gap) => [
+          gap,
+          {
+            games: counts[gap].games,
+            score: counts[gap].games === 0 ? 0 : counts[gap].points / counts[gap].games,
+          },
+        ]),
+      ) as RatingGapScores['scores']
+      return { site, scores }
+    })
+}
+
 /** Consecutive review days ending today, or yesterday if today has none yet. */
 export function drillStreak(reviewDays: string[], now: Date): number {
   const days = new Set(reviewDays)
