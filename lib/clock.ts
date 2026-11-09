@@ -19,6 +19,10 @@ export function plyClocks(pgn: string, plies: number): number[] | null {
  * after their previous move, or all of it before their first.
  */
 export function clockShareBeforePly(clocks: number[], ply: number, initial: number): number {
-  const left = ply > 2 ? clocks[ply - 3] : initial
-  return left / initial
+  // A berserked Lichess player starts on exactly half the time, which their first clock shows
+  // (Lichess doesn't run it on the first move). A slow first move elsewhere isn't a berserk.
+  const berserked = Math.abs(clocks[(ply - 1) % 2] - initial / 2) < 1
+  const start = berserked ? initial / 2 : initial
+  const left = ply > 2 ? clocks[ply - 3] : start
+  return left / start
 }

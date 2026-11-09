@@ -28,4 +28,12 @@ describe('clockShareBeforePly', () => {
     expect(clockShareBeforePly(clocks, 3, 600)).toBeCloseTo(590 / 600)
     expect(clockShareBeforePly(clocks, 5, 600)).toBe(0.5)
   })
+
+  it("measures a berserker's share against their halved start", () => {
+    // Black berserked a 3+0 game: 90 seconds, no increment.
+    const clocks = [180, 90, 170, 60, 160, 40]
+    expect(clockShareBeforePly(clocks, 4, 180)).toBe(1)
+    expect(clockShareBeforePly(clocks, 6, 180)).toBeCloseTo(60 / 90)
+    expect(clockShareBeforePly(clocks, 5, 180)).toBeCloseTo(170 / 180)
+  })
 })
