@@ -159,7 +159,15 @@ jobs:
           [ "$status" = 403 ] || { echo "::error::a foreign Host got $status, not 403"; exit 1; }
           headers=$(curl -fsS -D - -o /dev/null http://127.0.0.1:9878/)
           grep -qi '^x-frame-options: DENY' <<< "$headers" || { echo "::error::no X-Frame-Options"; exit 1; }
-          grep -qi "^content-security-policy: .*'nonce-" <<< "$headers" || { echo "::error::no CSP nonce"; exit 1; }
+          # A page that became static would be prerendered without nonces, and 'strict-dynamic' would
+          # block all its scripts while curl still sees a 200: each must carry its response's nonce.
+          for route in / /games /openings /learn /settings /repertoire /drill /blunders /puzzles /puzzles/1 /games/smoke; do
+            page=$(curl -fsS --max-time 30 -D "$RUNNER_TEMP/headers" "http://127.0.0.1:9878$route")
+            nonce=$(grep -i '^content-security-policy:' "$RUNNER_TEMP/headers" | grep -o "'nonce-[^']*'" | sed "s/^'nonce-//; s/'\$//")
+            [ -n "$nonce" ] || { echo "::error::$route has no CSP nonce"; exit 1; }
+            scripts=$(grep -o '<script[^>]*>' <<< "$page")
+            [ -n "$scripts" ] && ! grep -vF "nonce=\"$nonce\"" <<< "$scripts" || { echo "::error::$route has a script without the CSP nonce"; exit 1; }
+          done
           # With no username at all, any page is the setup screen and nothing else.
           CHESSCOM_USERNAME= LICHESS_USERNAME= pnpm start -p 9879 >> "$log" 2>&1 &
           setup=$(curl -fsS --retry 30 --retry-connrefused --retry-delay 1 http://127.0.0.1:9879/games)
