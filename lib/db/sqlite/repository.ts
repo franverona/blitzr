@@ -497,9 +497,14 @@ export class SqliteGameRepository {
       .execute()
   }
 
+  /** Oldest solve first. */
   async listSolvedPuzzleIds(): Promise<number[]> {
     const db = await this.ready()
-    const rows = await db.selectFrom('puzzle_progress').select('puzzle_id').execute()
+    const rows = await db
+      .selectFrom('puzzle_progress')
+      .select('puzzle_id')
+      .orderBy('solved_at')
+      .execute()
     return rows.map((r) => r.puzzle_id)
   }
 

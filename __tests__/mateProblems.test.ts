@@ -1,7 +1,7 @@
 import { Chess } from 'chess.js'
 import { describe, expect, it } from 'vitest'
 import { forcedMateWithin, isForcedMate } from '@/lib/forcedMate'
-import { puzzleColorToMove } from '@/lib/mateProblems'
+import { nextPuzzleByRating, puzzleColorToMove, type MateProblem } from '@/lib/mateProblems'
 import { BUNDLED_MATES, getMateProblem } from '@/lib/puzzleSet'
 
 describe('getMateProblem', () => {
@@ -118,4 +118,26 @@ describe('bundled puzzle content', () => {
     console.info(`Forced-mate sample (${checked.length}): ${checked.join(', ')}`)
     // Worst case on CI: three slow puzzles (~20s each), or the budget plus one past it.
   }, 120_000)
+})
+
+describe('nextPuzzleByRating', () => {
+  const puzzle = (id: number, rating?: number) =>
+    ({ id, rating, fen: '', moves: [], mateIn: 1 }) as unknown as MateProblem
+  const problems = [puzzle(1, 1000), puzzle(2, 1200), puzzle(3, 1400), puzzle(4, 1300), puzzle(5)]
+
+  it('picks the lowest-rated unsolved puzzle above the median of the recent clean solves', () => {
+    // Clean solves 1000 and 1200: median 1100, so 1300 comes before 1400.
+    expect(nextPuzzleByRating(problems, [1, 2], [])?.id).toBe(4)
+    // Only the last `recent` clean solves count: 1200 alone puts the bar at 1200.
+    expect(nextPuzzleByRating(problems, [1, 2], [], 1)?.id).toBe(4)
+  })
+
+  it('leaves out revealed solves, and falls back to list order', () => {
+    // 2 was revealed before it was solved, so 1000 is the median.
+    expect(nextPuzzleByRating(problems, [1, 2], [2])?.id).toBe(4)
+    expect(nextPuzzleByRating(problems, [], [])?.id).toBe(1)
+    // Nothing unsolved above 1400: the first unsolved in list order.
+    expect(nextPuzzleByRating(problems, [3], [])?.id).toBe(1)
+    expect(nextPuzzleByRating(problems, [1, 2, 3, 4, 5], [])).toBeUndefined()
+  })
 })

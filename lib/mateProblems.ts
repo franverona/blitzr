@@ -40,3 +40,37 @@ export function puzzleKindLabel(problem: MateProblem): string {
 export function puzzleColorToMove(problem: MateProblem): 'white' | 'black' {
   return problem.fen.split(' ')[1] === 'b' ? 'black' : 'white'
 }
+
+/**
+ * The next unsolved puzzle: the lowest-rated one above the median rating of the last `recent`
+ * clean solves (solved without revealing the answer), so each one stretches a little. List order
+ * without a rated clean solve, or once nothing unsolved is rated above that median.
+ * `solvedIds` is oldest solve first.
+ */
+export function nextPuzzleByRating(
+  problems: MateProblem[],
+  solvedIds: number[],
+  revealedIds: number[],
+  recent = 10,
+): MateProblem | undefined {
+  const solved = new Set(solvedIds)
+  const revealed = new Set(revealedIds)
+  const ratingById = new Map(problems.map((p) => [p.id, p.rating]))
+  const unsolved = problems.filter((p) => !solved.has(p.id))
+  const ratings = solvedIds
+    .filter((id) => !revealed.has(id))
+    .map((id) => ratingById.get(id))
+    .filter((r): r is number => r !== undefined)
+    .slice(-recent)
+    .sort((a, b) => a - b)
+  if (ratings.length === 0) return unsolved[0]
+  const mid = Math.floor(ratings.length / 2)
+  const median = ratings.length % 2 ? ratings[mid] : (ratings[mid - 1] + ratings[mid]) / 2
+  const next = unsolved
+    .filter((p) => p.rating !== undefined && p.rating > median)
+    .reduce<MateProblem | undefined>(
+      (best, p) => (!best || p.rating! < best.rating! ? p : best),
+      undefined,
+    )
+  return next ?? unsolved[0]
+}

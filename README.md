@@ -310,7 +310,9 @@ final position, and the next unsolved puzzle.
 each linked back to Lichess. You play the whole line yourself, both sides. Wrong moves can be
 retried, and **Reveal solution** doesn't count as solving (a revealed puzzle comes back first as
 Today's next puzzle until you solve it); ←/→ step through the moves played so
-far. Solved puzzles are tracked, and the
+far. Otherwise Today's next puzzle is the easiest unsolved Lichess puzzle rated above the median
+of your last 10 solves without a reveal, so each one stretches a little (list order until you have
+some). Solved puzzles are tracked, and the
 list filters by status, side to move, type and mate length.
 
 Defence puzzles flip it around: about 500 more Lichess positions, taken one move before a mate in 1
