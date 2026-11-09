@@ -7,8 +7,11 @@ import Database from 'better-sqlite3'
 import { dataDir as getDataDir } from '../lib/dataDir.ts'
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
-// Next reads .env.local for the app; a plain node script has to load it itself.
-if (fs.existsSync(path.join(root, '.env.local'))) process.loadEnvFile(path.join(root, '.env.local'))
+// Next reads .env.local, then .env, for the app; a plain node script has to load them itself
+// (a variable already set isn't overwritten, so .env.local wins, as in Next).
+for (const file of ['.env.local', '.env']) {
+  if (fs.existsSync(path.join(root, file))) process.loadEnvFile(path.join(root, file))
+}
 const dataDir = getDataDir(root)
 const src = path.join(dataDir, 'blitzr.db')
 if (!fs.existsSync(src)) {

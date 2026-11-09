@@ -29,7 +29,10 @@ import { dataDir } from '../lib/dataDir.ts'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const pgnPath = path.join(__dirname, '..', 'polgar.pgn')
 const root = path.join(__dirname, '..')
-if (fs.existsSync(path.join(root, '.env.local'))) process.loadEnvFile(path.join(root, '.env.local'))
+// .env.local wins over .env, as in Next (a set variable isn't overwritten).
+for (const file of ['.env.local', '.env']) {
+  if (fs.existsSync(path.join(root, file))) process.loadEnvFile(path.join(root, file))
+}
 const outPath = path.join(dataDir(root), 'polgar-mates.json')
 // The ids right after the 221 real-game puzzles, which is where they started.
 const FIRST_ID = 222
