@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { clockShareBeforePly, initialClockSeconds, plyClocks } from '@/lib/clock'
+import {
+  clockIncrementSeconds,
+  clockShareBeforePly,
+  formatClock,
+  formatThinkTime,
+  initialClockSeconds,
+  moveClocks,
+  plyClocks,
+  thinkSecondsForPly,
+} from '@/lib/clock'
 
 describe('initialClockSeconds', () => {
   it('reads the base time and skips daily or unknown controls', () => {
@@ -35,5 +44,52 @@ describe('clockShareBeforePly', () => {
     expect(clockShareBeforePly(clocks, 4, 180)).toBe(1)
     expect(clockShareBeforePly(clocks, 6, 180)).toBeCloseTo(60 / 90)
     expect(clockShareBeforePly(clocks, 5, 180)).toBeCloseTo(170 / 180)
+  })
+})
+
+describe('clockIncrementSeconds', () => {
+  it('reads the increment, 0 without one', () => {
+    expect(clockIncrementSeconds('180+2')).toBe(2)
+    expect(clockIncrementSeconds('600')).toBe(0)
+    expect(clockIncrementSeconds('-')).toBe(0)
+  })
+})
+
+describe('thinkSecondsForPly', () => {
+  it("takes the mover's clock before, minus after, plus the increment", () => {
+    // 3+2: White's first move took 5s, Black's 3s, White's second 22s.
+    const clocks = [177, 179, 157, 175]
+    expect(thinkSecondsForPly(clocks, 1, 180, 2)).toBe(5)
+    expect(thinkSecondsForPly(clocks, 2, 180, 2)).toBe(3)
+    expect(thinkSecondsForPly(clocks, 3, 180, 2)).toBe(22)
+    expect(thinkSecondsForPly(clocks, 4, 180, 2)).toBe(6)
+  })
+
+  it('starts a berserker on half the time, with no increment', () => {
+    const clocks = [182, 90, 170, 80]
+    expect(thinkSecondsForPly(clocks, 2, 180, 2)).toBe(0)
+    expect(thinkSecondsForPly(clocks, 4, 180, 2)).toBe(10)
+  })
+})
+
+describe('formatClock and formatThinkTime', () => {
+  it('reads like a clock', () => {
+    expect(formatClock(125.7)).toBe('2:05')
+    expect(formatClock(3725)).toBe('1:02:05')
+    expect(formatThinkTime(0.42)).toBe('0.4s')
+    expect(formatThinkTime(12.4)).toBe('12s')
+    expect(formatThinkTime(65)).toBe('1:05')
+  })
+})
+
+describe('moveClocks', () => {
+  it("gives every ply's think time and clock, only in a game clocked on every ply", () => {
+    const pgn = '1. e4 {[%clk 0:02:57]} 1... e5 {[%clk 0:02:59]} *'
+    expect(moveClocks(pgn, 2, '180+2')).toEqual([
+      { spent: 5, left: 177 },
+      { spent: 3, left: 179 },
+    ])
+    expect(moveClocks(pgn, 3, '180+2')).toBeUndefined()
+    expect(moveClocks(pgn, 2, '1/86400')).toBeUndefined()
   })
 })

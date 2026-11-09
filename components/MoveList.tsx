@@ -2,6 +2,7 @@
 
 import { Fragment, useEffect, useMemo, useRef } from 'react'
 import { findBlunders, formatEval, formatSwing } from '@/lib/analysis'
+import { formatClock, formatThinkTime, type MoveClock } from '@/lib/clock'
 import { whiteToMove } from '@/lib/drill'
 import { getStrings } from '@/lib/i18n/strings'
 import { summarizeMoveQuality } from '@/lib/moveQuality'
@@ -108,6 +109,7 @@ export function MoveList({
   evals,
   positions,
   myColor,
+  clocks,
 }: {
   movesSan: string[]
   ply: number
@@ -118,6 +120,8 @@ export function MoveList({
   /** FEN before each ply. */
   positions: string[]
   myColor: MyColor
+  /** Per ply (index `ply - 1`), for a game clocked on every move. */
+  clocks?: MoveClock[]
 }) {
   const pairs = useMemo(() => buildMovePairs(movesSan, positions[0]), [movesSan, positions])
   const activeRef = useRef<HTMLButtonElement>(null)
@@ -178,6 +182,7 @@ export function MoveList({
                   }
                   const isActive = move.ply === ply
                   const tier = tierByPly.get(move.ply)
+                  const clock = clocks?.[move.ply - 1]
                   return (
                     <button
                       key={side}
@@ -191,6 +196,17 @@ export function MoveList({
                     >
                       <PieceMoveLabel san={move.san} color={side} />
                       {tier && <MoveQualityBadge tier={tier} />}
+                      {clock && (
+                        <span
+                          title={s.board.moveClock(
+                            formatThinkTime(clock.spent),
+                            formatClock(clock.left),
+                          )}
+                          className="ml-auto text-xs font-normal text-zinc-500 tabular-nums dark:text-zinc-400"
+                        >
+                          {formatThinkTime(clock.spent)}
+                        </span>
+                      )}
                     </button>
                   )
                 })}

@@ -230,6 +230,8 @@ A game page also has:
   move tiers for both sides, a graph of the eval bar across the game (click it to jump to a move),
   then your inaccuracies, mistakes and blunders. Click one to see it on the board; the panel stays open
   until ✕, Esc or a click outside it. The move list badges the same three tiers on your own moves.
+- In a game with a clock on every move (all Lichess games, Chess.com's when its PGN has them), the
+  time each move took beside it in the move list; hover it for the clock left after the move.
 - **Engine lines**: the top 3 live lines for the current position. ▶ plays a line onto the board.
 - **Explore moves**: try your own moves from any point (just move a piece), with the engine
   following along. Esc or "Back to game" returns to the recorded game.

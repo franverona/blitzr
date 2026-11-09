@@ -18,6 +18,7 @@ import { PositionActions } from '@/components/PositionActions'
 import { ResultBadge } from '@/components/ResultBadge'
 import { fetchBotAvatar, fetchPlayerAvatar } from '@/lib/chesscom/client'
 import { coachRating, isBareBotNameEvent, parsePgnHeaders } from '@/lib/chesscom/normalize'
+import { moveClocks } from '@/lib/clock'
 import { formatDateTime } from '@/lib/dates'
 import { chesscomUrl } from '@/lib/manualGame'
 import { getStrings } from '@/lib/i18n/strings'
@@ -113,6 +114,7 @@ export default async function GamePage({
           boardMaxWidthClassName="max-w-160 lg:max-w-[min(40rem,calc(100dvh-9.25rem))] xl:max-w-[min(43rem,calc(100dvh-9.25rem))] 2xl:max-w-[min(46rem,calc(100dvh-9.25rem))]"
           sidebarMaxWidthClassName="lg:max-w-xs xl:max-w-sm"
           autoExplore
+          moveClocks={moveClocks(game.pgn, game.movesSan.length, game.timeControl)}
           sidebarTop={<LiveAnalysisPanel />}
           sidebarExtra={
             <div className="flex shrink-0 flex-col gap-3">
