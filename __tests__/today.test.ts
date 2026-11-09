@@ -6,6 +6,7 @@ import {
   lossReasons,
   suggestLesson,
   recentResults,
+  scoreByRatingGap,
   repertoireDeviations,
 } from '@/lib/today'
 import type { Game, Lesson, RepertoireColor, RepertoireNode } from '@/lib/types'
@@ -187,5 +188,42 @@ describe('suggestLesson', () => {
       games: 2,
     })
     expect(suggestLesson(games, [lesson('c4', ['c4'])])).toBeNull()
+  })
+})
+
+describe('scoreByRatingGap', () => {
+  const vs = (
+    mine: number,
+    theirs: number | null,
+    myResult: Game['myResult'],
+    site: Game['site'] = 'chesscom',
+  ) =>
+    game({ myColor: 'white', whiteRating: mine, blackRating: theirs, myResult, site, rated: true })
+
+  it('scores games against stronger, similar and weaker opponents, per site', () => {
+    const [chesscom, lichess] = scoreByRatingGap([
+      vs(1500, 1650, 'loss'),
+      vs(1500, 1601, 'draw'),
+      vs(1500, 1600, 'win'),
+      vs(1500, 1400, 'loss'),
+      vs(1500, 1399, 'win'),
+      vs(1500, null, 'win'),
+      vs(1900, 1500, 'win', 'lichess'),
+    ])
+    expect(chesscom.site).toBe('chesscom')
+    expect(chesscom.scores).toEqual({
+      stronger: { games: 2, score: 0.25 },
+      similar: { games: 2, score: 0.5 },
+      weaker: { games: 1, score: 1 },
+    })
+    expect(lichess.site).toBe('lichess')
+    expect(lichess.scores.weaker).toEqual({ games: 1, score: 1 })
+    expect(lichess.scores.stronger).toEqual({ games: 0, score: 0 })
+  })
+
+  it('lists no site without rated games', () => {
+    expect(scoreByRatingGap([vs(1500, null, 'win')])).toEqual([])
+    // A bot or coach game carries ratings but isn't rated.
+    expect(scoreByRatingGap([{ ...vs(1500, 2000, 'win'), rated: false }])).toEqual([])
   })
 })

@@ -10,6 +10,7 @@ import {
   GraduationCapIcon,
   LibraryBigIcon,
   RefreshCwIcon,
+  ScaleIcon,
   TargetIcon,
   ZapIcon,
 } from '@/components/NavIcons'
@@ -309,6 +310,35 @@ export default async function TodayPage() {
                     </Badge>
                   ))}
                 </div>
+              </FocusRow>
+            )}
+
+            {today.ratingGaps.length > 0 && (
+              <FocusRow
+                icon={<ScaleIcon className="size-4" />}
+                tone="blue"
+                label={s.today.ratingGapLabel}
+              >
+                {today.ratingGaps.map(({ site, scores }) => (
+                  <p key={site} className="text-sm">
+                    {/* Named only with both sites, as the ratings above. */}
+                    {today.ratingGaps.length > 1 && (
+                      <span className="text-zinc-500 dark:text-zinc-400">
+                        {s.common.site[site]}:{' '}
+                      </span>
+                    )}
+                    {(['stronger', 'similar', 'weaker'] as const)
+                      .filter((gap) => scores[gap].games > 0)
+                      .map(
+                        (gap) =>
+                          `${s.today.ratingGaps[gap]} ${Math.round(scores[gap].score * 100)}% (${scores[gap].games})`,
+                      )
+                      .join(' · ')}
+                  </p>
+                ))}
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  {s.today.ratingGapDetail}
+                </p>
               </FocusRow>
             )}
 
