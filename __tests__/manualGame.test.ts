@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { findDuplicateGame, parseManualGame, pgnSite } from '@/lib/manualGame'
+import { findDuplicateGame, parseManualGame, pgnSite, timeClassFromControl } from '@/lib/manualGame'
 
 // Exact PGN from issue #62 — a "Play vs Bot" game, the case the public
 // Chess.com API never exposes at all.
@@ -282,5 +282,23 @@ describe('findDuplicateGame', () => {
       url: 'https://www.chess.com/game/computer/1',
     }
     expect(findDuplicateGame(pasted, [other])).toBeUndefined()
+  })
+})
+
+describe('timeClassFromControl', () => {
+  it("classes a TimeControl by each site's thresholds", () => {
+    expect(timeClassFromControl('60+1', 'chesscom')).toBe('bullet')
+    expect(timeClassFromControl('300+3', 'chesscom')).toBe('blitz')
+    expect(timeClassFromControl('600', 'chesscom')).toBe('rapid')
+    expect(timeClassFromControl('1/86400', 'chesscom')).toBe('daily')
+    expect(timeClassFromControl('600+0', 'lichess')).toBe('rapid')
+    expect(timeClassFromControl('1800+0', 'lichess')).toBe('classical')
+    expect(timeClassFromControl('-', 'lichess')).toBe('correspondence')
+  })
+
+  it('is unknown without a parseable TimeControl', () => {
+    expect(timeClassFromControl(undefined, 'chesscom')).toBe('unknown')
+    expect(timeClassFromControl('-', 'chesscom')).toBe('unknown')
+    expect(timeClassFromControl('40/7200:3600', 'chesscom')).toBe('unknown')
   })
 })

@@ -102,6 +102,21 @@ export function pgnSite(pgn: string): GameSite {
   return lichessUrl(parsePgnHeaders(pgn).Site) ? 'lichess' : 'chesscom'
 }
 
+/**
+ * The site's time class for a PGN `TimeControl`, by estimated duration (base + 40 × increment).
+ * Chess.com's daily games are `1/<seconds per move>`, Lichess's correspondence ones `-`.
+ */
+export function timeClassFromControl(timeControl: string | undefined, site: GameSite): string {
+  if (/^1\/\d+$/.test(timeControl ?? '')) return 'daily'
+  if (site === 'lichess' && timeControl === '-') return 'correspondence'
+  const match = timeControl?.match(/^(\d+)(?:\+(\d+))?$/)
+  if (!match) return 'unknown'
+  const seconds = Number(match[1]) + 40 * Number(match[2] ?? 0)
+  if (seconds < 180) return 'bullet'
+  if (site === 'chesscom') return seconds < 600 ? 'blitz' : 'rapid'
+  return seconds < 480 ? 'blitz' : seconds < 1500 ? 'rapid' : 'classical'
+}
+
 /** 'auto' matches the username against the PGN's players. */
 export type ManualGameSide = 'auto' | MyColor | 'notMine'
 
@@ -157,7 +172,7 @@ export function parseManualGame(
     initialFen: headers.FEN ?? new Chess().fen(),
     finalFen,
     timeControl: headers.TimeControl ?? '',
-    timeClass: 'unknown',
+    timeClass: timeClassFromControl(headers.TimeControl, lichessLink ? 'lichess' : 'chesscom'),
     rules: rulesFromVariant(headers.Variant),
     rated: false,
     endTime: endTimeFromPgnDate(headers),
