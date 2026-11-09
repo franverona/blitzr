@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   buildDrillPrompt,
   dueDrillCards,
+  dueForecast,
   findBlunderCandidates,
   findDeviationCandidates,
   findMissedMateCandidates,
@@ -9,6 +10,7 @@ import {
   getSessionSize,
   isNearBestMove,
   keepsForcedMate,
+  learnedCounts,
   newCardSchedule,
   reconcileDrillDeck,
   scheduleReview,
@@ -572,5 +574,37 @@ describe('troubleCards', () => {
     const cards = [once, twice, twiceThenHit, thrice, fresh]
     expect(troubleCards(cards).map((c) => c.ply)).toEqual([4, 2, 3])
     expect(troubleCards(cards, 1).map((c) => c.ply)).toEqual([4])
+  })
+})
+
+describe('dueForecast', () => {
+  // Local times, so the local-day buckets hold in any time zone.
+  const now = new Date(2024, 1, 1, 12)
+  const at = (day: number, hour: number) => new Date(2024, 1, day, hour).toISOString()
+
+  it('counts cards by the local day they come due, leaving out the ones due now', () => {
+    const cards = [
+      makeCard({ dueAt: at(1, 9) }),
+      makeCard({ dueAt: at(1, 18) }),
+      makeCard({ dueAt: at(2, 0) }),
+      makeCard({ dueAt: at(2, 23) }),
+      makeCard({ dueAt: at(7, 10) }),
+      makeCard({ dueAt: at(8, 10) }),
+    ]
+    expect(dueForecast(cards, now)).toEqual([1, 2, 0, 0, 0, 0, 1])
+  })
+})
+
+describe('learnedCounts', () => {
+  it('counts cards per type and those with an interval of three weeks or more', () => {
+    const cards = [
+      makeCard({ intervalDays: 21 }),
+      makeCard({ intervalDays: 20.9 }),
+      makeCard({ sourceType: 'mate', intervalDays: 40 }),
+    ]
+    expect(learnedCounts(cards)).toEqual({
+      blunder: { total: 2, learned: 1 },
+      mate: { total: 1, learned: 1 },
+    })
   })
 })

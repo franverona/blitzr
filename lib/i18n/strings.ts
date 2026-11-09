@@ -191,6 +191,17 @@ const en = {
       'Cards for moves where you had a forced mate in 3 or fewer and played something else',
     clearOpening: 'Show all openings',
   },
+  drillProgress: {
+    title: 'Progress',
+    learned: (learned: number, total: number) => `${learned} of ${total} learned`,
+    learnedTooltip:
+      'A card counts as learned once you have answered it right often enough that it comes back three weeks or more later.',
+    forecast: 'Coming due',
+    forecastTooltip:
+      'Cards that come due on each of the next seven days, on top of the ones due now.',
+    laterToday: 'Later today',
+    tomorrow: 'Tomorrow',
+  },
   troubleCards: {
     title: 'Trouble cards',
     tooltip:
@@ -936,6 +947,17 @@ const es: Strings = {
     matesTitle:
       'Tarjetas de jugadas en las que tenías un mate forzado en 3 o menos y jugaste otra cosa',
     clearOpening: 'Mostrar todas las aperturas',
+  },
+  drillProgress: {
+    title: 'Progreso',
+    learned: (learned: number, total: number) => `${learned} de ${total} aprendidas`,
+    learnedTooltip:
+      'Una tarjeta cuenta como aprendida cuando la has acertado las veces suficientes para que vuelva dentro de tres semanas o más.',
+    forecast: 'Próximas',
+    forecastTooltip:
+      'Tarjetas que tocan en cada uno de los próximos siete días, además de las que tocan ahora.',
+    laterToday: 'Hoy, más tarde',
+    tomorrow: 'Mañana',
   },
   troubleCards: {
     title: 'Tarjetas difíciles',

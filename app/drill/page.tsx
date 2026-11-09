@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers'
 import { getDrillDeck } from '../actions'
 import { DrillFilters } from '@/components/DrillFilters'
+import { DrillProgress } from '@/components/DrillProgress'
 import { DrillSession } from '@/components/DrillSession'
 import { TroubleCards } from '@/components/TroubleCards'
 import { getStrings } from '@/lib/i18n/strings'
@@ -17,7 +18,7 @@ export default async function DrillPage({
     type === 'deviation' || type === 'blunder' || type === 'punish' || type === 'mate'
       ? type
       : undefined
-  const { prompts, totalCards, dueCount, troubles } = await getDrillDeck({
+  const { prompts, totalCards, dueCount, troubles, forecast, learned } = await getDrillDeck({
     sourceType,
     opening,
   })
@@ -37,6 +38,7 @@ export default async function DrillPage({
         filtered={Boolean(sourceType || opening)}
         initialAutoAdvance={(await cookies()).get('blitzr-drill-auto-advance')?.value === '1'}
       />
+      <DrillProgress forecast={forecast} learned={learned} />
       <TroubleCards troubles={troubles} />
     </div>
   )
