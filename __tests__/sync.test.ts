@@ -297,6 +297,8 @@ describe('listPendingArchives', () => {
     vi.mocked(fetchArchives).mockRejectedValue(new Error('chess.com down'))
     await expect(listPendingArchives()).rejects.toThrow('chess.com down')
     usernames.lichess = undefined
+    // The only configured site failing throws too, rather than listing nothing.
+    await expect(listPendingArchives()).rejects.toThrow('chess.com down')
     vi.useRealTimers()
   })
 })
