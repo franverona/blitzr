@@ -33,8 +33,9 @@ type GamesSearchParams = {
 export default async function GamesPage({
   searchParams,
 }: {
-  searchParams: Promise<GamesSearchParams>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
+  // A repeated key (`?q=a&q=b`) arrives as an array; it's dropped rather than trusted as a string.
   const {
     page: pageParam,
     q,
@@ -45,7 +46,9 @@ export default async function GamesPage({
     accOp,
     accValue,
     practice,
-  } = await searchParams
+  }: GamesSearchParams = Object.fromEntries(
+    Object.entries(await searchParams).filter(([, v]) => typeof v === 'string'),
+  )
   const site = siteParam === 'chesscom' || siteParam === 'lichess' ? siteParam : undefined
   // Practice games only; they have no accuracy filter, since getGameAccuracyById() skips them.
   const practiceOnly = practice === '1'
