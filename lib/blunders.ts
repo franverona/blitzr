@@ -1,6 +1,12 @@
 import type { PieceSymbol } from 'chess.js'
 import { findBlunders } from './analysis'
-import { clockShareBeforePly, initialClockSeconds, plyClocks } from './clock'
+import {
+  clockIncrementSeconds,
+  clockShareBeforePly,
+  initialClockSeconds,
+  plyClocks,
+  thinkSecondsForPly,
+} from './clock'
 import { formatDate } from './dates'
 import { isNearBestMove, whiteToMove } from './drill'
 import { getLocale } from './i18n/locale'
@@ -104,6 +110,18 @@ function clockBucket(share: number): ClockBucket {
   return share > 0.5 ? 'plenty' : share >= 0.2 ? 'some' : 'short'
 }
 
+type ThinkBucket = 'hasty' | 'normal' | 'long'
+const THINK_ORDER: ThinkBucket[] = ['hasty', 'normal', 'long']
+const THINK_LABELS: Record<Locale, Record<ThinkBucket, string>> = {
+  en: { hasty: 'Under 5 seconds', normal: '5 to 30 seconds', long: 'Over 30 seconds' },
+  es: { hasty: 'Menos de 5 segundos', normal: 'De 5 a 30 segundos', long: 'Más de 30 segundos' },
+}
+
+// Hasty blunders want slowing down; long-think ones, calculating better.
+function thinkBucket(seconds: number): ThinkBucket {
+  return seconds < 5 ? 'hasty' : seconds <= 30 ? 'normal' : 'long'
+}
+
 /**
  * Cross-game aggregate of the user's own blunders over analyzed games. The
  * caller merges in `trend`.
@@ -120,6 +138,7 @@ export function buildBlunderStats(
   const byReason = new Map<string, GroupAcc>()
   const byPhase = new Map<string, GroupAcc>()
   const byClock = new Map<string, GroupAcc>()
+  const byThinkTime = new Map<string, GroupAcc>()
   const worst: BlunderCandidate[] = []
   let analyzedGames = 0
   let totalBlunders = 0
@@ -136,6 +155,7 @@ export function buildBlunderStats(
     let positions: string[] | undefined
     const initialClock = initialClockSeconds(game.timeControl)
     const clocks = initialClock ? plyClocks(game.pgn, game.movesSan.length) : null
+    const increment = clockIncrementSeconds(game.timeControl)
 
     for (const blunder of findBlunders(analysis.evals, game.movesSan, game.initialFen)) {
       const isMine = whiteToMove(blunder.ply, game.initialFen) === (game.myColor === 'white')
@@ -172,6 +192,8 @@ export function buildBlunderStats(
       if (clocks && initialClock) {
         const bucket = clockBucket(clockShareBeforePly(clocks, blunder.ply, initialClock))
         accumulate(byClock, bucket, CLOCK_LABELS[locale][bucket], blunder.swingCp, isMateSwing)
+        const think = thinkBucket(thinkSecondsForPly(clocks, blunder.ply, initialClock, increment))
+        accumulate(byThinkTime, think, THINK_LABELS[locale][think], blunder.swingCp, isMateSwing)
       }
 
       worst.push({
@@ -233,6 +255,11 @@ export function buildBlunderStats(
     byClock: toGroupStats(byClock).sort(
       (a, b) =>
         CLOCK_ORDER.indexOf(a.key as ClockBucket) - CLOCK_ORDER.indexOf(b.key as ClockBucket),
+    ),
+    // Quickest first; the same games as `byClock`.
+    byThinkTime: toGroupStats(byThinkTime).sort(
+      (a, b) =>
+        THINK_ORDER.indexOf(a.key as ThinkBucket) - THINK_ORDER.indexOf(b.key as ThinkBucket),
     ),
     worst: topWorst,
   }

@@ -278,7 +278,8 @@ which moves count as blunders, so its blunder cards (and their review history) m
 `/blunders` shows how often you punished your opponents' blunders, and aggregates your own
 blunders across analyzed games by opening family, by piece, by tactic
 (hanging piece, fork, pin, skewer, or no simple pattern), by game phase (opening, middlegame,
-endgame) and, for games with a clock on every move, by how much of your time was left, with a top-10 worst list (each opening its game at that move) and an accuracy trend
+endgame) and, for games with a clock on every move, by how much of your time was left and by how
+long you spent on the move (under 5 seconds, 5 to 30, over 30), with a top-10 worst list (each opening its game at that move) and an accuracy trend
 (per-game dots plus a 10-game rolling average). **Won positions not won** lists the games you drew
 or lost after your winning chances reached 90%, each linking to your best position and to your own
 move after it that cost the most, and to play the winning position out against the bot. A date range

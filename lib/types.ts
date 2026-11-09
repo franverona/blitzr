@@ -313,6 +313,8 @@ export interface BlunderStats {
   byPhase: BlunderGroupStat[]
   /** By the share of the starting clock left before the move; empty without clocked games. */
   byClock: BlunderGroupStat[]
+  /** By the seconds spent on the move, in the same games as `byClock`. */
+  byThinkTime: BlunderGroupStat[]
   worst: WorstBlunder[]
   /** Oldest first, one point per analyzed game in scope. */
   trend: AccuracyTrendPoint[]

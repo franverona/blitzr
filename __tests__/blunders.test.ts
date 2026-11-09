@@ -194,7 +194,12 @@ describe('buildBlunderStats', () => {
     expect(buildBlunderStats([clocked, daily], analyses).byClock).toEqual([
       { key: 'short', label: 'Under a fifth', count: 1, avgSwingCp: 260 },
     ])
+    // 2.a4 took 10s (30 → 20).
+    expect(buildBlunderStats([clocked, daily], analyses).byThinkTime).toEqual([
+      { key: 'normal', label: '5 to 30 seconds', count: 1, avgSwingCp: 260 },
+    ])
     expect(buildBlunderStats([daily], analyses).byClock).toEqual([])
+    expect(buildBlunderStats([daily], analyses).byThinkTime).toEqual([])
   })
 
   it('excludes blunders on the opponent’s plies', () => {
