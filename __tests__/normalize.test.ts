@@ -43,6 +43,12 @@ describe('ecoNameFromUrl', () => {
   it('returns the decoded slug unchanged when no move-number token is found', () => {
     expect(ecoNameFromUrl('https://www.chess.com/openings/Italian-Game')).toBe('Italian Game')
   })
+
+  it('keeps the raw slug when it has a malformed % escape', () => {
+    expect(ecoNameFromUrl('https://www.chess.com/openings/Italian-Game-100%')).toBe(
+      'Italian Game: 100%',
+    )
+  })
 })
 
 describe('parsePgnHeaders', () => {
