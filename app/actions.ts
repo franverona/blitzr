@@ -63,6 +63,7 @@ import {
 } from '@/lib/today'
 import {
   isValidAnalysis,
+  replayBestMoves,
   isValidDrillAnswer,
   isValidDrillUndo,
   isValidManualGame,
@@ -436,7 +437,7 @@ export async function saveGameAnalysis(
     }
     await getRepository().saveGameAnalysis({
       gameId,
-      evals,
+      evals: replayBestMoves(game.initialFen, game.movesSan, evals),
       analyzedAt: new Date().toISOString(),
       movetimeMs,
     })

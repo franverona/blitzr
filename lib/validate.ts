@@ -1,6 +1,8 @@
 import { Chess } from 'chess.js'
 import { isBotElo } from './botStrength'
 import type { ManualGameSide } from './manualGame'
+import { buildPositions } from './positions'
+import { BEST_LINE_PLIES } from './stockfish/client'
 import type { PositionEval, RepertoireNode } from './types'
 
 // Server Actions are plain POST endpoints, so their arguments are untrusted.
@@ -34,6 +36,37 @@ export function isValidAnalysis(evals: unknown, moveCount: number, movetimeMs: u
     Number.isInteger(movetimeMs) &&
     movetimeMs > 0
   )
+}
+
+/**
+ * `evals` rebuilt with each best move replayed from its position: one that isn't legal there
+ * becomes null, and its line stops at its first illegal move (and at `BEST_LINE_PLIES`).
+ */
+export function replayBestMoves(
+  initialFen: string,
+  movesSan: string[],
+  evals: PositionEval[],
+): PositionEval[] {
+  const positions = buildPositions(initialFen, movesSan)
+  return evals.map(({ cp, mate, bestMove }, i) => {
+    if (!bestMove) return { cp, mate, bestMove: null }
+    const chess = new Chess(positions[i])
+    let move
+    try {
+      move = chess.move(bestMove.san)
+    } catch {
+      return { cp, mate, bestMove: null }
+    }
+    const bestLine: string[] = []
+    for (const san of bestMove.bestLine.slice(0, BEST_LINE_PLIES)) {
+      try {
+        bestLine.push(chess.move(san).san)
+      } catch {
+        break
+      }
+    }
+    return { cp, mate, bestMove: { from: move.from, to: move.to, san: move.san, bestLine } }
+  })
 }
 
 /** `savePracticeGame()`'s payload shape; the moves themselves are replayed by the builder. */
