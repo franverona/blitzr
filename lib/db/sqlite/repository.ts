@@ -166,23 +166,45 @@ export class SqliteGameRepository {
     return this.db
   }
 
-  /** Inserts games, skipping existing ids. Returns how many were new. */
+  /**
+   * Inserts games, skipping existing ids, except that a Lichess game's PGN, opening and time class
+   * are refreshed: ones synced before #378/#383 lack openings and clocks. Returns how many were new.
+   */
   async upsertGames(games: Game[]): Promise<number> {
     if (games.length === 0) return 0
     const db = await this.ready()
     return db.transaction().execute(async (trx) => {
-      let inserted = 0
+      // Counted, since an updated row also counts as "inserted or updated".
+      const countGames = async () =>
+        Number(
+          (
+            await trx
+              .selectFrom('games')
+              .select((eb) => eb.fn.countAll().as('n'))
+              .executeTakeFirstOrThrow()
+          ).n,
+        )
+      const before = await countGames()
       // Chunked: one statement for a heavy month exceeds SQLite's 32,766-parameter limit.
       for (let i = 0; i < games.length; i += UPSERT_CHUNK_SIZE) {
-        const results = await trx
+        await trx
           .insertInto('games')
           .values(games.slice(i, i + UPSERT_CHUNK_SIZE).map(gameToRow))
-          .onConflict((oc) => oc.doNothing())
+          .onConflict((oc) =>
+            oc
+              .column('id')
+              .doUpdateSet((eb) => ({
+                pgn: eb.ref('excluded.pgn'),
+                time_class: eb.ref('excluded.time_class'),
+                eco_code: eb.ref('excluded.eco_code'),
+                eco_name: eb.ref('excluded.eco_name'),
+                eco_url: eb.ref('excluded.eco_url'),
+              }))
+              .where('games.id', 'like', 'lichess:%'),
+          )
           .execute()
-        // Count actual inserts, not attempts (ON CONFLICT DO NOTHING skips most).
-        inserted += results.reduce((sum, r) => sum + Number(r.numInsertedOrUpdatedRows ?? 0), 0)
       }
-      return inserted
+      return (await countGames()) - before
     })
   }
 

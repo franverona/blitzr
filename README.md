@@ -178,8 +178,9 @@ download). See [Puzzles](#puzzles) for what each set contains.
 Requests send a descriptive `User-Agent`, months are fetched serially (the button shows
 month-by-month progress, and games appear as each month lands), and 429s are retried with backoff
 (a full minute for Lichess, as it asks). Lichess months run from your account's creation, and one
-stays open while a game started in it is still being played. Lichess has no profile pictures, so
-its players show their initial. Ratings on Today are kept per site. Variants chess.js can't replay
+stays open while a game started in it is still being played. Lichess games synced before openings
+and clocks were fetched get them from one more fetch of their months. Lichess has no profile
+pictures, so its players show their initial. Ratings on Today are kept per site. Variants chess.js can't replay
 (Horde, Racing Kings, Crazyhouse…) aren't stored. Games Chess.com's API never exposes (e.g. "Play Bots" games) can be added with
 **Add game by PGN**; they get their own id, so a later sync never touches them. A PGN exported
 from lichess.org (its `Site` header) becomes a Lichess game, with its link and opening name, and
