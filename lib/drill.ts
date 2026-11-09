@@ -314,6 +314,40 @@ export function dueDrillCards(
   return filterDrillCards(cards, filters, openingOf).filter((c) => c.dueAt <= nowIso)
 }
 
+/** A card counts as learned once its interval reaches three weeks. */
+export const LEARNED_INTERVAL_DAYS = 21
+
+/**
+ * How many cards come due on each of the next `days` local days, today first. Today counts only
+ * cards not due yet: the due ones are the session.
+ */
+export function dueForecast(cards: DrillCard[], now: Date, days = 7): number[] {
+  const counts = new Array<number>(days).fill(0)
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  for (const card of cards) {
+    const due = new Date(card.dueAt)
+    if (due <= now) continue
+    const dueDay = new Date(due.getFullYear(), due.getMonth(), due.getDate())
+    // Rounded: a DST change makes a day 23 or 25 hours.
+    const index = Math.round((dueDay.getTime() - today.getTime()) / 86_400_000)
+    if (index < days) counts[index]++
+  }
+  return counts
+}
+
+export type LearnedCounts = Partial<Record<DrillSourceType, { total: number; learned: number }>>
+
+/** Per card type, how many cards there are and how many are learned. */
+export function learnedCounts(cards: DrillCard[]): LearnedCounts {
+  const counts: LearnedCounts = {}
+  for (const card of cards) {
+    const count = (counts[card.sourceType] ??= { total: 0, learned: 0 })
+    count.total++
+    if (card.intervalDays >= LEARNED_INTERVAL_DAYS) count.learned++
+  }
+  return counts
+}
+
 // Ease is 2.5 - 0.2·misses + 0.1·hits, so this lists 2·misses - hits >= 3: two misses and
 // a hit (2.2) is in, one miss (2.3) or two misses and two hits (2.3) is out.
 const TROUBLE_EASE_BELOW = 2.25

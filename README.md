@@ -263,7 +263,9 @@ session where you left it.
 After a miss on a blunder, missed-punishment or missed-mate card, the engine's move is explained,
 with its plan on a step-through board.
 **Undo** (or U) takes back a misclicked answer, restoring the card's schedule, until you move on.
-**Trouble cards** below the session show up to 5 cards you keep missing, as positions linking to
+Below the session, **Progress** counts each card type's learned cards (ones coming back three weeks
+or more later), and **Coming due** shows how many cards fall due on each of the next seven days.
+**Trouble cards** below them show up to 5 cards you keep missing, as positions linking to
 their games, without the answer (the game opens with the engine's hints hidden until you move), and
 all but deviations with a link to play that position out against the bot.
 Shortcuts: Space/Enter for the next card, H for a hint, U to undo. Re-analyzing a game at another strength can change
