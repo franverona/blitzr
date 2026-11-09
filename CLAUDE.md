@@ -38,7 +38,7 @@ major, so tsc rejects APIs Node 22 lacks; Dependabot ignores its majors. Bump al
 
 `data/` (database, backups, `polgar-mates.json`) and `public/stockfish/` are created at
 install/runtime and gitignored. `BLITZR_DATA_DIR` moves `data/` (`lib/dataDir.ts`). Scripts load
-`.env.local` themselves (`process.loadEnvFile`), since only Next does it for the app.
+`.env.local`, then `.env`, themselves (`process.loadEnvFile`), since only Next does it for the app.
 
 ## Key conventions
 
