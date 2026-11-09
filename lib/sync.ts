@@ -57,8 +57,8 @@ function isPending(key: string, syncedStatus: Map<string, string>, oldestOpen: s
  * Archive months to fetch, oldest first per site (Chess.com's, then Lichess's): every one not
  * marked complete, plus any still-open month. The client syncs them one call at a time so it can
  * show progress. Only sites with a username set are synced. A site that fails to list its months
- * doesn't hold back the other: its error comes back beside the other's months, and only when both
- * fail does this throw.
+ * doesn't hold back the other: its error comes back beside the other's months, and only when every
+ * configured site fails does this throw.
  */
 export async function listPendingArchives(): Promise<{ archives: string[]; error?: unknown }> {
   const syncedStatus = new Map(
@@ -67,19 +67,22 @@ export async function listPendingArchives(): Promise<{ archives: string[]; error
   const oldestOpen = oldestOpenArchiveYm()
   const chesscom = siteUsername('chesscom')
   const lichess = siteUsername('lichess')
+  // Only configured sites are settled, so a lone site's failure still counts as "all failed".
   const sites = await Promise.allSettled([
-    chesscom
-      ? fetchArchives(chesscom).then((urls) => pendingArchiveYms(urls, syncedStatus, oldestOpen))
-      : [],
-    lichess
-      ? fetchLichessCreatedAt(lichess).then((createdAt) =>
-          lichessArchiveYms(createdAt).filter((key) => isPending(key, syncedStatus, oldestOpen)),
-        )
-      : [],
+    ...(chesscom
+      ? [fetchArchives(chesscom).then((urls) => pendingArchiveYms(urls, syncedStatus, oldestOpen))]
+      : []),
+    ...(lichess
+      ? [
+          fetchLichessCreatedAt(lichess).then((createdAt) =>
+            lichessArchiveYms(createdAt).filter((key) => isPending(key, syncedStatus, oldestOpen)),
+          ),
+        ]
+      : []),
   ])
   const listed = sites.flatMap((r) => (r.status === 'fulfilled' ? [r.value] : []))
   const failed = sites.flatMap((r) => (r.status === 'rejected' ? [r.reason] : []))
-  if (listed.length === 0) throw failed[0]
+  if (listed.length === 0 && failed.length > 0) throw failed[0]
   return { archives: listed.flat(), error: failed[0] }
 }
 
