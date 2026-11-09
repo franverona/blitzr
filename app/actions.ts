@@ -256,6 +256,7 @@ export async function addManualGame(
 
 /** Synced games aren't deletable: the next sync would bring them back. Practice games are. */
 export async function deleteManualGame(id: string): Promise<void> {
+  if (typeof id !== 'string') return
   const repo = getRepository()
   const game = await repo.getGame(id)
   if (game?.archiveYm !== 'manual' && game?.archiveYm !== 'practice') return
@@ -333,6 +334,7 @@ export async function exportDatabaseBackup(): Promise<
 }
 
 export async function listRepertoire(color: RepertoireColor): Promise<RepertoireNode[]> {
+  if (color !== 'white' && color !== 'black') return []
   return getRepository().listRepertoireNodes(color)
 }
 
