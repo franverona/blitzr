@@ -138,9 +138,10 @@ pnpm test
 pnpm build
 ```
 
-Then it starts the built app against an empty database and checks the main pages, a seeded game
-with its analysis (on the blunders, drill and Today pages too), a synced Lichess game, the play
-page for both, a practice game, two lessons and a puzzle from each Lichess set, the localhost-only
+Then it starts the built app against an empty database and checks the main pages, then seeds data
+and checks them again: a game with its analysis and clocks (on the blunders, drill and Today pages
+too), a synced Lichess game, the play page for both, a thrown win and its play page (bot level
+from the game's rating), a repertoire quiz line, a practice game, two lessons and a puzzle from each Lichess set, the localhost-only
 check, the security headers (and that every page's scripts carry the CSP nonce) and the setup screen without a username, failing on any error in the
 server's log (which it prints when a check fails). Last, it loads the `lib/` files the scripts import under plain Node and runs
 `pnpm backup`.
