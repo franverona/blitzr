@@ -1,6 +1,3 @@
-'use client'
-
-import { useState } from 'react'
 import Link from 'next/link'
 import { MiniBoard } from '@/components/MiniBoard'
 import { ENDGAME_LESSONS } from '@/lib/endgameTheory'
@@ -14,6 +11,8 @@ import { PageHeader } from '@/components/PageHeader'
 import { chipClass } from '@/components/styles'
 
 type Category = 'openings' | 'endgames' | 'positions'
+type ColorFilter = 'all' | 'white' | 'black'
+type GoalFilter = 'all' | 'win' | 'draw'
 
 const LESSONS: Record<Category, Lesson[]> = {
   openings: OPENING_LESSONS,
@@ -45,25 +44,63 @@ function LessonGrid({ lessons }: { lessons: Lesson[] }) {
   )
 }
 
-function CategoryTab({
-  label,
-  active,
-  onClick,
+function FilterTabs<T extends string>({
+  current,
+  options,
+  hrefFor,
 }: {
-  label: string
-  active: boolean
-  onClick: () => void
+  current: T
+  options: { value: T; label: string }[]
+  hrefFor: (value: T) => string
 }) {
   return (
-    <button onClick={onClick} className={chipClass(active)}>
-      {label}
-    </button>
+    <div className="flex flex-wrap items-center gap-2">
+      {options.map((tab) => (
+        <Link
+          key={tab.value}
+          href={hrefFor(tab.value)}
+          className={chipClass(current === tab.value)}
+        >
+          {tab.label}
+        </Link>
+      ))}
+    </div>
   )
 }
 
-export default function LearnPage() {
+/** URL-driven filters, like /puzzles: `?category=…&color=…&goal=…`. */
+export default async function LearnPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ category?: string; color?: string; goal?: string }>
+}) {
   const s = getStrings()
-  const [category, setCategory] = useState<Category>('openings')
+  const params = await searchParams
+  const category: Category =
+    params.category === 'endgames' || params.category === 'positions' ? params.category : 'openings'
+  const color: ColorFilter =
+    params.color === 'white' || params.color === 'black' ? params.color : 'all'
+  // Openings have nothing to play for, so no goal.
+  const goal: GoalFilter =
+    category !== 'openings' && (params.goal === 'win' || params.goal === 'draw')
+      ? params.goal
+      : 'all'
+
+  const lessons = LESSONS[category].filter(
+    (lesson) =>
+      (color === 'all' || lesson.primaryColor === color) &&
+      (goal === 'all' || (lesson.playGoal === 'draw') === (goal === 'draw')),
+  )
+
+  function hrefFor(next: { category?: Category; color?: ColorFilter; goal?: GoalFilter }) {
+    const merged = { category, color, goal, ...next }
+    const query = new URLSearchParams()
+    if (merged.category !== 'openings') query.set('category', merged.category)
+    if (merged.color !== 'all') query.set('color', merged.color)
+    if (merged.category !== 'openings' && merged.goal !== 'all') query.set('goal', merged.goal)
+    const qs = query.toString()
+    return qs ? `/learn?${qs}` : '/learn'
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -72,25 +109,43 @@ export default function LearnPage() {
         subtitle={<p className="text-sm text-zinc-500 dark:text-zinc-400">{s.learnPage.intro}</p>}
       />
 
-      <div className="flex items-center gap-2">
-        <CategoryTab
-          label={s.nav.openings}
-          active={category === 'openings'}
-          onClick={() => setCategory('openings')}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+        <FilterTabs
+          current={category}
+          options={[
+            { value: 'openings', label: s.nav.openings },
+            { value: 'endgames', label: s.learnPage.endgames },
+            { value: 'positions', label: s.learnPage.positions },
+          ]}
+          hrefFor={(value) => hrefFor({ category: value })}
         />
-        <CategoryTab
-          label={s.learnPage.endgames}
-          active={category === 'endgames'}
-          onClick={() => setCategory('endgames')}
+        <FilterTabs
+          current={color}
+          options={[
+            { value: 'all', label: s.puzzlesPage.filters.allColors },
+            { value: 'white', label: s.common.color.white },
+            { value: 'black', label: s.common.color.black },
+          ]}
+          hrefFor={(value) => hrefFor({ color: value })}
         />
-        <CategoryTab
-          label={s.learnPage.positions}
-          active={category === 'positions'}
-          onClick={() => setCategory('positions')}
-        />
+        {category !== 'openings' && (
+          <FilterTabs
+            current={goal}
+            options={[
+              { value: 'all', label: s.learnPage.allGoals },
+              { value: 'win', label: s.learnPage.goalWin },
+              { value: 'draw', label: s.learnPage.goalDraw },
+            ]}
+            hrefFor={(value) => hrefFor({ goal: value })}
+          />
+        )}
       </div>
 
-      <LessonGrid lessons={LESSONS[category]} />
+      {lessons.length > 0 ? (
+        <LessonGrid lessons={lessons} />
+      ) : (
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">{s.learnPage.noMatches}</p>
+      )}
     </div>
   )
 }

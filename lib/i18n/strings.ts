@@ -714,6 +714,10 @@ const en = {
       'Short, plain-language introductions to common openings, endgames and classic positions — not a repertoire, just the ideas behind one natural line, move by move.',
     endgames: 'Endgames',
     positions: 'Positions',
+    allGoals: 'Win or draw',
+    goalWin: 'To win',
+    goalDraw: 'To draw',
+    noMatches: 'No lessons match these filters.',
   },
   openingsPage: {
     title: 'Openings',
@@ -1497,6 +1501,10 @@ const es: Strings = {
       'Introducciones breves y en lenguaje sencillo a aperturas y finales comunes y a posiciones clásicas — no es un repertorio, solo las ideas detrás de una línea natural, jugada por jugada.',
     endgames: 'Finales',
     positions: 'Posiciones',
+    allGoals: 'Ganar o tablas',
+    goalWin: 'Para ganar',
+    goalDraw: 'Para hacer tablas',
+    noMatches: 'Ninguna lección coincide con estos filtros.',
   },
   openingsPage: {
     title: 'Aperturas',
