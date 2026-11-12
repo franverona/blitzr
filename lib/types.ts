@@ -108,6 +108,12 @@ export interface LessonGameStats {
   losses: number
 }
 
+/** Own games that reached an endgame or position lesson's pieces (pawns aside) — see
+ *  `findGamesReachingMaterial()`. */
+export interface LessonEndgameGames extends LessonGameStats {
+  recent: { gameId: string; ply: number; opponent: string; endTime: number; myResult: MyResult }[]
+}
+
 export type RepertoireColor = 'white' | 'black'
 
 export interface RepertoireNode {
