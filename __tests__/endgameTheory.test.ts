@@ -42,8 +42,14 @@ describe('ENDGAME_LESSONS content', () => {
     }
   })
 
-  it('the two mating lessons actually end in checkmate', () => {
-    for (const slug of ['king-and-queen-vs-king', 'king-and-rook-vs-king']) {
+  it('the mating lessons actually end in checkmate', () => {
+    for (const slug of [
+      'king-and-queen-vs-king',
+      'king-and-rook-vs-king',
+      'king-and-two-rooks-vs-king',
+      'king-and-two-bishops-vs-king',
+      'king-bishop-and-knight-vs-king',
+    ]) {
       const lesson = getEndgameLesson(slug)!
       const chess = new Chess(lesson.initialFen)
       for (const move of lesson.moves) chess.move(move.san)

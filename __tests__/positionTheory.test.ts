@@ -76,6 +76,28 @@ describe('POSITION_LESSONS content', () => {
     expect(chess.get('d5')).toEqual({ type: 'k', color: 'w' })
   })
 
+  it('the rook-pawn draw ends in stalemate', () => {
+    expect(playOut('rook-pawn-draw').isStalemate()).toBe(true)
+  })
+
+  it('rule of the square: the king catches the pawn, leaving bare kings', () => {
+    expect(playOut('rule-of-the-square').isInsufficientMaterial()).toBe(true)
+  })
+
+  it('queen vs rook ends in a check that also attacks the rook', () => {
+    const chess = playOut('queen-vs-rook')
+    expect(chess.inCheck()).toBe(true)
+    expect(chess.attackers('b1', 'w')).toContain('h7')
+  })
+
+  it("cutting off the king: the pawn reaches the seventh, still White's", () => {
+    expect(playOut('cutting-off-the-king').get('d7')).toEqual({ type: 'p', color: 'w' })
+  })
+
+  it('key squares: the white king reaches b5', () => {
+    expect(playOut('key-squares').get('b5')).toEqual({ type: 'k', color: 'w' })
+  })
+
   it('no slug collides with another lesson kind', async () => {
     const { OPENING_LESSONS } = await import('@/lib/openingTheory')
     const { ENDGAME_LESSONS } = await import('@/lib/endgameTheory')
