@@ -37,6 +37,9 @@ import { buildOpeningFamilies, openingFamilyLabel, openingFamilyLabels } from '@
 import { nextPuzzleByRating } from '@/lib/mateProblems'
 import { allMateProblems, getMateProblem } from '@/lib/puzzleSet'
 import { OPENING_LESSONS, countGamesReachingLine } from '@/lib/openingTheory'
+import { getEndgameLesson } from '@/lib/endgameTheory'
+import { findGamesReachingMaterial } from '@/lib/endgameGames'
+import { getPositionLesson } from '@/lib/positionTheory'
 import {
   buildPositions,
   isStandardChess,
@@ -84,6 +87,7 @@ import type {
   GameSite,
   GameAccuracy,
   GameAnalysis,
+  LessonEndgameGames,
   LessonGameStats,
   MyColor,
   MyResult,
@@ -155,6 +159,22 @@ export async function listOpenings(): Promise<OpeningFamily[]> {
 export async function getLessonGameStats(moves: string[]): Promise<LessonGameStats> {
   const games = await cachedStandardStartGames()
   return countGamesReachingLine(games, moves)
+}
+
+// Games are insert-only (a refreshed Lichess game changes its key), so answers stay valid for the
+// server's lifetime.
+const endgameGamesMemo = new Map<string, number | null>()
+
+/** Own games that reached an endgame or position lesson's pieces; null for any other slug. */
+export async function getLessonEndgameGames(slug: string): Promise<LessonEndgameGames | null> {
+  const lesson =
+    typeof slug === 'string' ? (getEndgameLesson(slug) ?? getPositionLesson(slug)) : undefined
+  if (!lesson) return null
+  return findGamesReachingMaterial(
+    await cachedMyStandardGames(),
+    lesson.initialFen,
+    endgameGamesMemo,
+  )
 }
 
 export async function getBlunderStats(filters?: {

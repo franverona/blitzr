@@ -139,7 +139,9 @@ Every game has a `site` (`chesscom` | `lichess`). `siteUsername(site)` reads `CH
 - **Re-analyzing a game can reset its drill progress:** another strength can shift which plies
   count as blunders, and the deck sync deletes cards whose ply no longer qualifies. Accepted.
 - Building positions replays the game, so per-phase stats run only in the Move quality panel, not
-  across every game on `/blunders` (#304).
+  across every game on `/blunders` (#304). An endgame lesson's "your games" line does replay every
+  game, so `findGamesReachingMaterial()` prunes by final material and `app/actions.ts` memoizes
+  each game's answer for the server's lifetime.
 - `useLiveAnalysisContext()` returns an empty default without a provider, so `/learn` can render
   `BoardView` without an engine. Explore mode is never persisted.
 
