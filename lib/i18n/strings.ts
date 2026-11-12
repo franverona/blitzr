@@ -554,10 +554,12 @@ const en = {
     yourMove: (color: string, move: number) => `Playing as ${color} — move ${move}`,
     engineThinking: 'Stockfish is defending…',
     won: (moves: number) => `Done in ${moves} move${moves === 1 ? '' : 's'}!`,
+    held: (moves: number) => `Draw held — ${moves} move${moves === 1 ? '' : 's'}!`,
     drawn: 'Drawn — the win slipped away. Restart and try again.',
     lost: 'Checkmated — restart and try again.',
-    goalMate: 'Checkmate the engine, which defends as well as it can.',
+    goalMate: 'Checkmate the engine while it defends.',
     goalPromotion: 'Promote your pawn while the engine tries to stop it.',
+    goalDraw: 'Hold the draw while the engine plays to win.',
     engineFailed: "The engine couldn't start, so it can't reply. Reload the page to try again.",
   },
   playBot: {
@@ -567,6 +569,7 @@ const en = {
     backToGame: '← Back to the game',
     strength: 'Bot strength',
     strengthLocked: 'Resign or restart to change it.',
+    fullStrength: 'Full strength',
     eloLabel: (elo: number, approximate: boolean) => `${approximate ? '~' : ''}${elo}`,
     approximateHelp: "Levels under 1320 use Stockfish's Skill Level, so their rating is a guess.",
     thinking: 'Stockfish is thinking…',
@@ -708,8 +711,15 @@ const en = {
   learnPage: {
     title: 'Learn',
     intro:
-      'Short, plain-language introductions to common openings and endgames — not a repertoire, just the ideas behind one natural line, move by move.',
+      'Short, plain-language introductions to common openings, endgames and classic positions — not a repertoire, just the ideas behind one natural line, move by move.',
     endgames: 'Endgames',
+    positions: 'Positions',
+    colorFilter: 'Your side',
+    goalFilter: 'Goal',
+    allGoals: 'Win or draw',
+    goalWin: 'To win',
+    goalDraw: 'To draw',
+    noMatches: 'No lessons match these filters.',
   },
   openingsPage: {
     title: 'Openings',
@@ -1328,10 +1338,12 @@ const es: Strings = {
     yourMove: (color: string, move: number) => `Juegas con ${color} — jugada ${move}`,
     engineThinking: 'Stockfish defiende…',
     won: (moves: number) => `¡Hecho en ${moves} ${moves === 1 ? 'jugada' : 'jugadas'}!`,
+    held: (moves: number) => `¡Tablas aguantadas — ${moves} ${moves === 1 ? 'jugada' : 'jugadas'}!`,
     drawn: 'Tablas — se escapó la victoria. Reinicia y vuelve a intentarlo.',
     lost: 'Jaque mate — reinicia y vuelve a intentarlo.',
-    goalMate: 'Da jaque mate al motor, que defiende lo mejor que puede.',
+    goalMate: 'Da jaque mate al motor mientras defiende.',
     goalPromotion: 'Corona tu peón mientras el motor intenta impedirlo.',
+    goalDraw: 'Aguanta las tablas mientras el motor juega para ganar.',
     engineFailed:
       'El motor no pudo arrancar, así que no puede responder. Recarga la página para reintentarlo.',
   },
@@ -1342,6 +1354,7 @@ const es: Strings = {
     backToGame: '← Volver a la partida',
     strength: 'Fuerza del bot',
     strengthLocked: 'Ríndete o reinicia para cambiarla.',
+    fullStrength: 'Máxima fuerza',
     eloLabel: (elo: number, approximate: boolean) => `${approximate ? '~' : ''}${elo}`,
     approximateHelp:
       'Los niveles por debajo de 1320 usan el Skill Level de Stockfish, así que su Elo es aproximado.',
@@ -1487,8 +1500,15 @@ const es: Strings = {
   learnPage: {
     title: 'Aprender',
     intro:
-      'Introducciones breves y en lenguaje sencillo a aperturas y finales comunes — no es un repertorio, solo las ideas detrás de una línea natural, jugada por jugada.',
+      'Introducciones breves y en lenguaje sencillo a aperturas y finales comunes y a posiciones clásicas — no es un repertorio, solo las ideas detrás de una línea natural, jugada por jugada.',
     endgames: 'Finales',
+    positions: 'Posiciones',
+    colorFilter: 'Tu bando',
+    goalFilter: 'Objetivo',
+    allGoals: 'Ganar o tablas',
+    goalWin: 'Para ganar',
+    goalDraw: 'Para hacer tablas',
+    noMatches: 'Ninguna lección coincide con estos filtros.',
   },
   openingsPage: {
     title: 'Aperturas',

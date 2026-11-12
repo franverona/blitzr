@@ -19,15 +19,19 @@ import { buttonClass } from './styles'
 
 export type PlayoutOutcome = 'won' | 'drawn' | 'lost'
 
+/** What counts as a win: mate, promoting a pawn, or holding a draw. */
+export type PlayoutGoal = 'mate' | 'promotion' | 'draw'
+
 function finished(
   chess: Chess,
   myColor: MyColor,
   promoted: boolean,
-  goalIsPromotion: boolean,
+  goal: PlayoutGoal,
 ): PlayoutOutcome | null {
   if (chess.isCheckmate()) return chess.turn() === myColor[0] ? 'lost' : 'won'
-  if (promoted && goalIsPromotion) return 'won'
-  return chess.isDraw() || chess.isStalemate() ? 'drawn' : null
+  if (promoted && goal === 'promotion') return 'won'
+  if (!chess.isDraw() && !chess.isStalemate()) return null
+  return goal === 'draw' ? 'won' : 'drawn'
 }
 
 export interface PlayoutMessages {
@@ -39,14 +43,14 @@ export interface PlayoutMessages {
 
 /**
  * A position played out against Stockfish, the user on `myColor`. The engine moves first when
- * it's its turn. Won at mate, or at promotion when `goalIsPromotion`.
+ * it's its turn. Won per `goal`.
  */
 export function PlayoutBoard({
   initialFen,
   myColor,
   engineOptions = [],
   movetimeMs,
-  goalIsPromotion = false,
+  goal = 'mate',
   allowResign = false,
   messages,
   onGameOver,
@@ -59,7 +63,7 @@ export function PlayoutBoard({
   /** `setoption` commands sent once, before the engine's first search. */
   engineOptions?: string[]
   movetimeMs: number
-  goalIsPromotion?: boolean
+  goal?: PlayoutGoal
   allowResign?: boolean
   messages: PlayoutMessages
   onGameOver?: (movesSan: string[], outcome: PlayoutOutcome, resigned: boolean) => void
@@ -74,7 +78,7 @@ export function PlayoutBoard({
   const myTurnLetter = myColor[0]
   const startsWithMe = new Chess(initialFen).turn() === myTurnLetter
   // A game page's final ply can already be mate or a draw: nothing left to play.
-  const initialOutcome = finished(new Chess(initialFen), myColor, false, false)
+  const initialOutcome = finished(new Chess(initialFen), myColor, false, 'mate')
   const engineOpens = !startsWithMe && !initialOutcome
 
   const [fen, setFen] = useState(initialFen)
@@ -156,7 +160,7 @@ export function PlayoutBoard({
     setFen(chess.fen())
     setMovesSan(next)
     setViewPly(null)
-    end(next, finished(chess, myColor, false, goalIsPromotion))
+    end(next, finished(chess, myColor, false, goal))
   }
 
   function engineFailure() {
@@ -208,7 +212,7 @@ export function PlayoutBoard({
     setSelectedSquare(null)
     setFen(chess.fen())
     setMovesSan(next)
-    const result = finished(chess, myColor, Boolean(move.promotion), goalIsPromotion)
+    const result = finished(chess, myColor, Boolean(move.promotion), goal)
     end(next, result)
     if (!result) engineReply(chess.fen(), next)
     return true

@@ -287,11 +287,14 @@ filter scopes the whole page.
 
 ### Learn
 
-`/learn` has short lessons on 14 openings and 3 basic endgames, each a line you step through
+`/learn` has short lessons on 14 openings, 3 basic endgames and 12 classic positions (Philidor,
+Lucena, Vančura, Saavedra, the opposition, triangulation…), each a line you step through
 with a note per move. **Quiz** mode tests you on one side while the opponent's moves play
-automatically (H shows the move, R restarts). Endgame lessons also have **Play it out**: the same
-position against Stockfish, which defends, until you mate (or promote). Study mode has the game
-page's shortcuts. Opening lessons show how many of your own games reached that line, and **Add to
+automatically (H shows the move, R restarts). Endgame and position lessons also have **Play it out**: the same
+position against Stockfish, at full strength or a chosen Elo, until you mate, promote or (for a
+defense like Philidor's) hold the draw. Study mode has the game
+page's shortcuts. The list filters by category, your side and (outside openings) whether the
+goal is to win or to draw, all in the URL (`/learn?category=positions&color=black&goal=draw`). Opening lessons show how many of your own games reached that line, and **Add to
 my repertoire** puts the line in your tree for the lesson's color, reusing the moves you already
 have. Content is
 adapted, in original wording, from Wikibooks'
