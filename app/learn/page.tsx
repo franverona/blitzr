@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { MiniBoard } from '@/components/MiniBoard'
+import { NavSelect } from '@/components/NavSelect'
 import { ENDGAME_LESSONS } from '@/lib/endgameTheory'
 import { getLocale } from '@/lib/i18n/locale'
 import { getStrings } from '@/lib/i18n/strings'
@@ -119,24 +120,24 @@ export default async function LearnPage({
           ]}
           hrefFor={(value) => hrefFor({ category: value })}
         />
-        <FilterTabs
-          current={color}
-          options={[
-            { value: 'all', label: s.puzzlesPage.filters.allColors },
-            { value: 'white', label: s.common.color.white },
-            { value: 'black', label: s.common.color.black },
-          ]}
-          hrefFor={(value) => hrefFor({ color: value })}
+        <NavSelect
+          label={s.learnPage.colorFilter}
+          value={color}
+          options={(['all', 'white', 'black'] as const).map((value) => ({
+            value,
+            label: value === 'all' ? s.puzzlesPage.filters.allColors : s.common.color[value],
+            href: hrefFor({ color: value }),
+          }))}
         />
         {category !== 'openings' && (
-          <FilterTabs
-            current={goal}
+          <NavSelect
+            label={s.learnPage.goalFilter}
+            value={goal}
             options={[
               { value: 'all', label: s.learnPage.allGoals },
               { value: 'win', label: s.learnPage.goalWin },
               { value: 'draw', label: s.learnPage.goalDraw },
-            ]}
-            hrefFor={(value) => hrefFor({ goal: value })}
+            ].map((option) => ({ ...option, href: hrefFor({ goal: option.value as GoalFilter }) }))}
           />
         )}
       </div>
