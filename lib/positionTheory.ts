@@ -1053,6 +1053,310 @@ export const POSITION_LESSONS: Lesson[] = [
     primaryColor: 'white',
     playGoal: 'promotion',
   },
+  {
+    slug: 'key-squares',
+    name: { en: 'Key Squares', es: 'Casillas clave' },
+    initialFen: '5k2/8/8/8/8/2P5/8/3K4 w - - 0 1',
+    moves: [
+      {
+        san: 'Kc2',
+        explanation: {
+          en: 'The king heads for the key squares b5, c5 and d5. The direct Kd2 lets Black block it by taking the opposition, so White goes around the other side of the pawn.',
+          es: 'El rey se dirige a las casillas clave b5, c5 y d5. El directo Rd2 permite a las negras bloquearlo tomando la oposición, así que las blancas rodean el peón por el otro lado.',
+        },
+      },
+      {
+        san: 'Ke7',
+        explanation: { en: 'Black rushes to defend them.', es: 'Las negras corren a defenderlas.' },
+      },
+      {
+        san: 'Kb3',
+        explanation: { en: 'Toward b5, around the pawn.', es: 'Hacia b5, rodeando el peón.' },
+      },
+      { san: 'Kd6', explanation: { en: 'Black gets closer.', es: 'Las negras se acercan.' } },
+      { san: 'Kb4', explanation: { en: 'One step from b5.', es: 'A un paso de b5.' } },
+      { san: 'Kc6', explanation: { en: 'Black takes b5 away.', es: 'Las negras le quitan b5.' } },
+      {
+        san: 'Kc4',
+        explanation: { en: 'Now c5 and d5 are in reach.', es: 'Ahora c5 y d5 están a su alcance.' },
+      },
+      {
+        san: 'Kd6',
+        explanation: {
+          en: 'If Black guards one, White takes another.',
+          es: 'Si las negras vigilan una, las blancas toman otra.',
+        },
+      },
+      {
+        san: 'Kb5',
+        explanation: {
+          en: 'A key square: the pawn now promotes whatever Black does.',
+          es: 'Una casilla clave: ahora el peón corona haga lo que haga las negras.',
+        },
+      },
+    ],
+    summary: {
+      en: 'In king and pawn against king, the attacker wins if its king reaches a key square: for a pawn on its second, third or fourth rank, the three squares two ranks in front of it. Here the key squares are b5, c5 and d5, and the white king can reach one of them by any route, however far away the black king starts.',
+      es: 'En rey y peón contra rey, el atacante gana si su rey llega a una casilla clave: para un peón en su segunda, tercera o cuarta fila, las tres casillas dos filas por delante. Aquí las casillas clave son b5, c5 y d5, y el rey blanco puede llegar a una de ellas por cualquier camino, empiece donde empiece el rey negro.',
+    },
+    sourceUrl: 'https://en.wikipedia.org/wiki/King_and_pawn_versus_king_endgame',
+    primaryColor: 'white',
+    playGoal: 'promotion',
+  },
+  {
+    slug: 'rule-of-the-square',
+    name: { en: 'Rule of the Square', es: 'La regla del cuadrado' },
+    // The source shows the position and Kb4; the rest of the line is ours.
+    initialFen: '8/8/8/8/5P2/k7/8/K7 b - - 0 1',
+    moves: [
+      {
+        san: 'Kb4',
+        explanation: {
+          en: 'The square runs from f4 to b8. Kb4 steps inside it, so the king catches the pawn.',
+          es: 'El cuadrado va de f4 a b8. Rb4 entra en él, así que el rey alcanza al peón.',
+        },
+      },
+      { san: 'f5', explanation: { en: 'The pawn runs.', es: 'El peón corre.' } },
+      {
+        san: 'Kc5',
+        explanation: {
+          en: 'The king stays inside the shrinking square.',
+          es: 'El rey se mantiene dentro del cuadrado, que se va encogiendo.',
+        },
+      },
+      { san: 'f6', explanation: { en: 'Still running.', es: 'Sigue corriendo.' } },
+      { san: 'Kd6', explanation: { en: 'Still inside.', es: 'Todavía dentro.' } },
+      { san: 'f7', explanation: { en: 'One step from promoting.', es: 'A un paso de coronar.' } },
+      {
+        san: 'Ke7',
+        explanation: { en: 'The king reaches the pawn.', es: 'El rey llega al peón.' },
+      },
+      {
+        san: 'f8=Q+',
+        explanation: {
+          en: 'The pawn promotes, but the new queen is lost at once.',
+          es: 'El peón corona, pero la nueva dama se pierde al instante.',
+        },
+      },
+      {
+        san: 'Kxf8',
+        explanation: { en: 'Only kings are left: a draw.', es: 'Solo quedan los reyes: tablas.' },
+      },
+    ],
+    summary: {
+      en: 'Can a king catch a passed pawn on its own? Draw a square from the pawn to its promotion rank: if the king can step inside the square, it catches the pawn; if not, the pawn promotes. Here Black is to move and steps into the square at once.',
+      es: '¿Puede un rey alcanzar por sí solo a un peón pasado? Dibuja un cuadrado desde el peón hasta su fila de coronación: si el rey puede entrar en el cuadrado, alcanza al peón; si no, el peón corona. Aquí mueven las negras y entran en el cuadrado enseguida.',
+    },
+    sourceUrl: 'https://en.wikipedia.org/wiki/King_and_pawn_versus_king_endgame',
+    primaryColor: 'black',
+    playGoal: 'draw',
+  },
+  {
+    slug: 'rook-pawn-draw',
+    name: { en: 'Rook Pawn Draw', es: 'Tablas con peón de torre' },
+    initialFen: 'k7/8/K7/P7/8/8/8/8 w - - 0 1',
+    moves: [
+      {
+        san: 'Kb6',
+        explanation: { en: 'White tries to go around.', es: 'Las blancas intentan rodearlo.' },
+      },
+      {
+        san: 'Kb8',
+        explanation: {
+          en: 'The black king just stays near the corner.',
+          es: 'El rey negro simplemente se queda cerca de la esquina.',
+        },
+      },
+      { san: 'a6', explanation: { en: 'Push the pawn.', es: 'Avanza el peón.' } },
+      { san: 'Ka8', explanation: { en: 'Back to the corner.', es: 'De vuelta a la esquina.' } },
+      {
+        san: 'a7',
+        explanation: {
+          en: 'Black has no legal move: stalemate, a draw.',
+          es: 'Las negras no tienen jugadas legales: ahogado, tablas.',
+        },
+      },
+    ],
+    summary: {
+      en: "A rook pawn is the exception to the king and pawn rules. Once the defending king reaches the corner in front of the pawn, nothing can drive it out: the attacking king can't get around the side, and pushing the pawn only ends in stalemate.",
+      es: 'Un peón de torre es la excepción a las reglas de rey y peón. En cuanto el rey defensor llega a la esquina delante del peón, nada puede sacarlo: el rey atacante no puede rodearlo por el lado, y avanzar el peón solo termina en ahogado.',
+    },
+    sourceUrl: 'https://en.wikipedia.org/wiki/King_and_pawn_versus_king_endgame',
+    primaryColor: 'black',
+    playGoal: 'draw',
+  },
+  {
+    slug: 'queen-vs-rook',
+    name: { en: 'Queen vs. Rook (Philidor)', es: 'Dama contra Torre (Philidor)' },
+    // The source's White-to-move triangulation, then its Black-to-move line.
+    initialFen: '1k6/1r6/2K5/Q7/8/8/8/8 w - - 0 1',
+    moves: [
+      {
+        san: 'Qe5+',
+        explanation: {
+          en: 'White would like Black to be the one to move, so the queen triangulates.',
+          es: 'Las blancas quieren que les toque mover a las negras, así que la dama triangula.',
+        },
+      },
+      {
+        san: 'Ka8',
+        explanation: {
+          en: 'The king hides in the corner.',
+          es: 'El rey se esconde en la esquina.',
+        },
+      },
+      {
+        san: 'Qa1+',
+        explanation: {
+          en: 'The second corner of the triangle.',
+          es: 'La segunda esquina del triángulo.',
+        },
+      },
+      { san: 'Kb8', explanation: { en: 'Back to b8.', es: 'De vuelta a b8.' } },
+      {
+        san: 'Qa5',
+        explanation: {
+          en: 'The same position as at the start, but now Black has to move: zugzwang.',
+          es: 'La misma posición del principio, pero ahora mueven las negras: zugzwang.',
+        },
+      },
+      {
+        san: 'Rb1',
+        explanation: {
+          en: "The rook has to leave the king's side.",
+          es: 'La torre tiene que separarse del rey.',
+        },
+      },
+      { san: 'Qd8+', explanation: { en: 'Checks start.', es: 'Empiezan los jaques.' } },
+      { san: 'Ka7', explanation: { en: 'The only square.', es: 'La única casilla.' } },
+      { san: 'Qd4+', explanation: { en: 'Another check.', es: 'Otro jaque.' } },
+      { san: 'Ka8', explanation: { en: 'Back to the corner.', es: 'De vuelta a la esquina.' } },
+      { san: 'Qh8+', explanation: { en: 'Another check.', es: 'Otro jaque.' } },
+      { san: 'Ka7', explanation: { en: 'Forced.', es: 'Forzada.' } },
+      {
+        san: 'Qh7+',
+        explanation: {
+          en: 'A fork: check, and the rook on b1 falls next move.',
+          es: 'Una horquilla: jaque, y la torre de b1 cae en la siguiente jugada.',
+        },
+      },
+    ],
+    summary: {
+      en: "Queen against rook is a win, and Philidor's 1777 position shows how. With Black to move, any rook move lets the queen fork king and rook with checks. With White to move, the queen loses a move by triangulating and hands the move to Black.",
+      es: 'Dama contra torre es una victoria, y la posición de Philidor de 1777 muestra cómo. Si mueven las negras, cualquier jugada de torre permite a la dama hacer una horquilla a rey y torre con jaques. Si mueven las blancas, la dama pierde un tiempo triangulando y le pasa el turno a las negras.',
+    },
+    sourceUrl: 'https://en.wikipedia.org/wiki/Pawnless_chess_endgame',
+    primaryColor: 'white',
+  },
+  {
+    slug: 'opposite-colored-bishops',
+    name: { en: 'Opposite-Colored Bishops', es: 'Alfiles de distinto color' },
+    initialFen: '8/2bB4/2P5/6k1/4K3/5P2/8/8 w - - 0 1',
+    moves: [
+      {
+        san: 'Kd5',
+        explanation: {
+          en: 'The white king heads for the queenside to support the c-pawn.',
+          es: 'El rey blanco se dirige al flanco de dama para apoyar el peón de c.',
+        },
+      },
+      {
+        san: 'Kf6',
+        explanation: {
+          en: 'The key move: the black king goes after the other pawn, so the white king never gets to e6.',
+          es: 'La jugada clave: el rey negro va a por el otro peón, así que el rey blanco nunca llega a e6.',
+        },
+      },
+      {
+        san: 'Kc5',
+        explanation: {
+          en: 'White keeps trying on the queenside.',
+          es: 'Las blancas siguen intentándolo en el flanco de dama.',
+        },
+      },
+      {
+        san: 'Ke7',
+        explanation: {
+          en: "The king gets in front of the c-pawn's path.",
+          es: 'El rey se pone en el camino del peón de c.',
+        },
+      },
+      { san: 'Kb5', explanation: { en: 'White heads for b6.', es: 'Las blancas van hacia b6.' } },
+      {
+        san: 'Bf4',
+        explanation: {
+          en: "The bishop waits on a dark diagonal: White's light-squared bishop can't drive it away.",
+          es: 'El alfil espera en una diagonal oscura: el alfil de casillas claras de las blancas no puede echarlo.',
+        },
+      },
+      { san: 'Kb6', explanation: { en: 'The king reaches b6.', es: 'El rey llega a b6.' } },
+      {
+        san: 'Kd8',
+        explanation: {
+          en: "And the black king covers c7 and c8. White can't make progress: a draw.",
+          es: 'Y el rey negro cubre c7 y c8. Las blancas no pueden avanzar: tablas.',
+        },
+      },
+    ],
+    summary: {
+      en: "With bishops of opposite colors, even two pawns up is often a draw. The defending bishop guards the dark squares the attacker's pawns have to cross, and the attacker's bishop can never challenge it. Here the black king and bishop stop both pawns on the same diagonal.",
+      es: 'Con alfiles de distinto color, incluso dos peones de más suelen ser tablas. El alfil defensor vigila las casillas oscuras que los peones atacantes tienen que cruzar, y el alfil atacante nunca puede disputárselas. Aquí el rey y el alfil negros detienen ambos peones en la misma diagonal.',
+    },
+    sourceUrl: 'https://en.wikipedia.org/wiki/Opposite-colored_bishops_endgame',
+    primaryColor: 'black',
+    playGoal: 'draw',
+  },
+  {
+    slug: 'cutting-off-the-king',
+    name: { en: 'Cutting Off the King', es: 'Cortar al rey' },
+    initialFen: '3r4/8/4K3/3P4/7R/4k3/8/8 w - - 0 1',
+    moves: [
+      {
+        san: 'd6',
+        explanation: {
+          en: "White's rook on the fourth rank keeps the black king away, so the pawn simply advances.",
+          es: 'La torre blanca en la cuarta fila mantiene alejado al rey negro, así que el peón simplemente avanza.',
+        },
+      },
+      {
+        san: 'Re8+',
+        explanation: {
+          en: 'The rook checks to slow things down.',
+          es: 'La torre da jaque para ganar tiempo.',
+        },
+      },
+      {
+        san: 'Kd7',
+        explanation: {
+          en: 'The king walks forward, attacking the rook.',
+          es: 'El rey avanza, atacando a la torre.',
+        },
+      },
+      { san: 'Rg8', explanation: { en: 'The rook steps away.', es: 'La torre se aparta.' } },
+      {
+        san: 'Kc7',
+        explanation: {
+          en: 'The king steps aside so the pawn can advance.',
+          es: 'El rey se aparta para que el peón pueda avanzar.',
+        },
+      },
+      { san: 'Rg7+', explanation: { en: 'One more check.', es: 'Un jaque más.' } },
+      {
+        san: 'd7',
+        explanation: {
+          en: "The pawn blocks the check and will promote: Black's king is too far away to help.",
+          es: 'El peón tapa el jaque y coronará: el rey negro está demasiado lejos para ayudar.',
+        },
+      },
+    ],
+    summary: {
+      en: "In rook and pawn against rook, if the defending king is cut off from the pawn by the attacking rook, the pawn usually promotes. The rook builds a wall along a rank or file, the defending king can't cross it, and the rook alone can't stop the pawn and king together.",
+      es: 'En torre y peón contra torre, si la torre atacante corta al rey defensor separándolo del peón, el peón normalmente corona. La torre levanta un muro por una fila o columna, el rey defensor no puede cruzarlo y la torre sola no puede detener al peón y al rey juntos.',
+    },
+    sourceUrl: 'https://en.wikibooks.org/wiki/Chess/The_Endgame/Rook_and_Pawn_Endings',
+    primaryColor: 'white',
+    playGoal: 'promotion',
+  },
 ]
 
 export function getPositionLesson(slug: string): Lesson | undefined {
