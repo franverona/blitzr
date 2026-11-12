@@ -34,7 +34,8 @@ major, so tsc rejects APIs Node 22 lacks; Dependabot ignores its majors. Bump al
 - `components/` — `styles.ts` holds shared class helpers (no `'use client'`, so Server Components
   can import it).
 - `proxy.ts` — 403 unless `Host` is loopback; per-request CSP nonce.
-- `scripts/` — postinstall, `pnpm backup`, and the puzzle importers.
+- `scripts/` — postinstall, `pnpm backup`, the puzzle importers, `check-defenses.mjs`, and
+  `stockfish.mjs` (native Stockfish, for the defence importer and checker).
 
 `data/` (database, backups, `polgar-mates.json`) and `public/stockfish/` are created at
 install/runtime and gitignored. `BLITZR_DATA_DIR` moves `data/` (`lib/dataDir.ts`). Scripts load

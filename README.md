@@ -36,7 +36,8 @@ implies endorsement.
 - Cross-game blunder stats (by opening, piece, tactic and game phase), how often you punished your
   opponents' blunders, the winning positions you didn't win, and an accuracy-over-time chart, all
   over a date range
-- Opening and endgame lessons with study and quiz modes
+- Opening, endgame and classic-position lessons with study and quiz modes, playing them out
+  against Stockfish, and progress tracking
 - Play any position from your games against Stockfish, at about 800 to 2500 Elo
 - Mate-in-N puzzles you solve move by move, and defence puzzles where you stop a mate
 - A Today page: cards due, games left to analyze, last week's accuracy and the next puzzle
@@ -312,9 +313,9 @@ due count split by type, and your streak), games not analyzed yet, the last 7 da
 your average with results and rating change per time control, the opening you blundered most this
 week (with a link to drill it), your worst blunder of the week, how many drill cards you keep
 missing, how you lost your games, your score in rated games against stronger, similar and weaker
-opponents (±100 rating, per site), an unfinished lesson
-for the opening you played most and another for the endgame your games reach most, how often you left your repertoire lately, your last game with its
-final position, and the next unsolved puzzle.
+opponents (±100 rating, per site), an unfinished lesson for the opening you played most this week
+and another for the endgame your games reach most (over all your games), how often you left your
+repertoire lately, your last game with its final position, and the next unsolved puzzle.
 
 ### Puzzles
 
