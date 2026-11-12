@@ -9,6 +9,7 @@ import {
   suggestLesson,
   recentResults,
   scoreByRatingGap,
+  scoreAfterLoss,
   repertoireDeviations,
   timeTroubleLosses,
 } from '@/lib/today'
@@ -193,6 +194,34 @@ describe('timeTroubleLosses', () => {
         game({ pgn: clk('0:00:10'), movesSan: moves }),
       ]),
     ).toBe(2)
+  })
+})
+
+describe('scoreAfterLoss', () => {
+  // A loss, then a game 10 minutes later: 20 pairs give 10 losses "otherwise" and 10 games after.
+  const pairs = (n: number, after: Game['myResult']) =>
+    Array.from({ length: n }, (_, i) => [
+      game({ id: `l${i}`, endTime: i * 86400, myResult: 'loss' }),
+      game({ id: `a${i}`, endTime: i * 86400 + 600, myResult: after }),
+    ]).flat()
+
+  it('splits the score by whether the game before ended in a loss within the hour', () => {
+    const games = [...pairs(10, 'win'), game({ endTime: 99 * 86400, timeControl: '1/86400' })]
+    expect(scoreAfterLoss(games)).toEqual({
+      afterLoss: { games: 10, score: 1 },
+      otherwise: { games: 10, score: 0 },
+    })
+  })
+
+  it('needs 10 games on each side', () => {
+    expect(scoreAfterLoss(pairs(9, 'draw'))).toBeNull()
+  })
+
+  it('ignores a loss more than an hour before', () => {
+    const late = pairs(10, 'win').map((g) =>
+      g.id.startsWith('a') ? { ...g, endTime: g.endTime + 3600 } : g,
+    )
+    expect(scoreAfterLoss(late)).toBeNull()
   })
 })
 

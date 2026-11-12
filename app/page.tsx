@@ -349,6 +349,24 @@ export default async function TodayPage() {
               </FocusRow>
             )}
 
+            {today.afterLoss && (
+              <FocusRow
+                icon={<FlagIcon className="size-4" />}
+                tone="zinc"
+                label={s.today.afterLossLabel}
+              >
+                <p className="text-sm">
+                  {s.today.afterLossDetail(
+                    Math.round(today.afterLoss.afterLoss.score * 100),
+                    today.afterLoss.afterLoss.games,
+                    Math.round(today.afterLoss.otherwise.score * 100),
+                    today.afterLoss.otherwise.games,
+                  )}
+                </p>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">{s.today.afterLossHelp}</p>
+              </FocusRow>
+            )}
+
             <FocusRow
               icon={<LibraryBigIcon className="size-4" />}
               tone="blue"

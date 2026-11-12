@@ -73,6 +73,43 @@ export function recentResults(
   return { wins: counts.win, losses: counts.loss, draws: counts.draw, ratings }
 }
 
+const AFTER_LOSS_WINDOW_SECONDS = 60 * 60
+const AFTER_LOSS_MIN_GAMES = 10
+
+/** `score`: a win 1, a draw ½, over `games`. */
+export interface Score {
+  games: number
+  score: number
+}
+
+/**
+ * Your score in games that ended within an hour of the loss before them, against every other
+ * game: whether to stop after a loss. Daily and correspondence games are skipped. Null until both
+ * sides have 10 games.
+ */
+export function scoreAfterLoss(games: Game[]): { afterLoss: Score; otherwise: Score } | null {
+  const tally = { afterLoss: { games: 0, points: 0 }, otherwise: { games: 0, points: 0 } }
+  const clocked = games
+    .filter((game) => initialClockSeconds(game.timeControl) !== null)
+    .sort((a, b) => a.endTime - b.endTime)
+  for (const [i, game] of clocked.entries()) {
+    const prev = clocked[i - 1]
+    // Games only store their end, so a long game started soon after a loss can miss the window.
+    const side =
+      prev?.myResult === 'loss' && game.endTime - prev.endTime <= AFTER_LOSS_WINDOW_SECONDS
+        ? tally.afterLoss
+        : tally.otherwise
+    side.games++
+    side.points += game.myResult === 'win' ? 1 : game.myResult === 'draw' ? 0.5 : 0
+  }
+  if (Math.min(tally.afterLoss.games, tally.otherwise.games) < AFTER_LOSS_MIN_GAMES) return null
+  const score = ({ games, points }: { games: number; points: number }) => ({
+    games,
+    score: points / games,
+  })
+  return { afterLoss: score(tally.afterLoss), otherwise: score(tally.otherwise) }
+}
+
 export type RatingGap = 'stronger' | 'similar' | 'weaker'
 
 export interface RatingGapScores {
