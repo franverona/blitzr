@@ -530,6 +530,10 @@ const en = {
       `You've played this in ${games} of your games (${wins}W ${draws}D ${losses}L)`,
     neverPlayed: "You haven't played this exact line in any synced games yet",
     seeOpeningStats: 'see your opening stats',
+    reachedGames: (games: number, wins: number, draws: number, losses: number) =>
+      `Your games with these pieces, pawns aside: ${games} (${wins}W ${draws}D ${losses}L)`,
+    reachedGame: (opponent: string, result: string) => `vs ${opponent} (${result})`,
+    neverReached: 'None of your synced games has reached these pieces yet, pawns aside',
     addToRepertoire: 'Add to my repertoire',
     addedToRepertoire: (n: number, color: 'white' | 'black') =>
       n === 0
@@ -1314,6 +1318,11 @@ const es: Strings = {
       `Has jugado esto en ${games} de tus partidas (${wins}V ${draws}E ${losses}D)`,
     neverPlayed: 'Aún no has jugado esta línea exacta en ninguna partida sincronizada',
     seeOpeningStats: 'ver tus estadísticas de apertura',
+    reachedGames: (games: number, wins: number, draws: number, losses: number) =>
+      `Tus partidas con estas piezas, sin contar peones: ${games} (${wins}V ${draws}E ${losses}D)`,
+    reachedGame: (opponent: string, result: string) => `vs ${opponent} (${result})`,
+    neverReached:
+      'Ninguna de tus partidas sincronizadas ha llegado aún a estas piezas, sin contar peones',
     addToRepertoire: 'Añadir a mi repertorio',
     addedToRepertoire: (n: number, color: 'white' | 'black') =>
       n === 0
