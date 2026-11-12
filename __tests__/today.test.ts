@@ -13,7 +13,7 @@ import {
   repertoireDeviations,
   timeTroubleLosses,
 } from '@/lib/today'
-import type { Game, Lesson, RepertoireColor, RepertoireNode } from '@/lib/types'
+import type { Game, GameAnalysis, Lesson, RepertoireColor, RepertoireNode } from '@/lib/types'
 
 const START = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 const now = new Date(2026, 9, 19, 12)
@@ -176,24 +176,33 @@ describe('lossReasons', () => {
 })
 
 describe('timeTroubleLosses', () => {
-  it('counts losses on time, or with under a tenth of your clock after your last move', () => {
+  it('counts losses on time or low on clock, and those whose analysis ends better for you', () => {
     const clk = (last: string) =>
       `1. e4 {[%clk 0:02:00]} 1... e5 {[%clk 0:02:00]} 2. Nf3 {[%clk ${last}]} *`
     const moves = ['e4', 'e5', 'Nf3']
     const resigned = (overrides: Partial<Game>) =>
       game({ myResult: 'loss', whiteResult: 'resigned', movesSan: moves, ...overrides })
+    const final = (gameId: string, cp: number): [string, GameAnalysis] => [
+      gameId,
+      { gameId, analyzedAt: '', evals: [{ cp, mate: null, bestMove: null }] },
+    ]
+    // Flagged 3 pawns up; the other resigned 5 down.
+    const analyses = new Map([final('flag', 300), final('short', -500)])
     expect(
-      timeTroubleLosses([
-        game({ myResult: 'loss', whiteResult: 'timeout' }),
-        // 10s of 180 after 2.Nf3.
-        resigned({ pgn: clk('0:00:10') }),
-        resigned({ pgn: clk('0:01:00') }),
-        // Black's last move left 120s.
-        resigned({ pgn: clk('0:00:10'), myColor: 'black', blackResult: 'resigned' }),
-        resigned({ pgn: '1. e4 e5 2. Nf3 *' }),
-        game({ pgn: clk('0:00:10'), movesSan: moves }),
-      ]),
-    ).toBe(2)
+      timeTroubleLosses(
+        [
+          game({ id: 'flag', myResult: 'loss', whiteResult: 'timeout' }),
+          // 10s of 180 after 2.Nf3.
+          resigned({ id: 'short', pgn: clk('0:00:10') }),
+          resigned({ pgn: clk('0:01:00') }),
+          // Black's last move left 120s.
+          resigned({ pgn: clk('0:00:10'), myColor: 'black', blackResult: 'resigned' }),
+          resigned({ pgn: '1. e4 e5 2. Nf3 *' }),
+          game({ pgn: clk('0:00:10'), movesSan: moves }),
+        ],
+        analyses,
+      ),
+    ).toEqual({ count: 2, whileAhead: 1 })
   })
 })
 

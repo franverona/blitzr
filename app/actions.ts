@@ -763,7 +763,7 @@ export async function getTodaySummary(): Promise<{
   } | null
   losses: ReturnType<typeof lossReasons>
   /** `timeTroubleLosses()` of the same games. */
-  timeTroubleLosses: number
+  timeTroubleLosses: ReturnType<typeof timeTroubleLosses>
   lesson: { slug: string; name: string; games: number } | null
   /** The unfinished endgame or position lesson whose pieces your games reached most. */
   endgameLesson: { slug: string; name: string; games: number } | null
@@ -908,7 +908,7 @@ export async function getTodaySummary(): Promise<{
         }
       : null,
     losses: lossReasons(recentGames),
-    timeTroubleLosses: timeTroubleLosses(recentGames),
+    timeTroubleLosses: timeTroubleLosses(recentGames, analysesByGameId),
     lesson: suggested
       ? {
           slug: suggested.lesson.slug,
