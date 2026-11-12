@@ -202,6 +202,28 @@ describe('buildBlunderStats', () => {
     expect(buildBlunderStats([daily], analyses).byThinkTime).toEqual([])
   })
 
+  it('counts own blunders per analyzed game by color and by time class', () => {
+    const blitzWhite = makeGame({ movesSan: ['a4'] })
+    const blitzBlack = makeGame({ myColor: 'black', movesSan: ['e4', 'a5'] })
+    const bulletWhite = makeGame({ timeClass: 'bullet', movesSan: ['e4'] })
+    const unanalyzed = makeGame({ timeClass: 'rapid', movesSan: ['a4'] })
+    const analyses = new Map([
+      [blitzWhite.id, makeAnalysis(blitzWhite.id, [cp(0), cp(-260)])],
+      [blitzBlack.id, makeAnalysis(blitzBlack.id, [cp(0), cp(0), cp(260)])],
+      [bulletWhite.id, makeAnalysis(bulletWhite.id, [cp(0), cp(10)])],
+    ])
+
+    const stats = buildBlunderStats([blitzWhite, blitzBlack, bulletWhite, unanalyzed], analyses)
+    expect(stats.byColor).toEqual([
+      { key: 'white', games: 2, blunders: 1 },
+      { key: 'black', games: 1, blunders: 1 },
+    ])
+    expect(stats.byTimeClass).toEqual([
+      { key: 'blitz', games: 2, blunders: 2 },
+      { key: 'bullet', games: 1, blunders: 0 },
+    ])
+  })
+
   it('excludes blunders on the opponent’s plies', () => {
     // ply 1 is white (the pawn move, fine); ply 2 is black — but this game's
     // myColor is white, so black's blunder shouldn't count.

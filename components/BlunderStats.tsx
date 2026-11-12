@@ -133,6 +133,37 @@ export function BlunderStats({ stats }: { stats: BlunderStatsData }) {
         </div>
       </section>
 
+      <section className="flex flex-col gap-2">
+        <SectionLabel>
+          <abbr title={s.blunderStats.byColorAndTimeClassTooltip}>
+            {s.blunderStats.byColorAndTimeClass}
+          </abbr>
+        </SectionLabel>
+        <div className="flex flex-wrap gap-2">
+          {[
+            ...stats.byColor.map((rate) => ({
+              ...rate,
+              label: s.common.color[rate.key as 'white' | 'black'],
+            })),
+            ...stats.byTimeClass.map((rate) => ({
+              ...rate,
+              key: `time-${rate.key}`,
+              label: s.common.timeClass[rate.key as keyof typeof s.common.timeClass] ?? rate.key,
+            })),
+          ].map((rate) => (
+            <div
+              key={rate.key}
+              className="flex items-center gap-1.5 rounded-md border border-zinc-200 px-2.5 py-1.5 text-sm dark:border-zinc-800"
+            >
+              <span className="font-medium">{rate.label}</span>
+              <span className="text-zinc-500 dark:text-zinc-400">
+                {s.blunderStats.perGame(rate.blunders / rate.games, rate.games)}
+              </span>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {(
         [
           [stats.byClock, s.blunderStats.byClock, s.blunderStats.byClockTooltip],

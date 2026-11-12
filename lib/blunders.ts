@@ -18,6 +18,7 @@ import { describeMove, pieceName, splitSanPiece } from './san'
 import { describeBetterMove, detectBlunderReason } from './tactics'
 import type {
   BlunderGroupStat,
+  BlunderRateStat,
   BlunderReason,
   BlunderStats,
   Game,
@@ -139,6 +140,14 @@ export function buildBlunderStats(
   const byPhase = new Map<string, GroupAcc>()
   const byClock = new Map<string, GroupAcc>()
   const byThinkTime = new Map<string, GroupAcc>()
+  // Per analyzed game, not raw counts: you rarely play as many games of each.
+  const byColor = new Map<string, BlunderRateStat>()
+  const byTimeClass = new Map<string, BlunderRateStat>()
+  const rateFor = (rates: Map<string, BlunderRateStat>, key: string) => {
+    let rate = rates.get(key)
+    if (!rate) rates.set(key, (rate = { key, games: 0, blunders: 0 }))
+    return rate
+  }
   const worst: BlunderCandidate[] = []
   let analyzedGames = 0
   let totalBlunders = 0
@@ -149,6 +158,10 @@ export function buildBlunderStats(
     const analysis = analysesByGameId.get(game.id)
     if (!analysis) continue
     analyzedGames++
+    const colorRate = rateFor(byColor, game.myColor)
+    const timeClassRate = rateFor(byTimeClass, game.timeClass)
+    colorRate.games++
+    timeClassRate.games++
 
     const opponent = game.myColor === 'white' ? game.blackUsername : game.whiteUsername
     const gameLabel = `vs ${opponent} · ${formatDate(game.endTime)}`
@@ -170,6 +183,8 @@ export function buildBlunderStats(
         continue
       }
       totalBlunders++
+      colorRate.blunders++
+      timeClassRate.blunders++
 
       const isMateSwing = blunder.evalBefore.mate !== null || blunder.evalAfter.mate !== null
 
@@ -261,6 +276,8 @@ export function buildBlunderStats(
       (a, b) =>
         THINK_ORDER.indexOf(a.key as ThinkBucket) - THINK_ORDER.indexOf(b.key as ThinkBucket),
     ),
+    byColor: (['white', 'black'] as const).flatMap((color) => byColor.get(color) ?? []),
+    byTimeClass: [...byTimeClass.values()].sort((a, b) => b.games - a.games),
     worst: topWorst,
   }
 }
