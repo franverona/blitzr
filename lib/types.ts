@@ -89,6 +89,8 @@ export interface Lesson {
   sourceUrl: string
   /** The side the lesson is framed around; Quiz mode defaults to it. */
   primaryColor: 'white' | 'black'
+  /** What Play counts as a win when it isn't mate, or promotion for a line ending in one. */
+  playGoal?: 'promotion' | 'draw'
 }
 
 /** Own games that reached an opening lesson's exact move prefix — see

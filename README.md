@@ -290,8 +290,9 @@ filter scopes the whole page.
 `/learn` has short lessons on 14 openings, 3 basic endgames and 3 classic positions (Philidor,
 Lucena, Réti), each a line you step through
 with a note per move. **Quiz** mode tests you on one side while the opponent's moves play
-automatically (H shows the move, R restarts). Endgame lessons also have **Play it out**: the same
-position against Stockfish, which defends, until you mate (or promote). Study mode has the game
+automatically (H shows the move, R restarts). Endgame and position lessons also have **Play it out**: the same
+position against Stockfish, at full strength or a chosen Elo, until you mate, promote or (for a
+defense like Philidor's) hold the draw. Study mode has the game
 page's shortcuts. Opening lessons show how many of your own games reached that line, and **Add to
 my repertoire** puts the line in your tree for the lesson's color, reusing the moves you already
 have. Content is

@@ -114,6 +114,7 @@ export const POSITION_LESSONS: Lesson[] = [
     },
     sourceUrl: 'https://en.wikipedia.org/wiki/Philidor_position',
     primaryColor: 'black',
+    playGoal: 'draw',
   },
   {
     slug: 'lucena-position',
@@ -218,6 +219,7 @@ export const POSITION_LESSONS: Lesson[] = [
     },
     sourceUrl: 'https://en.wikipedia.org/wiki/Lucena_position',
     primaryColor: 'white',
+    playGoal: 'promotion',
   },
   {
     slug: 'reti-study',
@@ -308,6 +310,7 @@ export const POSITION_LESSONS: Lesson[] = [
     },
     sourceUrl: 'https://en.wikipedia.org/wiki/R%C3%A9ti_endgame_study',
     primaryColor: 'white',
+    playGoal: 'draw',
   },
 ]
 

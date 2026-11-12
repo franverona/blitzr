@@ -151,7 +151,7 @@ Every game has a `site` (`chesscom` | `lichess`). `siteUsername(site)` reads `CH
 - **Polgár puzzles are local only** (copyrighted): `scripts/import-polgar-mates.mjs` writes the
   gitignored `data/polgar-mates.json`.
 - Lesson content is hand-authored (`lib/openingTheory.ts`, `lib/endgameTheory.ts`,
-  `lib/positionTheory.ts`). Only endgame lessons get Play: a position's goal can be a draw. Every
+  `lib/positionTheory.ts`). Play's goal is mate, promotion, or a lesson's `playGoal` (a draw to hold). Every
   `sourceUrl` must be read live before citing. **Summaries are paraphrased, never copied**
   (Wikibooks is CC BY-SA, this repo is MIT).
 
