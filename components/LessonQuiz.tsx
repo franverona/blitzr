@@ -11,6 +11,7 @@ import { REVEAL_ARROW_COLOR } from '@/lib/theme'
 import { useBoardContext } from './BoardContext'
 import { useSettings, useMoveSound } from './SettingsProvider'
 import { LegalMoveSquare } from './LegalMoveSquare'
+import { PromotionPicker, type PromotionPiece } from './PromotionPicker'
 import { ErrorText } from './ErrorText'
 import { buttonClass } from './styles'
 
@@ -44,6 +45,9 @@ export function LessonQuiz({
   const [hintsUsed, setHintsUsed] = useState(0)
   const [revealed, setRevealed] = useState(false)
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null)
+  const [pendingPromotion, setPendingPromotion] = useState<{ from: string; to: string } | null>(
+    null,
+  )
 
   const fen = positions[ply]
   useMoveSound(fen)
@@ -84,6 +88,7 @@ export function LessonQuiz({
     setHintsUsed(0)
     setRevealed(false)
     setSelectedSquare(null)
+    setPendingPromotion(null)
   }, [setPly])
 
   // H → Show move, R → Restart. A focused button already handles keys natively.
@@ -101,18 +106,27 @@ export function LessonQuiz({
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [isMyTurn, revealed, isComplete, handleHint, handleRestart])
 
-  function attemptMove(from: string, to: string): boolean {
+  function attemptMove(from: string, to: string, promotion?: PromotionPiece): boolean {
     if (!isMyTurn) return false
+    // A picker, not an auto-queen: a line can need underpromotion (Saavedra's c8=R).
+    if (!promotion) {
+      if (pendingPromotion) return false
+      if (legalDestinations(fen, from).some((m) => m.to === to && m.isPromotion)) {
+        setSelectedSquare(null)
+        setPendingPromotion({ from, to })
+        return true
+      }
+    }
     const chess = new Chess(fen)
     let move
     try {
-      // ponytail: always promote to queen, no promotion picker.
-      move = chess.move({ from, to, promotion: 'q' })
+      move = chess.move({ from, to, promotion: promotion ?? 'q' })
     } catch {
       return false
     }
     if (!move) return false
 
+    setPendingPromotion(null)
     setSelectedSquare(null)
     if (move.san === movesSan[ply]) {
       setFeedback(null)
@@ -136,8 +150,13 @@ export function LessonQuiz({
     return attemptMove(sourceSquare, targetSquare)
   }
 
+  function choosePromotion(promotion: PromotionPiece) {
+    if (!pendingPromotion) return
+    attemptMove(pendingPromotion.from, pendingPromotion.to, promotion)
+  }
+
   function handleSquareClick({ square, piece }: { square: string; piece: unknown | null }) {
-    if (!isMyTurn) return
+    if (!isMyTurn || pendingPromotion) return
     if (selectedSquare) {
       if (selectedSquare === square) {
         setSelectedSquare(null)
@@ -189,12 +208,12 @@ export function LessonQuiz({
           orientation={boardOrientation}
           className="w-full"
         >
-          <div className="w-full overflow-hidden rounded shadow-lg">
+          <div className="relative w-full overflow-hidden rounded shadow-lg">
             <Chessboard
               options={{
                 position: fen,
                 boardOrientation,
-                allowDragging: isMyTurn,
+                allowDragging: isMyTurn && !pendingPromotion,
                 onPieceDrop: handleDrop,
                 onSquareClick: handleSquareClick,
                 squareRenderer: ({ square, children }) => (
@@ -212,6 +231,7 @@ export function LessonQuiz({
                 arrows,
               }}
             />
+            {pendingPromotion && <PromotionPicker color={myColor} onChoose={choosePromotion} />}
           </div>
         </BoardCoordinates>
 
