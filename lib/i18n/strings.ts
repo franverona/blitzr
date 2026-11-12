@@ -90,6 +90,8 @@ const en = {
     lessonLabel: 'Suggested lesson',
     lessonDetail: (n: number) => `You reached it in ${n} game${n === 1 ? '' : 's'} this week`,
     studyLesson: 'Study',
+    endgameLessonLabel: 'Suggested endgame',
+    endgameLessonDetail: (n: number) => `${n} of your games reached these pieces, pawns aside`,
     noWeakSpot: 'No blunders in analyzed games this week.',
     repertoireLabel: 'Repertoire',
     repertoireDeviations: (deviated: number, considered: number) =>
@@ -872,6 +874,9 @@ const es: Strings = {
     lessonDetail: (n: number) =>
       `Llegaste a ella en ${n} ${n === 1 ? 'partida' : 'partidas'} esta semana`,
     studyLesson: 'Estudiar',
+    endgameLessonLabel: 'Final sugerido',
+    endgameLessonDetail: (n: number) =>
+      `${n} de tus partidas ${n === 1 ? 'llegó' : 'llegaron'} a estas piezas, sin contar peones`,
     noWeakSpot: 'Ningún error en las partidas analizadas esta semana.',
     repertoireLabel: 'Repertorio',
     repertoireDeviations: (deviated: number, considered: number) =>

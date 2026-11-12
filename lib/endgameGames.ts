@@ -24,13 +24,36 @@ function fitsWithin(have: string, limit: string): boolean {
   return [...PIECE_ORDER].every((piece) => count(have, piece) <= count(limit, piece))
 }
 
+/** Every set of pieces `game` had, as `w/b` (see `materialKey()`), with the first ply it did. */
+export function piecesReached(game: Game): Map<string, number> {
+  const reached = new Map<string, number>()
+  const record = (fen: string, ply: number) => {
+    const { w, b } = materialKey(fen)
+    if (!reached.has(`${w}/${b}`)) reached.set(`${w}/${b}`, ply)
+  }
+  const chess = new Chess(game.initialFen)
+  record(chess.fen(), 0)
+  for (const [i, san] of (game.movesSan ?? []).entries()) {
+    try {
+      chess.move(san)
+    } catch {
+      break
+    }
+    // Only a capture or a promotion changes material.
+    if (san.includes('x') || san.includes('=')) record(chess.fen(), i + 1)
+  }
+  return reached
+}
+
 /** The first ply at which `game` had the same pieces as `fen`, with either color on either side;
- *  null if it never did. */
-export function plyReachingMaterial(game: Game, fen: string): number | null {
+ *  null if it never did. `memo` keeps each game's `piecesReached()` across calls. */
+export function plyReachingMaterial(
+  game: Game,
+  fen: string,
+  memo: Map<string, Map<string, number>> = new Map(),
+): number | null {
   if (!game.movesSan) return null
   const target = materialKey(fen)
-  const matches = (key: { w: string; b: string }) =>
-    (key.w === target.w && key.b === target.b) || (key.w === target.b && key.b === target.w)
 
   // Replaying is slow (chess.js parses each SAN). Without a promotion, pieces are only ever
   // lost, so a game that ended with more of any piece than the lesson never had its pieces.
@@ -42,42 +65,31 @@ export function plyReachingMaterial(game: Game, fen: string): number | null {
     if (!possible) return null
   }
 
-  const chess = new Chess(game.initialFen)
-  if (matches(materialKey(chess.fen()))) return 0
-  for (let i = 0; i < game.movesSan.length; i++) {
-    const san = game.movesSan[i]
-    try {
-      chess.move(san)
-    } catch {
-      return null
-    }
-    // Only a capture or a promotion changes material.
-    if ((san.includes('x') || san.includes('=')) && matches(materialKey(chess.fen()))) return i + 1
+  // The moves' count too: a refreshed Lichess game can have more of them.
+  const key = `${game.id}:${game.movesSan.length}`
+  let reached = memo.get(key)
+  if (!reached) {
+    reached = piecesReached(game)
+    memo.set(key, reached)
   }
-  return null
+  const plies = [reached.get(`${target.w}/${target.b}`), reached.get(`${target.b}/${target.w}`)]
+  const found = plies.filter((ply) => ply !== undefined)
+  return found.length > 0 ? Math.min(...found) : null
 }
 
-/** Own games that reached a lesson's pieces, most recent first in `recent`. `memo` keeps each
- *  game's answer across calls, since replaying every game is slow. */
+/** Own games that reached a lesson's pieces, most recent first in `recent`. `memo`: see
+ *  `plyReachingMaterial()`. */
 export function findGamesReachingMaterial(
   games: Game[],
   fen: string,
-  memo: Map<string, number | null> = new Map(),
+  memo: Map<string, Map<string, number>> = new Map(),
 ): LessonEndgameGames {
-  const { w, b } = materialKey(fen)
-  // The moves' count too: a refreshed Lichess game can have more of them.
-  const memoKey = (game: Game) => `${game.id}:${game.movesSan?.length}:${[w, b].sort().join('/')}`
   let wins = 0
   let draws = 0
   let losses = 0
   const reached: LessonEndgameGames['recent'] = []
   for (const game of games) {
-    const key = memoKey(game)
-    let ply = memo.get(key)
-    if (ply === undefined) {
-      ply = plyReachingMaterial(game, fen)
-      memo.set(key, ply)
-    }
+    const ply = plyReachingMaterial(game, fen, memo)
     if (ply === null) continue
     if (game.myResult === 'win') wins++
     else if (game.myResult === 'draw') draws++

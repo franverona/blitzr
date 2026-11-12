@@ -37,9 +37,9 @@ import { buildOpeningFamilies, openingFamilyLabel, openingFamilyLabels } from '@
 import { nextPuzzleByRating } from '@/lib/mateProblems'
 import { allMateProblems, getMateProblem } from '@/lib/puzzleSet'
 import { OPENING_LESSONS, countGamesReachingLine, getOpeningLesson } from '@/lib/openingTheory'
-import { getEndgameLesson } from '@/lib/endgameTheory'
+import { ENDGAME_LESSONS, getEndgameLesson } from '@/lib/endgameTheory'
 import { findGamesReachingMaterial } from '@/lib/endgameGames'
-import { getPositionLesson } from '@/lib/positionTheory'
+import { POSITION_LESSONS, getPositionLesson } from '@/lib/positionTheory'
 import {
   buildPositions,
   isStandardChess,
@@ -66,6 +66,8 @@ import {
   recentResults,
   scoreByRatingGap,
   repertoireDeviations,
+  isLessonDone,
+  suggestEndgameLesson,
   suggestLesson,
 } from '@/lib/today'
 import {
@@ -162,9 +164,9 @@ export async function getLessonGameStats(moves: string[]): Promise<LessonGameSta
   return countGamesReachingLine(games, moves)
 }
 
-// Games are insert-only (a refreshed Lichess game changes its key), so answers stay valid for the
-// server's lifetime.
-const endgameGamesMemo = new Map<string, number | null>()
+// Each game's `piecesReached()`. Games are insert-only (a refreshed Lichess game changes its key),
+// so entries stay valid for the server's lifetime.
+const endgameGamesMemo = new Map<string, Map<string, number>>()
 
 /** Own games that reached an endgame or position lesson's pieces; null for any other slug. */
 export async function getLessonEndgameGames(slug: string): Promise<LessonEndgameGames | null> {
@@ -758,6 +760,8 @@ export async function getTodaySummary(): Promise<{
   } | null
   losses: ReturnType<typeof lossReasons>
   lesson: { slug: string; name: string; games: number } | null
+  /** The unfinished endgame or position lesson whose pieces your games reached most. */
+  endgameLesson: { slug: string; name: string; games: number } | null
   lastGame: {
     id: string
     opponent: string
@@ -809,9 +813,18 @@ export async function getTodaySummary(): Promise<{
   const recentStats = buildBlunderStats(recentGames, analysesByGameId, undefined, familyLabels)
   const worstOpening = recentStats.byOpening[0]
   const worst = recentStats.worst[0]
+  const lessonProgress = await repo.listLessonProgress()
   const suggested = suggestLesson(
     standardStartGames.filter((g) => g.endTime >= since),
-    OPENING_LESSONS,
+    OPENING_LESSONS.filter((lesson) => !isLessonDone(lessonProgress[lesson.slug], false)),
+  )
+  // From every own game, not just this week's: endgames are rarer than openings.
+  const suggestedEndgame = suggestEndgameLesson(
+    [...ENDGAME_LESSONS, ...POSITION_LESSONS].map((lesson) => ({
+      lesson,
+      games: findGamesReachingMaterial(games, lesson.initialFen, endgameGamesMemo).games,
+    })),
+    lessonProgress,
   )
   const weakSpot = worstOpening
     ? {
@@ -894,6 +907,13 @@ export async function getTodaySummary(): Promise<{
           slug: suggested.lesson.slug,
           name: suggested.lesson.name[getLocale()],
           games: suggested.games,
+        }
+      : null,
+    endgameLesson: suggestedEndgame
+      ? {
+          slug: suggestedEndgame.lesson.slug,
+          name: suggestedEndgame.lesson.name[getLocale()],
+          games: suggestedEndgame.games,
         }
       : null,
     syncIsFresh: syncedAts.length > 0 && !isSyncStale(syncedAts, now),

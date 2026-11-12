@@ -9,6 +9,7 @@ import type {
   GameAnalysis,
   GameSite,
   Lesson,
+  LessonProgress,
   MyResult,
   RepertoireColor,
   RepertoireNode,
@@ -231,6 +232,25 @@ export function suggestLesson(
     ) {
       best = { lesson, games: reached }
     }
+  }
+  return best
+}
+
+/** A finished quiz and, where the lesson has Play (`playable`), a win there too. */
+export function isLessonDone(progress: LessonProgress | undefined, playable: boolean): boolean {
+  return Boolean(progress?.quizCompleted && (!playable || progress.playWon))
+}
+
+/** The unfinished endgame or position lesson your games reached most (ties go to the first
+ *  listed), or null if none was reached. */
+export function suggestEndgameLesson(
+  reached: { lesson: Lesson; games: number }[],
+  progress: Record<string, LessonProgress>,
+): { lesson: Lesson; games: number } | null {
+  let best: { lesson: Lesson; games: number } | null = null
+  for (const candidate of reached) {
+    if (candidate.games === 0 || isLessonDone(progress[candidate.lesson.slug], true)) continue
+    if (!best || candidate.games > best.games) best = candidate
   }
   return best
 }

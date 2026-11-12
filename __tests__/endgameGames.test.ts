@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { findGamesReachingMaterial, materialKey, plyReachingMaterial } from '@/lib/endgameGames'
+import {
+  findGamesReachingMaterial,
+  materialKey,
+  piecesReached,
+  plyReachingMaterial,
+} from '@/lib/endgameGames'
 import type { Game } from '@/lib/types'
 
 // Rook vs rook, as in the Philidor lesson (White also has a pawn).
@@ -42,6 +47,18 @@ function makeGame(overrides: Partial<Game>): Game {
 describe('materialKey', () => {
   it("lists each side's pieces, strongest first, ignoring kings and pawns", () => {
     expect(materialKey('4k3/1p6/1P6/2PK4/8/8/8/1q1BR3 w - - 0 1')).toEqual({ w: 'RB', b: 'Q' })
+  })
+})
+
+describe('piecesReached', () => {
+  it('records each set of pieces once, at the first ply it appears', () => {
+    expect(piecesReached(makeGame({}))).toEqual(
+      new Map([
+        ['RR/RR', 0],
+        ['RR/R', 1],
+        ['R/R', 2],
+      ]),
+    )
   })
 })
 
@@ -89,12 +106,12 @@ describe('findGamesReachingMaterial', () => {
     expect(result.recent[0]).toMatchObject({ ply: 2, opponent: 'me' })
   })
 
-  it("reuses a memoized game's answer", () => {
+  it("reuses a memoized game's replay", () => {
     const game = makeGame({ id: 'g' })
-    const memo = new Map<string, number | null>()
+    const memo = new Map<string, Map<string, number>>()
     findGamesReachingMaterial([game], ROOK_PAWN_VS_ROOK, memo)
-    expect([...memo.values()]).toEqual([2])
-    memo.set([...memo.keys()][0], 7)
+    expect([...memo.values()][0].get('R/R')).toBe(2)
+    memo.set([...memo.keys()][0], new Map([['R/R', 7]]))
     expect(findGamesReachingMaterial([game], ROOK_PAWN_VS_ROOK, memo).recent[0].ply).toBe(7)
   })
 })

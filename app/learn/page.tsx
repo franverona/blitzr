@@ -9,6 +9,7 @@ import { getStrings } from '@/lib/i18n/strings'
 import { OPENING_LESSONS } from '@/lib/openingTheory'
 import { POSITION_LESSONS } from '@/lib/positionTheory'
 import { buildPositions } from '@/lib/positions'
+import { isLessonDone } from '@/lib/today'
 import { isApproximateElo, isBotElo } from '@/lib/botStrength'
 import type { Lesson, LessonProgress } from '@/lib/types'
 import { PageHeader } from '@/components/PageHeader'
@@ -90,11 +91,6 @@ function ProgressBadges({
   )
 }
 
-/** Its quiz finished and, where there's Play, won (or held) there too. */
-function isDone(lesson: Lesson, progress: LessonProgress | undefined, category: Category): boolean {
-  return Boolean(progress?.quizCompleted && (category === 'openings' || progress.playWon))
-}
-
 function FilterTabs<T extends string>({
   current,
   options,
@@ -145,7 +141,8 @@ export default async function LearnPage({
     (lesson) =>
       (color === 'all' || lesson.primaryColor === color) &&
       (goal === 'all' || (lesson.playGoal === 'draw') === (goal === 'draw')) &&
-      (status === 'all' || isDone(lesson, progress[lesson.slug], category) === (status === 'done')),
+      (status === 'all' ||
+        isLessonDone(progress[lesson.slug], category !== 'openings') === (status === 'done')),
   )
 
   function hrefFor(next: {
