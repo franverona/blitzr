@@ -195,8 +195,8 @@ jobs:
           check /learn/king-and-rook-vs-king 'King and Rook vs. King'
           check /learn/king-and-rook-vs-king smoke-endgame-opponent
           check /learn/lucena-position 'Lucena Position'
-          check /learn 'Quiz ✓'
-          check '/learn?status=pending' 'href="/learn/king-and-rook-vs-king"'
+          check '/learn?category=endgames' 'Quiz ✓'
+          check '/learn?category=endgames&status=pending' 'href="/learn/king-and-rook-vs-king"'
           check / '1 of your games reached these pieces'
           # A puzzle from each bundled Lichess set (the real-game one is in the loop above), and a filter.
           check /puzzles/10001 'Lichess puzzle bjqrC'
