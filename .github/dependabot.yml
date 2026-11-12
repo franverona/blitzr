@@ -15,12 +15,14 @@ updates:
     groups:
       # Never auto-merged (dependabot-automerge.yml repeats this list for ungrouped security
       # updates). Next's minors change APIs and defaults; kysely is 0.x, so its minors
-      # (0.29 -> 0.30) can break, and it backs the whole data layer.
+      # (0.29 -> 0.30) can break, and it backs the whole data layer. react-chessboard renders every
+      # board client-side, which the smoke test (curl only) never runs.
       framework:
-        patterns: ['next', 'eslint-config-next', 'react', 'react-dom', 'kysely']
+        patterns: ['next', 'eslint-config-next', 'react', 'react-dom', 'kysely', 'react-chessboard']
       minor-and-patch:
         update-types: [minor, patch]
-        exclude-patterns: ['next', 'eslint-config-next', 'react', 'react-dom', 'kysely']
+        exclude-patterns:
+          ['next', 'eslint-config-next', 'react', 'react-dom', 'kysely', 'react-chessboard']
     commit-message:
       prefix: chore
       prefix-development: chore
