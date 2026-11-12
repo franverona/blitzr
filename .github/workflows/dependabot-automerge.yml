@@ -28,7 +28,7 @@ jobs:
         run: |
           for dep in ${DEPENDENCY_NAMES//,/ }; do
             case "$dep" in
-              next | eslint-config-next | react | react-dom | kysely | react-chessboard)
+              next | eslint-config-next | react | react-dom | kysely | react-chessboard | chess.js)
                 echo "$dep is left for a manual review"
                 exit 0
                 ;;
