@@ -75,6 +75,14 @@ export interface PuzzleRevealsTable {
   revealed_at: string
 }
 
+export interface LessonProgressTable {
+  slug: string
+  quiz_completed_at: string | null
+  play_won_at: string | null
+  /** NULL with `play_won_at` set: won at full strength. */
+  play_best_elo: number | null
+}
+
 export interface DrillReviewDaysTable {
   /** Local "YYYY-MM-DD". */
   day: string
@@ -89,4 +97,5 @@ export interface DbSchema {
   puzzle_progress: PuzzleProgressTable
   puzzle_reveals: PuzzleRevealsTable
   drill_review_days: DrillReviewDaysTable
+  lesson_progress: LessonProgressTable
 }

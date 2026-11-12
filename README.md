@@ -293,8 +293,9 @@ with a note per move. **Quiz** mode tests you on one side while the opponent's m
 automatically (H shows the move, R restarts). Endgame and position lessons also have **Play it out**: the same
 position against Stockfish, at full strength or a chosen Elo, until you mate, promote or (for a
 defense like Philidor's) hold the draw. Study mode has the game
-page's shortcuts. The list filters by category, your side and (outside openings) whether the
-goal is to win or to draw, all in the URL (`/learn?category=positions&color=black&goal=draw`). Opening lessons show how many of your own games reached that line; endgame and position
+page's shortcuts. Finishing a quiz, or winning (or holding) in Play, marks the lesson on its card,
+with the strongest bot you beat. The list filters by category, your side, (outside openings)
+whether the goal is to win or to draw, and progress (pending or done), all in the URL (`/learn?category=positions&color=black&goal=draw`). Opening lessons show how many of your own games reached that line; endgame and position
 lessons, how many reached the same pieces (pawns aside, so rook vs rook for Philidor), with links
 to the most recent at that move. On an opening lesson, **Add to
 my repertoire** puts the line in your tree for the lesson's color, reusing the moves you already

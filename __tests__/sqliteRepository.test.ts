@@ -300,3 +300,27 @@ describe('SqliteGameRepository.upsertGames on an existing id', () => {
     expect((await repo.getGame('1'))?.pgn).toBe('')
   })
 })
+
+describe('SqliteGameRepository lesson progress', () => {
+  it('records a quiz completion once', async () => {
+    await repo.markLessonQuizCompleted('quiz-lesson')
+    await repo.markLessonQuizCompleted('quiz-lesson')
+    expect((await repo.listLessonProgress())['quiz-lesson']).toEqual({
+      quizCompleted: true,
+      playWon: null,
+    })
+  })
+
+  it('keeps the strongest Play win, full strength above any Elo', async () => {
+    const best = async () => (await repo.listLessonProgress())['play-lesson'].playWon
+    await repo.recordLessonPlayWin('play-lesson', 1400)
+    await repo.recordLessonPlayWin('play-lesson', 1000)
+    expect(await best()).toEqual({ elo: 1400 })
+    await repo.recordLessonPlayWin('play-lesson', 1800)
+    expect(await best()).toEqual({ elo: 1800 })
+    await repo.recordLessonPlayWin('play-lesson', null)
+    await repo.recordLessonPlayWin('play-lesson', 2500)
+    expect(await best()).toEqual({ elo: null })
+    expect((await repo.listLessonProgress())['play-lesson'].quizCompleted).toBe(false)
+  })
+})

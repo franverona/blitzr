@@ -178,6 +178,17 @@ async function runMigrations(db: Kysely<DbSchema>): Promise<void> {
     )
   `.execute(db)
 
+  // A /learn lesson's quiz finished, and its best Play win: play_best_elo NULL with play_won_at set
+  // means full strength.
+  await sql`
+    CREATE TABLE IF NOT EXISTS lesson_progress (
+      slug TEXT PRIMARY KEY,
+      quiz_completed_at TEXT,
+      play_won_at TEXT,
+      play_best_elo INTEGER
+    )
+  `.execute(db)
+
   // Puzzles whose solution was revealed; unsolved ones come back first as Today's next puzzle.
   await sql`
     CREATE TABLE IF NOT EXISTS puzzle_reveals (

@@ -30,13 +30,13 @@ import {
   selectSessionCards,
 } from '@/lib/drill'
 import type { DrillCandidate, LearnedCounts } from '@/lib/drill'
-import type { BotElo } from '@/lib/botStrength'
+import { isBotElo, type BotElo } from '@/lib/botStrength'
 import { findDuplicateGame, parseManualGame, pgnSite, type ManualGameSide } from '@/lib/manualGame'
 import { summarizeMoveQuality } from '@/lib/moveQuality'
 import { buildOpeningFamilies, openingFamilyLabel, openingFamilyLabels } from '@/lib/openings'
 import { nextPuzzleByRating } from '@/lib/mateProblems'
 import { allMateProblems, getMateProblem } from '@/lib/puzzleSet'
-import { OPENING_LESSONS, countGamesReachingLine } from '@/lib/openingTheory'
+import { OPENING_LESSONS, countGamesReachingLine, getOpeningLesson } from '@/lib/openingTheory'
 import { getEndgameLesson } from '@/lib/endgameTheory'
 import { findGamesReachingMaterial } from '@/lib/endgameGames'
 import { getPositionLesson } from '@/lib/positionTheory'
@@ -89,6 +89,7 @@ import type {
   GameAnalysis,
   LessonEndgameGames,
   LessonGameStats,
+  LessonProgress,
   MyColor,
   MyResult,
   OpeningFamily,
@@ -908,6 +909,28 @@ export async function markPuzzleSolved(puzzleId: number): Promise<void> {
   await getRepository().markPuzzleSolved(puzzleId)
   revalidatePath('/puzzles')
   revalidatePath('/')
+}
+
+export async function getLessonProgress(): Promise<Record<string, LessonProgress>> {
+  return getRepository().listLessonProgress()
+}
+
+export async function markLessonQuizCompleted(slug: string): Promise<void> {
+  const known =
+    typeof slug === 'string' &&
+    Boolean(getOpeningLesson(slug) ?? getEndgameLesson(slug) ?? getPositionLesson(slug))
+  if (!known) throw new Error('Invalid lesson')
+  await getRepository().markLessonQuizCompleted(slug)
+  revalidatePath('/learn')
+}
+
+/** A Play win (or a held draw) at `elo`; null is full strength. Openings have no Play. */
+export async function recordLessonPlayWin(slug: string, elo: number | null): Promise<void> {
+  const playable =
+    typeof slug === 'string' && Boolean(getEndgameLesson(slug) ?? getPositionLesson(slug))
+  if (!playable || (elo !== null && !isBotElo(elo))) throw new Error('Invalid lesson')
+  await getRepository().recordLessonPlayWin(slug, elo)
+  revalidatePath('/learn')
 }
 
 export async function markPuzzleRevealed(puzzleId: number): Promise<void> {
