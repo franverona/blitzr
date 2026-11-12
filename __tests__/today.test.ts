@@ -4,6 +4,8 @@ import {
   drillWeek,
   localDay,
   lossReasons,
+  isLessonDone,
+  suggestEndgameLesson,
   suggestLesson,
   recentResults,
   scoreByRatingGap,
@@ -225,5 +227,35 @@ describe('scoreByRatingGap', () => {
     expect(scoreByRatingGap([vs(1500, null, 'win')])).toEqual([])
     // A bot or coach game carries ratings but isn't rated.
     expect(scoreByRatingGap([{ ...vs(1500, 2000, 'win'), rated: false }])).toEqual([])
+  })
+})
+
+describe('isLessonDone', () => {
+  it('needs the quiz, and a Play win only where the lesson has Play', () => {
+    const quizOnly = { quizCompleted: true, playWon: null }
+    expect(isLessonDone(quizOnly, false)).toBe(true)
+    expect(isLessonDone(quizOnly, true)).toBe(false)
+    expect(isLessonDone({ quizCompleted: true, playWon: { elo: 1400 } }, true)).toBe(true)
+    expect(isLessonDone({ quizCompleted: false, playWon: { elo: null } }, true)).toBe(false)
+    expect(isLessonDone(undefined, false)).toBe(false)
+  })
+})
+
+describe('suggestEndgameLesson', () => {
+  const lesson = (slug: string) => ({ slug }) as Lesson
+
+  it('picks the most-reached unfinished lesson, the first listed on a tie', () => {
+    const reached = [
+      { lesson: lesson('done'), games: 9 },
+      { lesson: lesson('philidor'), games: 6 },
+      { lesson: lesson('lucena'), games: 6 },
+      { lesson: lesson('never'), games: 0 },
+    ]
+    const progress = { done: { quizCompleted: true, playWon: { elo: null } } }
+    expect(suggestEndgameLesson(reached, progress)?.lesson.slug).toBe('philidor')
+  })
+
+  it('returns null when nothing unfinished was reached', () => {
+    expect(suggestEndgameLesson([{ lesson: lesson('never'), games: 0 }], {})).toBeNull()
   })
 })

@@ -373,6 +373,20 @@ export default async function TodayPage() {
                 </p>
               </FocusRow>
             )}
+
+            {today.endgameLesson && (
+              <FocusRow
+                icon={<GraduationCapIcon className="size-4" />}
+                tone="emerald"
+                label={s.today.endgameLessonLabel}
+                action={{ href: `/learn/${today.endgameLesson.slug}`, label: s.today.studyLesson }}
+              >
+                <p className="text-sm font-medium">{today.endgameLesson.name}</p>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  {s.today.endgameLessonDetail(today.endgameLesson.games)}
+                </p>
+              </FocusRow>
+            )}
           </ul>
         </Card>
       </div>
