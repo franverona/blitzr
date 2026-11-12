@@ -21,14 +21,17 @@ import { chipClass, LINK_CLASS } from './styles'
 
 type Mode = 'study' | 'quiz' | 'play'
 
-/** Study/Quiz (and, for endgames, Play) toggle. `key={mode}` resets the board on every switch. */
+/** Study/Quiz (and, for endgame lessons, Play) toggle. `key={mode}` resets the board on every switch. */
 export function LessonPractice({
   lesson,
   gameStats,
+  playable,
 }: {
   lesson: Lesson
-  /** null for endgame lessons, which hides the section. */
+  /** null for endgame and position lessons, which hides the section. */
   gameStats: LessonGameStatsData | null
+  /** Endgame lessons only: a position lesson's goal can be a draw, which Play can't score. */
+  playable: boolean
 }) {
   const [mode, setMode] = useState<Mode>('study')
   const s = getStrings()
@@ -60,8 +63,7 @@ export function LessonPractice({
                 active={mode === 'quiz'}
                 onClick={() => setMode('quiz')}
               />
-              {/* Endgame lessons only (no game stats): an opening has no position to win from. */}
-              {!gameStats && (
+              {playable && (
                 <ModeTab
                   label={s.endgamePlayout.play}
                   active={mode === 'play'}
@@ -69,7 +71,7 @@ export function LessonPractice({
                 />
               )}
               <span className="mx-1 h-4 w-px bg-zinc-300 dark:bg-zinc-700" />
-              {/* Opening lessons only (they have game stats); endgames start from a FEN. */}
+              {/* Opening lessons only (they have game stats); the others start from a FEN. */}
               {gameStats && (
                 <AddLessonToRepertoireButton slug={lesson.slug} color={lesson.primaryColor} />
               )}

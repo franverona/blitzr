@@ -7,12 +7,19 @@ import { ENDGAME_LESSONS } from '@/lib/endgameTheory'
 import { getLocale } from '@/lib/i18n/locale'
 import { getStrings } from '@/lib/i18n/strings'
 import { OPENING_LESSONS } from '@/lib/openingTheory'
+import { POSITION_LESSONS } from '@/lib/positionTheory'
 import { buildPositions } from '@/lib/positions'
 import type { Lesson } from '@/lib/types'
 import { PageHeader } from '@/components/PageHeader'
 import { chipClass } from '@/components/styles'
 
-type Category = 'openings' | 'endgames'
+type Category = 'openings' | 'endgames' | 'positions'
+
+const LESSONS: Record<Category, Lesson[]> = {
+  openings: OPENING_LESSONS,
+  endgames: ENDGAME_LESSONS,
+  positions: POSITION_LESSONS,
+}
 
 function LessonGrid({ lessons }: { lessons: Lesson[] }) {
   const locale = getLocale()
@@ -76,9 +83,14 @@ export default function LearnPage() {
           active={category === 'endgames'}
           onClick={() => setCategory('endgames')}
         />
+        <CategoryTab
+          label={s.learnPage.positions}
+          active={category === 'positions'}
+          onClick={() => setCategory('positions')}
+        />
       </div>
 
-      <LessonGrid lessons={category === 'openings' ? OPENING_LESSONS : ENDGAME_LESSONS} />
+      <LessonGrid lessons={LESSONS[category]} />
     </div>
   )
 }

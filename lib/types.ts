@@ -77,8 +77,8 @@ export interface LessonMove {
   explanation: Record<Locale, string>
 }
 
-/** A hand-authored opening (`lib/openingTheory.ts`) or endgame
- *  (`lib/endgameTheory.ts`) lesson. */
+/** A hand-authored opening (`lib/openingTheory.ts`), endgame (`lib/endgameTheory.ts`) or
+ *  theoretical position (`lib/positionTheory.ts`) lesson. */
 export interface Lesson {
   slug: string
   name: Record<Locale, string>

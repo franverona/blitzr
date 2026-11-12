@@ -3,11 +3,13 @@ import { getLessonGameStats } from '@/app/actions'
 import { LessonPractice } from '@/components/LessonPractice'
 import { getEndgameLesson } from '@/lib/endgameTheory'
 import { getOpeningLesson } from '@/lib/openingTheory'
+import { getPositionLesson } from '@/lib/positionTheory'
 
 export default async function LearnLessonPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
   const openingLesson = getOpeningLesson(slug)
-  const lesson = openingLesson ?? getEndgameLesson(slug)
+  const endgameLesson = getEndgameLesson(slug)
+  const lesson = openingLesson ?? endgameLesson ?? getPositionLesson(slug)
   if (!lesson) notFound()
 
   // Opening lessons only; null hides the section.
@@ -15,5 +17,5 @@ export default async function LearnLessonPage({ params }: { params: Promise<{ sl
     ? await getLessonGameStats(openingLesson.moves.map((move) => move.san))
     : null
 
-  return <LessonPractice lesson={lesson} gameStats={gameStats} />
+  return <LessonPractice lesson={lesson} gameStats={gameStats} playable={!!endgameLesson} />
 }
