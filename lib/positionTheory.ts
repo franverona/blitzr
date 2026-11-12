@@ -222,6 +222,283 @@ export const POSITION_LESSONS: Lesson[] = [
     playGoal: 'promotion',
   },
   {
+    slug: 'vancura-position',
+    name: { en: 'Vančura Position', es: 'Posición de Vančura' },
+    initialFen: 'R7/6k1/P4r2/8/2K5/8/8/8 w - - 0 1',
+    moves: [
+      {
+        san: 'Kb5',
+        explanation: {
+          en: "White's king heads toward the pawn to protect it, so the rook can get free.",
+          es: 'El rey blanco se dirige hacia el peón para protegerlo y liberar así a la torre.',
+        },
+      },
+      {
+        san: 'Rf5+',
+        explanation: {
+          en: 'Black checks from the side straight away.',
+          es: 'Las negras dan jaque por el lateral enseguida.',
+        },
+      },
+      {
+        san: 'Kc6',
+        explanation: {
+          en: 'The king keeps trying to get closer.',
+          es: 'El rey sigue intentando acercarse.',
+        },
+      },
+      {
+        san: 'Rf6+',
+        explanation: {
+          en: 'Another check. The king can never shelter from these checks.',
+          es: 'Otro jaque. El rey nunca puede resguardarse de estos jaques.',
+        },
+      },
+      {
+        san: 'Kd5',
+        explanation: {
+          en: 'The king has to go back up the board.',
+          es: 'El rey tiene que volver a subir por el tablero.',
+        },
+      },
+      { san: 'Rf5+', explanation: { en: 'Still checking.', es: 'Siguen los jaques.' } },
+      {
+        san: 'Ke6',
+        explanation: {
+          en: 'The king tries the other way, toward the black rook.',
+          es: 'El rey prueba por el otro lado, hacia la torre negra.',
+        },
+      },
+      {
+        san: 'Rf6+',
+        explanation: {
+          en: 'Black keeps checking from the side.',
+          es: 'Las negras siguen dando jaque por el lateral.',
+        },
+      },
+      { san: 'Ke5', explanation: { en: 'The king steps back.', es: 'El rey retrocede.' } },
+      {
+        san: 'Rb6',
+        explanation: {
+          en: 'With no more useful checks, the rook goes back to attacking the pawn from the side.',
+          es: 'Sin más jaques útiles, la torre vuelve a atacar el peón por el lateral.',
+        },
+      },
+      {
+        san: 'Kd5',
+        explanation: {
+          en: 'The king turns back toward the pawn.',
+          es: 'El rey vuelve hacia el peón.',
+        },
+      },
+      {
+        san: 'Rf6',
+        explanation: {
+          en: 'The rook steps away again, ready to check once the king gets close to the pawn.',
+          es: 'La torre vuelve a alejarse, lista para dar jaque cuando el rey se acerque al peón.',
+        },
+      },
+      {
+        san: 'Kd4',
+        explanation: { en: 'White tries another route.', es: 'Las blancas prueban otra ruta.' },
+      },
+      {
+        san: 'Rb6',
+        explanation: { en: 'Back to attacking the pawn.', es: 'De nuevo a atacar el peón.' },
+      },
+      {
+        san: 'Kc5',
+        explanation: { en: 'The king threatens the rook.', es: 'El rey amenaza a la torre.' },
+      },
+      {
+        san: 'Rf6',
+        explanation: {
+          en: 'The rook simply goes back to the f-file.',
+          es: 'La torre simplemente vuelve a la columna f.',
+        },
+      },
+      {
+        san: 'Ra7+',
+        explanation: {
+          en: 'White tries to drive the black king away from the corner.',
+          es: 'Las blancas intentan alejar al rey negro de la esquina.',
+        },
+      },
+      {
+        san: 'Kg6',
+        explanation: {
+          en: 'The king steps aside, but only for a moment.',
+          es: 'El rey se aparta, pero solo un momento.',
+        },
+      },
+      {
+        san: 'Ra8',
+        explanation: {
+          en: 'The rook has to go back in front of the pawn.',
+          es: 'La torre tiene que volver delante del peón.',
+        },
+      },
+      {
+        san: 'Kg7',
+        explanation: {
+          en: 'Back where it started. White has made no progress: a draw.',
+          es: 'De vuelta al principio. Las blancas no han avanzado nada: tablas.',
+        },
+      },
+    ],
+    summary: {
+      en: "The Vančura position is how to draw against a rook pawn when your rook can't get in front of it or behind it. Attack the pawn from the side, from far away, so the enemy rook has to stay in front of the pawn to guard it. Keep your king near the other corner. If the white king walks over to protect the pawn, check it from the side; it has nowhere to hide.",
+      es: 'La posición de Vančura es la forma de hacer tablas contra un peón de torre cuando tu torre no puede ponerse delante ni detrás de él. Ataca el peón por el lateral, desde lejos, para que la torre rival tenga que quedarse delante del peón protegiéndolo. Mantén tu rey cerca de la otra esquina. Si el rey blanco va a proteger el peón, dale jaque por el lateral: no tiene dónde esconderse.',
+    },
+    sourceUrl: 'https://en.wikipedia.org/wiki/Van%C4%8Dura_position',
+    primaryColor: 'black',
+    playGoal: 'draw',
+  },
+  {
+    slug: 'short-side-defense',
+    name: { en: 'Short-Side Defense', es: 'Defensa por el lado corto' },
+    initialFen: '4K3/4P1k1/8/8/8/8/r7/5R2 b - - 0 1',
+    moves: [
+      {
+        san: 'Ra8+',
+        explanation: {
+          en: "Black's king is on the short side, so the rook is free to check from the long side, far from the pawn.",
+          es: 'El rey negro está en el lado corto, así que la torre puede dar jaque libremente desde el lado largo, lejos del peón.',
+        },
+      },
+      {
+        san: 'Kd7',
+        explanation: {
+          en: 'The king leaves the promotion square to escape the checks.',
+          es: 'El rey abandona la casilla de coronación para escapar de los jaques.',
+        },
+      },
+      {
+        san: 'Ra7+',
+        explanation: {
+          en: 'Checks from the side keep coming.',
+          es: 'Los jaques por el lateral siguen llegando.',
+        },
+      },
+      {
+        san: 'Kd6',
+        explanation: { en: 'The king moves down the board.', es: 'El rey baja por el tablero.' },
+      },
+      {
+        san: 'Ra6+',
+        explanation: {
+          en: 'Still checking: the rook is far enough away that the king can never get close to it.',
+          es: 'Sigue el jaque: la torre está tan lejos que el rey nunca puede acercarse a ella.',
+        },
+      },
+      {
+        san: 'Kd5',
+        explanation: { en: 'The king moves down again.', es: 'El rey vuelve a bajar.' },
+      },
+      { san: 'Ra5+', explanation: { en: 'Another check.', es: 'Otro jaque.' } },
+      {
+        san: 'Kc6',
+        explanation: {
+          en: 'The king tries to approach the rook.',
+          es: 'El rey intenta acercarse a la torre.',
+        },
+      },
+      { san: 'Ra6+', explanation: { en: 'Still checking.', es: 'Sigue dando jaque.' } },
+      {
+        san: 'Kb7',
+        explanation: {
+          en: 'The king attacks the rook, but now it is far from its pawn.',
+          es: 'El rey ataca a la torre, pero ahora está lejos de su peón.',
+        },
+      },
+      {
+        san: 'Re6',
+        explanation: {
+          en: 'The rook escapes and attacks the pawn, which falls next move. A draw.',
+          es: 'La torre escapa y ataca al peón, que cae en la siguiente jugada. Tablas.',
+        },
+      },
+    ],
+    summary: {
+      en: "When you can't get your king in front of the pawn, the short-side defense still draws. Put your king on the short side of the pawn, the side with fewer files, and your rook on the long side, at least three files away from the pawn. From there the rook checks the king from the side until it has to leave the pawn, and then the rook wins the pawn.",
+      es: 'Cuando no puedes poner tu rey delante del peón, la defensa por el lado corto todavía hace tablas. Pon tu rey en el lado corto del peón, el que tiene menos columnas, y tu torre en el lado largo, al menos a tres columnas del peón. Desde ahí la torre da jaque al rey por el lateral hasta que tiene que abandonar el peón, y entonces la torre lo gana.',
+    },
+    sourceUrl: 'https://en.wikipedia.org/wiki/Rook_and_pawn_versus_rook_endgame',
+    primaryColor: 'black',
+    playGoal: 'draw',
+  },
+  {
+    slug: 'saavedra-position',
+    name: { en: 'Saavedra Position', es: 'Posición de Saavedra' },
+    initialFen: '8/8/1KP5/3r4/8/8/8/k7 w - - 0 1',
+    moves: [
+      {
+        san: 'c7',
+        explanation: {
+          en: 'The pawn is one step from promoting, and the rook seems unable to stop it.',
+          es: 'El peón está a un paso de coronar, y la torre parece incapaz de impedirlo.',
+        },
+      },
+      {
+        san: 'Rd6+',
+        explanation: { en: 'Black starts checking.', es: 'Las negras empiezan a dar jaques.' },
+      },
+      {
+        san: 'Kb5',
+        explanation: {
+          en: 'The king moves down the board, away from the checks.',
+          es: 'El rey baja por el tablero, huyendo de los jaques.',
+        },
+      },
+      { san: 'Rd5+', explanation: { en: 'Another check.', es: 'Otro jaque.' } },
+      { san: 'Kb4', explanation: { en: 'Still moving down.', es: 'Sigue bajando.' } },
+      { san: 'Rd4+', explanation: { en: 'Another check.', es: 'Otro jaque.' } },
+      { san: 'Kb3', explanation: { en: 'Still moving down.', es: 'Sigue bajando.' } },
+      { san: 'Rd3+', explanation: { en: 'Another check.', es: 'Otro jaque.' } },
+      {
+        san: 'Kc2',
+        explanation: {
+          en: 'The king attacks the rook and ends the checks.',
+          es: 'El rey ataca a la torre y pone fin a los jaques.',
+        },
+      },
+      {
+        san: 'Rd4',
+        explanation: {
+          en: 'The trap: after a queen promotion, Rc4+ gives up the rook, and taking it leaves Black stalemated.',
+          es: 'La trampa: tras coronar en dama, Tc4+ entrega la torre, y al capturarla las negras quedan ahogadas.',
+        },
+      },
+      {
+        san: 'c8=R',
+        explanation: {
+          en: 'Promoting to a rook avoids the stalemate and threatens Ra8 mate.',
+          es: 'Coronar en torre evita el ahogado y amenaza Ta8 mate.',
+        },
+      },
+      {
+        san: 'Ra4',
+        explanation: {
+          en: 'The only way to stop the mate.',
+          es: 'La única forma de parar el mate.',
+        },
+      },
+      {
+        san: 'Kb3',
+        explanation: {
+          en: 'Double threat: mate on c1, and the rook on a4 is attacked. Black loses the rook or gets mated.',
+          es: 'Doble amenaza: mate en c1, y la torre de a4 está atacada. Las negras pierden la torre o reciben mate.',
+        },
+      },
+    ],
+    summary: {
+      en: 'In the Saavedra position the obvious move draws. The black rook drives the white king down the board with checks, then sets a stalemate trap: if the pawn promotes to a queen, the rook gives itself up and Black is stalemated. Promoting to a rook instead avoids the stalemate and threatens a mate of its own, and Black loses the rook or gets mated.',
+      es: 'En la posición de Saavedra la jugada obvia hace tablas. La torre negra hace bajar al rey blanco a base de jaques y luego tiende una trampa de ahogado: si el peón corona en dama, la torre se sacrifica y las negras quedan ahogadas. Coronar en torre evita el ahogado y amenaza un mate propio, y las negras pierden la torre o reciben mate.',
+    },
+    sourceUrl: 'https://en.wikipedia.org/wiki/Saavedra_position',
+    primaryColor: 'white',
+  },
+  {
     slug: 'reti-study',
     name: { en: "Réti's Study", es: 'Estudio de Réti' },
     initialFen: '7K/8/k1P5/7p/8/8/8/8 w - - 0 1',
@@ -311,6 +588,470 @@ export const POSITION_LESSONS: Lesson[] = [
     sourceUrl: 'https://en.wikipedia.org/wiki/R%C3%A9ti_endgame_study',
     primaryColor: 'white',
     playGoal: 'draw',
+  },
+  {
+    slug: 'opposition',
+    name: { en: 'The Opposition', es: 'La oposición' },
+    initialFen: '2k5/8/8/8/1PK5/8/8/8 b - - 0 1',
+    moves: [
+      {
+        san: 'Kb8',
+        explanation: {
+          en: 'The only move that draws: Black gets ready to answer every white king move with the opposition. Kb7? loses to Kb5.',
+          es: 'La única jugada que hace tablas: las negras se preparan para responder a cada jugada del rey blanco con la oposición. Rb7? pierde por Rb5.',
+        },
+      },
+      {
+        san: 'Kc5',
+        explanation: { en: 'The white king steps forward.', es: 'El rey blanco avanza.' },
+      },
+      {
+        san: 'Kc7',
+        explanation: {
+          en: 'Black takes the opposition: the kings face each other and White has to move.',
+          es: 'Las negras toman la oposición: los reyes quedan frente a frente y les toca mover a las blancas.',
+        },
+      },
+      {
+        san: 'Kb5',
+        explanation: {
+          en: 'White tries the other side.',
+          es: 'Las blancas prueban por el otro lado.',
+        },
+      },
+      {
+        san: 'Kb7',
+        explanation: {
+          en: 'Opposition again. The white king never reaches a6, b6 or c6.',
+          es: 'Oposición de nuevo. El rey blanco nunca llega a a6, b6 ni c6.',
+        },
+      },
+      {
+        san: 'Ka5',
+        explanation: { en: 'White tries the edge.', es: 'Las blancas prueban por el borde.' },
+      },
+      {
+        san: 'Ka7',
+        explanation: {
+          en: 'And Black answers with the opposition once more. A draw.',
+          es: 'Y las negras responden con la oposición una vez más. Tablas.',
+        },
+      },
+    ],
+    summary: {
+      en: 'Two kings facing each other with one square between them are in opposition, and the side that doesn\'t have to move "has the opposition." In king and pawn endings the defender uses it to keep the attacking king off the key squares in front of the pawn. This line is from Gligorić–Fischer, 1959, where Black held the draw by always taking the opposition.',
+      es: 'Dos reyes enfrentados con una casilla entre ellos están en oposición, y el bando al que no le toca mover "tiene la oposición". En los finales de rey y peón, el defensor la usa para impedir que el rey atacante llegue a las casillas clave delante del peón. Esta línea es de Gligorić–Fischer, 1959, donde las negras hicieron tablas tomando siempre la oposición.',
+    },
+    sourceUrl: 'https://en.wikipedia.org/wiki/Opposition_(chess)',
+    primaryColor: 'black',
+    playGoal: 'draw',
+  },
+  {
+    slug: 'triangulation',
+    name: { en: 'Triangulation', es: 'Triangulación' },
+    initialFen: '8/1p1k4/1P6/2PK4/8/8/8/8 w - - 0 1',
+    moves: [
+      {
+        san: 'Ke5',
+        explanation: {
+          en: 'White wants this exact position with Black to move, so the king starts its triangle: d5, e5, d4, back to d5.',
+          es: 'Las blancas quieren esta misma posición con el turno de las negras, así que el rey empieza su triángulo: d5, e5, d4 y de vuelta a d5.',
+        },
+      },
+      {
+        san: 'Kc6',
+        explanation: {
+          en: 'Black tries to win the pawn on c5, which is defended by its partner on b6.',
+          es: 'Las negras intentan ganar el peón de c5, que está defendido por su compañero de b6.',
+        },
+      },
+      {
+        san: 'Kd4',
+        explanation: {
+          en: 'The second corner of the triangle, guarding c5.',
+          es: 'La segunda esquina del triángulo, defendiendo c5.',
+        },
+      },
+      {
+        san: 'Kd7',
+        explanation: {
+          en: 'Black has to come back to guard against the king entering.',
+          es: 'Las negras tienen que volver para vigilar la entrada del rey.',
+        },
+      },
+      {
+        san: 'Kd5',
+        explanation: {
+          en: 'Back to the start, but now it is Black to move: zugzwang.',
+          es: 'De vuelta al principio, pero ahora mueven las negras: zugzwang.',
+        },
+      },
+      {
+        san: 'Kc8',
+        explanation: {
+          en: 'Any king move lets the white king in.',
+          es: 'Cualquier jugada del rey deja pasar al rey blanco.',
+        },
+      },
+      { san: 'Ke6', explanation: { en: 'The king walks in.', es: 'El rey entra.' } },
+      {
+        san: 'Kd8',
+        explanation: {
+          en: 'Black tries to stay close.',
+          es: 'Las negras intentan mantenerse cerca.',
+        },
+      },
+      {
+        san: 'Kd6',
+        explanation: { en: 'The king keeps advancing.', es: 'El rey sigue avanzando.' },
+      },
+      {
+        san: 'Kc8',
+        explanation: {
+          en: 'Black is running out of room.',
+          es: 'Las negras se quedan sin espacio.',
+        },
+      },
+      {
+        san: 'Ke7',
+        explanation: {
+          en: 'The king heads for the pawn on b7.',
+          es: 'El rey se dirige al peón de b7.',
+        },
+      },
+      {
+        san: 'Kb8',
+        explanation: { en: 'Black defends the pawn.', es: 'Las negras defienden el peón.' },
+      },
+      {
+        san: 'Kd7',
+        explanation: { en: 'The king takes away c8 and c7.', es: 'El rey le quita c8 y c7.' },
+      },
+      { san: 'Ka8', explanation: { en: 'Pushed into the corner.', es: 'Empujado a la esquina.' } },
+      {
+        san: 'c6',
+        explanation: {
+          en: 'The c-pawn breaks through and White wins.',
+          es: 'El peón de c rompe y las blancas ganan.',
+        },
+      },
+    ],
+    summary: {
+      en: "Sometimes the position would be winning if only the other side had to move. Triangulation fixes that: the king walks around a small triangle of squares and comes back to where it started, taking three moves to do it. The defending king can't copy it, because it has to keep guarding its squares, so the same position comes back with the other side to move.",
+      es: 'A veces la posición estaría ganada si solo le tocara mover al rival. La triangulación lo arregla: el rey recorre un pequeño triángulo de casillas y vuelve a donde estaba, gastando tres jugadas. El rey defensor no puede imitarlo porque tiene que seguir vigilando sus casillas, así que vuelve a aparecer la misma posición con el turno del rival.',
+    },
+    sourceUrl: 'https://en.wikipedia.org/wiki/Triangulation_(chess)',
+    primaryColor: 'white',
+    playGoal: 'promotion',
+  },
+  {
+    slug: 'wrong-rook-pawn',
+    name: { en: 'Wrong Bishop and Rook Pawn', es: 'Alfil equivocado y peón de torre' },
+    // The source gives the position only; this short line ends in the stalemate it describes.
+    initialFen: 'k7/4B3/PK6/8/8/8/8/8 w - - 0 1',
+    moves: [
+      {
+        san: 'Bc5',
+        explanation: {
+          en: "White's bishop moves on the dark squares, but the promotion square a8 is light.",
+          es: 'El alfil blanco va por casillas oscuras, pero la casilla de coronación a8 es clara.',
+        },
+      },
+      {
+        san: 'Kb8',
+        explanation: {
+          en: 'The king steps out of the corner, since nothing attacks b8.',
+          es: 'El rey sale de la esquina, ya que nada ataca b8.',
+        },
+      },
+      {
+        san: 'Bd6+',
+        explanation: {
+          en: 'The bishop checks the king back into the corner.',
+          es: 'El alfil da jaque y devuelve al rey a la esquina.',
+        },
+      },
+      {
+        san: 'Ka8',
+        explanation: {
+          en: 'Back in the corner, and the bishop can never attack a8.',
+          es: 'De vuelta en la esquina, y el alfil nunca podrá atacar a8.',
+        },
+      },
+      {
+        san: 'a7',
+        explanation: {
+          en: 'Pushing the pawn leaves Black with no legal move: stalemate, a draw.',
+          es: 'Avanzar el peón deja a las negras sin ninguna jugada legal: ahogado, tablas.',
+        },
+      },
+    ],
+    summary: {
+      en: "A bishop and a rook pawn can't win if the bishop doesn't control the pawn's promotion square. The defending king stays in that corner, and nothing can drive it out: the bishop can't attack the square, and pushing it away with the king only leads to stalemate. Even a whole bishop up, it's a draw.",
+      es: 'Un alfil y un peón de torre no pueden ganar si el alfil no controla la casilla de coronación del peón. El rey defensor se queda en esa esquina y nada puede sacarlo: el alfil no puede atacar la casilla, e intentar echarlo con el rey solo lleva al ahogado. Incluso con un alfil de más, son tablas.',
+    },
+    sourceUrl: 'https://en.wikipedia.org/wiki/Wrong_rook_pawn',
+    primaryColor: 'black',
+    playGoal: 'draw',
+  },
+  {
+    slug: 'queen-vs-pawn-win',
+    name: { en: 'Queen vs. Pawn on the Seventh', es: 'Dama contra peón en séptima' },
+    initialFen: '3Q4/1K6/8/8/8/8/3kp3/8 b - - 0 1',
+    moves: [
+      {
+        san: 'Ke3',
+        explanation: {
+          en: 'The black king supports its pawn, which is about to promote.',
+          es: 'El rey negro apoya a su peón, que está a punto de coronar.',
+        },
+      },
+      {
+        san: 'Qh4',
+        explanation: {
+          en: 'The queen covers e1 along the diagonal, so the pawn cannot promote yet.',
+          es: 'La dama controla e1 por la diagonal, así que el peón aún no puede coronar.',
+        },
+      },
+      {
+        san: 'Kd2',
+        explanation: { en: 'The king guards e1 as well.', es: 'El rey también vigila e1.' },
+      },
+      {
+        san: 'Qd4+',
+        explanation: { en: 'Checks bring the queen closer.', es: 'Los jaques acercan la dama.' },
+      },
+      {
+        san: 'Kc2',
+        explanation: {
+          en: 'The king steps away but keeps guarding the pawn.',
+          es: 'El rey se aparta pero sigue protegiendo el peón.',
+        },
+      },
+      {
+        san: 'Qe3',
+        explanation: {
+          en: 'The queen attacks the pawn and covers e1.',
+          es: 'La dama ataca el peón y controla e1.',
+        },
+      },
+      {
+        san: 'Kd1',
+        explanation: {
+          en: 'The king defends the pawn again.',
+          es: 'El rey vuelve a defender el peón.',
+        },
+      },
+      { san: 'Qd3+', explanation: { en: 'Another check.', es: 'Otro jaque.' } },
+      {
+        san: 'Ke1',
+        explanation: {
+          en: 'The king ends up in front of its own pawn, blocking it.',
+          es: 'El rey acaba delante de su propio peón, bloqueándolo.',
+        },
+      },
+      {
+        san: 'Kc6',
+        explanation: {
+          en: 'The pawn is blocked, so White has a free move: the king steps closer.',
+          es: 'El peón está bloqueado, así que las blancas tienen una jugada libre: el rey se acerca.',
+        },
+      },
+      {
+        san: 'Kf2',
+        explanation: {
+          en: 'The king steps out again, so the pawn can promote.',
+          es: 'El rey vuelve a salir para que el peón pueda coronar.',
+        },
+      },
+      {
+        san: 'Qd2',
+        explanation: {
+          en: 'The queen attacks the pawn and covers e1.',
+          es: 'La dama ataca el peón y controla e1.',
+        },
+      },
+      {
+        san: 'Kf1',
+        explanation: {
+          en: 'The king keeps defending the pawn.',
+          es: 'El rey sigue defendiendo el peón.',
+        },
+      },
+      { san: 'Qf4+', explanation: { en: 'The checks start again.', es: 'Vuelven los jaques.' } },
+      {
+        san: 'Kg1',
+        explanation: {
+          en: 'The king escapes toward the corner.',
+          es: 'El rey escapa hacia la esquina.',
+        },
+      },
+      { san: 'Qe3+', explanation: { en: 'Another check.', es: 'Otro jaque.' } },
+      {
+        san: 'Kf1',
+        explanation: { en: 'The king goes back to the pawn.', es: 'El rey vuelve junto al peón.' },
+      },
+      { san: 'Qf3+', explanation: { en: 'Another check.', es: 'Otro jaque.' } },
+      {
+        san: 'Ke1',
+        explanation: { en: 'In front of the pawn again.', es: 'Otra vez delante del peón.' },
+      },
+      {
+        san: 'Kd5',
+        explanation: {
+          en: 'Another free move for the white king.',
+          es: 'Otra jugada libre para el rey blanco.',
+        },
+      },
+      {
+        san: 'Kd2',
+        explanation: {
+          en: 'The king steps out of the way again.',
+          es: 'El rey vuelve a apartarse.',
+        },
+      },
+      {
+        san: 'Qf2',
+        explanation: {
+          en: 'The queen attacks e2 and covers e1.',
+          es: 'La dama ataca e2 y controla e1.',
+        },
+      },
+      {
+        san: 'Kd1',
+        explanation: { en: 'The king keeps defending.', es: 'El rey sigue defendiendo.' },
+      },
+      {
+        san: 'Qd4+',
+        explanation: { en: 'The same pattern again.', es: 'El mismo esquema otra vez.' },
+      },
+      { san: 'Kc2', explanation: { en: 'The king steps aside.', es: 'El rey se aparta.' } },
+      {
+        san: 'Qe3',
+        explanation: {
+          en: 'Attacking the pawn and covering e1.',
+          es: 'Ataca el peón y controla e1.',
+        },
+      },
+      { san: 'Kd1', explanation: { en: 'Defending the pawn.', es: 'Defiende el peón.' } },
+      { san: 'Qd3+', explanation: { en: 'A check.', es: 'Un jaque.' } },
+      {
+        san: 'Ke1',
+        explanation: { en: 'In front of the pawn once more.', es: 'Delante del peón una vez más.' },
+      },
+      {
+        san: 'Ke4',
+        explanation: {
+          en: 'A third free move: the king is almost there.',
+          es: 'Una tercera jugada libre: el rey casi ha llegado.',
+        },
+      },
+      {
+        san: 'Kf2',
+        explanation: { en: 'The king steps out again.', es: 'El rey vuelve a salir.' },
+      },
+      { san: 'Qf3+', explanation: { en: 'Another check.', es: 'Otro jaque.' } },
+      {
+        san: 'Ke1',
+        explanation: {
+          en: 'The only way to keep the pawn.',
+          es: 'La única forma de conservar el peón.',
+        },
+      },
+      {
+        san: 'Kd3',
+        explanation: {
+          en: 'The king has arrived: the pawn falls, and mate follows.',
+          es: 'El rey ha llegado: el peón cae y luego llega el mate.',
+        },
+      },
+    ],
+    summary: {
+      en: 'A queen beats a center or knight pawn on its seventh rank, even with the white king far away. Check the king, or attack the pawn, until the black king has to step in front of its own pawn. While it blocks the pawn, White has a free move to bring the king one step closer. Repeat until the king arrives, then win the pawn and mate.',
+      es: 'Una dama gana contra un peón central o de caballo en su séptima fila, aunque el rey blanco esté lejos. Da jaque al rey o ataca el peón hasta que el rey negro tenga que ponerse delante de su propio peón. Mientras lo bloquea, las blancas tienen una jugada libre para acercar su rey un paso. Se repite hasta que llega el rey, y entonces se gana el peón y se da mate.',
+    },
+    sourceUrl: 'https://en.wikipedia.org/wiki/Queen_versus_pawn_endgame',
+    primaryColor: 'white',
+  },
+  {
+    slug: 'queen-vs-bishop-pawn',
+    name: { en: 'Queen vs. Bishop Pawn', es: 'Dama contra peón de alfil' },
+    initialFen: '3Q4/8/8/8/4K3/8/1kp5/8 w - - 0 1',
+    moves: [
+      {
+        san: 'Qb6+',
+        explanation: {
+          en: 'White starts the usual checks.',
+          es: 'Las blancas empiezan los jaques de siempre.',
+        },
+      },
+      {
+        san: 'Ka1',
+        explanation: {
+          en: 'The key defense: the king goes to the corner instead of in front of the pawn.',
+          es: 'La defensa clave: el rey va a la esquina en lugar de ponerse delante del peón.',
+        },
+      },
+      { san: 'Qd4+', explanation: { en: 'Another check.', es: 'Otro jaque.' } },
+      {
+        san: 'Kb1',
+        explanation: {
+          en: 'The king comes back next to the pawn.',
+          es: 'El rey vuelve junto al peón.',
+        },
+      },
+      { san: 'Qb4+', explanation: { en: 'Another check.', es: 'Otro jaque.' } },
+      { san: 'Ka1', explanation: { en: 'Back to the corner.', es: 'De vuelta a la esquina.' } },
+      {
+        san: 'Qc3+',
+        explanation: { en: 'White keeps checking.', es: 'Las blancas siguen dando jaque.' },
+      },
+      { san: 'Kb1', explanation: { en: 'Next to the pawn again.', es: 'Otra vez junto al peón.' } },
+      { san: 'Qb3+', explanation: { en: 'One more check.', es: 'Un jaque más.' } },
+      {
+        san: 'Ka1',
+        explanation: {
+          en: 'Into the corner. Taking the pawn now would be stalemate, and White has no time to bring the king. A draw.',
+          es: 'A la esquina. Capturar ahora el peón sería ahogado, y las blancas no tienen tiempo de acercar el rey. Tablas.',
+        },
+      },
+    ],
+    summary: {
+      en: "Against a bishop pawn (or rook pawn) on the seventh, a lone queen usually can't win. The defending king runs to the corner, and when White forces it in front of the pawn, taking the pawn would leave Black stalemated. White only wins if its king is already close enough to help.",
+      es: 'Contra un peón de alfil (o de torre) en séptima, una dama sola normalmente no puede ganar. El rey defensor corre a la esquina, y cuando las blancas lo obligan a ponerse delante del peón, capturar el peón dejaría a las negras ahogadas. Las blancas solo ganan si su rey ya está lo bastante cerca para ayudar.',
+    },
+    sourceUrl: 'https://en.wikipedia.org/wiki/Queen_versus_pawn_endgame',
+    primaryColor: 'black',
+    playGoal: 'draw',
+  },
+  {
+    slug: 'trebuchet',
+    name: { en: 'Trébuchet (Mutual Zugzwang)', es: 'Trébuchet (zugzwang recíproco)' },
+    // The source gives the position only; this line stops once White wins the pawn.
+    initialFen: '8/8/8/3pK3/2kP4/8/8/8 b - - 0 1',
+    moves: [
+      {
+        san: 'Kb4',
+        explanation: {
+          en: 'Black has to move, and every king move leaves the d5-pawn undefended.',
+          es: 'Las negras tienen que mover, y cualquier jugada del rey deja sin defensa al peón de d5.',
+        },
+      },
+      {
+        san: 'Kxd5',
+        explanation: {
+          en: 'White wins the pawn and its king stands right in front of its own pawn, which will promote.',
+          es: 'Las blancas ganan el peón y su rey queda justo delante de su propio peón, que coronará.',
+        },
+      },
+    ],
+    summary: {
+      en: "In a trébuchet each king attacks the other's pawn while defending its own. Whoever has to move must leave their pawn behind: the other king takes it and then escorts its own pawn to promotion. Here it's Black to move, so Black loses.",
+      es: 'En un trébuchet cada rey ataca el peón rival mientras defiende el suyo. Al bando al que le toca mover tiene que abandonar su peón: el otro rey lo captura y luego acompaña a su propio peón hasta la coronación. Aquí mueven las negras, así que pierden.',
+    },
+    sourceUrl: 'https://en.wikipedia.org/wiki/Zugzwang',
+    primaryColor: 'white',
+    playGoal: 'promotion',
   },
 ]
 

@@ -52,6 +52,30 @@ describe('POSITION_LESSONS content', () => {
     expect(playOut('reti-study').isInsufficientMaterial()).toBe(true)
   })
 
+  it('the wrong-rook-pawn line ends in stalemate', () => {
+    expect(playOut('wrong-rook-pawn').isStalemate()).toBe(true)
+  })
+
+  it('Saavedra: promoting to a queen instead falls into the stalemate trap', () => {
+    const lesson = getPositionLesson('saavedra-position')!
+    const chess = new Chess(lesson.initialFen)
+    for (const move of lesson.moves.slice(0, 10)) chess.move(move.san)
+    for (const san of ['c8=Q', 'Rc4+', 'Qxc4']) chess.move(san)
+    expect(chess.isStalemate()).toBe(true)
+  })
+
+  it('queen vs bishop pawn: taking the pawn at the end is stalemate', () => {
+    const chess = playOut('queen-vs-bishop-pawn')
+    chess.move('Qxc2')
+    expect(chess.isStalemate()).toBe(true)
+  })
+
+  it('trébuchet: White has won the pawn and keeps its own', () => {
+    const chess = playOut('trebuchet')
+    expect(chess.get('d4')).toEqual({ type: 'p', color: 'w' })
+    expect(chess.get('d5')).toEqual({ type: 'k', color: 'w' })
+  })
+
   it('no slug collides with another lesson kind', async () => {
     const { OPENING_LESSONS } = await import('@/lib/openingTheory')
     const { ENDGAME_LESSONS } = await import('@/lib/endgameTheory')

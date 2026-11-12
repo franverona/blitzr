@@ -287,8 +287,8 @@ filter scopes the whole page.
 
 ### Learn
 
-`/learn` has short lessons on 14 openings, 3 basic endgames and 3 classic positions (Philidor,
-Lucena, Réti), each a line you step through
+`/learn` has short lessons on 14 openings, 3 basic endgames and 12 classic positions (Philidor,
+Lucena, Vančura, Saavedra, the opposition, triangulation…), each a line you step through
 with a note per move. **Quiz** mode tests you on one side while the opponent's moves play
 automatically (H shows the move, R restarts). Endgame and position lessons also have **Play it out**: the same
 position against Stockfish, at full strength or a chosen Elo, until you mate, promote or (for a
