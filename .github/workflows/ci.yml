@@ -148,6 +148,18 @@ jobs:
             fen, created_at) VALUES (?, 'white', ?, ?, ?, ?, '1970-01-01T00:00:00.000Z')`)
           node.run('smoke-r1', null, 1, 'e4', 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1')
           node.run('smoke-r2', 'smoke-r1', 2, 'e5', 'rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2')
+          // A game from a king-and-rook-vs-king position, so that lesson's "your games" line and
+          // Today's endgame suggestion have a game; its quiz is done, so the lesson is still pending.
+          db.prepare(`INSERT INTO games (id, url, pgn, moves_san, initial_fen, time_control,
+            time_class, rules, rated, end_time, white_username, white_result, black_username,
+            black_result, my_color, my_result, archive_ym, created_at, site)
+            VALUES ('smoke-endgame', '', '', @moves, @fen, '180', 'blitz', 'chess', 0, 0, 'smoke-white',
+            'win', 'smoke-endgame-opponent', 'resigned', 'white', 'win', 'manual', '', 'lichess')`).run({
+            moves: JSON.stringify(['Ra5+']),
+            fen: '8/8/8/4k3/8/8/8/R3K3 w - - 0 1',
+          })
+          db.prepare(`INSERT INTO lesson_progress (slug, quiz_completed_at)
+            VALUES ('king-and-rook-vs-king', '1970-01-01T00:00:00.000Z')`).run()
           JS
           get_routes
           # notFound() still answers 200 (loading.tsx streams), so check each page's content too.
@@ -181,6 +193,11 @@ jobs:
           check / '% accuracy'
           check /learn/sicilian-defense 'Sicilian Defense'
           check /learn/king-and-rook-vs-king 'King and Rook vs. King'
+          check /learn/king-and-rook-vs-king smoke-endgame-opponent
+          check /learn/lucena-position 'Lucena Position'
+          check /learn 'Quiz ✓'
+          check '/learn?status=pending' 'href="/learn/king-and-rook-vs-king"'
+          check / '1 of your games reached these pieces'
           # A puzzle from each bundled Lichess set (the real-game one is in the loop above), and a filter.
           check /puzzles/10001 'Lichess puzzle bjqrC'
           check /puzzles/20002 'Lichess puzzle e1pHA'
