@@ -28,7 +28,14 @@ function revealArrow(fen: string, san: string) {
 /** Play a lesson's line from memory. Only your side (`myColor`) is
  *  quizzed; the opponent's replies auto-play. Progress is BoardProvider's
  *  `ply`, so MoveExplanation follows along without extra wiring. */
-export function LessonQuiz({ sidebarExtra }: { sidebarExtra?: React.ReactNode }) {
+export function LessonQuiz({
+  sidebarExtra,
+  onComplete,
+}: {
+  sidebarExtra?: React.ReactNode
+  /** Called once each time the line is played to its end. */
+  onComplete?: () => void
+}) {
   const { ply, setPly, positions, lastPly, myColor, boardOrientation, movesSan } = useBoardContext()
   const s = getStrings()
   const boardColors = useSettings()
@@ -51,6 +58,12 @@ export function LessonQuiz({ sidebarExtra }: { sidebarExtra?: React.ReactNode })
   const isMyTurn =
     ply < lastPly && (whiteToMove(ply + 1, positions[0]) ? 'white' : 'black') === myColor
   const isComplete = ply >= lastPly
+
+  useEffect(() => {
+    if (isComplete) onComplete?.()
+    // Only on reaching the end, not when the caller passes a new callback.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isComplete])
 
   // Auto-play the opponent's move after a short delay.
   useEffect(() => {

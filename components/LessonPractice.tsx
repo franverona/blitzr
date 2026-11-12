@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import toast from 'react-hot-toast'
+import { markLessonQuizCompleted } from '@/app/actions'
 import { getLocale } from '@/lib/i18n/locale'
 import { getStrings } from '@/lib/i18n/strings'
 import { resolveOrientation } from '@/lib/theme'
@@ -96,7 +98,14 @@ export function LessonPractice({
             }
           />
         ) : mode === 'quiz' ? (
-          <LessonQuiz sidebarExtra={<MoveExplanation moves={lesson.moves} />} />
+          <LessonQuiz
+            sidebarExtra={<MoveExplanation moves={lesson.moves} />}
+            onComplete={() =>
+              markLessonQuizCompleted(lesson.slug).catch(() =>
+                toast.error(s.lessonPractice.progressSaveFailed, { id: 'lesson-progress' }),
+              )
+            }
+          />
         ) : (
           <EndgamePlayout lesson={lesson} />
         )}

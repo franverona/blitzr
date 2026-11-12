@@ -93,6 +93,12 @@ export interface Lesson {
   playGoal?: 'promotion' | 'draw'
 }
 
+/** A /learn lesson's progress. `playWon.elo` null: won (or held) at full strength. */
+export interface LessonProgress {
+  quizCompleted: boolean
+  playWon: { elo: number | null } | null
+}
+
 /** Own games that reached an opening lesson's exact move prefix — see
  *  `countGamesReachingLine()`. */
 export interface LessonGameStats {
