@@ -313,10 +313,10 @@ due count split by type, and your streak), games not analyzed yet, the last 7 da
 your average with results and rating change per time control, the opening you blundered most this
 week (with a link to drill it), your worst blunder of the week, how many drill cards you keep
 missing, how you lost your games (and how many in time trouble), your score in rated games against
-stronger, similar and weaker opponents (±100 rating, per site), an unfinished lesson for the
-opening you played most this week and another for the endgame your games reach most (over all your
-games), how often you left your repertoire lately, your last game with its final position, and the
-next unsolved puzzle.
+stronger, similar and weaker opponents (±100 rating, per site), your score in games right after a
+loss against the rest, an unfinished lesson for the opening you played most this week and another
+for the endgame your games reach most (over all your games), how often you left your repertoire
+lately, your last game with its final position, and the next unsolved puzzle.
 
 ### Puzzles
 

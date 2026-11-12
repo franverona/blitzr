@@ -66,6 +66,7 @@ import {
   timeTroubleLosses,
   recentResults,
   scoreByRatingGap,
+  scoreAfterLoss,
   repertoireDeviations,
   isLessonDone,
   suggestEndgameLesson,
@@ -749,6 +750,7 @@ export async function getTodaySummary(): Promise<{
   accuracy: ReturnType<typeof recentAccuracy>
   results: ReturnType<typeof recentResults>
   ratingGaps: ReturnType<typeof scoreByRatingGap>
+  afterLoss: ReturnType<typeof scoreAfterLoss>
   weakSpot: { opening: string; blunders: number; drillable: boolean } | null
   worstBlunder: {
     gameId: string
@@ -866,6 +868,7 @@ export async function getTodaySummary(): Promise<{
     accuracy: recentAccuracy(buildAccuracyTrend(games, analysesByGameId), now),
     results: recentResults(games, now),
     ratingGaps: scoreByRatingGap(games),
+    afterLoss: scoreAfterLoss(games),
     weakSpot,
     lastGame: last
       ? {
