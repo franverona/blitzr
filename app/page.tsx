@@ -310,10 +310,13 @@ export default async function TodayPage() {
                     </Badge>
                   ))}
                 </div>
-                {today.timeTroubleLosses > 0 && (
+                {today.timeTroubleLosses.count > 0 && (
                   <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
                     <abbr title={s.today.timeTroubleTooltip}>
-                      {s.today.timeTroubleLosses(today.timeTroubleLosses)}
+                      {s.today.timeTroubleLosses(
+                        today.timeTroubleLosses.count,
+                        today.timeTroubleLosses.whileAhead,
+                      )}
                     </abbr>
                   </p>
                 )}
