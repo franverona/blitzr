@@ -16,6 +16,7 @@ import type {
   DrillSourceType,
   Game,
   GameAnalysis,
+  LessonProgress,
   MyColor,
   GameSite,
   MyResult,
@@ -515,6 +516,54 @@ export class SqliteGameRepository {
       .insertInto('puzzle_progress')
       .values({ puzzle_id: puzzleId, solved_at: new Date().toISOString() })
       .onConflict((oc) => oc.column('puzzle_id').doNothing())
+      .execute()
+  }
+
+  async listLessonProgress(): Promise<Record<string, LessonProgress>> {
+    const db = await this.ready()
+    const rows = await db.selectFrom('lesson_progress').selectAll().execute()
+    return Object.fromEntries(
+      rows.map((r) => [
+        r.slug,
+        {
+          quizCompleted: r.quiz_completed_at !== null,
+          playWon: r.play_won_at !== null ? { elo: r.play_best_elo } : null,
+        },
+      ]),
+    )
+  }
+
+  /** Keeps the first completion's time. */
+  async markLessonQuizCompleted(slug: string): Promise<void> {
+    const db = await this.ready()
+    await db
+      .insertInto('lesson_progress')
+      .values({ slug, quiz_completed_at: new Date().toISOString() })
+      .onConflict((oc) =>
+        oc.column('slug').doUpdateSet({
+          quiz_completed_at: sql`coalesce(quiz_completed_at, excluded.quiz_completed_at)`,
+        }),
+      )
+      .execute()
+  }
+
+  /** Keeps the strongest win: full strength (`elo` null) beats any Elo. */
+  async recordLessonPlayWin(slug: string, elo: number | null): Promise<void> {
+    const db = await this.ready()
+    const existing = await db
+      .selectFrom('lesson_progress')
+      .select(['play_won_at', 'play_best_elo'])
+      .where('slug', '=', slug)
+      .executeTakeFirst()
+    if (existing?.play_won_at) {
+      const best = existing.play_best_elo
+      if (best === null || (elo !== null && elo <= best)) return
+    }
+    const now = new Date().toISOString()
+    await db
+      .insertInto('lesson_progress')
+      .values({ slug, play_won_at: now, play_best_elo: elo })
+      .onConflict((oc) => oc.column('slug').doUpdateSet({ play_won_at: now, play_best_elo: elo }))
       .execute()
   }
 

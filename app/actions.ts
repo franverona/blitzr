@@ -30,13 +30,16 @@ import {
   selectSessionCards,
 } from '@/lib/drill'
 import type { DrillCandidate, LearnedCounts } from '@/lib/drill'
-import type { BotElo } from '@/lib/botStrength'
+import { isBotElo, type BotElo } from '@/lib/botStrength'
 import { findDuplicateGame, parseManualGame, pgnSite, type ManualGameSide } from '@/lib/manualGame'
 import { summarizeMoveQuality } from '@/lib/moveQuality'
 import { buildOpeningFamilies, openingFamilyLabel, openingFamilyLabels } from '@/lib/openings'
 import { nextPuzzleByRating } from '@/lib/mateProblems'
 import { allMateProblems, getMateProblem } from '@/lib/puzzleSet'
-import { OPENING_LESSONS, countGamesReachingLine } from '@/lib/openingTheory'
+import { OPENING_LESSONS, countGamesReachingLine, getOpeningLesson } from '@/lib/openingTheory'
+import { getEndgameLesson } from '@/lib/endgameTheory'
+import { findGamesReachingMaterial } from '@/lib/endgameGames'
+import { getPositionLesson } from '@/lib/positionTheory'
 import {
   buildPositions,
   isStandardChess,
@@ -84,7 +87,9 @@ import type {
   GameSite,
   GameAccuracy,
   GameAnalysis,
+  LessonEndgameGames,
   LessonGameStats,
+  LessonProgress,
   MyColor,
   MyResult,
   OpeningFamily,
@@ -155,6 +160,22 @@ export async function listOpenings(): Promise<OpeningFamily[]> {
 export async function getLessonGameStats(moves: string[]): Promise<LessonGameStats> {
   const games = await cachedStandardStartGames()
   return countGamesReachingLine(games, moves)
+}
+
+// Games are insert-only (a refreshed Lichess game changes its key), so answers stay valid for the
+// server's lifetime.
+const endgameGamesMemo = new Map<string, number | null>()
+
+/** Own games that reached an endgame or position lesson's pieces; null for any other slug. */
+export async function getLessonEndgameGames(slug: string): Promise<LessonEndgameGames | null> {
+  const lesson =
+    typeof slug === 'string' ? (getEndgameLesson(slug) ?? getPositionLesson(slug)) : undefined
+  if (!lesson) return null
+  return findGamesReachingMaterial(
+    await cachedMyStandardGames(),
+    lesson.initialFen,
+    endgameGamesMemo,
+  )
 }
 
 export async function getBlunderStats(filters?: {
@@ -888,6 +909,28 @@ export async function markPuzzleSolved(puzzleId: number): Promise<void> {
   await getRepository().markPuzzleSolved(puzzleId)
   revalidatePath('/puzzles')
   revalidatePath('/')
+}
+
+export async function getLessonProgress(): Promise<Record<string, LessonProgress>> {
+  return getRepository().listLessonProgress()
+}
+
+export async function markLessonQuizCompleted(slug: string): Promise<void> {
+  const known =
+    typeof slug === 'string' &&
+    Boolean(getOpeningLesson(slug) ?? getEndgameLesson(slug) ?? getPositionLesson(slug))
+  if (!known) throw new Error('Invalid lesson')
+  await getRepository().markLessonQuizCompleted(slug)
+  revalidatePath('/learn')
+}
+
+/** A Play win (or a held draw) at `elo`; null is full strength. Openings have no Play. */
+export async function recordLessonPlayWin(slug: string, elo: number | null): Promise<void> {
+  const playable =
+    typeof slug === 'string' && Boolean(getEndgameLesson(slug) ?? getPositionLesson(slug))
+  if (!playable || (elo !== null && !isBotElo(elo))) throw new Error('Invalid lesson')
+  await getRepository().recordLessonPlayWin(slug, elo)
+  revalidatePath('/learn')
 }
 
 export async function markPuzzleRevealed(puzzleId: number): Promise<void> {

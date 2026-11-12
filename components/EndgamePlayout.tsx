@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import toast from 'react-hot-toast'
+import { recordLessonPlayWin } from '@/app/actions'
 import { botMovetimeMs, botUciOptions, type BotElo } from '@/lib/botStrength'
 import { getStrings } from '@/lib/i18n/strings'
 import type { Lesson } from '@/lib/types'
@@ -28,6 +30,12 @@ export function EndgamePlayout({ lesson }: { lesson: Lesson }) {
       engineOptions={elo ? botUciOptions(elo) : []}
       movetimeMs={elo ? botMovetimeMs(elo) : FULL_STRENGTH_MOVETIME_MS}
       goal={goal}
+      onGameOver={(_line, outcome) => {
+        if (outcome !== 'won') return
+        recordLessonPlayWin(lesson.slug, elo).catch(() =>
+          toast.error(s.lessonPractice.progressSaveFailed, { id: 'lesson-progress' }),
+        )
+      }}
       // Take back, for practice.
       allowResign
       messages={{

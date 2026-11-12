@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import { getLessonProgress } from '@/app/actions'
+import { Badge } from '@/components/Badge'
 import { MiniBoard } from '@/components/MiniBoard'
 import { NavSelect } from '@/components/NavSelect'
 import { ENDGAME_LESSONS } from '@/lib/endgameTheory'
@@ -7,13 +9,15 @@ import { getStrings } from '@/lib/i18n/strings'
 import { OPENING_LESSONS } from '@/lib/openingTheory'
 import { POSITION_LESSONS } from '@/lib/positionTheory'
 import { buildPositions } from '@/lib/positions'
-import type { Lesson } from '@/lib/types'
+import { isApproximateElo, isBotElo } from '@/lib/botStrength'
+import type { Lesson, LessonProgress } from '@/lib/types'
 import { PageHeader } from '@/components/PageHeader'
 import { chipClass } from '@/components/styles'
 
 type Category = 'openings' | 'endgames' | 'positions'
 type ColorFilter = 'all' | 'white' | 'black'
 type GoalFilter = 'all' | 'win' | 'draw'
+type StatusFilter = 'all' | 'pending' | 'done'
 
 const LESSONS: Record<Category, Lesson[]> = {
   openings: OPENING_LESSONS,
@@ -23,8 +27,17 @@ const LESSONS: Record<Category, Lesson[]> = {
 
 /** `showStart`: a classic position is recognized by its starting diagram, an opening or a mate by
  *  where its line ends. */
-function LessonGrid({ lessons, showStart }: { lessons: Lesson[]; showStart: boolean }) {
+function LessonGrid({
+  lessons,
+  showStart,
+  progress,
+}: {
+  lessons: Lesson[]
+  showStart: boolean
+  progress: Record<string, LessonProgress>
+}) {
   const locale = getLocale()
+  const s = getStrings()
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
       {lessons.map((lesson) => {
@@ -42,11 +55,44 @@ function LessonGrid({ lessons, showStart }: { lessons: Lesson[]; showStart: bool
           >
             <MiniBoard fen={fen} />
             <p className="text-center text-sm font-medium">{lesson.name[locale]}</p>
+            <ProgressBadges lesson={lesson} progress={progress[lesson.slug]} s={s} />
           </Link>
         )
       })}
     </div>
   )
+}
+
+function ProgressBadges({
+  lesson,
+  progress,
+  s,
+}: {
+  lesson: Lesson
+  progress: LessonProgress | undefined
+  s: ReturnType<typeof getStrings>
+}) {
+  if (!progress) return null
+  const elo = progress.playWon?.elo ?? null
+  const level =
+    elo !== null && isBotElo(elo)
+      ? s.playBot.eloLabel(elo, isApproximateElo(elo))
+      : s.playBot.fullStrength
+  return (
+    <div className="flex flex-wrap justify-center gap-1">
+      {progress.quizCompleted && <Badge tone="emerald">{s.learnPage.quizDone}</Badge>}
+      {progress.playWon && (
+        <Badge tone="emerald">
+          {lesson.playGoal === 'draw' ? s.learnPage.heldAt(level) : s.learnPage.wonAt(level)}
+        </Badge>
+      )}
+    </div>
+  )
+}
+
+/** Its quiz finished and, where there's Play, won (or held) there too. */
+function isDone(lesson: Lesson, progress: LessonProgress | undefined, category: Category): boolean {
+  return Boolean(progress?.quizCompleted && (category === 'openings' || progress.playWon))
 }
 
 function FilterTabs<T extends string>({
@@ -77,7 +123,7 @@ function FilterTabs<T extends string>({
 export default async function LearnPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string; color?: string; goal?: string }>
+  searchParams: Promise<{ category?: string; color?: string; goal?: string; status?: string }>
 }) {
   const s = getStrings()
   const params = await searchParams
@@ -91,18 +137,29 @@ export default async function LearnPage({
       ? params.goal
       : 'all'
 
+  const status: StatusFilter =
+    params.status === 'pending' || params.status === 'done' ? params.status : 'all'
+  const progress = await getLessonProgress()
+
   const lessons = LESSONS[category].filter(
     (lesson) =>
       (color === 'all' || lesson.primaryColor === color) &&
-      (goal === 'all' || (lesson.playGoal === 'draw') === (goal === 'draw')),
+      (goal === 'all' || (lesson.playGoal === 'draw') === (goal === 'draw')) &&
+      (status === 'all' || isDone(lesson, progress[lesson.slug], category) === (status === 'done')),
   )
 
-  function hrefFor(next: { category?: Category; color?: ColorFilter; goal?: GoalFilter }) {
-    const merged = { category, color, goal, ...next }
+  function hrefFor(next: {
+    category?: Category
+    color?: ColorFilter
+    goal?: GoalFilter
+    status?: StatusFilter
+  }) {
+    const merged = { category, color, goal, status, ...next }
     const query = new URLSearchParams()
     if (merged.category !== 'openings') query.set('category', merged.category)
     if (merged.color !== 'all') query.set('color', merged.color)
     if (merged.category !== 'openings' && merged.goal !== 'all') query.set('goal', merged.goal)
+    if (merged.status !== 'all') query.set('status', merged.status)
     const qs = query.toString()
     return qs ? `/learn?${qs}` : '/learn'
   }
@@ -144,10 +201,19 @@ export default async function LearnPage({
             ].map((option) => ({ ...option, href: hrefFor({ goal: option.value as GoalFilter }) }))}
           />
         )}
+        <NavSelect
+          label={s.learnPage.statusFilter}
+          value={status}
+          options={(['all', 'pending', 'done'] as const).map((value) => ({
+            value,
+            label: s.learnPage.status[value],
+            href: hrefFor({ status: value }),
+          }))}
+        />
       </div>
 
       {lessons.length > 0 ? (
-        <LessonGrid lessons={lessons} showStart={category === 'positions'} />
+        <LessonGrid lessons={lessons} showStart={category === 'positions'} progress={progress} />
       ) : (
         <p className="text-sm text-zinc-500 dark:text-zinc-400">{s.learnPage.noMatches}</p>
       )}

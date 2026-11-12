@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { getLessonGameStats } from '@/app/actions'
+import { getLessonEndgameGames, getLessonGameStats } from '@/app/actions'
 import { LessonPractice } from '@/components/LessonPractice'
 import { getEndgameLesson } from '@/lib/endgameTheory'
 import { getOpeningLesson } from '@/lib/openingTheory'
@@ -16,5 +16,8 @@ export default async function LearnLessonPage({ params }: { params: Promise<{ sl
     ? await getLessonGameStats(openingLesson.moves.map((move) => move.san))
     : null
 
-  return <LessonPractice lesson={lesson} gameStats={gameStats} />
+  // Endgame and position lessons only.
+  const endgameGames = openingLesson ? null : await getLessonEndgameGames(slug)
+
+  return <LessonPractice lesson={lesson} gameStats={gameStats} endgameGames={endgameGames} />
 }

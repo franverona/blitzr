@@ -2,10 +2,17 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import toast from 'react-hot-toast'
+import { markLessonQuizCompleted } from '@/app/actions'
 import { getLocale } from '@/lib/i18n/locale'
 import { getStrings } from '@/lib/i18n/strings'
 import { resolveOrientation } from '@/lib/theme'
-import type { Lesson, LessonGameStats as LessonGameStatsData } from '@/lib/types'
+import { formatDate } from '@/lib/dates'
+import type {
+  Lesson,
+  LessonEndgameGames,
+  LessonGameStats as LessonGameStatsData,
+} from '@/lib/types'
 import { AboutOpeningButton } from './AboutOpeningButton'
 import { AddLessonToRepertoireButton } from './AddLessonToRepertoireButton'
 import { BoardView } from './Board'
@@ -25,10 +32,13 @@ type Mode = 'study' | 'quiz' | 'play'
 export function LessonPractice({
   lesson,
   gameStats,
+  endgameGames,
 }: {
   lesson: Lesson
   /** null for endgame and position lessons, which hides the section. */
   gameStats: LessonGameStatsData | null
+  /** null for opening lessons. */
+  endgameGames: LessonEndgameGames | null
 }) {
   const [mode, setMode] = useState<Mode>('study')
   const s = getStrings()
@@ -83,6 +93,7 @@ export function LessonPractice({
           }
         />
         {gameStats && <LessonGameStats stats={gameStats} />}
+        {endgameGames && <EndgameGames stats={endgameGames} />}
         {mode === 'study' ? (
           <BoardView
             // lg+: 13rem ≈ chrome above/below the board.
@@ -96,7 +107,14 @@ export function LessonPractice({
             }
           />
         ) : mode === 'quiz' ? (
-          <LessonQuiz sidebarExtra={<MoveExplanation moves={lesson.moves} />} />
+          <LessonQuiz
+            sidebarExtra={<MoveExplanation moves={lesson.moves} />}
+            onComplete={() =>
+              markLessonQuizCompleted(lesson.slug).catch(() =>
+                toast.error(s.lessonPractice.progressSaveFailed, { id: 'lesson-progress' }),
+              )
+            }
+          />
         ) : (
           <EndgamePlayout lesson={lesson} />
         )}
@@ -117,6 +135,33 @@ function LessonGameStats({ stats }: { stats: LessonGameStatsData }) {
         {s.lessonPractice.seeOpeningStats}
       </Link>
       .
+    </p>
+  )
+}
+
+function EndgameGames({ stats }: { stats: LessonEndgameGames }) {
+  const s = getStrings()
+  if (stats.games === 0) {
+    return (
+      <p className="text-sm text-zinc-500 dark:text-zinc-400">{s.lessonPractice.neverReached}</p>
+    )
+  }
+  return (
+    <p className="text-sm text-zinc-500 dark:text-zinc-400">
+      {s.lessonPractice.reachedGames(stats.games, stats.wins, stats.draws, stats.losses)}
+      {' — '}
+      {stats.recent.map((game, i) => (
+        <span key={game.gameId}>
+          {i > 0 && ', '}
+          <Link
+            href={`/games/${game.gameId}?ply=${game.ply}`}
+            title={formatDate(game.endTime)}
+            className={LINK_CLASS}
+          >
+            {s.lessonPractice.reachedGame(game.opponent, s.common.result[game.myResult])}
+          </Link>
+        </span>
+      ))}
     </p>
   )
 }
