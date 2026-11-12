@@ -63,6 +63,7 @@ import {
   gameReview,
   localDay,
   lossReasons,
+  timeTroubleLosses,
   recentResults,
   scoreByRatingGap,
   repertoireDeviations,
@@ -759,6 +760,8 @@ export async function getTodaySummary(): Promise<{
     why: string
   } | null
   losses: ReturnType<typeof lossReasons>
+  /** `timeTroubleLosses()` of the same games. */
+  timeTroubleLosses: number
   lesson: { slug: string; name: string; games: number } | null
   /** The unfinished endgame or position lesson whose pieces your games reached most. */
   endgameLesson: { slug: string; name: string; games: number } | null
@@ -902,6 +905,7 @@ export async function getTodaySummary(): Promise<{
         }
       : null,
     losses: lossReasons(recentGames),
+    timeTroubleLosses: timeTroubleLosses(recentGames),
     lesson: suggested
       ? {
           slug: suggested.lesson.slug,

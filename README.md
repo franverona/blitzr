@@ -312,10 +312,11 @@ The landing page, **Today** (`/`), gathers what's waiting: today's drill session
 due count split by type, and your streak), games not analyzed yet, the last 7 days' accuracy against
 your average with results and rating change per time control, the opening you blundered most this
 week (with a link to drill it), your worst blunder of the week, how many drill cards you keep
-missing, how you lost your games, your score in rated games against stronger, similar and weaker
-opponents (±100 rating, per site), an unfinished lesson for the opening you played most this week
-and another for the endgame your games reach most (over all your games), how often you left your
-repertoire lately, your last game with its final position, and the next unsolved puzzle.
+missing, how you lost your games (and how many in time trouble), your score in rated games against
+stronger, similar and weaker opponents (±100 rating, per site), an unfinished lesson for the
+opening you played most this week and another for the endgame your games reach most (over all your
+games), how often you left your repertoire lately, your last game with its final position, and the
+next unsolved puzzle.
 
 ### Puzzles
 

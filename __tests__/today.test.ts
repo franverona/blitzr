@@ -10,6 +10,7 @@ import {
   recentResults,
   scoreByRatingGap,
   repertoireDeviations,
+  timeTroubleLosses,
 } from '@/lib/today'
 import type { Game, Lesson, RepertoireColor, RepertoireNode } from '@/lib/types'
 
@@ -170,6 +171,28 @@ describe('lossReasons', () => {
       { reason: 'checkmate', count: 1 },
       { reason: 'other', count: 1 },
     ])
+  })
+})
+
+describe('timeTroubleLosses', () => {
+  it('counts losses on time, or with under a tenth of your clock after your last move', () => {
+    const clk = (last: string) =>
+      `1. e4 {[%clk 0:02:00]} 1... e5 {[%clk 0:02:00]} 2. Nf3 {[%clk ${last}]} *`
+    const moves = ['e4', 'e5', 'Nf3']
+    const resigned = (overrides: Partial<Game>) =>
+      game({ myResult: 'loss', whiteResult: 'resigned', movesSan: moves, ...overrides })
+    expect(
+      timeTroubleLosses([
+        game({ myResult: 'loss', whiteResult: 'timeout' }),
+        // 10s of 180 after 2.Nf3.
+        resigned({ pgn: clk('0:00:10') }),
+        resigned({ pgn: clk('0:01:00') }),
+        // Black's last move left 120s.
+        resigned({ pgn: clk('0:00:10'), myColor: 'black', blackResult: 'resigned' }),
+        resigned({ pgn: '1. e4 e5 2. Nf3 *' }),
+        game({ pgn: clk('0:00:10'), movesSan: moves }),
+      ]),
+    ).toBe(2)
   })
 })
 
