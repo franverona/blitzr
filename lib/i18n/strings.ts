@@ -87,6 +87,9 @@ const en = {
       abandoned: 'abandoned',
       other: 'other',
     } satisfies Record<LossReason, string>,
+    timeTroubleLosses: (n: number) => `${n} of them in time trouble`,
+    timeTroubleTooltip:
+      'Lost on time, or with under a tenth of your starting clock left after your last move (only games with a clock on every move count that way).',
     lessonLabel: 'Suggested lesson',
     lessonDetail: (n: number) => `You reached it in ${n} game${n === 1 ? '' : 's'} this week`,
     studyLesson: 'Study',
@@ -874,6 +877,9 @@ const es: Strings = {
       abandoned: 'por desconexión',
       other: 'otras',
     } satisfies Record<LossReason, string>,
+    timeTroubleLosses: (n: number) => `${n} de ellas con apuros de tiempo`,
+    timeTroubleTooltip:
+      'Perdidas por tiempo, o con menos de una décima parte de tu tiempo inicial tras tu última jugada (así solo cuentan las partidas con reloj en cada jugada).',
     lessonLabel: 'Lección sugerida',
     lessonDetail: (n: number) =>
       `Llegaste a ella en ${n} ${n === 1 ? 'partida' : 'partidas'} esta semana`,

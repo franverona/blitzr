@@ -1,4 +1,5 @@
 import { findBlunders, whiteToMove } from './analysis'
+import { clockShareBeforePly, initialClockSeconds, plyClocks } from './clock'
 import { summarizeMoveQuality } from './moveQuality'
 import { moveNumberOfPly } from './san'
 import { startsFromStandardPosition } from './positions'
@@ -211,6 +212,31 @@ export function lossReasons(games: Game[]): { reason: LossReason; count: number 
     counts.set(reason, (counts.get(reason) ?? 0) + 1)
   }
   return [...counts].map(([reason, count]) => ({ reason, count })).sort((a, b) => b.count - a.count)
+}
+
+const TIME_TROUBLE_SHARE = 0.1
+
+/** Losses on time, or with under a tenth of your starting clock left after your last move (only
+ *  games with a clock on every ply can count that way). */
+export function timeTroubleLosses(games: Game[]): number {
+  let count = 0
+  for (const game of games) {
+    if (game.myResult !== 'loss') continue
+    if ((game.myColor === 'white' ? game.whiteResult : game.blackResult) === 'timeout') {
+      count++
+      continue
+    }
+    const plies = game.movesSan?.length ?? 0
+    const initial = initialClockSeconds(game.timeControl)
+    const clocks = initial ? plyClocks(game.pgn, plies) : null
+    if (!initial || !clocks) continue
+    const myLastPly =
+      whiteToMove(plies, game.initialFen) === (game.myColor === 'white') ? plies : plies - 1
+    if (myLastPly < 1) continue
+    // Before your next move is after this one: the same helper, with its berserk handling.
+    if (clockShareBeforePly(clocks, myLastPly + 2, initial) < TIME_TROUBLE_SHARE) count++
+  }
+  return count
 }
 
 /** The lesson `games` reached most (ties go to the longer line), or null if none. */
