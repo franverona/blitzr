@@ -202,10 +202,10 @@ describe('buildBlunderStats', () => {
     expect(buildBlunderStats([daily], analyses).byThinkTime).toEqual([])
   })
 
-  it('counts own blunders per analyzed game by color and by time class', () => {
+  it('counts blunders per analyzed game, and the score over every game, by color and time class', () => {
     const blitzWhite = makeGame({ movesSan: ['a4'] })
-    const blitzBlack = makeGame({ myColor: 'black', movesSan: ['e4', 'a5'] })
-    const bulletWhite = makeGame({ timeClass: 'bullet', movesSan: ['e4'] })
+    const blitzBlack = makeGame({ myColor: 'black', myResult: 'loss', movesSan: ['e4', 'a5'] })
+    const bulletWhite = makeGame({ timeClass: 'bullet', myResult: 'draw', movesSan: ['e4'] })
     const unanalyzed = makeGame({ timeClass: 'rapid', movesSan: ['a4'] })
     const analyses = new Map([
       [blitzWhite.id, makeAnalysis(blitzWhite.id, [cp(0), cp(-260)])],
@@ -215,12 +215,13 @@ describe('buildBlunderStats', () => {
 
     const stats = buildBlunderStats([blitzWhite, blitzBlack, bulletWhite, unanalyzed], analyses)
     expect(stats.byColor).toEqual([
-      { key: 'white', games: 2, blunders: 1 },
-      { key: 'black', games: 1, blunders: 1 },
+      { key: 'white', games: 2, blunders: 1, played: 3, score: 2.5 / 3 },
+      { key: 'black', games: 1, blunders: 1, played: 1, score: 0 },
     ])
     expect(stats.byTimeClass).toEqual([
-      { key: 'blitz', games: 2, blunders: 2 },
-      { key: 'bullet', games: 1, blunders: 0 },
+      { key: 'blitz', games: 2, blunders: 2, played: 2, score: 0.5 },
+      { key: 'bullet', games: 1, blunders: 0, played: 1, score: 0.5 },
+      { key: 'rapid', games: 0, blunders: 0, played: 1, score: 1 },
     ])
   })
 

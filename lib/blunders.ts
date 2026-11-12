@@ -145,7 +145,8 @@ export function buildBlunderStats(
   const byTimeClass = new Map<string, BlunderRateStat>()
   const rateFor = (rates: Map<string, BlunderRateStat>, key: string) => {
     let rate = rates.get(key)
-    if (!rate) rates.set(key, (rate = { key, games: 0, blunders: 0 }))
+    // `score` holds points until the end.
+    if (!rate) rates.set(key, (rate = { key, games: 0, blunders: 0, played: 0, score: 0 }))
     return rate
   }
   const worst: BlunderCandidate[] = []
@@ -154,12 +155,18 @@ export function buildBlunderStats(
   const punish = { chances: 0, punished: 0 }
 
   for (const game of games) {
+    const colorRate = rateFor(byColor, game.myColor)
+    const timeClassRate = rateFor(byTimeClass, game.timeClass)
+    const points = game.myResult === 'win' ? 1 : game.myResult === 'draw' ? 0.5 : 0
+    for (const rate of [colorRate, timeClassRate]) {
+      rate.played++
+      rate.score += points
+    }
+
     if (!game.movesSan) continue
     const analysis = analysesByGameId.get(game.id)
     if (!analysis) continue
     analyzedGames++
-    const colorRate = rateFor(byColor, game.myColor)
-    const timeClassRate = rateFor(byTimeClass, game.timeClass)
     colorRate.games++
     timeClassRate.games++
 
@@ -276,8 +283,13 @@ export function buildBlunderStats(
       (a, b) =>
         THINK_ORDER.indexOf(a.key as ThinkBucket) - THINK_ORDER.indexOf(b.key as ThinkBucket),
     ),
-    byColor: (['white', 'black'] as const).flatMap((color) => byColor.get(color) ?? []),
-    byTimeClass: [...byTimeClass.values()].sort((a, b) => b.games - a.games),
+    byColor: (['white', 'black'] as const).flatMap((color) => {
+      const rate = byColor.get(color)
+      return rate ? [{ ...rate, score: rate.score / rate.played }] : []
+    }),
+    byTimeClass: [...byTimeClass.values()]
+      .map((rate) => ({ ...rate, score: rate.score / rate.played }))
+      .sort((a, b) => b.played - a.played),
     worst: topWorst,
   }
 }

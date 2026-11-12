@@ -281,11 +281,16 @@ export interface BlunderGroupStat {
   avgSwingCp: number | null
 }
 
-/** Own blunders over the analyzed games of one color or time class. */
+/** One color or time class: own blunders over its analyzed games, and the score over all of it. */
 export interface BlunderRateStat {
   key: string
+  /** Analyzed games. */
   games: number
   blunders: number
+  /** Every game, analyzed or not. */
+  played: number
+  /** A win 1, a draw ½, over `played`. */
+  score: number
 }
 
 export interface WorstBlunder {
@@ -336,9 +341,9 @@ export interface BlunderStats {
   byClock: BlunderGroupStat[]
   /** By the seconds spent on the move, in the same games as `byClock`. */
   byThinkTime: BlunderGroupStat[]
-  /** White, then Black; only colors with an analyzed game. */
+  /** White, then Black; only colors with a game. */
   byColor: BlunderRateStat[]
-  /** By `Game.timeClass`, most analyzed games first. */
+  /** By `Game.timeClass`, most played first. */
   byTimeClass: BlunderRateStat[]
   worst: WorstBlunder[]
   /** Oldest first, one point per analyzed game in scope. */
