@@ -281,10 +281,11 @@ const en = {
     byThinkTime: 'By time spent',
     byThinkTimeTooltip:
       'Your blunders in games with a clock on every move, by how long you spent on the move. Quick ones call for slowing down; long ones, for calculating better.',
-    byColorAndTimeClass: 'Per game, by color and time class',
+    byColorAndTimeClass: 'By color and time class',
     byColorAndTimeClassTooltip:
-      'Your blunders per analyzed game (how many games in brackets), so a color or time class you play more often doesn’t look worse just for that.',
-    perGame: (rate: number, games: number) => `${rate.toFixed(1)} per game (${games})`,
+      'Your blunders per analyzed game, so a color or time class you play more often doesn’t look worse just for that, and your score over all its games (a win 1, a draw ½). Games in brackets.',
+    perGame: (rate: number, games: number) => `${rate.toFixed(1)} blunders per game (${games})`,
+    score: (pct: number, games: number) => `${pct}% score (${games})`,
     worstBlunders: 'Worst blunders',
     punishTitle: 'Punishing their blunders',
     punishTooltip:
@@ -1086,10 +1087,12 @@ const es: Strings = {
     byThinkTime: 'Por tiempo pensado',
     byThinkTimeTooltip:
       'Tus errores graves en partidas con reloj en cada jugada, según cuánto pensaste la jugada. Los rápidos piden ir más despacio; los largos, calcular mejor.',
-    byColorAndTimeClass: 'Por partida, según color y ritmo',
+    byColorAndTimeClass: 'Por color y ritmo',
     byColorAndTimeClassTooltip:
-      'Tus errores graves por partida analizada (cuántas partidas entre paréntesis), para que un color o ritmo que juegas más no parezca peor solo por eso.',
-    perGame: (rate: number, games: number) => `${rate.toFixed(1)} por partida (${games})`,
+      'Tus errores graves por partida analizada, para que un color o ritmo que juegas más no parezca peor solo por eso, y tus puntos sobre todas sus partidas (victoria 1, tablas ½). Partidas entre paréntesis.',
+    perGame: (rate: number, games: number) =>
+      `${rate.toFixed(1)} errores graves por partida (${games})`,
+    score: (pct: number, games: number) => `${pct}% de puntos (${games})`,
     worstBlunders: 'Peores errores',
     punishTitle: 'Castigar sus errores',
     punishTooltip:

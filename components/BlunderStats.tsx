@@ -157,7 +157,12 @@ export function BlunderStats({ stats }: { stats: BlunderStatsData }) {
             >
               <span className="font-medium">{rate.label}</span>
               <span className="text-zinc-500 dark:text-zinc-400">
-                {s.blunderStats.perGame(rate.blunders / rate.games, rate.games)}
+                {[
+                  rate.games > 0 && s.blunderStats.perGame(rate.blunders / rate.games, rate.games),
+                  s.blunderStats.score(Math.round(rate.score * 100), rate.played),
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
               </span>
             </div>
           ))}
