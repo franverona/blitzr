@@ -21,22 +21,26 @@ const LESSONS: Record<Category, Lesson[]> = {
   positions: POSITION_LESSONS,
 }
 
-function LessonGrid({ lessons }: { lessons: Lesson[] }) {
+/** `showStart`: a classic position is recognized by its starting diagram, an opening or a mate by
+ *  where its line ends. */
+function LessonGrid({ lessons, showStart }: { lessons: Lesson[]; showStart: boolean }) {
   const locale = getLocale()
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
       {lessons.map((lesson) => {
-        const positions = buildPositions(
-          lesson.initialFen,
-          lesson.moves.map((move) => move.san),
-        )
+        const fen = showStart
+          ? lesson.initialFen
+          : buildPositions(
+              lesson.initialFen,
+              lesson.moves.map((move) => move.san),
+            ).at(-1)!
         return (
           <Link
             key={lesson.slug}
             href={`/learn/${lesson.slug}`}
             className="flex flex-col gap-2 rounded-lg border border-zinc-200 p-2 hover:bg-zinc-100 dark:border-zinc-800 dark:hover:bg-zinc-900"
           >
-            <MiniBoard fen={positions[positions.length - 1]} />
+            <MiniBoard fen={fen} />
             <p className="text-center text-sm font-medium">{lesson.name[locale]}</p>
           </Link>
         )
@@ -143,7 +147,7 @@ export default async function LearnPage({
       </div>
 
       {lessons.length > 0 ? (
-        <LessonGrid lessons={lessons} />
+        <LessonGrid lessons={lessons} showStart={category === 'positions'} />
       ) : (
         <p className="text-sm text-zinc-500 dark:text-zinc-400">{s.learnPage.noMatches}</p>
       )}
