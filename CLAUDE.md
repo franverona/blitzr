@@ -68,8 +68,7 @@ install/runtime and gitignored. `BLITZR_DATA_DIR` moves `data/` (`lib/dataDir.ts
   with localized labels need `flex-wrap`.
 - **Shared UI before new class strings:** `PageHeader`, `Dialog`, `Badge`, `Card` /
   `SectionLabel`, `TableShell`, `IconButton`, `ErrorText`, `Spinner`, `Select`, `Tabs`, `FocusRow`,
-  and the helpers in
-  `components/styles.ts`. Toasts: pass an `id` so a newer one from the same source replaces the last.
+  and the helpers in `components/styles.ts`. Toasts: pass an `id` so a newer one from the same source replaces the last.
 - **Every `<dialog>` is a `Dialog`** (named by its `<h2>` via `useId()`); the caller owns the `ref`
   and `showModal()`.
 - **Light/dark theme:** `blitzr-theme` cookie (default `dark`), read in `app/layout.tsx` to set
