@@ -10,6 +10,7 @@ import { DeleteGameButton } from '@/components/DeleteGameButton'
 import {
   AnalyzeButton,
   GameAnalysisProvider,
+  GameStoryCard,
   MoveQualityLink,
 } from '@/components/GameAnalysisPanel'
 import { LiveAnalysisPanel } from '@/components/LiveAnalysisPanel'
@@ -135,6 +136,14 @@ export default async function GamePage({
             {game.pgn}
           </pre>
         </div>
+      )}
+      {/* Told as "you", so not for someone else's game. */}
+      {game.movesSan && game.isMine && (
+        <GameStoryCard
+          ecoName={game.ecoName}
+          myResult={game.myResult}
+          finalResults={{ white: game.whiteResult, black: game.blackResult }}
+        />
       )}
       {practiceGames.length > 0 && <PracticeGamesCard source={game} games={practiceGames} />}
     </div>

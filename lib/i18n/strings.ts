@@ -1,4 +1,6 @@
 import type { GameEndReason } from '../gameEnd'
+import type { Standing } from '../gameStory'
+import type { GamePhase } from '../material'
 import type { LossReason } from '../today'
 import { getLocale, Locale } from './locale'
 
@@ -439,6 +441,69 @@ const en = {
         'Mistakes: moves costing as much as 0.6–2 pawns would from an equal position, just short of a blunder',
       blunder: 'Blunders: moves costing as much as 2+ pawns would from an equal position',
     },
+  },
+  gameStory: {
+    title: 'How the game went',
+    standing: {
+      winning: 'you were winning',
+      better: 'you were a bit better',
+      equal: 'the position was balanced',
+      worse: 'you were a bit worse',
+      losing: 'you were losing',
+    } satisfies Record<Standing, string>,
+    opening: (name: string | null, move: string, standing: string) =>
+      `${name ? `The game started as the ${name}. ` : ''}By move ${move}, when the opening was over, ${standing}.`,
+    shortGame: 'The game ended before the opening was even over.',
+    quiet:
+      'Neither side made a mistake big enough to change who was better — a steady game from start to finish.',
+    turningPointsIntro: (count: number) =>
+      count === 1
+        ? 'One move changed the course of the game:'
+        : `${count} moves changed the course of the game:`,
+    mine: { mistake: 'You made a mistake.', blunder: 'You blundered.' },
+    theirs: {
+      mistake: 'Your opponent made a mistake.',
+      blunder: 'Your opponent blundered.',
+    },
+    shift: (before: string, after: string) => `Before it ${before}; after it ${after}.`,
+    then: (after: string) => `Now ${after}.`,
+    missedChance: 'It gave back the chance your opponent had just handed you.',
+    better: (san: string) => `Better was ${san}.`,
+    slippedWin: 'Your best moment: you were winning here, but the win got away.',
+    phases: {
+      opening: 'in the opening',
+      middlegame: 'in the middlegame',
+      endgame: 'in the endgame',
+    } satisfies Record<GamePhase, string>,
+    phaseOne: (phase: string, accuracy: number) => `Your accuracy ${phase} was ${accuracy}.`,
+    phaseRange: (best: string, bestAcc: number, worst: string, worstAcc: number) =>
+      `You played best ${best} (${bestAcc} accuracy) and struggled most ${worst} (${worstAcc}).`,
+    accuracy: (mine: number, theirs: number) =>
+      `Overall your accuracy was ${mine}, against ${theirs} for your opponent.`,
+    ending: {
+      win: {
+        checkmate: 'You won by checkmate.',
+        resigned: 'Your opponent resigned.',
+        timeout: 'Your opponent ran out of time.',
+        abandoned: 'Your opponent abandoned the game.',
+        other: 'You won.',
+      },
+      loss: {
+        checkmate: 'You were checkmated.',
+        resigned: 'You resigned.',
+        timeout: 'You lost on time.',
+        abandoned: 'You abandoned the game.',
+        other: 'You lost.',
+      },
+      draw: {
+        agreed: 'The game was drawn by agreement.',
+        repetition: 'The game was drawn by repetition.',
+        timevsinsufficient:
+          "The game was drawn: a flag fell, but the other side didn't have enough material to mate.",
+        other: 'The game ended in a draw.',
+      },
+    },
+    finalStanding: (standing: string) => `In the final position ${standing}.`,
   },
   bulkAnalyze: {
     button: 'Analyze all',
@@ -1249,6 +1314,69 @@ const es: Strings = {
       blunder:
         'Errores graves: jugadas que cuestan lo que costarían 2+ peones desde una posición igualada',
     },
+  },
+  gameStory: {
+    title: 'Cómo fue la partida',
+    standing: {
+      winning: 'ibas ganando',
+      better: 'estabas algo mejor',
+      equal: 'la posición estaba igualada',
+      worse: 'estabas algo peor',
+      losing: 'ibas perdiendo',
+    },
+    opening: (name: string | null, move: string, standing: string) =>
+      `${name ? `La partida empezó como ${name}. ` : ''}Hacia la jugada ${move}, terminada la apertura, ${standing}.`,
+    shortGame: 'La partida terminó antes de acabar la apertura.',
+    quiet:
+      'Ningún bando cometió un error tan grande como para cambiar quién estaba mejor: una partida estable de principio a fin.',
+    turningPointsIntro: (count: number) =>
+      count === 1
+        ? 'Una jugada cambió el rumbo de la partida:'
+        : `${count} jugadas cambiaron el rumbo de la partida:`,
+    mine: { mistake: 'Cometiste un error.', blunder: 'Cometiste un error grave.' },
+    theirs: {
+      mistake: 'Tu rival cometió un error.',
+      blunder: 'Tu rival cometió un error grave.',
+    },
+    shift: (before: string, after: string) => `Antes ${before}; después ${after}.`,
+    then: (after: string) => `Ahora ${after}.`,
+    missedChance: 'Devolvió la oportunidad que tu rival te acababa de regalar.',
+    better: (san: string) => `Era mejor ${san}.`,
+    slippedWin: 'Tu mejor momento: aquí ibas ganando, pero la victoria se escapó.',
+    phases: {
+      opening: 'en la apertura',
+      middlegame: 'en el medio juego',
+      endgame: 'en el final',
+    },
+    phaseOne: (phase: string, accuracy: number) => `Tu precisión ${phase} fue de ${accuracy}.`,
+    phaseRange: (best: string, bestAcc: number, worst: string, worstAcc: number) =>
+      `Jugaste mejor ${best} (precisión ${bestAcc}) y te costó más ${worst} (${worstAcc}).`,
+    accuracy: (mine: number, theirs: number) =>
+      `En total tu precisión fue de ${mine}, frente a ${theirs} de tu rival.`,
+    ending: {
+      win: {
+        checkmate: 'Ganaste por jaque mate.',
+        resigned: 'Tu rival abandonó.',
+        timeout: 'Tu rival se quedó sin tiempo.',
+        abandoned: 'Tu rival dejó la partida.',
+        other: 'Ganaste.',
+      },
+      loss: {
+        checkmate: 'Te dieron jaque mate.',
+        resigned: 'Abandonaste.',
+        timeout: 'Perdiste por tiempo.',
+        abandoned: 'Dejaste la partida.',
+        other: 'Perdiste.',
+      },
+      draw: {
+        agreed: 'La partida acabó en tablas de mutuo acuerdo.',
+        repetition: 'La partida acabó en tablas por repetición.',
+        timevsinsufficient:
+          'La partida acabó en tablas: se agotó un reloj, pero el otro bando no tenía material para dar mate.',
+        other: 'La partida acabó en tablas.',
+      },
+    },
+    finalStanding: (standing: string) => `En la posición final ${standing}.`,
   },
   bulkAnalyze: {
     button: 'Analizar todas',
