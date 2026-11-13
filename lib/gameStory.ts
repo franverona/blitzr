@@ -1,4 +1,4 @@
-import { evalBarPercent, moveWinDrop, whiteToMove } from './analysis'
+import { EVAL_BANDS_CP, evalBarPercent, moveWinDrop, whiteToMove } from './analysis'
 import { gameEndBadges, type GameEndReason } from './gameEnd'
 import { gamePhase, type GamePhase } from './material'
 import { classifyMoveQuality, summarizeMoveQuality } from './moveQuality'
@@ -6,16 +6,42 @@ import { detectBlunderReason } from './tactics'
 import { WINNING_WIN_PCT } from './thrownWins'
 import type { BlunderReason, MyColor, PositionEval } from './types'
 
-/** How the position stood for the user, coarser than an eval so it reads as words. */
-export type Standing = 'winning' | 'better' | 'equal' | 'worse' | 'losing'
+/** How the position stood for the user: describeEval()'s bands, so the summary agrees with the
+ *  eval text under the board. */
+export type Standing =
+  | 'crushing'
+  | 'winning'
+  | 'better'
+  | 'edge'
+  | 'equal'
+  | 'slightlyWorse'
+  | 'worse'
+  | 'losing'
+  | 'lost'
 
 export function standingFor(evaluation: PositionEval, myColor: MyColor): Standing {
-  const pct = myColor === 'white' ? evalBarPercent(evaluation) : 100 - evalBarPercent(evaluation)
-  if (pct >= WINNING_WIN_PCT) return 'winning'
-  if (pct >= 60) return 'better'
-  if (pct > 40) return 'equal'
-  if (pct > 100 - WINNING_WIN_PCT) return 'worse'
-  return 'losing'
+  const sign = myColor === 'white' ? 1 : -1
+  if (evaluation.mate !== null) return evaluation.mate * sign > 0 ? 'crushing' : 'lost'
+  const cp = (evaluation.cp ?? 0) * sign
+  const abs = Math.abs(cp)
+  if (abs < EVAL_BANDS_CP.edge) return 'equal'
+  if (abs < EVAL_BANDS_CP.better) return cp > 0 ? 'edge' : 'slightlyWorse'
+  if (abs < EVAL_BANDS_CP.winning) return cp > 0 ? 'better' : 'worse'
+  if (abs < EVAL_BANDS_CP.crushing) return cp > 0 ? 'winning' : 'losing'
+  return cp > 0 ? 'crushing' : 'lost'
+}
+
+// Coarser than Standing, so +7 → +5 isn't told as a turning point; a slight edge counts as level.
+const TURN_GROUP: Record<Standing, number> = {
+  crushing: 2,
+  winning: 2,
+  better: 1,
+  edge: 0,
+  equal: 0,
+  slightlyWorse: 0,
+  worse: -1,
+  losing: -2,
+  lost: -2,
 }
 
 export interface TurningPoint {
@@ -47,7 +73,8 @@ export interface GameStory {
 
 /**
  * The facts behind a plain-words summary of an analyzed game. Turning points are mistakes and
- * blunders (either side) that changed the standing, so a slip that stays winning isn't one.
+ * blunders (either side) that changed who was ahead (TURN_GROUP), so a slip that stays winning
+ * isn't one.
  * `positions` is buildPositions()'s: index i before movesSan[i], last one the final position.
  */
 export function buildGameStory(
@@ -69,7 +96,7 @@ export function buildGameStory(
     if (tier !== 'mistake' && tier !== 'blunder') continue
     const standingBefore = standingFor(before, myColor)
     const standingAfter = standingFor(after, myColor)
-    if (standingBefore === standingAfter) continue
+    if (TURN_GROUP[standingBefore] === TURN_GROUP[standingAfter]) continue
     const mover: MyColor = whiteMoved ? 'white' : 'black'
     const mine = mover === myColor
     const previous = turningPoints.at(-1)

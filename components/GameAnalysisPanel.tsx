@@ -389,7 +389,7 @@ export function GameStoryCard({
           <>
             <p>{t.turningPointsIntro(story.turningPoints.length)}</p>
             <ul className="flex flex-col gap-2">
-              {story.turningPoints.map((tp, i) => (
+              {story.turningPoints.map((tp) => (
                 <li key={tp.ply}>
                   {moveChip(tp.ply)}
                   <span>
@@ -403,11 +403,7 @@ export function GameStoryCard({
                       {tp.mine ? t.mine[tp.tier] : t.theirs[tp.tier]}
                     </span>{' '}
                     {tp.missedChance && `${t.missedChance} `}
-                    {/* The "before" is only news when it isn't where the last point left off. */}
-                    {tp.before ===
-                    (story.turningPoints[i - 1]?.after ?? story.afterOpening?.standing)
-                      ? t.then(t.standing[tp.after])
-                      : t.shift(t.standing[tp.before], t.standing[tp.after])}
+                    {t.shift(t.standing[tp.before], t.standing[tp.after])}
                     {tp.reason && ` ${describeBlunderReason(tp.reason)}`}
                     {tp.mine && tp.bestSan && ` ${t.better(tp.bestSan)}`}
                   </span>
