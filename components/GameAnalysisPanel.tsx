@@ -3,13 +3,16 @@
 import { createContext, useContext, useEffect, useId, useMemo, useState } from 'react'
 import { saveGameAnalysis } from '@/app/actions'
 import { getStrings } from '@/lib/i18n/strings'
+import { buildGameStory } from '@/lib/gameStory'
 import type { GamePhase } from '@/lib/material'
 import { MOVE_QUALITY_TIERS, summarizeMoveQuality } from '@/lib/moveQuality'
 import { buildPositions } from '@/lib/positions'
-import { plyLabel } from '@/lib/san'
+import { moveNumberOfPly, plyLabel } from '@/lib/san'
 import { ANALYSIS_STRENGTHS, type AnalysisStrength, analyzeGame } from '@/lib/stockfish/analyze'
-import type { GameAnalysis, MyColor } from '@/lib/types'
+import { describeBlunderReason } from '@/lib/tactics'
+import type { GameAnalysis, MyColor, MyResult } from '@/lib/types'
 import { useBoardContext } from './BoardContext'
+import { Card } from './Card'
 import type { BadMoveTier } from './MoveQualityBadge'
 import { ErrorText } from './ErrorText'
 import { EvalGraph } from './EvalGraph'
@@ -311,6 +314,128 @@ function MoveQualityPanel({
         )}
       </aside>
     </>
+  )
+}
+
+/** A plain-words account of the analyzed game; each move named in it jumps the board there. */
+export function GameStoryCard({
+  ecoName,
+  myResult,
+  finalResults,
+}: {
+  ecoName: string | null
+  myResult: MyResult
+  finalResults: { white: string; black: string }
+}) {
+  const { analysis, movesSan, myColor, positions } = useAnalysisContext()
+  const { ply: currentPly, exploring, setPly, exitExploring } = useBoardContext()
+  const story = useMemo(
+    () =>
+      analysis &&
+      buildGameStory(
+        analysis.evals,
+        movesSan,
+        positions,
+        myColor,
+        myResult === 'win',
+        finalResults,
+      ),
+    [analysis, movesSan, positions, myColor, myResult, finalResults],
+  )
+  const s = getStrings()
+  if (!story) return null
+  const t = s.gameStory
+  const initialFen = positions[0]
+
+  const moveChip = (ply: number) => (
+    <button
+      onClick={() => {
+        exitExploring()
+        setPly(ply)
+      }}
+      aria-current={!exploring && ply === currentPly ? 'step' : undefined}
+      className={`${chipClass(!exploring && ply === currentPly)} mr-2 tabular-nums`}
+    >
+      {plyLabel(ply, initialFen)} {movesSan[ply - 1]}
+    </button>
+  )
+
+  const phases = GAME_PHASES.flatMap((phase) => {
+    const accuracy = story.byPhase[phase]
+    return accuracy === null ? [] : [{ phase: t.phases[phase], accuracy }]
+  }).sort((a, b) => b.accuracy - a.accuracy)
+  const best = phases[0]
+  const worst = phases.at(-1)
+  const ending = t.ending[myResult]
+  const endReason = story.endReason
+  const endText =
+    endReason && endReason in ending ? ending[endReason as keyof typeof ending] : ending.other
+
+  return (
+    <Card title={t.title}>
+      <div className="flex flex-col gap-3 text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
+        <p>
+          {story.afterOpening
+            ? t.opening(
+                ecoName,
+                String(moveNumberOfPly(story.afterOpening.ply, initialFen)),
+                t.standing[story.afterOpening.standing],
+              )
+            : t.shortGame}
+        </p>
+        {story.turningPoints.length === 0 ? (
+          <p>{t.quiet}</p>
+        ) : (
+          <>
+            <p>{t.turningPointsIntro(story.turningPoints.length)}</p>
+            <ul className="flex flex-col gap-2">
+              {story.turningPoints.map((tp, i) => (
+                <li key={tp.ply}>
+                  {moveChip(tp.ply)}
+                  <span>
+                    <span
+                      className={
+                        tp.mine
+                          ? 'font-medium text-red-700 dark:text-red-400'
+                          : 'font-medium text-emerald-700 dark:text-emerald-400'
+                      }
+                    >
+                      {tp.mine ? t.mine[tp.tier] : t.theirs[tp.tier]}
+                    </span>{' '}
+                    {tp.missedChance && `${t.missedChance} `}
+                    {/* The "before" is only news when it isn't where the last point left off. */}
+                    {tp.before ===
+                    (story.turningPoints[i - 1]?.after ?? story.afterOpening?.standing)
+                      ? t.then(t.standing[tp.after])
+                      : t.shift(t.standing[tp.before], t.standing[tp.after])}
+                    {tp.reason && ` ${describeBlunderReason(tp.reason)}`}
+                    {tp.mine && tp.bestSan && ` ${t.better(tp.bestSan)}`}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+        {story.slippedWin && story.slippedWin.ply > 0 && (
+          <p>
+            {moveChip(story.slippedWin.ply)}
+            <span>{t.slippedWin}</span>
+          </p>
+        )}
+        <p>
+          {best && worst && best !== worst
+            ? t.phaseRange(best.phase, best.accuracy, worst.phase, worst.accuracy)
+            : best && t.phaseOne(best.phase, best.accuracy)}{' '}
+          {story.accuracy.mine !== null &&
+            story.accuracy.theirs !== null &&
+            t.accuracy(story.accuracy.mine, story.accuracy.theirs)}
+        </p>
+        <p>
+          {endText}
+          {endReason !== 'checkmate' && ` ${t.finalStanding(t.standing[story.finalStanding])}`}
+        </p>
+      </div>
+    </Card>
   )
 }
 
