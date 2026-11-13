@@ -3,7 +3,7 @@ import { Kysely, SqliteDialect } from 'kysely'
 import { beforeAll, describe, expect, it, vi } from 'vitest'
 import { SqliteGameRepository } from '@/lib/db/sqlite/repository'
 import type { DbSchema } from '@/lib/db/types'
-import type { Game } from '@/lib/types'
+import type { Game, PositionEval } from '@/lib/types'
 
 // In-memory SQLite: exercises the real SQL, never touches data/blitzr.db.
 const sqlite = new Database(':memory:')
@@ -82,6 +82,16 @@ describe('SqliteGameRepository.saveGameAnalysis', () => {
     await repo.saveGameAnalysis({ gameId: '1', evals: [], analyzedAt: 'a', movetimeMs: 150 })
     await repo.saveGameAnalysis({ gameId: '1', evals: [], analyzedAt: 'b', movetimeMs: 1000 })
     expect(await repo.getGameAnalysis('1')).toMatchObject({ analyzedAt: 'b', movetimeMs: 1000 })
+  })
+
+  it('gives a best move saved without bestLine an empty one', async () => {
+    const legacy = { cp: 20, mate: null, bestMove: { from: 'e2', to: 'e4', san: 'e4' } }
+    const evals = [legacy, { cp: 0, mate: null, bestMove: null }] as PositionEval[]
+    await repo.saveGameAnalysis({ gameId: '1', evals, analyzedAt: 'a' })
+    expect((await repo.getGameAnalysis('1'))?.evals).toEqual([
+      { ...legacy, bestMove: { ...legacy.bestMove, bestLine: [] } },
+      evals[1],
+    ])
   })
 })
 
