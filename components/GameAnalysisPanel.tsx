@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useId, useMemo, useState } from 'react'
+import { createContext, useContext, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { saveGameAnalysis } from '@/app/actions'
 import { getStrings } from '@/lib/i18n/strings'
 import { buildGameStory } from '@/lib/gameStory'
@@ -12,7 +12,6 @@ import { ANALYSIS_STRENGTHS, type AnalysisStrength, analyzeGame } from '@/lib/st
 import { describeBlunderReason } from '@/lib/tactics'
 import type { GameAnalysis, MyColor, MyResult } from '@/lib/types'
 import { useBoardContext } from './BoardContext'
-import { Card } from './Card'
 import type { BadMoveTier } from './MoveQualityBadge'
 import { ErrorText } from './ErrorText'
 import { EvalGraph } from './EvalGraph'
@@ -317,8 +316,9 @@ function MoveQualityPanel({
   )
 }
 
-/** A plain-words account of the analyzed game; each move named in it jumps the board there. */
-export function GameStoryCard({
+/** A plain-words account of the analyzed game, for the board's sidebar; each move named in it
+ *  jumps the board there. Unanalyzed, it offers the analysis instead. */
+export function GameStoryPanel({
   ecoName,
   myResult,
   finalResults,
@@ -342,9 +342,36 @@ export function GameStoryCard({
       ),
     [analysis, movesSan, positions, myColor, myResult, finalResults],
   )
+  const scrollRef = useRef<HTMLDivElement>(null)
+  // Keeps the turning point being viewed in sight, as MoveList does for the current move; also on
+  // resize, since BoardView caps the sidebar's height only after measuring the board.
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const scroll = () =>
+      el
+        .querySelector('[aria-current="step"]')
+        ?.closest('li, p')
+        ?.scrollIntoView({ block: 'nearest' })
+    scroll()
+    const observer = new ResizeObserver(scroll)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [currentPly, exploring, story])
   const s = getStrings()
-  if (!story) return null
   const t = s.gameStory
+  const panelClass =
+    'flex w-full flex-col gap-3 overflow-y-auto rounded border border-zinc-200 bg-zinc-50 p-4 text-sm leading-relaxed text-zinc-700 max-h-140 lg:max-h-none lg:min-h-0 lg:flex-1 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300'
+  if (!story) {
+    return (
+      <div className={panelClass}>
+        <p>{t.analyzeFirst}</p>
+        <div className="self-start">
+          <AnalyzeButton />
+        </div>
+      </div>
+    )
+  }
   const initialFen = positions[0]
 
   const moveChip = (ply: number) => (
@@ -372,66 +399,64 @@ export function GameStoryCard({
     endReason && endReason in ending ? ending[endReason as keyof typeof ending] : ending.other
 
   return (
-    <Card title={t.title}>
-      <div className="flex flex-col gap-3 text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
+    <div ref={scrollRef} className={panelClass}>
+      <p>
+        {story.afterOpening
+          ? t.opening(
+              ecoName,
+              String(moveNumberOfPly(story.afterOpening.ply, initialFen)),
+              t.standing[story.afterOpening.standing],
+            )
+          : t.shortGame}
+      </p>
+      {story.turningPoints.length === 0 ? (
+        <p>{t.quiet}</p>
+      ) : (
+        <>
+          <p>{t.turningPointsIntro(story.turningPoints.length)}</p>
+          <ul className="flex flex-col gap-2">
+            {story.turningPoints.map((tp) => (
+              <li key={tp.ply}>
+                {moveChip(tp.ply)}
+                <span>
+                  <span
+                    className={
+                      tp.mine
+                        ? 'font-medium text-red-700 dark:text-red-400'
+                        : 'font-medium text-emerald-700 dark:text-emerald-400'
+                    }
+                  >
+                    {tp.mine ? t.mine[tp.tier] : t.theirs[tp.tier]}
+                  </span>{' '}
+                  {tp.missedChance && `${t.missedChance} `}
+                  {t.shift(t.standing[tp.before], t.standing[tp.after])}
+                  {tp.reason && ` ${describeBlunderReason(tp.reason)}`}
+                  {tp.mine && tp.bestSan && ` ${t.better(tp.bestSan)}`}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+      {story.slippedWin && story.slippedWin.ply > 0 && (
         <p>
-          {story.afterOpening
-            ? t.opening(
-                ecoName,
-                String(moveNumberOfPly(story.afterOpening.ply, initialFen)),
-                t.standing[story.afterOpening.standing],
-              )
-            : t.shortGame}
+          {moveChip(story.slippedWin.ply)}
+          <span>{t.slippedWin}</span>
         </p>
-        {story.turningPoints.length === 0 ? (
-          <p>{t.quiet}</p>
-        ) : (
-          <>
-            <p>{t.turningPointsIntro(story.turningPoints.length)}</p>
-            <ul className="flex flex-col gap-2">
-              {story.turningPoints.map((tp) => (
-                <li key={tp.ply}>
-                  {moveChip(tp.ply)}
-                  <span>
-                    <span
-                      className={
-                        tp.mine
-                          ? 'font-medium text-red-700 dark:text-red-400'
-                          : 'font-medium text-emerald-700 dark:text-emerald-400'
-                      }
-                    >
-                      {tp.mine ? t.mine[tp.tier] : t.theirs[tp.tier]}
-                    </span>{' '}
-                    {tp.missedChance && `${t.missedChance} `}
-                    {t.shift(t.standing[tp.before], t.standing[tp.after])}
-                    {tp.reason && ` ${describeBlunderReason(tp.reason)}`}
-                    {tp.mine && tp.bestSan && ` ${t.better(tp.bestSan)}`}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-        {story.slippedWin && story.slippedWin.ply > 0 && (
-          <p>
-            {moveChip(story.slippedWin.ply)}
-            <span>{t.slippedWin}</span>
-          </p>
-        )}
-        <p>
-          {best && worst && best !== worst
-            ? t.phaseRange(best.phase, best.accuracy, worst.phase, worst.accuracy)
-            : best && t.phaseOne(best.phase, best.accuracy)}{' '}
-          {story.accuracy.mine !== null &&
-            story.accuracy.theirs !== null &&
-            t.accuracy(story.accuracy.mine, story.accuracy.theirs)}
-        </p>
-        <p>
-          {endText}
-          {endReason !== 'checkmate' && ` ${t.finalStanding(t.standing[story.finalStanding])}`}
-        </p>
-      </div>
-    </Card>
+      )}
+      <p>
+        {best && worst && best !== worst
+          ? t.phaseRange(best.phase, best.accuracy, worst.phase, worst.accuracy)
+          : best && t.phaseOne(best.phase, best.accuracy)}{' '}
+        {story.accuracy.mine !== null &&
+          story.accuracy.theirs !== null &&
+          t.accuracy(story.accuracy.mine, story.accuracy.theirs)}
+      </p>
+      <p>
+        {endText}
+        {endReason !== 'checkmate' && ` ${t.finalStanding(t.standing[story.finalStanding])}`}
+      </p>
+    </div>
   )
 }
 

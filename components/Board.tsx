@@ -28,12 +28,14 @@ import { PromotionPicker } from './PromotionPicker'
 import { useBoardContext } from './BoardContext'
 import { useLiveAnalysisContext } from './LiveAnalysis'
 import { GameEndBadge } from './GameEndBadge'
+import { chipClass } from './styles'
 
 export function BoardView({
   boardMaxWidthClassName = 'max-w-160',
   sidebarMaxWidthClassName = 'lg:max-w-sm xl:max-w-md',
   sidebarExtra,
   sidebarTop,
+  sidebarAltTab,
   autoExplore = false,
   moveClocks,
 }: {
@@ -47,6 +49,8 @@ export function BoardView({
   sidebarExtra?: React.ReactNode
   /** Content above the move list. */
   sidebarTop?: React.ReactNode
+  /** A second sidebar tab, shown in place of `sidebarTop` and the move list. */
+  sidebarAltTab?: { label: string; content: React.ReactNode; initiallyOpen?: boolean }
   /** Think time and clock per ply, shown in the move list. */
   moveClocks?: MoveClock[]
 } = {}) {
@@ -68,6 +72,7 @@ export function BoardView({
     hintsHidden,
   } = useBoardContext()
   const s = getStrings()
+  const [altTabOpen, setAltTabOpen] = useState(sidebarAltTab?.initiallyOpen ?? false)
   const boardColors = useSettings()
   const hideHints = boardColors.hideEngineHints || hintsHidden
   const { lines: liveLines, fen: liveFen, terminal: liveTerminal } = useLiveAnalysisContext()
@@ -358,21 +363,41 @@ export function BoardView({
         className={`flex min-h-0 w-full flex-col gap-4 lg:flex-1 ${sidebarMaxWidthClassName}`}
         style={sidebarHeight ? { height: sidebarHeight } : undefined}
       >
-        {sidebarTop}
-        <MoveList
-          movesSan={movesSan}
-          ply={ply}
-          onSelect={(p) => {
-            // Clicking a recorded move leaves explore mode.
-            if (exploring) exitExploring()
-            setPly(p)
-          }}
-          result={result}
-          evals={evals}
-          positions={positions}
-          myColor={myColor}
-          clocks={moveClocks}
-        />
+        {sidebarAltTab && (
+          <div className="flex shrink-0 gap-1.5">
+            {[false, true].map((alt) => (
+              <button
+                key={String(alt)}
+                onClick={() => setAltTabOpen(alt)}
+                aria-pressed={altTabOpen === alt}
+                className={chipClass(altTabOpen === alt)}
+              >
+                {alt ? sidebarAltTab.label : s.board.movesTab}
+              </button>
+            ))}
+          </div>
+        )}
+        {sidebarAltTab && altTabOpen ? (
+          sidebarAltTab.content
+        ) : (
+          <>
+            {sidebarTop}
+            <MoveList
+              movesSan={movesSan}
+              ply={ply}
+              onSelect={(p) => {
+                // Clicking a recorded move leaves explore mode.
+                if (exploring) exitExploring()
+                setPly(p)
+              }}
+              result={result}
+              evals={evals}
+              positions={positions}
+              myColor={myColor}
+              clocks={moveClocks}
+            />
+          </>
+        )}
         {sidebarExtra}
       </div>
     </div>

@@ -231,10 +231,11 @@ A game page also has:
   move tiers for both sides, a graph of the eval bar across the game (click it to jump to a move),
   then your inaccuracies, mistakes and blunders. Click one to see it on the board; the panel stays open
   until ✕, Esc or a click outside it. The move list badges the same three tiers on your own moves.
-- Below the board, **How the game went**: a plain-words summary of an analyzed game of yours — how
+- A **Summary** tab beside the move list: a plain-words account of an analyzed game of yours — how
   you came out of the opening, every mistake or blunder (yours or your opponent's) that changed who
   was better and why, a winning position that got away, where you played best and worst, and how it
-  ended. Click any move in it to see it on the board.
+  ended. Click any move in it to see it on the board; `?view=summary` opens the page on it. An
+  unanalyzed game offers the analysis there instead.
 - In a game with a clock on every move (all Lichess games, Chess.com's when its PGN has them), the
   time each move took beside it in the move list; hover it for the clock left after the move.
 - **Engine lines**: the top 3 live lines for the current position. ▶ plays a line onto the board.

@@ -375,6 +375,7 @@ const en = {
     material: 'Material:',
     exploring: 'Exploring',
     backToGame: 'Back to game',
+    movesTab: 'Moves',
     endReasons: {
       checkmate: 'Checkmate',
       winner: 'Winner',
@@ -443,7 +444,8 @@ const en = {
     },
   },
   gameStory: {
-    title: 'How the game went',
+    tab: 'Summary',
+    analyzeFirst: 'Analyze this game with Stockfish to get a summary of how it went.',
     standing: {
       crushing: 'clearly winning for you',
       winning: 'winning for you',
@@ -1250,6 +1252,7 @@ const es: Strings = {
     material: 'Material:',
     exploring: 'Explorando',
     backToGame: 'Volver a la partida',
+    movesTab: 'Jugadas',
     endReasons: {
       checkmate: 'Jaque mate',
       winner: 'Ganador',
@@ -1319,7 +1322,8 @@ const es: Strings = {
     },
   },
   gameStory: {
-    title: 'Cómo fue la partida',
+    tab: 'Resumen',
+    analyzeFirst: 'Analiza esta partida con Stockfish para ver un resumen de cómo fue.',
     standing: {
       crushing: 'claramente ganadora para ti',
       winning: 'ganadora para ti',
