@@ -235,7 +235,7 @@ A game page also has:
   you came out of the opening, every mistake or blunder (yours or your opponent's) that changed who
   was better and why, a winning position that got away, where you played best and worst, and how it
   ended. Click any move in it to see it on the board; `?view=summary` opens the page on it. An
-  unanalyzed game offers the analysis there instead.
+  unanalyzed game asks you to analyze it first.
 - In a game with a clock on every move (all Lichess games, Chess.com's when its PGN has them), the
   time each move took beside it in the move list; hover it for the clock left after the move.
 - **Engine lines**: the top 3 live lines for the current position. ▶ plays a line onto the board.

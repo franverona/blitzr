@@ -323,7 +323,7 @@ function MoveQualityPanel({
 }
 
 /** A plain-words account of the analyzed game, for the board's sidebar; each move named in it
- *  jumps the board there. Unanalyzed, it offers the analysis instead. */
+ *  jumps the board there. Unanalyzed, it points to the analysis instead. */
 export function GameStoryPanel({
   ecoName,
   myResult,
@@ -370,11 +370,8 @@ export function GameStoryPanel({
     'flex w-full flex-col gap-3 overflow-y-auto rounded border border-zinc-200 bg-zinc-50 p-4 text-sm leading-relaxed text-zinc-700 max-h-140 lg:max-h-none lg:min-h-0 lg:flex-1 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300'
   if (!story) {
     return (
-      <div className={panelClass}>
-        <p>{t.analyzeFirst}</p>
-        <div className="self-start">
-          <AnalyzeButton />
-        </div>
+      <div className={`${panelClass} items-center justify-center text-center`}>
+        <p className="max-w-60 text-zinc-500 dark:text-zinc-400">{t.analyzeFirst}</p>
       </div>
     )
   }
