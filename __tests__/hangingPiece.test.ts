@@ -77,6 +77,13 @@ describe('detectHangingPiece', () => {
     expect(detectHangingPiece(before, after, 'white')?.attacker).toBeUndefined()
   })
 
+  it('does not flag a piece the opponent cannot take because the move gives check', () => {
+    // Nc6-d3+ stops defending the d4 pawn, but White must answer the check before Ra4xd4.
+    const before = '7k/8/2n5/8/R2p4/8/8/4K3 b - - 0 1'
+    const after = '7k/8/8/8/R2p4/3n4/8/4K3 w - - 1 2'
+    expect(detectHangingPiece(before, after, 'black')).toBeNull()
+  })
+
   it('never reports the king itself as hanging', () => {
     const fen = '4r2k/8/8/8/8/8/8/4K3 w - - 0 1'
     expect(detectHangingPiece(fen, fen, 'white')).toBeNull()
