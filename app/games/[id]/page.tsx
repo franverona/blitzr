@@ -10,7 +10,7 @@ import { DeleteGameButton } from '@/components/DeleteGameButton'
 import {
   AnalyzeButton,
   GameAnalysisProvider,
-  GameStoryCard,
+  GameStoryPanel,
   MoveQualityLink,
 } from '@/components/GameAnalysisPanel'
 import { LiveAnalysisPanel } from '@/components/LiveAnalysisPanel'
@@ -41,7 +41,7 @@ export default async function GamePage({
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ ply?: string; hints?: string }>
+  searchParams: Promise<{ ply?: string; hints?: string; view?: string }>
 }) {
   // Next hands params over percent-encoded, which turns Lichess's `lichess:<id>` into `%3A`.
   const id = decodeGameIdParam((await params).id)
@@ -49,6 +49,7 @@ export default async function GamePage({
   const query = await searchParams
   // `?ply=` deep-links a position (e.g. from Today's worst blunder); BoardProvider clamps it.
   // `?hints=0` keeps the engine's answer off that position (trouble cards link to it).
+  // `?view=summary` opens the sidebar on the game summary.
   const plyParam = Number(query.ply)
   const initialPly = Number.isInteger(plyParam) && plyParam >= 0 ? plyParam : 1
   const game = await getGame(id)
@@ -117,6 +118,22 @@ export default async function GamePage({
           autoExplore
           moveClocks={moveClocks(game.pgn, game.movesSan.length, game.timeControl)}
           sidebarTop={<LiveAnalysisPanel />}
+          // Told as "you", so not for someone else's game; only standard chess can be analyzed.
+          sidebarAltTab={
+            game.isMine && isStandardChess(game)
+              ? {
+                  label: getStrings().gameStory.tab,
+                  initiallyOpen: query.view === 'summary',
+                  content: (
+                    <GameStoryPanel
+                      ecoName={game.ecoName}
+                      myResult={game.myResult}
+                      finalResults={{ white: game.whiteResult, black: game.blackResult }}
+                    />
+                  ),
+                }
+              : undefined
+          }
           sidebarExtra={
             <div className="flex shrink-0 flex-col gap-3">
               <BoardNavControls />
@@ -136,14 +153,6 @@ export default async function GamePage({
             {game.pgn}
           </pre>
         </div>
-      )}
-      {/* Told as "you", so not for someone else's game. */}
-      {game.movesSan && game.isMine && (
-        <GameStoryCard
-          ecoName={game.ecoName}
-          myResult={game.myResult}
-          finalResults={{ white: game.whiteResult, black: game.blackResult }}
-        />
       )}
       {practiceGames.length > 0 && <PracticeGamesCard source={game} games={practiceGames} />}
     </div>

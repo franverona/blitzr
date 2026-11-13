@@ -3,7 +3,7 @@ import type { MyResult } from '@/lib/types'
 import { Badge } from './Badge'
 import type { Tone } from './styles'
 
-const RESULT_TONES: Record<MyResult, Tone> = {
+export const RESULT_TONES: Record<MyResult, Tone> = {
   win: 'emerald',
   draw: 'zinc',
   loss: 'rose',

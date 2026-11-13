@@ -375,6 +375,8 @@ const en = {
     material: 'Material:',
     exploring: 'Exploring',
     backToGame: 'Back to game',
+    movesTab: 'Moves',
+    sidebarTabs: 'Game panels',
     endReasons: {
       checkmate: 'Checkmate',
       winner: 'Winner',
@@ -443,7 +445,8 @@ const en = {
     },
   },
   gameStory: {
-    title: 'How the game went',
+    tab: 'Summary',
+    analyzeFirst: 'Analyze this game with Stockfish to get a summary of how it went.',
     standing: {
       crushing: 'clearly winning for you',
       winning: 'winning for you',
@@ -472,7 +475,8 @@ const en = {
     shift: (before: string, after: string) => `The position went from ${before} to ${after}.`,
     missedChance: 'It gave back the chance your opponent had just handed you.',
     better: (san: string) => `Better was ${san}.`,
-    slippedWin: 'Your best moment: you were winning here, but the win got away.',
+    slippedWinTitle: 'Your best moment',
+    slippedWin: 'You were winning here, but the win got away.',
     phases: {
       opening: 'in the opening',
       middlegame: 'in the middlegame',
@@ -481,8 +485,7 @@ const en = {
     phaseOne: (phase: string, accuracy: number) => `Your accuracy ${phase} was ${accuracy}.`,
     phaseRange: (best: string, bestAcc: number, worst: string, worstAcc: number) =>
       `You played best ${best} (${bestAcc} accuracy) and struggled most ${worst} (${worstAcc}).`,
-    accuracy: (mine: number, theirs: number) =>
-      `Overall your accuracy was ${mine}, against ${theirs} for your opponent.`,
+    endingLabel: 'How it ended',
     ending: {
       win: {
         checkmate: 'You won by checkmate.',
@@ -1250,6 +1253,8 @@ const es: Strings = {
     material: 'Material:',
     exploring: 'Explorando',
     backToGame: 'Volver a la partida',
+    movesTab: 'Jugadas',
+    sidebarTabs: 'Paneles de la partida',
     endReasons: {
       checkmate: 'Jaque mate',
       winner: 'Ganador',
@@ -1319,7 +1324,8 @@ const es: Strings = {
     },
   },
   gameStory: {
-    title: 'Cómo fue la partida',
+    tab: 'Resumen',
+    analyzeFirst: 'Analiza esta partida con Stockfish para ver un resumen de cómo fue.',
     standing: {
       crushing: 'claramente ganadora para ti',
       winning: 'ganadora para ti',
@@ -1348,7 +1354,8 @@ const es: Strings = {
     shift: (before: string, after: string) => `La posición pasó de ${before} a ${after}.`,
     missedChance: 'Devolvió la oportunidad que tu rival te acababa de regalar.',
     better: (san: string) => `Era mejor ${san}.`,
-    slippedWin: 'Tu mejor momento: aquí ibas ganando, pero la victoria se escapó.',
+    slippedWinTitle: 'Tu mejor momento',
+    slippedWin: 'Aquí ibas ganando, pero la victoria se escapó.',
     phases: {
       opening: 'en la apertura',
       middlegame: 'en el medio juego',
@@ -1357,8 +1364,7 @@ const es: Strings = {
     phaseOne: (phase: string, accuracy: number) => `Tu precisión ${phase} fue de ${accuracy}.`,
     phaseRange: (best: string, bestAcc: number, worst: string, worstAcc: number) =>
       `Jugaste mejor ${best} (precisión ${bestAcc}) y te costó más ${worst} (${worstAcc}).`,
-    accuracy: (mine: number, theirs: number) =>
-      `En total tu precisión fue de ${mine}, frente a ${theirs} de tu rival.`,
+    endingLabel: 'Cómo terminó',
     ending: {
       win: {
         checkmate: 'Ganaste por jaque mate.',

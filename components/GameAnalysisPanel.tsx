@@ -1,8 +1,9 @@
 'use client'
 
-import { createContext, useContext, useEffect, useId, useMemo, useState } from 'react'
+import { createContext, useContext, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { saveGameAnalysis } from '@/app/actions'
 import { getStrings } from '@/lib/i18n/strings'
+import { whiteToMove } from '@/lib/analysis'
 import { buildGameStory } from '@/lib/gameStory'
 import type { GamePhase } from '@/lib/material'
 import { MOVE_QUALITY_TIERS, summarizeMoveQuality } from '@/lib/moveQuality'
@@ -12,10 +13,14 @@ import { ANALYSIS_STRENGTHS, type AnalysisStrength, analyzeGame } from '@/lib/st
 import { describeBlunderReason } from '@/lib/tactics'
 import type { GameAnalysis, MyColor, MyResult } from '@/lib/types'
 import { useBoardContext } from './BoardContext'
-import { Card } from './Card'
 import type { BadMoveTier } from './MoveQualityBadge'
 import { ErrorText } from './ErrorText'
 import { EvalGraph } from './EvalGraph'
+import { Badge } from './Badge'
+import { FocusRow } from './FocusRow'
+import { FlagIcon, TargetIcon } from './NavIcons'
+import { RESULT_TONES } from './ResultBadge'
+import { PieceMoveLabel } from './PieceMoveLabel'
 import { Select } from './Select'
 import { useSettings } from './SettingsProvider'
 import { accuracyTone, chipClass, LINK_CLASS, TONE_TEXT_CLASS } from './styles'
@@ -317,8 +322,9 @@ function MoveQualityPanel({
   )
 }
 
-/** A plain-words account of the analyzed game; each move named in it jumps the board there. */
-export function GameStoryCard({
+/** A plain-words account of the analyzed game, for the board's sidebar; each move named in it
+ *  jumps the board there. Unanalyzed, it points to the analysis instead. */
+export function GameStoryPanel({
   ecoName,
   myResult,
   finalResults,
@@ -342,9 +348,33 @@ export function GameStoryCard({
       ),
     [analysis, movesSan, positions, myColor, myResult, finalResults],
   )
+  const scrollRef = useRef<HTMLDivElement>(null)
+  // Keeps the turning point being viewed in sight, as MoveList does for the current move; also on
+  // resize, since BoardView caps the sidebar's height only after measuring the board.
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const scroll = () =>
+      el
+        .querySelector('[aria-current="step"]')
+        ?.closest('[data-story-item]')
+        ?.scrollIntoView({ block: 'nearest' })
+    scroll()
+    const observer = new ResizeObserver(scroll)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [currentPly, exploring, story])
   const s = getStrings()
-  if (!story) return null
   const t = s.gameStory
+  const panelClass =
+    'flex w-full flex-col gap-3 overflow-y-auto rounded border border-zinc-200 bg-zinc-50 p-4 text-sm leading-relaxed text-zinc-700 max-h-140 lg:max-h-none lg:min-h-0 lg:flex-1 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300'
+  if (!story) {
+    return (
+      <div className={`${panelClass} items-center justify-center text-center`}>
+        <p className="max-w-60 text-zinc-500 dark:text-zinc-400">{t.analyzeFirst}</p>
+      </div>
+    )
+  }
   const initialFen = positions[0]
 
   const moveChip = (ply: number) => (
@@ -354,84 +384,137 @@ export function GameStoryCard({
         setPly(ply)
       }}
       aria-current={!exploring && ply === currentPly ? 'step' : undefined}
-      className={`${chipClass(!exploring && ply === currentPly)} mr-2 tabular-nums`}
+      className={`${chipClass(!exploring && ply === currentPly)} min-w-28 shrink-0 text-center tabular-nums`}
     >
-      {plyLabel(ply, initialFen)} {movesSan[ply - 1]}
+      {plyLabel(ply, initialFen)}{' '}
+      <PieceMoveLabel
+        san={movesSan[ply - 1]}
+        color={whiteToMove(ply, initialFen) ? 'white' : 'black'}
+      />
     </button>
   )
 
   const phases = GAME_PHASES.flatMap((phase) => {
     const accuracy = story.byPhase[phase]
-    return accuracy === null ? [] : [{ phase: t.phases[phase], accuracy }]
-  }).sort((a, b) => b.accuracy - a.accuracy)
-  const best = phases[0]
-  const worst = phases.at(-1)
+    return accuracy === null ? [] : [{ phase, accuracy }]
+  })
+  const ranked = [...phases].sort((a, b) => b.accuracy - a.accuracy)
+  const best = ranked[0]
+  const worst = ranked.at(-1)
+  const { mine: myAccuracy, theirs: theirAccuracy } = story.accuracy
+  const accuracyText = (accuracy: number | null) =>
+    accuracy === null ? '' : TONE_TEXT_CLASS[accuracyTone(accuracy)]
   const ending = t.ending[myResult]
   const endReason = story.endReason
   const endText =
     endReason && endReason in ending ? ending[endReason as keyof typeof ending] : ending.other
 
   return (
-    <Card title={t.title}>
-      <div className="flex flex-col gap-3 text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-        <p>
-          {story.afterOpening
-            ? t.opening(
-                ecoName,
-                String(moveNumberOfPly(story.afterOpening.ply, initialFen)),
-                t.standing[story.afterOpening.standing],
-              )
-            : t.shortGame}
-        </p>
-        {story.turningPoints.length === 0 ? (
-          <p>{t.quiet}</p>
-        ) : (
-          <>
-            <p>{t.turningPointsIntro(story.turningPoints.length)}</p>
-            <ul className="flex flex-col gap-2">
-              {story.turningPoints.map((tp) => (
-                <li key={tp.ply}>
+    <div ref={scrollRef} className={panelClass}>
+      <p>
+        {story.afterOpening
+          ? t.opening(
+              ecoName,
+              String(moveNumberOfPly(story.afterOpening.ply, initialFen)),
+              t.standing[story.afterOpening.standing],
+            )
+          : t.shortGame}
+      </p>
+      {story.turningPoints.length === 0 ? (
+        <p>{t.quiet}</p>
+      ) : (
+        <>
+          <p>{t.turningPointsIntro(story.turningPoints.length)}</p>
+          <ul className="flex flex-col gap-4">
+            {story.turningPoints.map((tp) => (
+              <li key={tp.ply} data-story-item className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
                   {moveChip(tp.ply)}
-                  <span>
-                    <span
-                      className={
-                        tp.mine
-                          ? 'font-medium text-red-700 dark:text-red-400'
-                          : 'font-medium text-emerald-700 dark:text-emerald-400'
-                      }
-                    >
-                      {tp.mine ? t.mine[tp.tier] : t.theirs[tp.tier]}
-                    </span>{' '}
-                    {tp.missedChance && `${t.missedChance} `}
-                    {t.shift(t.standing[tp.before], t.standing[tp.after])}
-                    {tp.reason && ` ${describeBlunderReason(tp.reason)}`}
-                    {tp.mine && tp.bestSan && ` ${t.better(tp.bestSan)}`}
+                  <span
+                    className={
+                      tp.mine
+                        ? 'font-medium text-red-700 dark:text-red-400'
+                        : 'font-medium text-emerald-700 dark:text-emerald-400'
+                    }
+                  >
+                    {tp.mine ? t.mine[tp.tier] : t.theirs[tp.tier]}
                   </span>
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-        {story.slippedWin && story.slippedWin.ply > 0 && (
-          <p>
+                </div>
+                <p>
+                  {tp.missedChance && `${t.missedChance} `}
+                  {t.shift(t.standing[tp.before], t.standing[tp.after])}
+                  {tp.reason && ` ${describeBlunderReason(tp.reason)}`}
+                  {tp.mine && tp.bestSan && ` ${t.better(tp.bestSan)}`}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+      {story.slippedWin && story.slippedWin.ply > 0 && (
+        <div data-story-item className="flex flex-col gap-1">
+          <div className="flex items-center gap-2">
             {moveChip(story.slippedWin.ply)}
-            <span>{t.slippedWin}</span>
+            <span className="font-medium">{t.slippedWinTitle}</span>
+          </div>
+          <p>{t.slippedWin}</p>
+        </div>
+      )}
+      <ul className="mt-1 flex flex-col gap-4 border-t border-zinc-200 pt-4 dark:border-zinc-800">
+        <FocusRow
+          icon={<TargetIcon className="size-4" />}
+          tone={myAccuracy === null ? 'zinc' : accuracyTone(myAccuracy)}
+          label={s.analysisPanel.accuracy}
+        >
+          <p className="tabular-nums">
+            {s.analysisPanel.you}{' '}
+            <span className={`text-base font-semibold ${accuracyText(myAccuracy)}`}>
+              {myAccuracy ?? '—'}
+            </span>
+            <span className="text-zinc-500 dark:text-zinc-400">
+              {' · '}
+              {s.analysisPanel.opponent}{' '}
+              <span className={`font-medium ${accuracyText(theirAccuracy)}`}>
+                {theirAccuracy ?? '—'}
+              </span>
+            </span>
           </p>
-        )}
-        <p>
-          {best && worst && best !== worst
-            ? t.phaseRange(best.phase, best.accuracy, worst.phase, worst.accuracy)
-            : best && t.phaseOne(best.phase, best.accuracy)}{' '}
-          {story.accuracy.mine !== null &&
-            story.accuracy.theirs !== null &&
-            t.accuracy(story.accuracy.mine, story.accuracy.theirs)}
-        </p>
-        <p>
-          {endText}
-          {endReason !== 'checkmate' && ` ${t.finalStanding(t.standing[story.finalStanding])}`}
-        </p>
-      </div>
-    </Card>
+          {phases.length > 0 && (
+            <div className="my-1.5 flex flex-wrap gap-1.5">
+              {phases.map(({ phase, accuracy }) => (
+                <Badge key={phase} tone={accuracyTone(accuracy)} shape="pill">
+                  {s.analysisPanel.phases[phase]} {accuracy}
+                </Badge>
+              ))}
+            </div>
+          )}
+          {best && worst && (
+            <p className="text-zinc-500 dark:text-zinc-400">
+              {best !== worst
+                ? t.phaseRange(
+                    t.phases[best.phase],
+                    best.accuracy,
+                    t.phases[worst.phase],
+                    worst.accuracy,
+                  )
+                : t.phaseOne(t.phases[best.phase], best.accuracy)}
+            </p>
+          )}
+        </FocusRow>
+        <FocusRow
+          icon={<FlagIcon className="size-4" />}
+          tone={RESULT_TONES[myResult]}
+          label={t.endingLabel}
+        >
+          <p className="font-medium">{endText}</p>
+          {endReason !== 'checkmate' && (
+            <p className="text-zinc-500 dark:text-zinc-400">
+              {t.finalStanding(t.standing[story.finalStanding])}
+            </p>
+          )}
+        </FocusRow>
+      </ul>
+    </div>
   )
 }
 

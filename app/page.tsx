@@ -23,8 +23,9 @@ import { getTrainingOrientation, resolveOrientation } from '@/lib/theme'
 import type { LossReason } from '@/lib/today'
 import { Badge } from '@/components/Badge'
 import { Card } from '@/components/Card'
+import { FocusRow } from '@/components/FocusRow'
 import { PageHeader } from '@/components/PageHeader'
-import { buttonClass, LINK_CLASS, toneClass, type Tone } from '@/components/styles'
+import { buttonClass, LINK_CLASS, type Tone } from '@/components/styles'
 
 const mutedClassName = 'text-sm text-zinc-500 dark:text-zinc-400'
 export default async function TodayPage() {
@@ -443,44 +444,6 @@ function BoardFill({ children }: { children: React.ReactNode }) {
     <div className="w-full max-w-xs xl:[container-type:size] xl:min-h-0 xl:max-w-none xl:flex-1">
       <div className="xl:w-[min(100cqw,100cqh)]">{children}</div>
     </div>
-  )
-}
-
-function FocusRow({
-  icon,
-  tone,
-  label,
-  action,
-  children,
-}: {
-  icon: React.ReactNode
-  tone: Tone
-  label: string
-  action?: { href: string; label: string } | null | false
-  children: React.ReactNode
-}) {
-  return (
-    <li className="flex min-w-0 items-start gap-3">
-      <span
-        className={`flex size-8 shrink-0 items-center justify-center rounded-md ${toneClass(tone)}`}
-      >
-        {icon}
-      </span>
-      <div className="min-w-0 flex-1">
-        <p className="text-[11px] font-medium tracking-wide text-zinc-500 uppercase dark:text-zinc-400">
-          {label}
-        </p>
-        {children}
-        {action && (
-          <Link
-            href={action.href}
-            className={`mt-1 inline-block text-xs font-medium ${LINK_CLASS}`}
-          >
-            {action.label} →
-          </Link>
-        )}
-      </div>
-    </li>
   )
 }
 
