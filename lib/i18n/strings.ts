@@ -484,8 +484,7 @@ const en = {
     phaseOne: (phase: string, accuracy: number) => `Your accuracy ${phase} was ${accuracy}.`,
     phaseRange: (best: string, bestAcc: number, worst: string, worstAcc: number) =>
       `You played best ${best} (${bestAcc} accuracy) and struggled most ${worst} (${worstAcc}).`,
-    accuracy: (mine: number, theirs: number) =>
-      `Overall your accuracy was ${mine}, against ${theirs} for your opponent.`,
+    endingLabel: 'How it ended',
     ending: {
       win: {
         checkmate: 'You won by checkmate.',
@@ -1363,8 +1362,7 @@ const es: Strings = {
     phaseOne: (phase: string, accuracy: number) => `Tu precisión ${phase} fue de ${accuracy}.`,
     phaseRange: (best: string, bestAcc: number, worst: string, worstAcc: number) =>
       `Jugaste mejor ${best} (precisión ${bestAcc}) y te costó más ${worst} (${worstAcc}).`,
-    accuracy: (mine: number, theirs: number) =>
-      `En total tu precisión fue de ${mine}, frente a ${theirs} de tu rival.`,
+    endingLabel: 'Cómo terminó',
     ending: {
       win: {
         checkmate: 'Ganaste por jaque mate.',
