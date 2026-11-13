@@ -19,17 +19,29 @@ export interface HangingPiece {
 /**
  * Every `color` piece (excluding the king) that's attacked and either
  * undefended or attacked by a cheaper piece, so a defender doesn't save it.
- * No exchange evaluation or pin awareness.
+ * No exchange evaluation. When the opponent is to move, only legal captures count, so a
+ * check (or pin) that rules out the capture doesn't leave the piece hanging.
  */
 export function hangingSquares(fen: string, color: Color): Map<Square, HangingPiece> {
   const chess = new Chess(fen)
   const opponent: Color = color === 'w' ? 'b' : 'w'
   const found = new Map<Square, HangingPiece>()
+  const legalCaptures =
+    chess.turn() === opponent
+      ? new Set(
+          chess
+            .moves({ verbose: true })
+            .filter((m) => m.captured)
+            .map((m) => m.from + m.to),
+        )
+      : null
 
   for (const row of chess.board()) {
     for (const cell of row) {
       if (!cell || cell.color !== color || cell.type === 'k') continue
-      const attackers = chess.attackers(cell.square, opponent)
+      const attackers = chess
+        .attackers(cell.square, opponent)
+        .filter((from) => !legalCaptures || legalCaptures.has(from + cell.square))
       if (attackers.length === 0) continue
       if (!chess.isAttacked(cell.square, color)) {
         found.set(cell.square, { piece: cell.type })
