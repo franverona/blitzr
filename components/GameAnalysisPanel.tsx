@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { saveGameAnalysis } from '@/app/actions'
 import { getStrings } from '@/lib/i18n/strings'
+import { whiteToMove } from '@/lib/analysis'
 import { buildGameStory } from '@/lib/gameStory'
 import type { GamePhase } from '@/lib/material'
 import { MOVE_QUALITY_TIERS, summarizeMoveQuality } from '@/lib/moveQuality'
@@ -19,6 +20,7 @@ import { Badge } from './Badge'
 import { FocusRow } from './FocusRow'
 import { FlagIcon, TargetIcon } from './NavIcons'
 import { RESULT_TONES } from './ResultBadge'
+import { PieceMoveLabel } from './PieceMoveLabel'
 import { Select } from './Select'
 import { useSettings } from './SettingsProvider'
 import { accuracyTone, chipClass, LINK_CLASS, TONE_TEXT_CLASS } from './styles'
@@ -387,7 +389,11 @@ export function GameStoryPanel({
       aria-current={!exploring && ply === currentPly ? 'step' : undefined}
       className={`${chipClass(!exploring && ply === currentPly)} min-w-28 shrink-0 text-center tabular-nums`}
     >
-      {plyLabel(ply, initialFen)} {movesSan[ply - 1]}
+      {plyLabel(ply, initialFen)}{' '}
+      <PieceMoveLabel
+        san={movesSan[ply - 1]}
+        color={whiteToMove(ply, initialFen) ? 'white' : 'black'}
+      />
     </button>
   )
 
