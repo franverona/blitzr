@@ -381,7 +381,7 @@ export function GameStoryPanel({
         setPly(ply)
       }}
       aria-current={!exploring && ply === currentPly ? 'step' : undefined}
-      className={`${chipClass(!exploring && ply === currentPly)} mr-2 tabular-nums`}
+      className={`${chipClass(!exploring && ply === currentPly)} mr-2 min-w-28 text-center tabular-nums`}
     >
       {plyLabel(ply, initialFen)} {movesSan[ply - 1]}
     </button>
