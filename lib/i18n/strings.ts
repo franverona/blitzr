@@ -474,7 +474,8 @@ const en = {
     shift: (before: string, after: string) => `The position went from ${before} to ${after}.`,
     missedChance: 'It gave back the chance your opponent had just handed you.',
     better: (san: string) => `Better was ${san}.`,
-    slippedWin: 'Your best moment: you were winning here, but the win got away.',
+    slippedWinTitle: 'Your best moment',
+    slippedWin: 'You were winning here, but the win got away.',
     phases: {
       opening: 'in the opening',
       middlegame: 'in the middlegame',
@@ -1352,7 +1353,8 @@ const es: Strings = {
     shift: (before: string, after: string) => `La posición pasó de ${before} a ${after}.`,
     missedChance: 'Devolvió la oportunidad que tu rival te acababa de regalar.',
     better: (san: string) => `Era mejor ${san}.`,
-    slippedWin: 'Tu mejor momento: aquí ibas ganando, pero la victoria se escapó.',
+    slippedWinTitle: 'Tu mejor momento',
+    slippedWin: 'Aquí ibas ganando, pero la victoria se escapó.',
     phases: {
       opening: 'en la apertura',
       middlegame: 'en el medio juego',

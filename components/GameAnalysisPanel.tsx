@@ -351,7 +351,7 @@ export function GameStoryPanel({
     const scroll = () =>
       el
         .querySelector('[aria-current="step"]')
-        ?.closest('li, p')
+        ?.closest('[data-story-item]')
         ?.scrollIntoView({ block: 'nearest' })
     scroll()
     const observer = new ResizeObserver(scroll)
@@ -381,7 +381,7 @@ export function GameStoryPanel({
         setPly(ply)
       }}
       aria-current={!exploring && ply === currentPly ? 'step' : undefined}
-      className={`${chipClass(!exploring && ply === currentPly)} mr-2 min-w-28 text-center tabular-nums`}
+      className={`${chipClass(!exploring && ply === currentPly)} min-w-28 shrink-0 text-center tabular-nums`}
     >
       {plyLabel(ply, initialFen)} {movesSan[ply - 1]}
     </button>
@@ -414,11 +414,11 @@ export function GameStoryPanel({
       ) : (
         <>
           <p>{t.turningPointsIntro(story.turningPoints.length)}</p>
-          <ul className="flex flex-col gap-2">
+          <ul className="flex flex-col gap-4">
             {story.turningPoints.map((tp) => (
-              <li key={tp.ply}>
-                {moveChip(tp.ply)}
-                <span>
+              <li key={tp.ply} data-story-item className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  {moveChip(tp.ply)}
                   <span
                     className={
                       tp.mine
@@ -427,22 +427,27 @@ export function GameStoryPanel({
                     }
                   >
                     {tp.mine ? t.mine[tp.tier] : t.theirs[tp.tier]}
-                  </span>{' '}
+                  </span>
+                </div>
+                <p>
                   {tp.missedChance && `${t.missedChance} `}
                   {t.shift(t.standing[tp.before], t.standing[tp.after])}
                   {tp.reason && ` ${describeBlunderReason(tp.reason)}`}
                   {tp.mine && tp.bestSan && ` ${t.better(tp.bestSan)}`}
-                </span>
+                </p>
               </li>
             ))}
           </ul>
         </>
       )}
       {story.slippedWin && story.slippedWin.ply > 0 && (
-        <p>
-          {moveChip(story.slippedWin.ply)}
-          <span>{t.slippedWin}</span>
-        </p>
+        <div data-story-item className="flex flex-col gap-1">
+          <div className="flex items-center gap-2">
+            {moveChip(story.slippedWin.ply)}
+            <span className="font-medium">{t.slippedWinTitle}</span>
+          </div>
+          <p>{t.slippedWin}</p>
+        </div>
       )}
       <p>
         {best && worst && best !== worst
