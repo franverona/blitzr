@@ -139,8 +139,9 @@ Every game has a `site` (`chesscom` | `lichess`). `siteUsername(site)` reads `CH
   one-ply lookback, no exchange evaluation, absolute pins only.
 - **Re-analyzing a game can reset its drill progress:** another strength can shift which plies
   count as blunders, and the deck sync deletes cards whose ply no longer qualifies. Accepted.
-- The game page's summary (`buildGameStory()`) counts a mistake or blunder as a turning point only
-  if it changes the coarse `Standing`, so slips that stay winning don't pad it.
+- The game page's summary (`buildGameStory()`) words positions in `describeEval()`'s bands
+  (`EVAL_BANDS_CP`), so it agrees with the text under the board, but counts a mistake or blunder as
+  a turning point only if it changes the coarser `TURN_GROUP`, so slips that stay winning don't pad it.
 - Building positions replays the game, so per-phase stats run only in the game page, not
   across every game on `/blunders` (#304). An endgame lesson's "your games" line and Today's endgame
   suggestion do replay games, so `findGamesReachingMaterial()` prunes by final material and

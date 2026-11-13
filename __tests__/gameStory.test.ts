@@ -12,11 +12,18 @@ const POSITIONS = buildPositions(START_FEN, MOVES)
 
 describe('standingFor', () => {
   it('reads the eval from the user’s side', () => {
-    expect(standingFor(cp(0), 'white')).toBe('equal')
+    expect(standingFor(cp(30), 'white')).toBe('equal')
+    expect(standingFor(cp(100), 'white')).toBe('edge')
     expect(standingFor(cp(200), 'white')).toBe('better')
     expect(standingFor(cp(200), 'black')).toBe('worse')
-    expect(standingFor(mate(2), 'black')).toBe('losing')
-    expect(standingFor(mate(-1), 'black')).toBe('winning')
+    expect(standingFor(mate(2), 'black')).toBe('lost')
+    expect(standingFor(mate(-1), 'black')).toBe('crushing')
+  })
+
+  it('matches the eval text under the board', () => {
+    // A game's +8.3 → +5.8 was reported as merely "a bit better".
+    expect(standingFor(cp(834), 'white')).toBe('crushing')
+    expect(standingFor(cp(579), 'white')).toBe('winning')
   })
 })
 
@@ -38,13 +45,13 @@ describe('buildGameStory', () => {
         mine: true,
         tier: 'blunder',
         before: 'equal',
-        after: 'losing',
+        after: 'lost',
         bestSan: 'Qe7',
         missedChance: false,
       }),
     ])
     expect(story.endReason).toBe('checkmate')
-    expect(story.finalStanding).toBe('losing')
+    expect(story.finalStanding).toBe('lost')
     expect(story.slippedWin).toBeNull()
     // Never out of the opening.
     expect(story.afterOpening).toBeNull()
@@ -58,6 +65,19 @@ describe('buildGameStory', () => {
     expect(story.turningPoints[0]).toMatchObject({ ply: 6, mine: false })
     // Peak is the mate-in-1 position, before White's (mating) move.
     expect(story.slippedWin).toEqual({ ply: 6 })
+  })
+
+  it('skips a slip that leaves the user as far ahead', () => {
+    const moves = ['e4', 'e5', 'Nf3', 'Nc6']
+    // +8.3 → +5.8: clearly winning to winning, still a win.
+    const story = buildGameStory(
+      [cp(834), cp(834), cp(834), cp(579), cp(579)],
+      moves,
+      buildPositions(START_FEN, moves),
+      'white',
+      true,
+    )
+    expect(story.turningPoints).toEqual([])
   })
 
   it('flags a move that hands back the opponent’s gift', () => {

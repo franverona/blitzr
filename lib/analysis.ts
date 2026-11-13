@@ -109,6 +109,9 @@ export function evalBarPercent(evaluation: PositionEval): number {
   return ((winChances + 1) / 2) * 100
 }
 
+/** describeEval()'s |cp| cutoffs, shared so other wording agrees with it. */
+export const EVAL_BANDS_CP = { edge: 50, better: 150, winning: 300, crushing: 700 }
+
 /** Plain-language eval, e.g. "White is winning". */
 export function describeEval(evaluation: PositionEval, locale: Locale = getLocale()): string {
   const es = locale === 'es'
@@ -119,12 +122,14 @@ export function describeEval(evaluation: PositionEval, locale: Locale = getLocal
     return evaluation.mate > 0 ? 'White has a forced mate' : 'Black has a forced mate'
   }
   const cp = evaluation.cp ?? 0
-  if (Math.abs(cp) < 50) return es ? 'Posición igualada' : 'Equal position'
+  if (Math.abs(cp) < EVAL_BANDS_CP.edge) return es ? 'Posición igualada' : 'Equal position'
   const side = cp > 0 ? (es ? 'las blancas' : 'White') : es ? 'las negras' : 'Black'
   const abs = Math.abs(cp)
-  if (abs < 150) return es ? `Ligera ventaja para ${side}` : `Slight edge for ${side}`
-  if (abs < 300) return es ? `Mejor para ${side}` : `${side} is better`
-  if (abs < 700) return es ? `Posición ganadora para ${side}` : `${side} is winning`
+  if (abs < EVAL_BANDS_CP.better)
+    return es ? `Ligera ventaja para ${side}` : `Slight edge for ${side}`
+  if (abs < EVAL_BANDS_CP.winning) return es ? `Mejor para ${side}` : `${side} is better`
+  if (abs < EVAL_BANDS_CP.crushing)
+    return es ? `Posición ganadora para ${side}` : `${side} is winning`
   return es ? `Posición completamente ganadora para ${side}` : `${side} is completely winning`
 }
 
