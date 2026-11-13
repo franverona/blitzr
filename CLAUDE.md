@@ -67,7 +67,8 @@ install/runtime and gitignored. `BLITZR_DATA_DIR` moves `data/` (`lib/dataDir.ts
   laptop — adding content above/below a board means re-measuring `N`. Button rows sharing space
   with localized labels need `flex-wrap`.
 - **Shared UI before new class strings:** `PageHeader`, `Dialog`, `Badge`, `Card` /
-  `SectionLabel`, `TableShell`, `IconButton`, `ErrorText`, `Spinner`, `Select`, and the helpers in
+  `SectionLabel`, `TableShell`, `IconButton`, `ErrorText`, `Spinner`, `Select`, `Tabs`, `FocusRow`,
+  and the helpers in
   `components/styles.ts`. Toasts: pass an `id` so a newer one from the same source replaces the last.
 - **Every `<dialog>` is a `Dialog`** (named by its `<h2>` via `useId()`); the caller owns the `ref`
   and `showModal()`.

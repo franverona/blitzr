@@ -28,7 +28,7 @@ import { PromotionPicker } from './PromotionPicker'
 import { useBoardContext } from './BoardContext'
 import { useLiveAnalysisContext } from './LiveAnalysis'
 import { GameEndBadge } from './GameEndBadge'
-import { chipClass } from './styles'
+import { Tabs } from './Tabs'
 
 export function BoardView({
   boardMaxWidthClassName = 'max-w-160',
@@ -259,6 +259,26 @@ export function BoardView({
     }
   }, [])
 
+  const mainSidebar = (
+    <>
+      {sidebarTop}
+      <MoveList
+        movesSan={movesSan}
+        ply={ply}
+        onSelect={(p) => {
+          // Clicking a recorded move leaves explore mode.
+          if (exploring) exitExploring()
+          setPly(p)
+        }}
+        result={result}
+        evals={evals}
+        positions={positions}
+        myColor={myColor}
+        clocks={moveClocks}
+      />
+    </>
+  )
+
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-center">
       <div
@@ -363,40 +383,21 @@ export function BoardView({
         className={`flex min-h-0 w-full flex-col gap-4 lg:flex-1 ${sidebarMaxWidthClassName}`}
         style={sidebarHeight ? { height: sidebarHeight } : undefined}
       >
-        {sidebarAltTab && (
-          <div className="flex shrink-0 gap-1.5">
-            {[false, true].map((alt) => (
-              <button
-                key={String(alt)}
-                onClick={() => setAltTabOpen(alt)}
-                aria-pressed={altTabOpen === alt}
-                className={chipClass(altTabOpen === alt)}
-              >
-                {alt ? sidebarAltTab.label : s.board.movesTab}
-              </button>
-            ))}
-          </div>
-        )}
-        {sidebarAltTab && altTabOpen ? (
-          sidebarAltTab.content
+        {sidebarAltTab ? (
+          <Tabs
+            tabs={[
+              { id: 'main', label: s.board.movesTab },
+              { id: 'alt', label: sidebarAltTab.label },
+            ]}
+            selected={altTabOpen ? 'alt' : 'main'}
+            onSelect={(id) => setAltTabOpen(id === 'alt')}
+            label={s.board.sidebarTabs}
+            panelClassName="flex min-h-0 flex-col gap-4 lg:flex-1"
+          >
+            {altTabOpen ? sidebarAltTab.content : mainSidebar}
+          </Tabs>
         ) : (
-          <>
-            {sidebarTop}
-            <MoveList
-              movesSan={movesSan}
-              ply={ply}
-              onSelect={(p) => {
-                // Clicking a recorded move leaves explore mode.
-                if (exploring) exitExploring()
-                setPly(p)
-              }}
-              result={result}
-              evals={evals}
-              positions={positions}
-              myColor={myColor}
-              clocks={moveClocks}
-            />
-          </>
+          mainSidebar
         )}
         {sidebarExtra}
       </div>

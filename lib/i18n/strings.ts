@@ -376,6 +376,7 @@ const en = {
     exploring: 'Exploring',
     backToGame: 'Back to game',
     movesTab: 'Moves',
+    sidebarTabs: 'Game panels',
     endReasons: {
       checkmate: 'Checkmate',
       winner: 'Winner',
@@ -1253,6 +1254,7 @@ const es: Strings = {
     exploring: 'Explorando',
     backToGame: 'Volver a la partida',
     movesTab: 'Jugadas',
+    sidebarTabs: 'Paneles de la partida',
     endReasons: {
       checkmate: 'Jaque mate',
       winner: 'Ganador',
