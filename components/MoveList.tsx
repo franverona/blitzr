@@ -82,7 +82,7 @@ function BlunderDetail({
       {betterMoveHead && (
         <div className="text-xs text-zinc-500 dark:text-zinc-400">
           {s.common.betterWas} {betterMoveHead}
-          {bestMove && bestMove.bestLine?.length > 0 && (
+          {bestMove && bestMove.bestLine.length > 0 && (
             <PlanBoardButton
               betterMove={betterMove ?? betterMoveHead}
               fenBefore={fenBefore}
@@ -92,7 +92,7 @@ function BlunderDetail({
           )}
         </div>
       )}
-      {bestMove && bestMove.bestLine?.length > 0 && (
+      {bestMove && bestMove.bestLine.length > 0 && (
         <div className="text-sm text-zinc-700 dark:text-zinc-300">
           <MoveSequence fen={fenBefore} moves={[bestMove.san, ...bestMove.bestLine]} />
         </div>

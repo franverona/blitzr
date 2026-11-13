@@ -142,7 +142,7 @@ export interface BestMove {
   to: string
   san: string
   /** The engine's principal variation after this move (SAN). Empty if the PV
-   *  was short or the analysis predates this field. */
+   *  was short or the analysis predates this field (the repository fills it in). */
   bestLine: string[]
 }
 

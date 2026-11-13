@@ -20,6 +20,7 @@ import type {
   MyColor,
   GameSite,
   MyResult,
+  PositionEval,
   RepertoireColor,
   RepertoireNode,
 } from '../../types'
@@ -107,7 +108,10 @@ function rowToRepertoireNode(row: RepertoireMovesTable): RepertoireNode {
 function rowToGameAnalysis(row: GameAnalysisTable): GameAnalysis {
   return {
     gameId: row.game_id,
-    evals: JSON.parse(row.evals),
+    // Analyses saved before #31 have no `bestLine`.
+    evals: (JSON.parse(row.evals) as PositionEval[]).map((e) =>
+      e?.bestMove ? { ...e, bestMove: { ...e.bestMove, bestLine: e.bestMove.bestLine ?? [] } } : e,
+    ),
     analyzedAt: row.analyzed_at,
     movetimeMs: row.movetime_ms ?? undefined,
   }
