@@ -80,6 +80,12 @@ export function GameList({
               />
             </th>
           )}
+          {/* The practice list (the selectable one) has no star column. */}
+          {!selectable && (
+            <th className="w-9 py-2 pl-2">
+              <span className="sr-only">{s.gameList.headers.favorite}</span>
+            </th>
+          )}
           {/* With a selection, the labels turn transparent (keeping the column widths) and the
               button sits over them, so neither the table nor its columns move. */}
           <th className={`relative px-3 py-2 ${selecting ? 'text-transparent' : ''}`}>

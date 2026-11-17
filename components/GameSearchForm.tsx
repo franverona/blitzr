@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import { getStrings } from '@/lib/i18n/strings'
 import type { GameSite } from '@/lib/types'
 import { Dialog } from './Dialog'
-import { FunnelIcon } from './NavIcons'
+import { FunnelIcon, StarIcon } from './NavIcons'
 import { Select } from './Select'
 import { SiteIcon } from './SiteIcon'
 import { INPUT_CLASS, buttonClass, chipClass } from './styles'
@@ -23,6 +23,7 @@ type Filters = {
   accOp?: string
   accValue?: string
   practice?: string
+  fav?: string
 }
 
 /** The URL's accuracy, or the default when unset; 0 is a value, not unset. */
@@ -43,6 +44,7 @@ export function GameSearchForm({
   accOp,
   accValue,
   practice,
+  fav,
 }: {
   defaultValue: string
   result?: string
@@ -55,6 +57,7 @@ export function GameSearchForm({
   accValue?: string
   /** `'1'`: practice games only, which have no accuracy filter (it reads stats data). */
   practice?: string
+  fav?: string
 }) {
   const [value, setValue] = useState(defaultValue)
   const [accuracy, setAccuracy] = useState(sliderAccuracy(accValue))
@@ -100,6 +103,7 @@ export function GameSearchForm({
       accOp,
       accValue,
       practice,
+      fav,
       ...next,
     }
     for (const [key, val] of Object.entries(merged)) {
@@ -115,7 +119,7 @@ export function GameSearchForm({
     debounceRef.current = setTimeout(() => navigate(next), SEARCH_DEBOUNCE_MS)
   }
 
-  const active = [result, color, rated, site, accOp, practice].filter(Boolean).length
+  const active = [result, color, rated, site, accOp, practice, fav].filter(Boolean).length
 
   return (
     <form
@@ -240,20 +244,31 @@ export function GameSearchForm({
           </FilterField>
         )}
 
-        <button
-          type="button"
-          aria-pressed={Boolean(practice)}
-          onClick={() =>
-            navigate(
-              practice
-                ? { practice: '' }
-                : { practice: '1', accOp: '', accValue: '', rated: '', site: '' },
-            )
-          }
-          className={`self-start ${chipClass(Boolean(practice))}`}
-        >
-          {s.gamesPage.practiceOnly}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            aria-pressed={Boolean(fav)}
+            onClick={() => navigate(fav ? { fav: '' } : { fav: '1', practice: '' })}
+            className={`flex items-center gap-1.5 ${chipClass(Boolean(fav))}`}
+          >
+            <StarIcon className="size-4 shrink-0 fill-current stroke-[2.5] text-amber-500 dark:text-amber-400" />
+            {s.gamesPage.favoritesOnly}
+          </button>
+          <button
+            type="button"
+            aria-pressed={Boolean(practice)}
+            onClick={() =>
+              navigate(
+                practice
+                  ? { practice: '' }
+                  : { practice: '1', accOp: '', accValue: '', rated: '', site: '', fav: '' },
+              )
+            }
+            className={chipClass(Boolean(practice))}
+          >
+            {s.gamesPage.practiceOnly}
+          </button>
+        </div>
 
         {active > 0 && (
           <button
@@ -267,6 +282,7 @@ export function GameSearchForm({
                 accOp: '',
                 accValue: '',
                 practice: '',
+                fav: '',
               })
             }
             className={`self-start ${buttonClass({ size: 'sm' })}`}

@@ -54,6 +54,7 @@ function rowToGame(row: GamesTable): Game {
     archiveYm: row.archive_ym,
     createdAt: row.created_at,
     site: row.site as GameSite,
+    ...(row.favorite === 1 && { favorite: true }),
     ...(row.source_game_id !== null && {
       practiceOf: { gameId: row.source_game_id, ply: row.source_ply ?? 0 },
     }),
@@ -82,6 +83,8 @@ function gameToRow(game: Game): GamesTable {
     my_color: game.myColor,
     my_result: game.myResult,
     is_mine: game.isMine ? 1 : 0,
+    // Only on first insert: upsertGames()' conflict update never touches it, so a sync keeps the star.
+    favorite: game.favorite ? 1 : 0,
     eco_code: game.ecoCode,
     eco_name: game.ecoName,
     eco_url: game.ecoUrl,
@@ -161,6 +164,7 @@ export interface ListGamesParams {
   gameIds?: string[]
   /** Only practice games instead of none (`/games?practice=1`). */
   practice?: boolean
+  favorite?: boolean
 }
 
 export class SqliteGameRepository {
@@ -272,6 +276,10 @@ export class SqliteGameRepository {
       rowsQuery = rowsQuery.where('site', '=', params.site)
       countQuery = countQuery.where('site', '=', params.site)
     }
+    if (params.favorite) {
+      rowsQuery = rowsQuery.where('favorite', '=', 1)
+      countQuery = countQuery.where('favorite', '=', 1)
+    }
     if (params.gameIds) {
       rowsQuery = rowsQuery.where('id', 'in', params.gameIds)
       countQuery = countQuery.where('id', 'in', params.gameIds)
@@ -308,6 +316,15 @@ export class SqliteGameRepository {
       .orderBy('end_time', 'desc')
       .execute()
     return rows.map(rowToGame)
+  }
+
+  async setGameFavorite(id: string, favorite: boolean): Promise<void> {
+    const db = await this.ready()
+    await db
+      .updateTable('games')
+      .set({ favorite: favorite ? 1 : 0 })
+      .where('id', '=', id)
+      .execute()
   }
 
   async listManualGames(): Promise<Game[]> {

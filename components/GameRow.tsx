@@ -7,6 +7,7 @@ import { getStrings } from '@/lib/i18n/strings'
 import type { Game, GameAccuracy } from '@/lib/types'
 import { SiteIcon } from './SiteIcon'
 import { Badge } from './Badge'
+import { FavoriteButton } from './FavoriteButton'
 import { KnightIcon } from './KnightIcon'
 import { ResultBadge } from './ResultBadge'
 import { Spinner } from './Spinner'
@@ -47,6 +48,12 @@ export function GameRow({
             checked={select.checked}
             onChange={select.onToggle}
           />
+        </td>
+      )}
+      {/* Outside the cell links, so starring doesn't open the game. Practice games can't be starred. */}
+      {!game.practiceOf && (
+        <td className="py-1 pl-2">
+          <FavoriteButton gameId={game.id} favorite={game.favorite ?? false} />
         </td>
       )}
       <Cell href={href} className="whitespace-nowrap" tabbable>

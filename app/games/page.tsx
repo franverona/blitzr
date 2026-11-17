@@ -28,6 +28,7 @@ type GamesSearchParams = {
   accOp?: string
   accValue?: string
   practice?: string
+  fav?: string
 }
 
 export default async function GamesPage({
@@ -46,12 +47,14 @@ export default async function GamesPage({
     accOp,
     accValue,
     practice,
+    fav,
   }: GamesSearchParams = Object.fromEntries(
     Object.entries(await searchParams).filter(([, v]) => typeof v === 'string'),
   )
   const site = siteParam === 'chesscom' || siteParam === 'lichess' ? siteParam : undefined
   // Practice games only; they have no accuracy filter, since getGameAccuracyById() skips them.
   const practiceOnly = practice === '1'
+  const favoritesOnly = !practiceOnly && fav === '1'
   const page = Math.max(1, Number(pageParam) || 1)
   const opponent = q?.trim() || undefined
 
@@ -82,6 +85,7 @@ export default async function GamesPage({
     site: practiceOnly ? undefined : site,
     gameIds,
     practice: practiceOnly,
+    favorite: favoritesOnly,
   })
   const accuracies = practiceOnly
     ? await getPracticeAccuracyById(games.map((g) => g.id))
@@ -89,7 +93,7 @@ export default async function GamesPage({
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
   const filters = practiceOnly
     ? { q, result, color, practice }
-    : { q, result, color, rated, site, accOp, accValue }
+    : { q, result, color, rated, site, accOp, accValue, fav: favoritesOnly ? '1' : undefined }
   const filtered = Object.values(filters).some((v) => v !== undefined && v !== '')
   // A stale or hand-typed page past the end would otherwise show "no games".
   if (page > totalPages) redirect(pageHref(totalPages, filters))
@@ -129,6 +133,7 @@ export default async function GamesPage({
         accOp={accOp}
         accValue={accValue}
         practice={practiceOnly ? '1' : undefined}
+        fav={favoritesOnly ? '1' : undefined}
       />
 
       <GameList

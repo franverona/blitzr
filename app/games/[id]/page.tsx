@@ -7,6 +7,7 @@ import { BoardProvider } from '@/components/BoardContext'
 import { BoardNavControls } from '@/components/BoardNavControls'
 import { LiveAnalysisProvider } from '@/components/LiveAnalysis'
 import { DeleteGameButton } from '@/components/DeleteGameButton'
+import { FavoriteButton } from '@/components/FavoriteButton'
 import {
   AnalyzeButton,
   GameAnalysisProvider,
@@ -244,6 +245,7 @@ function GameHeader({
         {game.blackUsername}
         {rating('black')}
         {game.isMine && <ResultBadge result={game.myResult} />}
+        {!game.practiceOf && <FavoriteButton gameId={game.id} favorite={game.favorite ?? false} />}
       </h1>
       {/* A div, not a <p>: MoveQualityLink renders an <aside>. */}
       <div className="text-xs text-zinc-500 dark:text-zinc-400">
