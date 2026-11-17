@@ -192,6 +192,24 @@ describe('SqliteGameRepository.upsertGames', () => {
   })
 })
 
+describe('SqliteGameRepository favorites', () => {
+  it('filters starred games and keeps the star across a re-sync', async () => {
+    const lichess = { ...game('lichess:fav', 'fverona', 'zed', 'white'), site: 'lichess' as const }
+    await repo.upsertGames([lichess])
+    await repo.setGameFavorite('1', true)
+    await repo.setGameFavorite('lichess:fav', true)
+    // A re-sync sends the game unstarred; Lichess games take the conflict-update path.
+    await repo.upsertGames([game('1', 'fverona', 'alice', 'white'), lichess])
+    const ids = (await repo.listGames({ favorite: true })).games.map((g) => g.id)
+    expect(ids.sort()).toEqual(['1', 'lichess:fav'])
+    expect((await repo.getGame('2'))?.favorite).toBeUndefined()
+
+    await repo.setGameFavorite('1', false)
+    expect((await repo.listGames({ favorite: true })).total).toBe(1)
+    await repo.deleteGame('lichess:fav')
+  })
+})
+
 describe('SqliteGameRepository puzzle reveals', () => {
   it('lists reveals oldest first, keeping a puzzle in place when revealed again', async () => {
     vi.useFakeTimers()

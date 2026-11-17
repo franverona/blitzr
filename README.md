@@ -196,6 +196,9 @@ you played, or **Not me** for a game you only want to study: it can still be rep
 analyzed, but stays out of your openings, blunders, accuracy and drills. Pasted games can be
 deleted from their game page.
 
+Star any game (synced or pasted) as a favorite from its row in the games list or from its game
+page; **Favorites only** in the list's filters shows just those. A sync never clears a star.
+
 ### Repertoire
 
 On `/repertoire`, build an opening tree per color by playing moves on the board, branching as

@@ -27,6 +27,8 @@ export interface Game {
   /** False for a pasted game the user didn't play; it's kept out of every
    *  stat, and `myColor` is just the board orientation. */
   isMine: boolean
+  /** Starred by hand in the games list or game page. */
+  favorite?: boolean
   ecoCode: string | null
   ecoName: string | null
   ecoUrl: string | null

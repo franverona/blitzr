@@ -166,6 +166,8 @@ const en = {
   },
   gameRow: {
     notMine: 'Not you',
+    addFavorite: 'Add to favorites',
+    removeFavorite: 'Remove from favorites',
     // Per site: Lichess classes by estimated duration (base time + 40 × increment).
     timeClassTooltips: {
       chesscom: {
@@ -242,6 +244,7 @@ const en = {
       `Delete ${n} practice game${n === 1 ? '' : 's'} and ${n === 1 ? 'its' : 'their'} analysis?`,
     deleted: (n: number) => `Deleted ${n} practice game${n === 1 ? '' : 's'}.`,
     headers: {
+      favorite: 'Favorite',
       date: 'Date',
       color: 'Color',
       site: 'Site',
@@ -719,6 +722,7 @@ const en = {
     rated: 'Rated only',
     unrated: 'Unrated only',
     practiceOnly: 'Practice games',
+    favoritesOnly: 'Favorites only',
     anyAccuracy: 'Any accuracy',
     filters: 'Filters',
     filtersActive: (n: number) => `Filters, ${n} active`,
@@ -1039,6 +1043,8 @@ const es: Strings = {
   },
   gameRow: {
     notMine: 'No eres tú',
+    addFavorite: 'Añadir a favoritas',
+    removeFavorite: 'Quitar de favoritas',
     timeClassTooltips: {
       chesscom: {
         bullet: 'Bala — menos de 3 minutos por jugador',
@@ -1117,6 +1123,7 @@ const es: Strings = {
     deleted: (n: number) =>
       `${n} partida${n === 1 ? '' : 's'} de práctica eliminada${n === 1 ? '' : 's'}.`,
     headers: {
+      favorite: 'Favorita',
       date: 'Fecha',
       color: 'Color',
       site: 'Sitio',
@@ -1605,6 +1612,7 @@ const es: Strings = {
     rated: 'Solo clasificadas',
     unrated: 'Solo no clasificadas',
     practiceOnly: 'Partidas de práctica',
+    favoritesOnly: 'Solo favoritas',
     anyAccuracy: 'Cualquier precisión',
     filters: 'Filtros',
     filtersActive: (n: number) => `Filtros, ${n} ${n === 1 ? 'activo' : 'activos'}`,

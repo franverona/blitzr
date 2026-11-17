@@ -305,6 +305,18 @@ export async function deleteManualGame(id: string): Promise<void> {
   for (const path of ['/', '/games', '/openings', '/blunders', '/drill']) revalidatePath(path)
 }
 
+/** Practice games can't be starred: they count nowhere and their list has no favorite filter. */
+export async function setGameFavorite(id: string, favorite: boolean): Promise<void> {
+  if (typeof id !== 'string' || typeof favorite !== 'boolean') return
+  const repo = getRepository()
+  const game = await repo.getGame(id)
+  if (!game || game.archiveYm === 'practice') return
+  await repo.setGameFavorite(id, favorite)
+  revalidatePath('/games')
+  // The route pattern: a Lichess id's `:` arrives percent-encoded in the literal path.
+  revalidatePath('/games/[id]', 'page')
+}
+
 /** Deletes the given practice games; any other id is ignored. Returns how many went. */
 export async function deletePracticeGames(gameIds: string[]): Promise<number> {
   if (!Array.isArray(gameIds) || !gameIds.every((id) => typeof id === 'string')) return 0

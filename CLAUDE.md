@@ -127,6 +127,8 @@ Every game has a `site` (`chesscom` | `lichess`). `siteUsername(site)` reads `CH
   every stat reads through those two — never read `games` around them. A practice game can't be
   practiced from.
 - Only manual and practice games can be deleted; FKs cascade to analysis and drill cards.
+- **Favorites** are a `games.favorite` column, set only by `setGameFavorite()`: `upsertGames()`'s
+  conflict update leaves it alone, so a sync keeps the star. Practice games can't be starred.
 
 ## Engine analysis
 

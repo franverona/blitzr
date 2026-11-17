@@ -19,6 +19,7 @@ export interface GamesTable {
   my_color: string
   my_result: string
   is_mine: number
+  favorite: number
   eco_code: string | null
   eco_name: string | null
   eco_url: string | null

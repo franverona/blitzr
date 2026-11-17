@@ -110,6 +110,9 @@ async function runMigrations(db: Kysely<DbSchema>): Promise<void> {
   if (!gameColumns.rows.some((c) => c.name === 'is_mine')) {
     await alter(sql`ALTER TABLE games ADD COLUMN is_mine INTEGER NOT NULL DEFAULT 1`)
   }
+  if (!gameColumns.rows.some((c) => c.name === 'favorite')) {
+    await alter(sql`ALTER TABLE games ADD COLUMN favorite INTEGER NOT NULL DEFAULT 0`)
+  }
 
   // Every game before Lichess support came from Chess.com.
   if (!gameColumns.rows.some((c) => c.name === 'site')) {
