@@ -28,7 +28,7 @@ export function TroubleCards({ troubles }: { troubles: DrillPrompt[] }) {
             >
               {t.gameLabel}
             </Link>
-            <span className="text-xs text-zinc-500 dark:text-zinc-400">
+            <span className="text-xs text-zinc-600 dark:text-zinc-400">
               {/* `fen` is the position before the move, so it numbers ply 1 from there. */}
               {s.troubleCards.kind[t.sourceType]} · {plyLabel(1, t.fen)}
             </span>

@@ -72,7 +72,7 @@ export function GameRow({
           <Badge tone="zinc">{s.gameRow.notMine}</Badge>
         )}
       </Cell>
-      <Cell href={href} className="justify-end text-zinc-400 tabular-nums">
+      <Cell href={href} className="justify-end text-zinc-500 tabular-nums dark:text-zinc-400">
         {/* An unrated game's rating isn't meaningful. */}
         {game.isMine && game.rated && myRating != null ? myRating : '—'}
       </Cell>
@@ -115,7 +115,7 @@ export function GameRow({
           <span className="text-zinc-300 dark:text-zinc-700">—</span>
         )}
       </Cell>
-      <Cell href={href} className="text-zinc-400">
+      <Cell href={href} className="text-zinc-500 dark:text-zinc-400">
         {timeClassTooltip ? <abbr title={timeClassTooltip}>{timeClassLabel}</abbr> : timeClassLabel}
       </Cell>
     </tr>

@@ -90,7 +90,7 @@ export default async function PuzzlesPage({
     <div className="flex flex-col gap-4">
       <PageHeader
         title={s.puzzlesPage.title}
-        subtitle={<p className="text-sm text-zinc-500 dark:text-zinc-400">{s.puzzlesPage.intro}</p>}
+        subtitle={<p className="text-sm text-zinc-600 dark:text-zinc-400">{s.puzzlesPage.intro}</p>}
         actions={
           problems.length > 0 && (
             <div className="flex items-center gap-3">
@@ -101,7 +101,7 @@ export default async function PuzzlesPage({
                     style={{ width: `${(solvedCount / problems.length) * 100}%` }}
                   />
                 </div>
-                <span className="text-sm text-zinc-500 dark:text-zinc-400">
+                <span className="text-sm text-zinc-600 dark:text-zinc-400">
                   {s.puzzlesPage.solvedCount(solvedCount, problems.length)}
                 </span>
               </div>
@@ -116,7 +116,7 @@ export default async function PuzzlesPage({
       />
 
       {problems.length === 0 ? (
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">{s.puzzlesPage.empty}</p>
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">{s.puzzlesPage.empty}</p>
       ) : (
         <>
           <PuzzleFilters
@@ -128,7 +128,7 @@ export default async function PuzzlesPage({
           />
 
           {filtered.length === 0 ? (
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">{s.puzzlesPage.noneMatch}</p>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">{s.puzzlesPage.noneMatch}</p>
           ) : (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
               {pageItems.map((problem) => {
@@ -137,10 +137,10 @@ export default async function PuzzlesPage({
                   <Link
                     key={problem.id}
                     href={`/puzzles/${problem.id}`}
-                    className={`flex flex-col gap-1 rounded-lg border p-3 hover:bg-zinc-100 dark:hover:bg-zinc-900 ${
+                    className={`flex flex-col gap-1 rounded-lg border bg-white p-3 shadow-sm hover:bg-zinc-50 dark:bg-transparent dark:shadow-none dark:hover:bg-zinc-900 ${
                       isSolved
-                        ? 'border-emerald-300 dark:border-emerald-800'
-                        : 'border-zinc-200 dark:border-zinc-800'
+                        ? 'border-emerald-500 dark:border-emerald-800'
+                        : 'border-zinc-300 dark:border-zinc-800'
                     }`}
                   >
                     <MiniBoard
@@ -148,7 +148,7 @@ export default async function PuzzlesPage({
                       boardOrientation={resolveOrientation(orientation, puzzleColorToMove(problem))}
                     />
                     <div className="mt-2 flex items-center justify-between gap-2">
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400">#{problem.id}</p>
+                      <p className="text-xs text-zinc-600 dark:text-zinc-400">#{problem.id}</p>
                       <div className="flex items-center gap-1">
                         {isSolved && (
                           <span
@@ -164,7 +164,7 @@ export default async function PuzzlesPage({
                       </div>
                     </div>
                     <p className="text-sm font-medium">{problem.title}</p>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                    <p className="text-xs text-zinc-600 dark:text-zinc-400">
                       {[
                         problem.source,
                         problem.year,
@@ -184,7 +184,7 @@ export default async function PuzzlesPage({
               <PageLink page={page - 1} filters={pageFilters} disabled={page <= 1}>
                 {s.puzzlesPage.pagePrevious}
               </PageLink>
-              <span className="text-zinc-500 dark:text-zinc-400">
+              <span className="text-zinc-600 dark:text-zinc-400">
                 {s.puzzlesPage.pageOf(page, totalPages)}
               </span>
               <PageLink page={page + 1} filters={pageFilters} disabled={page >= totalPages}>

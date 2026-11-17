@@ -34,7 +34,7 @@ export function FavoriteButton({
       className={`flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-full outline-none hover:bg-zinc-200 focus-visible:ring-2 focus-visible:ring-amber-500 dark:hover:bg-zinc-800 ${
         starred
           ? 'text-amber-500 hover:text-amber-600 dark:text-amber-400 dark:hover:text-amber-300'
-          : 'text-zinc-400 hover:text-amber-500 dark:text-zinc-500 dark:hover:text-amber-400'
+          : 'text-zinc-500 hover:text-amber-500 dark:text-zinc-500 dark:hover:text-amber-400'
       } ${className}`}
     >
       <StarIcon className={`size-5 stroke-[2.5] ${starred ? 'fill-current' : ''}`} />

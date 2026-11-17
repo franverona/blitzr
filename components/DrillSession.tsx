@@ -261,7 +261,7 @@ function DrillDeck({
 
   if (sessionPrompts.length === 0) {
     return (
-      <p className="mx-auto max-w-140 text-sm text-zinc-500 dark:text-zinc-400">
+      <p className="mx-auto max-w-140 text-sm text-zinc-600 dark:text-zinc-400">
         {sessionTotalCards === 0
           ? s.drill.nothingToDrillYet
           : s.drill.noCardsDue(filtered, sessionTotalCards)}
@@ -274,7 +274,7 @@ function DrillDeck({
     return (
       <div className="mx-auto flex w-full max-w-140 flex-col gap-3">
         <p className="text-lg font-medium">{s.drill.sessionComplete}</p>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">
           {s.drill.tally(tally.correct, tally.incorrect, cardCount)}
         </p>
         <div className="flex flex-wrap items-center gap-3">
@@ -493,7 +493,7 @@ function DrillDeck({
 
       <div className="mx-auto flex w-full max-w-140 flex-col gap-3 lg:mx-0 lg:max-w-80">
         <div className="flex flex-col gap-1.5">
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
             {s.drill.cardOf(index + 1, sessionPrompts.length)}
             {prompt.retry && ` · ${s.drill.retryNote}`}
           </p>
@@ -537,7 +537,7 @@ function DrillDeck({
         )}
 
         {hintLevel >= 1 && (
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
             {s.drill.hintText(
               [...new Set(activePrompt.correctMoves.map((san) => hintPieceName(san)))].join(
                 ` ${s.drill.or} `,
@@ -549,7 +549,7 @@ function DrillDeck({
         )}
 
         {checking && (
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">{s.drill.checkingMove}</p>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">{s.drill.checkingMove}</p>
         )}
 
         {feedback && (
@@ -611,7 +611,7 @@ function DrillDeck({
             />
             {s.drill.autoAdvance}
           </label>
-          <p className="text-xs text-zinc-500 dark:text-zinc-600">{s.drill.keyboardHint}</p>
+          <p className="text-xs text-zinc-600 dark:text-zinc-600">{s.drill.keyboardHint}</p>
         </div>
       </div>
     </div>

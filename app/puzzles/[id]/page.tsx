@@ -25,7 +25,7 @@ export default async function PuzzlePage({ params }: { params: Promise<{ id: str
       <div className="flex flex-col gap-1 border-b border-zinc-200 pb-4 dark:border-zinc-800">
         <Link
           href="/puzzles"
-          className="w-fit text-sm text-zinc-500 hover:underline dark:text-zinc-400"
+          className="w-fit text-sm text-zinc-600 hover:underline dark:text-zinc-400"
         >
           {s.puzzlesPage.backToList}
         </Link>
@@ -42,7 +42,7 @@ export default async function PuzzlePage({ params }: { params: Promise<{ id: str
             </Badge>
           )}
         </div>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">
           {[
             problem.composer,
             problem.source,

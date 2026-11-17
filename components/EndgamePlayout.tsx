@@ -53,7 +53,7 @@ export function EndgamePlayout({ lesson }: { lesson: Lesson }) {
               locked={inProgress}
               fullStrengthOption
             />
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">
               {goal === 'draw'
                 ? s.endgamePlayout.goalDraw
                 : goal === 'promotion'

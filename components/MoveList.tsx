@@ -66,7 +66,7 @@ function BlunderDetail({
     <li className="bg-accent/10 flex flex-col gap-3 border-t border-zinc-200 px-3 py-4 dark:border-zinc-800">
       <div className="flex flex-wrap items-center gap-2">
         <MoveQualityBadge tier={tier} />
-        <span className="text-xs text-zinc-500 dark:text-zinc-400">
+        <span className="text-xs text-zinc-600 dark:text-zinc-400">
           {formatEval(blunder.evalBefore)} → {formatEval(blunder.evalAfter)} ({formatSwing(blunder)}
           )
         </span>
@@ -75,12 +75,12 @@ function BlunderDetail({
         {describeMove(fenBefore, blunder.moveSan)}
       </div>
       {reason && (
-        <div className="text-xs text-zinc-500 dark:text-zinc-400">
+        <div className="text-xs text-zinc-600 dark:text-zinc-400">
           {describeBlunderReason(reason)}
         </div>
       )}
       {betterMoveHead && (
-        <div className="text-xs text-zinc-500 dark:text-zinc-400">
+        <div className="text-xs text-zinc-600 dark:text-zinc-400">
           {s.common.betterWas} {betterMoveHead}
           {bestMove && bestMove.bestLine.length > 0 && (
             <PlanBoardButton
@@ -152,14 +152,14 @@ export function MoveList({
   }, [ply])
 
   return (
-    <div className="flex w-full flex-col overflow-hidden rounded border border-zinc-200 bg-zinc-50 lg:min-h-0 lg:flex-1 dark:border-zinc-800 dark:bg-zinc-900">
+    <div className="flex w-full flex-col overflow-hidden rounded border border-zinc-300 bg-white shadow-sm lg:min-h-0 lg:flex-1 dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-none">
       <button
         ref={ply === 0 ? activeRef : undefined}
         onClick={() => onSelect(0)}
         className={`border-b border-zinc-200 px-3 py-1.5 text-left text-sm dark:border-zinc-800 ${
           ply === 0
             ? 'bg-accent/50 font-semibold text-zinc-900 dark:text-white'
-            : 'text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800/60'
+            : 'text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800/60'
         }`}
       >
         {s.board.startingPositionButton}
@@ -172,7 +172,7 @@ export function MoveList({
           return (
             <Fragment key={pair.moveNumber}>
               <li className={`flex ${i % 2 === 1 ? 'bg-zinc-100 dark:bg-zinc-800/25' : ''}`}>
-                <span className="w-8 shrink-0 px-2 py-1.5 text-zinc-500 tabular-nums">
+                <span className="w-8 shrink-0 px-2 py-1.5 text-zinc-600 tabular-nums dark:text-zinc-500">
                   {pair.moveNumber}.
                 </span>
                 {(['white', 'black'] as const).map((side) => {
@@ -202,7 +202,7 @@ export function MoveList({
                             formatThinkTime(clock.spent),
                             formatClock(clock.left),
                           )}
-                          className="ml-auto text-xs font-normal text-zinc-500 tabular-nums dark:text-zinc-400"
+                          className="ml-auto text-xs font-normal text-zinc-600 tabular-nums dark:text-zinc-400"
                         >
                           {formatThinkTime(clock.spent)}
                         </span>
@@ -224,7 +224,7 @@ export function MoveList({
           )
         })}
         {result && (
-          <li className="px-2 py-1.5 font-medium text-zinc-500 dark:text-zinc-400">
+          <li className="px-2 py-1.5 font-medium text-zinc-600 dark:text-zinc-400">
             <span className="pl-8">{result}</span>
           </li>
         )}

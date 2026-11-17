@@ -86,7 +86,7 @@ export function DateRangeFilter({ from, to }: { from?: string; to?: string }) {
           <button
             type="button"
             onClick={() => navigate({ from: '', to: '' })}
-            className="text-zinc-500 hover:underline dark:text-zinc-400"
+            className="text-zinc-600 hover:underline dark:text-zinc-400"
           >
             {s.dateRangeFilter.clear}
           </button>

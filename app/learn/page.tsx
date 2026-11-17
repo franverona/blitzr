@@ -52,7 +52,7 @@ function LessonGrid({
           <Link
             key={lesson.slug}
             href={`/learn/${lesson.slug}`}
-            className="flex flex-col gap-2 rounded-lg border border-zinc-200 p-2 hover:bg-zinc-100 dark:border-zinc-800 dark:hover:bg-zinc-900"
+            className="flex flex-col gap-2 rounded-lg border border-zinc-300 bg-white p-2 shadow-sm hover:bg-zinc-50 dark:border-zinc-800 dark:bg-transparent dark:shadow-none dark:hover:bg-zinc-900"
           >
             <MiniBoard fen={fen} />
             <p className="text-center text-sm font-medium">{lesson.name[locale]}</p>
@@ -165,7 +165,7 @@ export default async function LearnPage({
     <div className="flex flex-col gap-4">
       <PageHeader
         title={s.learnPage.title}
-        subtitle={<p className="text-sm text-zinc-500 dark:text-zinc-400">{s.learnPage.intro}</p>}
+        subtitle={<p className="text-sm text-zinc-600 dark:text-zinc-400">{s.learnPage.intro}</p>}
       />
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
@@ -212,7 +212,7 @@ export default async function LearnPage({
       {lessons.length > 0 ? (
         <LessonGrid lessons={lessons} showStart={category === 'positions'} progress={progress} />
       ) : (
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">{s.learnPage.noMatches}</p>
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">{s.learnPage.noMatches}</p>
       )}
     </div>
   )

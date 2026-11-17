@@ -55,7 +55,7 @@ export function PlanBoard({
           />
         </div>
       </BoardCoordinates>
-      <div className="flex items-center justify-between gap-2 text-xs text-zinc-500">
+      <div className="flex items-center justify-between gap-2 text-xs text-zinc-600 dark:text-zinc-500">
         <span>
           {s.planBoard.label} {ply} / {lastPly}
           {ply > 0 && ` — ${moves[ply - 1]}`}

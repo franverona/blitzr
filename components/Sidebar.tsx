@@ -51,7 +51,7 @@ export function Sidebar({
     // The toggle sits on this wrapper because the <aside>'s overflow-y-auto
     // would clip it. `top-9` aligns it with the logo row.
     <div className={`relative flex h-full shrink-0 ${collapsed ? 'w-14' : 'w-14 md:w-40'}`}>
-      <aside className="flex w-full flex-col gap-4 overflow-y-auto border-r border-zinc-200 px-2 py-4 dark:border-zinc-800">
+      <aside className="flex w-full flex-col gap-4 overflow-y-auto border-r border-zinc-300 bg-white px-2 py-4 dark:border-zinc-800 dark:bg-transparent">
         <Link
           href="/"
           className={`flex h-10 min-w-0 items-center gap-2 text-lg font-semibold tracking-tight ${iconRowClassName}`}
@@ -72,7 +72,7 @@ export function Sidebar({
             className={`mb-2 flex items-center gap-2 rounded-md py-2 text-sm transition-colors ${iconRowClassName} ${
               settingsActive
                 ? 'bg-accent/20 font-medium text-zinc-900 dark:text-white'
-                : 'text-zinc-500 hover:bg-zinc-200 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100'
+                : 'text-zinc-600 hover:bg-zinc-200 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100'
             }`}
           >
             <SettingsIcon className={`size-5 shrink-0 ${settingsActive ? 'text-accent' : ''}`} />
@@ -91,7 +91,7 @@ export function Sidebar({
                     <span className="block truncate text-sm font-medium text-zinc-700 dark:text-zinc-300">
                       {username}
                     </span>
-                    <span className="block truncate text-xs text-zinc-500 dark:text-zinc-400">
+                    <span className="block truncate text-xs text-zinc-600 dark:text-zinc-400">
                       {s.common.site[site]}
                     </span>
                   </span>
@@ -105,7 +105,7 @@ export function Sidebar({
         type="button"
         onClick={toggle}
         aria-label={collapsed ? s.nav.expand : s.nav.collapse}
-        className="absolute top-9 -right-3 z-10 hidden size-6 -translate-y-1/2 items-center justify-center rounded-full border border-zinc-200 bg-zinc-50 text-zinc-500 shadow-sm hover:text-zinc-900 md:flex dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+        className="absolute top-9 -right-3 z-10 hidden size-6 -translate-y-1/2 items-center justify-center rounded-full border border-zinc-300 bg-white text-zinc-600 shadow-sm hover:text-zinc-900 md:flex dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
       >
         <ChevronLeftIcon
           className={`size-3.5 transition-transform ${collapsed ? 'rotate-180' : ''}`}

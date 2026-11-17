@@ -126,7 +126,7 @@ export function LessonPractice({
 function LessonGameStats({ stats }: { stats: LessonGameStatsData }) {
   const s = getStrings()
   return (
-    <p className="text-sm text-zinc-500 dark:text-zinc-400">
+    <p className="text-sm text-zinc-600 dark:text-zinc-400">
       {stats.games > 0
         ? s.lessonPractice.playedGames(stats.games, stats.wins, stats.draws, stats.losses)
         : s.lessonPractice.neverPlayed}
@@ -143,11 +143,11 @@ function EndgameGames({ stats }: { stats: LessonEndgameGames }) {
   const s = getStrings()
   if (stats.games === 0) {
     return (
-      <p className="text-sm text-zinc-500 dark:text-zinc-400">{s.lessonPractice.neverReached}</p>
+      <p className="text-sm text-zinc-600 dark:text-zinc-400">{s.lessonPractice.neverReached}</p>
     )
   }
   return (
-    <p className="text-sm text-zinc-500 dark:text-zinc-400">
+    <p className="text-sm text-zinc-600 dark:text-zinc-400">
       {s.lessonPractice.reachedGames(stats.games, stats.wins, stats.draws, stats.losses)}
       {' — '}
       {stats.recent.map((game, i) => (

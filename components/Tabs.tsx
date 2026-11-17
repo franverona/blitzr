@@ -71,7 +71,7 @@ export function Tabs<T extends string>({
               className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
                 active
                   ? 'border-accent text-zinc-900 dark:text-white'
-                  : 'border-transparent text-zinc-500 hover:border-zinc-300 hover:text-zinc-800 dark:text-zinc-400 dark:hover:border-zinc-700 dark:hover:text-zinc-200'
+                  : 'border-transparent text-zinc-600 hover:border-zinc-300 hover:text-zinc-800 dark:text-zinc-400 dark:hover:border-zinc-700 dark:hover:text-zinc-200'
               }`}
             >
               {tab.label}

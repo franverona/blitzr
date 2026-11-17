@@ -13,10 +13,10 @@ export function TableShell({
   children: ReactNode
 }) {
   return (
-    <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
+    <div className="overflow-x-auto rounded-lg border border-zinc-300 bg-white shadow-sm dark:border-zinc-800 dark:bg-transparent dark:shadow-none">
       <table className="w-full text-sm">
         <thead
-          className={`text-left text-xs tracking-wide text-zinc-500 uppercase dark:text-zinc-400 ${headClassName}`}
+          className={`text-left text-xs tracking-wide text-zinc-600 uppercase dark:text-zinc-400 ${headClassName}`}
         >
           <tr>{head}</tr>
         </thead>

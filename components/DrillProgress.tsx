@@ -41,7 +41,7 @@ export function DrillProgress({
         <dl className="grid grid-cols-[auto_auto] gap-x-4 gap-y-1 text-sm">
           {types.map((t) => (
             <div key={t} className="contents">
-              <dt className="text-zinc-500 dark:text-zinc-400">{typeLabel[t]}</dt>
+              <dt className="text-zinc-600 dark:text-zinc-400">{typeLabel[t]}</dt>
               <dd className="text-zinc-800 tabular-nums dark:text-zinc-200">
                 {s.drillProgress.learned(learned[t]!.learned, learned[t]!.total)}
               </dd>
@@ -56,9 +56,9 @@ export function DrillProgress({
         <ol className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
           {forecast.map((count, i) => (
             <li key={i} className="flex flex-col items-center">
-              <span className="text-xs text-zinc-500 dark:text-zinc-400">{dayLabel(i)}</span>
+              <span className="text-xs text-zinc-600 dark:text-zinc-400">{dayLabel(i)}</span>
               <span
-                className={`font-medium tabular-nums ${count === 0 ? 'text-zinc-400 dark:text-zinc-600' : 'text-zinc-800 dark:text-zinc-200'}`}
+                className={`font-medium tabular-nums ${count === 0 ? 'text-zinc-500 dark:text-zinc-600' : 'text-zinc-800 dark:text-zinc-200'}`}
               >
                 {count}
               </span>

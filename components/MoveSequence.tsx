@@ -28,7 +28,7 @@ export function MoveSequence({
       {formatted.map((move, i) => {
         // zinc-500 matches MoveList's move numbers and stays readable in dark mode.
         const numberLabel = (move.color === 'white' || i === 0) && (
-          <span className="text-zinc-500">
+          <span className="text-zinc-600 dark:text-zinc-500">
             {move.moveNumber}
             {move.color === 'white' ? '.' : '…'}
           </span>
@@ -39,7 +39,7 @@ export function MoveSequence({
           return (
             <span
               key={i}
-              className={`inline-flex items-center gap-1 ${isCurrent ? 'font-semibold text-zinc-900 dark:text-white' : 'text-zinc-500 dark:text-zinc-400'}`}
+              className={`inline-flex items-center gap-1 ${isCurrent ? 'font-semibold text-zinc-900 dark:text-white' : 'text-zinc-600 dark:text-zinc-400'}`}
             >
               {numberLabel}
               <PieceMoveLabel san={move.san} color={move.color} />
@@ -53,7 +53,7 @@ export function MoveSequence({
             className={`inline-flex items-center gap-1 rounded px-1 py-0.5 ${
               isCurrent
                 ? 'bg-accent/40 font-semibold text-zinc-900 dark:text-white'
-                : 'text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800'
+                : 'text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800'
             }`}
           >
             {numberLabel}

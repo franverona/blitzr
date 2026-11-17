@@ -181,7 +181,7 @@ export function LessonQuiz({
           {isComplete ? (
             <p className="text-lg font-medium">{s.lessonQuiz.lineComplete}</p>
           ) : (
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">
               {isMyTurn
                 ? s.lessonQuiz.playingAs(colorLabel, ply + 1, lastPly)
                 : s.lessonQuiz.opponentsMove}
@@ -236,7 +236,7 @@ export function LessonQuiz({
         </BoardCoordinates>
 
         {isComplete ? (
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
             {mistakes === 0 && hintsUsed === 0
               ? s.lessonQuiz.perfect
               : s.lessonQuiz.summary(mistakes, hintsUsed)}

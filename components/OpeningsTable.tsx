@@ -23,7 +23,7 @@ export function OpeningsTable({ families }: { families: OpeningFamily[] }) {
   }
 
   if (families.length === 0) {
-    return <p className="text-sm text-zinc-500 dark:text-zinc-400">{s.openingsTable.empty}</p>
+    return <p className="text-sm text-zinc-600 dark:text-zinc-400">{s.openingsTable.empty}</p>
   }
 
   return (
@@ -52,7 +52,9 @@ export function OpeningsTable({ families }: { families: OpeningFamily[] }) {
               className="cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-900/50"
             >
               <td className="px-3 py-2 font-medium">
-                <span className="mr-1 inline-block w-3 text-zinc-400">{isOpen ? '▾' : '▸'}</span>
+                <span className="mr-1 inline-block w-3 text-zinc-500 dark:text-zinc-400">
+                  {isOpen ? '▾' : '▸'}
+                </span>
                 {family.label}
               </td>
               <td className="px-3 py-2 text-zinc-600 dark:text-zinc-400">

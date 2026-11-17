@@ -110,7 +110,7 @@ export function EvalGraph({
 
         {hoverPly !== null && hovered && (
           <div
-            className="pointer-events-none absolute -top-2 flex -translate-x-1/2 -translate-y-full flex-col rounded-md border border-zinc-200 bg-zinc-50 px-2 py-1 text-xs whitespace-nowrap shadow-lg dark:border-zinc-700 dark:bg-zinc-900"
+            className="pointer-events-none absolute -top-2 flex -translate-x-1/2 -translate-y-full flex-col rounded-md border border-zinc-300 bg-white px-2 py-1 text-xs whitespace-nowrap shadow-lg dark:border-zinc-700 dark:bg-zinc-900"
             style={{ left: `${hoverXPercent}%` }}
           >
             <span className="font-medium text-zinc-900 dark:text-zinc-100">

@@ -78,7 +78,7 @@ export function RepertoireQuiz({
           <LessonQuiz />
         </BoardProvider>
       ) : (
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">{s.repertoire.noLinesToQuiz}</p>
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">{s.repertoire.noLinesToQuiz}</p>
       )}
     </div>
   )

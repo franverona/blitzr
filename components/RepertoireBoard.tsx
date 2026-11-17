@@ -275,7 +275,9 @@ export function RepertoireBoard({
 
           {siblings.length > 1 && (
             <div className="flex flex-wrap items-center gap-2 text-sm">
-              <span className="text-zinc-500">{s.repertoire.alternativesHere}</span>
+              <span className="text-zinc-600 dark:text-zinc-500">
+                {s.repertoire.alternativesHere}
+              </span>
               {siblings.map((sibling) => (
                 <button
                   key={sibling.id}
@@ -297,7 +299,7 @@ export function RepertoireBoard({
           <RepertoireTree nodes={nodes} currentPath={path} onSelectPath={setPath} />
           {gaps.length > 0 && (
             <section className="flex flex-col gap-2">
-              <h2 className="text-xs font-semibold tracking-wide text-zinc-500 uppercase dark:text-zinc-400">
+              <h2 className="text-xs font-semibold tracking-wide text-zinc-600 uppercase dark:text-zinc-400">
                 <abbr title={s.repertoire.gapsTooltip}>{s.repertoire.gapsTitle}</abbr>
               </h2>
               <ul className="flex flex-col gap-1.5 text-sm">
@@ -308,7 +310,7 @@ export function RepertoireBoard({
                       className="flex w-full flex-wrap items-center gap-x-2 gap-y-1 rounded px-2 py-1 text-left hover:bg-zinc-200 dark:hover:bg-zinc-800"
                     >
                       <MoveSequence fen={START_FEN} moves={[...gap.line, gap.next]} />
-                      <span className="text-zinc-500 dark:text-zinc-400">
+                      <span className="text-zinc-600 dark:text-zinc-400">
                         {s.repertoire.gapGames(gap.games)}
                       </span>
                     </button>

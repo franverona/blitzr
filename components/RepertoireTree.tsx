@@ -19,14 +19,14 @@ export function RepertoireTree({
 
   if (roots.length === 0) {
     return (
-      <p className="text-sm text-zinc-500 lg:max-w-xs lg:flex-1">
+      <p className="text-sm text-zinc-600 lg:max-w-xs lg:flex-1 dark:text-zinc-500">
         {getStrings().repertoire.noMovesYet}
       </p>
     )
   }
 
   return (
-    <div className="w-full overflow-y-auto rounded border border-zinc-200 bg-zinc-50 py-2 text-sm lg:max-h-160 lg:max-w-xs lg:flex-1 dark:border-zinc-800 dark:bg-zinc-900">
+    <div className="w-full overflow-y-auto rounded border border-zinc-300 bg-white py-2 text-sm shadow-sm lg:max-h-160 lg:max-w-xs lg:flex-1 dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-none">
       {roots.map((node) => (
         <TreeNode
           key={node.id}
@@ -68,7 +68,7 @@ function TreeNode({
             : 'text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800'
         }`}
       >
-        <span className="mr-1 text-zinc-500">{plyLabel(node.ply)}</span>
+        <span className="mr-1 text-zinc-600 dark:text-zinc-500">{plyLabel(node.ply)}</span>
         <PieceMoveLabel san={node.moveSan} color={node.ply % 2 === 1 ? 'white' : 'black'} />
       </button>
       {children.map((child) => (

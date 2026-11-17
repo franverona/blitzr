@@ -352,7 +352,7 @@ export function BoardView({
             </div>
           </BoardCoordinates>
         </div>
-        <div className="flex flex-wrap items-center justify-between gap-x-3 text-xs text-zinc-400">
+        <div className="flex flex-wrap items-center justify-between gap-x-3 text-xs text-zinc-500 dark:text-zinc-400">
           <p>
             {s.board.material} {formatMaterialDiff(materialDiff(displayFen))}
             {barEval && (

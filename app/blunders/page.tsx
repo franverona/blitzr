@@ -20,7 +20,7 @@ export default async function BlundersPage({
       <PageHeader
         title={s.blundersPage.title}
         subtitle={
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
             {s.blundersPage.summary(stats.totalBlunders, stats.analyzedGames, stats.totalGames)}
           </p>
         }

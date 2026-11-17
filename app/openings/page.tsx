@@ -12,7 +12,7 @@ export default async function OpeningsPage() {
       <PageHeader
         title={s.openingsPage.title}
         subtitle={
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">{s.openingsPage.intro}</p>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">{s.openingsPage.intro}</p>
         }
       />
       <OpeningsTable families={families} />

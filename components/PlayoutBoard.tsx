@@ -308,7 +308,7 @@ export function PlayoutBoard({
           ? 'text-lg font-medium text-emerald-600 dark:text-emerald-400'
           : outcome === 'lost'
             ? 'text-lg font-medium text-red-600 dark:text-red-400'
-            : 'text-sm text-zinc-500 dark:text-zinc-400'
+            : 'text-sm text-zinc-600 dark:text-zinc-400'
       }
     >
       {outcome === 'won'
