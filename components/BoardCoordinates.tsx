@@ -23,7 +23,7 @@ export function BoardCoordinates({
 
   return (
     <div
-      className={`pb-7 pl-7 text-sm font-semibold text-zinc-500 select-none dark:text-zinc-400 ${className}`}
+      className={`pb-7 pl-7 text-sm font-semibold text-zinc-600 select-none dark:text-zinc-400 ${className}`}
     >
       <div className="relative">
         {children}

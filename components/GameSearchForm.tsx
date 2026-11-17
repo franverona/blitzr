@@ -298,7 +298,7 @@ export function GameSearchForm({
 function FilterField({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <span className="text-xs font-medium text-zinc-500 uppercase dark:text-zinc-400">
+      <span className="text-xs font-medium text-zinc-600 uppercase dark:text-zinc-400">
         {label}
       </span>
       {children}

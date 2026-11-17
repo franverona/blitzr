@@ -231,7 +231,7 @@ function GameHeader({
   const rating = (color: MyColor) =>
     coachElo != null &&
     color !== game.myColor && (
-      <span className="text-sm font-normal text-zinc-500">({coachElo})</span>
+      <span className="text-sm font-normal text-zinc-600 dark:text-zinc-500">({coachElo})</span>
     )
   return (
     // flex-1 + basis: a long opening name wraps here instead of overflowing the button row.
@@ -240,7 +240,7 @@ function GameHeader({
         <PlayerAvatar username={game.whiteUsername} avatarUrl={whiteAvatar} />
         {game.whiteUsername}
         {rating('white')}
-        <span className="text-sm font-normal text-zinc-500">{s.common.vs}</span>
+        <span className="text-sm font-normal text-zinc-600 dark:text-zinc-500">{s.common.vs}</span>
         <PlayerAvatar username={game.blackUsername} avatarUrl={blackAvatar} />
         {game.blackUsername}
         {rating('black')}
@@ -248,7 +248,7 @@ function GameHeader({
         {!game.practiceOf && <FavoriteButton gameId={game.id} favorite={game.favorite ?? false} />}
       </h1>
       {/* A div, not a <p>: MoveQualityLink renders an <aside>. */}
-      <div className="text-xs text-zinc-500 dark:text-zinc-400">
+      <div className="text-xs text-zinc-600 dark:text-zinc-400">
         {formatDateTime(game.endTime)} · {timeClassLabel}
         {!game.isMine && ` · ${s.gamePage.notMine}`}
         {game.practiceOf && (
@@ -323,7 +323,7 @@ function PracticeGamesCard({ source, games }: { source: Game; games: Game[] }) {
               <Link href={`/games/${g.id}`} className={LINK_CLASS}>
                 {fromLabel(ply)}
               </Link>
-              <span className="text-zinc-500 dark:text-zinc-400">
+              <span className="text-zinc-600 dark:text-zinc-400">
                 {s.common.vs} {bot} · {formatDateTime(g.endTime)}
               </span>
             </li>

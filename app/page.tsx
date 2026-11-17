@@ -27,7 +27,7 @@ import { FocusRow } from '@/components/FocusRow'
 import { PageHeader } from '@/components/PageHeader'
 import { buttonClass, LINK_CLASS, type Tone } from '@/components/styles'
 
-const mutedClassName = 'text-sm text-zinc-500 dark:text-zinc-400'
+const mutedClassName = 'text-sm text-zinc-600 dark:text-zinc-400'
 export default async function TodayPage() {
   const s = getStrings()
   const today = await getTodaySummary()
@@ -254,7 +254,7 @@ export default async function TodayPage() {
               {weakSpot ? (
                 <>
                   <p className="text-sm font-medium">{weakSpot.opening}</p>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  <p className="text-xs text-zinc-600 dark:text-zinc-400">
                     {s.today.weakSpotDetail(weakSpot.blunders)}
                   </p>
                 </>
@@ -279,11 +279,11 @@ export default async function TodayPage() {
                     {today.worstBlunder.moveLabel}
                     {today.worstBlunder.moveSan}
                   </span>{' '}
-                  <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                  <span className="text-xs text-zinc-600 dark:text-zinc-400">
                     {today.worstBlunder.label}
                   </span>
                 </p>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400">{today.worstBlunder.why}</p>
+                <p className="text-xs text-zinc-600 dark:text-zinc-400">{today.worstBlunder.why}</p>
               </FocusRow>
             )}
 
@@ -334,7 +334,7 @@ export default async function TodayPage() {
                   <p key={site} className="text-sm">
                     {/* Named only with both sites, as the ratings above. */}
                     {today.ratingGaps.length > 1 && (
-                      <span className="text-zinc-500 dark:text-zinc-400">
+                      <span className="text-zinc-600 dark:text-zinc-400">
                         {s.common.site[site]}:{' '}
                       </span>
                     )}
@@ -347,7 +347,7 @@ export default async function TodayPage() {
                       .join(' · ')}
                   </p>
                 ))}
-                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                <p className="text-xs text-zinc-600 dark:text-zinc-400">
                   {s.today.ratingGapDetail}
                 </p>
               </FocusRow>
@@ -367,7 +367,7 @@ export default async function TodayPage() {
                     today.afterLoss.otherwise.games,
                   )}
                 </p>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400">{s.today.afterLossHelp}</p>
+                <p className="text-xs text-zinc-600 dark:text-zinc-400">{s.today.afterLossHelp}</p>
               </FocusRow>
             )}
 
@@ -397,7 +397,7 @@ export default async function TodayPage() {
                 action={{ href: `/learn/${today.lesson.slug}`, label: s.today.studyLesson }}
               >
                 <p className="text-sm font-medium">{today.lesson.name}</p>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                <p className="text-xs text-zinc-600 dark:text-zinc-400">
                   {s.today.lessonDetail(today.lesson.games)}
                 </p>
               </FocusRow>
@@ -411,7 +411,7 @@ export default async function TodayPage() {
                 action={{ href: `/learn/${today.endgameLesson.slug}`, label: s.today.studyLesson }}
               >
                 <p className="text-sm font-medium">{today.endgameLesson.name}</p>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                <p className="text-xs text-zinc-600 dark:text-zinc-400">
                   {s.today.endgameLessonDetail(today.endgameLesson.games)}
                 </p>
               </FocusRow>
@@ -476,7 +476,7 @@ function StreakBadge({ streak, week }: { streak: number; week: boolean[] }) {
         ))}
       </span>
       {streak > 0 && !drilledToday && (
-        <span className="text-xs text-zinc-500 dark:text-zinc-400">{s.today.keepStreak}</span>
+        <span className="text-xs text-zinc-600 dark:text-zinc-400">{s.today.keepStreak}</span>
       )}
     </div>
   )
@@ -487,7 +487,7 @@ function SyncBadge({ syncedAt, fresh }: { syncedAt: string; fresh: boolean }) {
   return (
     <p
       title={formatDateTime(Date.parse(syncedAt) / 1000)}
-      className="flex items-center gap-1.5 rounded-full border border-zinc-200 bg-zinc-50 px-2.5 py-1 text-xs text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400"
+      className="flex items-center gap-1.5 rounded-full border border-zinc-300 bg-white px-2.5 py-1 text-xs text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400"
     >
       <span
         aria-hidden

@@ -126,7 +126,7 @@ export function AnalyzeButton() {
           className="rounded-l-md bg-transparent py-1.5 pl-3 text-zinc-600 hover:bg-zinc-100 disabled:opacity-50 dark:text-zinc-300 dark:hover:bg-zinc-800"
         >
           {(Object.keys(ANALYSIS_STRENGTHS) as AnalysisStrength[]).map((k) => (
-            <option key={k} value={k} className="bg-zinc-50 dark:bg-zinc-900">
+            <option key={k} value={k} className="bg-white dark:bg-zinc-900">
               {s.settings.analysisStrengths[k]}
               {k === savedStrength && ' ✓'}
             </option>
@@ -239,7 +239,7 @@ function MoveQualityPanel({
         id={id}
         aria-labelledby={titleId}
         inert={!open}
-        className={`fixed inset-y-0 right-0 z-40 w-full max-w-md space-y-4 overflow-y-auto border-l border-zinc-200 bg-zinc-50 p-6 text-sm text-zinc-900 shadow-xl transition-transform duration-200 ease-out motion-reduce:transition-none dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 ${
+        className={`fixed inset-y-0 right-0 z-40 w-full max-w-md space-y-4 overflow-y-auto border-l border-zinc-300 bg-white p-6 text-sm text-zinc-900 shadow-xl transition-transform duration-200 ease-out motion-reduce:transition-none dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 ${
           open ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
@@ -251,7 +251,7 @@ function MoveQualityPanel({
             type="button"
             onClick={onClose}
             aria-label={s.common.close}
-            className="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
+            className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-500 dark:hover:text-zinc-200"
           >
             ✕
           </button>
@@ -272,14 +272,14 @@ function MoveQualityPanel({
             <td className="px-3 py-2 text-right">{theirs.accuracy ?? '—'}</td>
           </tr>
           {GAME_PHASES.map((phase) => (
-            <tr key={phase} className="text-zinc-500 dark:text-zinc-400">
+            <tr key={phase} className="text-zinc-600 dark:text-zinc-400">
               <td className="py-2 pr-3 pl-6">{s.analysisPanel.phases[phase]}</td>
               <td className="px-3 py-2 text-right">{mine.byPhase?.[phase] ?? '—'}</td>
               <td className="px-3 py-2 text-right">{theirs.byPhase?.[phase] ?? '—'}</td>
             </tr>
           ))}
           {MOVE_QUALITY_TIERS.map((tier) => (
-            <tr key={tier} className="text-zinc-500 dark:text-zinc-400">
+            <tr key={tier} className="text-zinc-600 dark:text-zinc-400">
               <td className="px-3 py-2">{s.analysisPanel.moveQuality[tier]}</td>
               <td className="px-3 py-2 text-right">{mine.counts[tier]}</td>
               <td className="px-3 py-2 text-right">{theirs.counts[tier]}</td>
@@ -298,7 +298,7 @@ function MoveQualityPanel({
             <p className="text-sm font-medium">{s.analysisPanel.yourMoves}</p>
             {badTiers.map((tier) => (
               <div key={tier} className="flex flex-col gap-1.5">
-                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                <p className="text-xs text-zinc-600 dark:text-zinc-400">
                   {s.analysisPanel.moveQuality[tier]}
                 </p>
                 <div className="flex flex-wrap gap-1.5">
@@ -367,11 +367,11 @@ export function GameStoryPanel({
   const s = getStrings()
   const t = s.gameStory
   const panelClass =
-    'flex w-full flex-col gap-3 overflow-y-auto rounded border border-zinc-200 bg-zinc-50 p-4 text-sm leading-relaxed text-zinc-700 max-h-140 lg:max-h-none lg:min-h-0 lg:flex-1 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300'
+    'flex w-full flex-col gap-3 overflow-y-auto rounded border border-zinc-300 bg-white p-4 shadow-sm dark:shadow-none text-sm leading-relaxed text-zinc-700 max-h-140 lg:max-h-none lg:min-h-0 lg:flex-1 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300'
   if (!story) {
     return (
       <div className={`${panelClass} items-center justify-center text-center`}>
-        <p className="max-w-60 text-zinc-500 dark:text-zinc-400">{t.analyzeFirst}</p>
+        <p className="max-w-60 text-zinc-600 dark:text-zinc-400">{t.analyzeFirst}</p>
       </div>
     )
   }
@@ -471,7 +471,7 @@ export function GameStoryPanel({
             <span className={`text-base font-semibold ${accuracyText(myAccuracy)}`}>
               {myAccuracy ?? '—'}
             </span>
-            <span className="text-zinc-500 dark:text-zinc-400">
+            <span className="text-zinc-600 dark:text-zinc-400">
               {' · '}
               {s.analysisPanel.opponent}{' '}
               <span className={`font-medium ${accuracyText(theirAccuracy)}`}>
@@ -489,7 +489,7 @@ export function GameStoryPanel({
             </div>
           )}
           {best && worst && (
-            <p className="text-zinc-500 dark:text-zinc-400">
+            <p className="text-zinc-600 dark:text-zinc-400">
               {best !== worst
                 ? t.phaseRange(
                     t.phases[best.phase],
@@ -508,7 +508,7 @@ export function GameStoryPanel({
         >
           <p className="font-medium">{endText}</p>
           {endReason !== 'checkmate' && (
-            <p className="text-zinc-500 dark:text-zinc-400">
+            <p className="text-zinc-600 dark:text-zinc-400">
               {t.finalStanding(t.standing[story.finalStanding])}
             </p>
           )}

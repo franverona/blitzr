@@ -40,7 +40,7 @@ export default async function PlayBotPage({
   return (
     <div className="flex flex-col gap-4">
       {/* One quiet line instead of PageHeader, so the board gets the height. */}
-      <div className="flex flex-wrap items-baseline gap-x-2 text-sm text-zinc-500 dark:text-zinc-400">
+      <div className="flex flex-wrap items-baseline gap-x-2 text-sm text-zinc-600 dark:text-zinc-400">
         <Link href={`/games/${game.id}?ply=${ply}`} className={LINK_CLASS}>
           {s.playBot.backToGame}
         </Link>

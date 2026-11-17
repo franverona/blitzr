@@ -3,7 +3,7 @@ import { getStrings } from '@/lib/i18n/strings'
 export function EvalHelp() {
   const s = getStrings()
   return (
-    <details className="text-xs text-zinc-500">
+    <details className="text-xs text-zinc-600 dark:text-zinc-500">
       <summary className="cursor-pointer select-none hover:text-zinc-900 dark:hover:text-zinc-300">
         {s.evalHelp.summary}
       </summary>

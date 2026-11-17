@@ -64,7 +64,7 @@ export function AccuracyTrendChart({ points }: { points: AccuracyTrendPoint[] })
   }
 
   if (points.length === 0) {
-    return <p className="text-sm text-zinc-500 dark:text-zinc-400">{s.accuracyTrend.empty}</p>
+    return <p className="text-sm text-zinc-600 dark:text-zinc-400">{s.accuracyTrend.empty}</p>
   }
 
   const linePath = averages
@@ -96,10 +96,10 @@ export function AccuracyTrendChart({ points }: { points: AccuracyTrendPoint[] })
       <SectionLabel>{s.accuracyTrend.title}</SectionLabel>
 
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-xs text-zinc-500 dark:text-zinc-500">
+        <p className="text-xs text-zinc-600 dark:text-zinc-500">
           {s.accuracyTrend.caption(ROLLING_AVERAGE_WINDOW)}
         </p>
-        <label className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-500">
+        <label className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-500">
           <input
             type="checkbox"
             checked={showDots}
@@ -217,14 +217,14 @@ export function AccuracyTrendChart({ points }: { points: AccuracyTrendPoint[] })
 
         {hovered && hoveredAverage !== null && (
           <div
-            className="pointer-events-none absolute top-0 flex flex-col gap-0.5 rounded-md border border-zinc-200 bg-zinc-50 px-2 py-1.5 text-xs whitespace-nowrap shadow-lg dark:border-zinc-700 dark:bg-zinc-900"
+            className="pointer-events-none absolute top-0 flex flex-col gap-0.5 rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-xs whitespace-nowrap shadow-lg dark:border-zinc-700 dark:bg-zinc-900"
             style={{ left: `${hoverXPercent}%`, transform: 'translateX(-50%)' }}
           >
             <span className="font-medium text-zinc-900 dark:text-zinc-100">
               {hovered.gameLabel}
             </span>
             <span className="text-zinc-600 dark:text-zinc-400">{hovered.accuracy}%</span>
-            <span className="text-zinc-500 dark:text-zinc-500">
+            <span className="text-zinc-600 dark:text-zinc-500">
               {s.accuracyTrend.tooltipAverage(ROLLING_AVERAGE_WINDOW)}: {hoveredAverage}%
             </span>
           </div>

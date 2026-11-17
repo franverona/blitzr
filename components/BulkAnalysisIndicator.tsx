@@ -11,7 +11,7 @@ export function BulkAnalysisIndicator() {
   if (!progress) return null
 
   return (
-    <div className="flex flex-col gap-1 border-t border-zinc-200 px-1 pt-3 text-xs text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
+    <div className="flex flex-col gap-1 border-t border-zinc-200 px-1 pt-3 text-xs text-zinc-600 dark:border-zinc-800 dark:text-zinc-400">
       <span>
         {s.bulkAnalyze.analyzingProgress(progress.gamesDone + 1, progress.gamesTotal)}
         {progress.positionsTotal > 0 &&

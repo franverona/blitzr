@@ -23,7 +23,7 @@ export function PromotionPicker({
   const s = getStrings()
   return (
     <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/50">
-      <div className="flex flex-col items-center gap-2 rounded-lg bg-zinc-50 p-4 shadow-xl dark:bg-zinc-900">
+      <div className="flex flex-col items-center gap-2 rounded-lg bg-white p-4 shadow-xl dark:bg-zinc-900">
         <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
           {s.puzzles.choosePromotion}
         </p>

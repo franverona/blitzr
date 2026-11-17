@@ -68,14 +68,14 @@ export function AddPgnButton() {
           placeholder={s.addPgn.placeholder}
           rows={10}
           required
-          className="w-full rounded-md border border-zinc-300 bg-zinc-50 p-2 font-mono text-xs text-zinc-900 placeholder:text-zinc-400 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-600"
+          className="w-full rounded-md border border-zinc-300 bg-white p-2 font-mono text-xs text-zinc-900 placeholder:text-zinc-400 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-600"
         />
         <label className="flex flex-wrap items-center gap-2 text-sm">
           {s.addPgn.sideLabel}
           <Select
             value={side}
             onChange={(e) => setSide(e.target.value as ManualGameSide)}
-            className="rounded-md border border-zinc-300 bg-zinc-50 py-1 pl-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+            className="rounded-md border border-zinc-300 bg-white py-1 pl-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
           >
             {(['auto', 'white', 'black', 'notMine'] as const).map((value) => (
               <option key={value} value={value}>

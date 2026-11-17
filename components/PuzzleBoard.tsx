@@ -249,7 +249,7 @@ export function PuzzleBoard({
       </div>
 
       <div className="flex w-full flex-col gap-3 lg:max-w-sm lg:flex-1 xl:max-w-md">
-        <div className="flex w-full flex-col overflow-hidden rounded border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="flex w-full flex-col overflow-hidden rounded border border-zinc-300 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-none">
           <p className="border-b border-zinc-200 px-3 py-1.5 text-sm font-medium text-zinc-600 dark:border-zinc-800 dark:text-zinc-400">
             {s.puzzles.movesLabel}
           </p>
@@ -262,7 +262,7 @@ export function PuzzleBoard({
                 onSelectIndex={(i) => goToPly(i + 1)}
               />
             ) : (
-              <span className="text-sm text-zinc-400 dark:text-zinc-500">—</span>
+              <span className="text-sm text-zinc-500 dark:text-zinc-500">—</span>
             )}
           </div>
         </div>
@@ -287,11 +287,11 @@ export function PuzzleBoard({
         {saves && finished && (
           <div className="flex flex-col gap-2 text-sm">
             <p>
-              <span className="text-zinc-500 dark:text-zinc-400">{s.puzzles.savesLabel}: </span>
+              <span className="text-zinc-600 dark:text-zinc-400">{s.puzzles.savesLabel}: </span>
               {saves.join(', ')}
             </p>
             <div>
-              <p className="text-zinc-500 dark:text-zinc-400">{s.puzzles.inTheGameLabel}:</p>
+              <p className="text-zinc-600 dark:text-zinc-400">{s.puzzles.inTheGameLabel}:</p>
               <MoveSequence fen={problem.fen} moves={problem.moves} />
             </div>
           </div>

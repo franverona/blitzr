@@ -22,13 +22,13 @@ export function BlunderStats({ stats }: { stats: BlunderStatsData }) {
   const boardColors = useSettings()
   if (stats.analyzedGames === 0) {
     return (
-      <p className="text-sm text-zinc-500 dark:text-zinc-400">{s.blunderStats.emptyNoAnalyzed}</p>
+      <p className="text-sm text-zinc-600 dark:text-zinc-400">{s.blunderStats.emptyNoAnalyzed}</p>
     )
   }
 
   if (stats.totalBlunders === 0) {
     return (
-      <p className="text-sm text-zinc-500 dark:text-zinc-400">
+      <p className="text-sm text-zinc-600 dark:text-zinc-400">
         {s.blunderStats.emptyNoBlunders(stats.analyzedGames)}
       </p>
     )
@@ -95,7 +95,7 @@ export function BlunderStats({ stats }: { stats: BlunderStatsData }) {
                 </span>
               )}
               <span className="font-medium">{group.label}</span>
-              <span className="text-zinc-500 dark:text-zinc-400">×{group.count}</span>
+              <span className="text-zinc-600 dark:text-zinc-400">×{group.count}</span>
             </div>
           ))}
         </div>
@@ -110,7 +110,7 @@ export function BlunderStats({ stats }: { stats: BlunderStatsData }) {
               className="flex items-center gap-1.5 rounded-md border border-zinc-200 px-2.5 py-1.5 text-sm dark:border-zinc-800"
             >
               <span className="font-medium">{group.label}</span>
-              <span className="text-zinc-500 dark:text-zinc-400">×{group.count}</span>
+              <span className="text-zinc-600 dark:text-zinc-400">×{group.count}</span>
             </div>
           ))}
         </div>
@@ -127,7 +127,7 @@ export function BlunderStats({ stats }: { stats: BlunderStatsData }) {
               className="flex items-center gap-1.5 rounded-md border border-zinc-200 px-2.5 py-1.5 text-sm dark:border-zinc-800"
             >
               <span className="font-medium">{group.label}</span>
-              <span className="text-zinc-500 dark:text-zinc-400">×{group.count}</span>
+              <span className="text-zinc-600 dark:text-zinc-400">×{group.count}</span>
             </div>
           ))}
         </div>
@@ -156,7 +156,7 @@ export function BlunderStats({ stats }: { stats: BlunderStatsData }) {
               className="flex items-center gap-1.5 rounded-md border border-zinc-200 px-2.5 py-1.5 text-sm dark:border-zinc-800"
             >
               <span className="font-medium">{rate.label}</span>
-              <span className="text-zinc-500 dark:text-zinc-400">
+              <span className="text-zinc-600 dark:text-zinc-400">
                 {[
                   rate.games > 0 && s.blunderStats.perGame(rate.blunders / rate.games, rate.games),
                   s.blunderStats.score(Math.round(rate.score * 100), rate.played),
@@ -188,7 +188,7 @@ export function BlunderStats({ stats }: { stats: BlunderStatsData }) {
                     className="flex items-center gap-1.5 rounded-md border border-zinc-200 px-2.5 py-1.5 text-sm dark:border-zinc-800"
                   >
                     <span className="font-medium">{group.label}</span>
-                    <span className="text-zinc-500 dark:text-zinc-400">×{group.count}</span>
+                    <span className="text-zinc-600 dark:text-zinc-400">×{group.count}</span>
                   </div>
                 ))}
               </div>
@@ -211,14 +211,14 @@ export function BlunderStats({ stats }: { stats: BlunderStatsData }) {
                   {formatEval(b.evalAfter)} ({formatSwing(b)})
                 </span>
               </div>
-              <div className="text-xs text-zinc-500 dark:text-zinc-500">{b.moveDescription}</div>
+              <div className="text-xs text-zinc-600 dark:text-zinc-500">{b.moveDescription}</div>
               {b.reason && (
-                <div className="text-xs text-zinc-500 dark:text-zinc-500">
+                <div className="text-xs text-zinc-600 dark:text-zinc-500">
                   {describeBlunderReason(b.reason)}
                 </div>
               )}
               {b.betterMove && (
-                <div className="text-xs text-zinc-500 dark:text-zinc-500">
+                <div className="text-xs text-zinc-600 dark:text-zinc-500">
                   {s.common.betterWas} {b.betterMove}
                 </div>
               )}

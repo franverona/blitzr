@@ -12,7 +12,7 @@ export default function ErrorPage({ error, retry }: { error: unknown; retry: () 
     <div className="flex flex-col items-start gap-3">
       <h1 className="text-xl font-semibold">{s.routeStatus.errorTitle}</h1>
       <p className="text-sm text-zinc-600 dark:text-zinc-400">{s.routeStatus.errorBody}</p>
-      {digest && <p className="font-mono text-xs text-zinc-500">{digest}</p>}
+      {digest && <p className="font-mono text-xs text-zinc-600 dark:text-zinc-500">{digest}</p>}
       <button onClick={retry} className={buttonClass()}>
         {s.routeStatus.retry}
       </button>

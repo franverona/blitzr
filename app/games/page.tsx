@@ -153,7 +153,7 @@ export default async function GamesPage({
           <PageLink page={page - 1} filters={filters} disabled={page <= 1}>
             {s.gamesPage.previous}
           </PageLink>
-          <span className="text-zinc-500 dark:text-zinc-400">
+          <span className="text-zinc-600 dark:text-zinc-400">
             {s.gamesPage.pageOf(page, totalPages)}
           </span>
           <PageLink page={page + 1} filters={filters} disabled={page >= totalPages}>

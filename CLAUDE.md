@@ -73,7 +73,10 @@ install/runtime and gitignored. `BLITZR_DATA_DIR` moves `data/` (`lib/dataDir.ts
   and `showModal()`.
 - **Light/dark theme:** `blitzr-theme` cookie (default `dark`), read in `app/layout.tsx` to set
   `.dark` before first paint. Every component needs an explicit light class alongside its `dark:`
-  one. `EvalBar` is deliberately not themed.
+  one. `EvalBar` is deliberately not themed. Light surfaces (cards, tables, panels) are `bg-white`
+  with `border-zinc-300 shadow-sm` on the `zinc-100` canvas, paired with `dark:shadow-none`; muted
+  light text is no fainter than `text-zinc-500`. A light class with no `dark:` partner applies in
+  both themes, so changing one means adding the old value as its `dark:` class.
 - **Per-viewer settings** live in `SettingsProvider`, each in a `blitzr-*` cookie read in
   `app/layout.tsx` — cookies, not localStorage, because react-chessboard's square colors are
   inline-style props and must be right on first render. **Cookie names are duplicated as literals**

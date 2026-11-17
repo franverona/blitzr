@@ -23,7 +23,7 @@ export function FocusRow({
         {icon}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-[11px] font-medium tracking-wide text-zinc-500 uppercase dark:text-zinc-400">
+        <p className="text-[11px] font-medium tracking-wide text-zinc-600 uppercase dark:text-zinc-400">
           {label}
         </p>
         {children}

@@ -76,7 +76,9 @@ export function SettingsForm() {
                 settings.setMoveSounds(!settings.moveSounds)
               }}
             />
-            <p className="text-xs text-zinc-500">{s.settings.moveSoundsCredit}</p>
+            <p className="text-xs text-zinc-600 dark:text-zinc-500">
+              {s.settings.moveSoundsCredit}
+            </p>
           </div>
           <div className="flex flex-col gap-2 text-sm">
             <span>{s.settings.trainingOrientation}</span>
@@ -109,7 +111,9 @@ export function SettingsForm() {
               label={(strength) => s.settings.analysisStrengths[strength]}
               title={(strength) => `${ANALYSIS_STRENGTHS[strength]}ms`}
             />
-            <p className="text-xs text-zinc-500">{s.settings.analysisStrengthHint}</p>
+            <p className="text-xs text-zinc-600 dark:text-zinc-500">
+              {s.settings.analysisStrengthHint}
+            </p>
           </div>
           <div className="flex flex-col gap-1">
             <Toggle
@@ -117,7 +121,9 @@ export function SettingsForm() {
               checked={settings.hideEngineHints}
               onChange={() => settings.setHideEngineHints(!settings.hideEngineHints)}
             />
-            <p className="text-xs text-zinc-500">{s.settings.hideEngineHintsHint}</p>
+            <p className="text-xs text-zinc-600 dark:text-zinc-500">
+              {s.settings.hideEngineHintsHint}
+            </p>
           </div>
         </Section>
 
@@ -130,15 +136,19 @@ export function SettingsForm() {
               onChange={(size) => settings.setDrillSessionSize(Number(size) as SessionSize)}
               label={(size) => size}
             />
-            <p className="text-xs text-zinc-500">{s.settings.drillSessionSizeHint}</p>
+            <p className="text-xs text-zinc-600 dark:text-zinc-500">
+              {s.settings.drillSessionSizeHint}
+            </p>
           </div>
         </Section>
 
         <Section title={s.settings.sections.data}>
           <div className="flex flex-col gap-2 text-sm">
             <BackupButton />
-            <p className="text-xs text-zinc-500">{s.settings.backupHint}</p>
-            <p className="text-xs text-zinc-500">{s.settings.backupRestoreHint}</p>
+            <p className="text-xs text-zinc-600 dark:text-zinc-500">{s.settings.backupHint}</p>
+            <p className="text-xs text-zinc-600 dark:text-zinc-500">
+              {s.settings.backupRestoreHint}
+            </p>
           </div>
         </Section>
       </div>

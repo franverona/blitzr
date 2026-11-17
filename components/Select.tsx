@@ -14,7 +14,7 @@ export function Select({ className = '', children, ...props }: ComponentProps<'s
       <svg
         aria-hidden
         viewBox="0 0 12 12"
-        className="pointer-events-none absolute top-1/2 right-2.5 h-3 w-3 -translate-y-1/2 text-zinc-500"
+        className="pointer-events-none absolute top-1/2 right-2.5 h-3 w-3 -translate-y-1/2 text-zinc-600 dark:text-zinc-500"
       >
         <path
           d="M3 4.5 6 7.5 9 4.5"

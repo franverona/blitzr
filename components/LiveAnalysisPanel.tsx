@@ -43,9 +43,11 @@ export function LiveAnalysisPanel() {
 
   return (
     // Capped so a long explored line can't squeeze out the move list.
-    <div className="flex shrink-0 flex-col gap-1 overflow-y-auto rounded-md border border-zinc-200 bg-zinc-50 text-sm lg:max-h-[60%] dark:border-zinc-800 dark:bg-zinc-900/50">
+    <div className="flex shrink-0 flex-col gap-1 overflow-y-auto rounded-md border border-zinc-300 bg-white text-sm shadow-sm lg:max-h-[60%] dark:border-zinc-800 dark:bg-zinc-900/50 dark:shadow-none">
       <div className="flex items-center justify-between px-3 pt-3">
-        <p className="text-xs font-semibold text-zinc-500">{s.liveAnalysis.panelTitle}</p>
+        <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-500">
+          {s.liveAnalysis.panelTitle}
+        </p>
         {/* Keeps showing the previous lines while a new search runs. */}
         {thinking && (
           <Spinner
@@ -60,7 +62,9 @@ export function LiveAnalysisPanel() {
         // Tied to `explorePath`, not to a search, so it stays put while the
         // lines below refresh.
         <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 border-t border-b border-zinc-200 px-3 py-2 text-xs dark:border-zinc-800">
-          <span className="shrink-0 font-semibold text-zinc-500">{s.liveAnalysis.yourLine}</span>
+          <span className="shrink-0 font-semibold text-zinc-600 dark:text-zinc-500">
+            {s.liveAnalysis.yourLine}
+          </span>
           <MoveSequence
             fen={explorePositions[0]}
             moves={explorePath}
@@ -71,7 +75,7 @@ export function LiveAnalysisPanel() {
             onClick={resetExploreLine}
             aria-label={s.liveAnalysis.resetLine}
             title={s.liveAnalysis.resetLine}
-            className="ml-auto shrink-0 rounded px-1.5 py-0.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+            className="ml-auto shrink-0 rounded px-1.5 py-0.5 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
           >
             ✕
           </button>
@@ -79,9 +83,9 @@ export function LiveAnalysisPanel() {
       )}
       <div className="flex flex-col divide-y divide-zinc-200 dark:divide-zinc-800">
         {lines === null || fen === null ? (
-          <p className="px-3 pb-3 text-zinc-500">{s.liveAnalysis.thinking}</p>
+          <p className="px-3 pb-3 text-zinc-600 dark:text-zinc-500">{s.liveAnalysis.thinking}</p>
         ) : lines.length === 0 ? (
-          <p className="px-3 pb-3 text-zinc-500">{s.liveAnalysis.gameOver}</p>
+          <p className="px-3 pb-3 text-zinc-600 dark:text-zinc-500">{s.liveAnalysis.gameOver}</p>
         ) : (
           lines.map((line, i) => {
             const moves = [line.move.san, ...line.move.bestLine]
@@ -107,7 +111,7 @@ export function LiveAnalysisPanel() {
                   className={`shrink-0 rounded px-1.5 py-0.5 disabled:opacity-100 ${
                     isQueued
                       ? 'text-emerald-600 dark:text-emerald-400'
-                      : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 disabled:opacity-30 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'
+                      : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 disabled:opacity-30 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'
                   }`}
                 >
                   {isQueued ? '✓' : '▶'}

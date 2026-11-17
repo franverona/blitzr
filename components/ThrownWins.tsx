@@ -19,7 +19,7 @@ export function ThrownWins({ wins, analyzedGames }: { wins: ThrownWin[]; analyze
       <SectionLabel>
         <abbr title={s.thrownWins.tooltip(WINNING_WIN_PCT)}>{s.thrownWins.title}</abbr>
       </SectionLabel>
-      <p className="text-sm text-zinc-500 dark:text-zinc-400">
+      <p className="text-sm text-zinc-600 dark:text-zinc-400">
         {s.thrownWins.summary(wins.length, analyzedGames)}
       </p>
       {wins.length > 0 && (

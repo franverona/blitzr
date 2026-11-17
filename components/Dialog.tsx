@@ -37,7 +37,7 @@ export function Dialog({
           type="button"
           onClick={(e) => e.currentTarget.closest('dialog')?.close()}
           aria-label={s.common.close}
-          className="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
+          className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-500 dark:hover:text-zinc-200"
         >
           ✕
         </button>
@@ -53,7 +53,7 @@ export function Dialog({
       onClick={(e) => {
         if (e.target === e.currentTarget) e.currentTarget.close()
       }}
-      className={`fixed m-0 border-zinc-200 bg-zinc-50 p-0 text-left text-zinc-900 backdrop:bg-black/60 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 ${
+      className={`fixed m-0 border-zinc-300 bg-white p-0 text-left text-zinc-900 backdrop:bg-black/60 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 ${
         placement === 'right'
           ? // Slides in and out: `starting:` is where it enters from, and the discrete transition
             // keeps it displayed until it has slid out.

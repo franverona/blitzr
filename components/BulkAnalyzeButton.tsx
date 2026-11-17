@@ -35,7 +35,10 @@ export function BulkAnalyzeButton({ hasUnanalyzedGames }: { hasUnanalyzedGames: 
         )}
       </button>
       {progress && (
-        <button onClick={cancel} className="text-sm text-zinc-500 underline hover:text-zinc-200">
+        <button
+          onClick={cancel}
+          className="text-sm text-zinc-600 underline hover:text-zinc-200 dark:text-zinc-500"
+        >
           {s.bulkAnalyze.cancel}
         </button>
       )}

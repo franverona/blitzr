@@ -4,21 +4,23 @@
 export type Tone = 'emerald' | 'amber' | 'rose' | 'zinc' | 'blue' | 'accent'
 
 export const TONE_TEXT_CLASS: Record<Tone, string> = {
-  emerald: 'text-emerald-700 dark:text-emerald-400',
-  amber: 'text-amber-700 dark:text-amber-400',
-  rose: 'text-rose-700 dark:text-rose-400',
-  zinc: 'text-zinc-700 dark:text-zinc-300',
-  blue: 'text-blue-700 dark:text-blue-400',
-  accent: 'text-zinc-700 dark:text-zinc-300',
+  emerald: 'text-emerald-800 dark:text-emerald-400',
+  amber: 'text-amber-800 dark:text-amber-400',
+  rose: 'text-rose-800 dark:text-rose-400',
+  zinc: 'text-zinc-800 dark:text-zinc-300',
+  blue: 'text-blue-800 dark:text-blue-400',
+  accent: 'text-zinc-800 dark:text-zinc-300',
 }
 
+// The light-mode ring keeps a pale badge visible on a pale surface.
 const TONE_BG_CLASS: Record<Tone, string> = {
-  emerald: 'bg-emerald-100 dark:bg-emerald-900/40',
-  amber: 'bg-amber-100 dark:bg-amber-900/40',
-  rose: 'bg-rose-100 dark:bg-rose-900/40',
-  zinc: 'bg-zinc-200 dark:bg-zinc-800',
-  blue: 'bg-blue-100 dark:bg-blue-900/40',
-  accent: 'bg-accent/20',
+  emerald:
+    'bg-emerald-100 ring-1 ring-emerald-600/30 ring-inset dark:bg-emerald-900/40 dark:ring-0',
+  amber: 'bg-amber-100 ring-1 ring-amber-600/30 ring-inset dark:bg-amber-900/40 dark:ring-0',
+  rose: 'bg-rose-100 ring-1 ring-rose-600/30 ring-inset dark:bg-rose-900/40 dark:ring-0',
+  zinc: 'bg-zinc-100 ring-1 ring-zinc-500/30 ring-inset dark:bg-zinc-800 dark:ring-0',
+  blue: 'bg-blue-100 ring-1 ring-blue-600/30 ring-inset dark:bg-blue-900/40 dark:ring-0',
+  accent: 'bg-accent/20 ring-1 ring-accent/50 ring-inset dark:ring-0',
 }
 
 export function toneClass(tone: Tone): string {
@@ -32,7 +34,8 @@ export function accuracyTone(accuracy: number): Tone {
 }
 
 const BUTTON_VARIANT_CLASS = {
-  secondary: 'border-zinc-300 hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800',
+  secondary:
+    'border-zinc-300 bg-white hover:bg-zinc-100 dark:border-zinc-700 dark:bg-transparent dark:hover:bg-zinc-800',
   primary:
     'border-transparent bg-zinc-900 text-zinc-50 hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300',
   danger:
@@ -59,21 +62,21 @@ export function buttonClass({
 export function chipClass(active: boolean): string {
   return `rounded-md border px-3 py-1.5 text-sm ${
     active
-      ? 'border-accent bg-accent/20 text-zinc-900 dark:text-white'
-      : 'border-zinc-300 text-zinc-500 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800'
+      ? 'border-zinc-900 bg-zinc-900 text-white dark:border-accent dark:bg-accent/20'
+      : 'border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:bg-transparent dark:text-zinc-400 dark:hover:bg-zinc-800'
   }`
 }
 
 export const LINK_CLASS = 'text-blue-600 hover:underline dark:text-blue-400'
 
 export const INPUT_CLASS =
-  'rounded-md border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900'
+  'rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900'
 
 /** The big ◀/▶ buttons under a board (game, lesson, puzzle). */
 export function navButtonClass(active: boolean): string {
   return `flex h-10 flex-1 items-center justify-center rounded-lg border disabled:opacity-40 ${
     active
       ? 'border-accent bg-accent/20 text-zinc-900 dark:text-white'
-      : 'border-zinc-300 bg-zinc-50 text-zinc-700 hover:bg-zinc-200 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700'
+      : 'border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-200 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700'
   }`
 }
