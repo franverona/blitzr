@@ -75,6 +75,10 @@ describe('POSITION_LESSONS content', () => {
     expect(playOut('shouldering').get('a8')).toEqual({ type: 'q', color: 'w' })
   })
 
+  it('the knight-stops-pawn line ends in a bare-kings draw', () => {
+    expect(playOut('knight-stops-pawn').isInsufficientMaterial()).toBe(true)
+  })
+
   it('Saavedra: promoting to a queen instead falls into the stalemate trap', () => {
     const lesson = getPositionLesson('saavedra-position')!
     const chess = new Chess(lesson.initialFen)
