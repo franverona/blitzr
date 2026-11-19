@@ -2314,6 +2314,72 @@ export const POSITION_LESSONS: Lesson[] = [
     primaryColor: 'black',
     playGoal: 'draw',
   },
+  {
+    // Eight pieces, past the tablebase: the line was checked with Stockfish instead.
+    slug: 'pawn-breakthrough',
+    name: { en: 'Pawn Breakthrough', es: 'Ruptura de peones' },
+    initialFen: '7k/ppp5/8/PPP5/8/8/8/7K w - - 0 1',
+    moves: [
+      {
+        san: 'b6',
+        explanation: {
+          en: 'Three pawns against three, and both kings far away. White sacrifices the middle pawn to force one of the others through.',
+          es: 'Tres peones contra tres y los dos reyes lejos. Las blancas sacrifican el peón central para abrir paso a uno de los otros.',
+        },
+      },
+      {
+        san: 'axb6',
+        explanation: {
+          en: 'After 1...cxb6 the mirror-image idea works: 2.a6! bxa6 3.c6.',
+          es: 'Tras 1...cxb6 funciona la misma idea al revés: 2.a6! bxa6 3.c6.',
+        },
+      },
+      {
+        san: 'c6',
+        explanation: {
+          en: 'A second sacrifice, deflecting the b7 pawn.',
+          es: 'Un segundo sacrificio, que desvía al peón de b7.',
+        },
+      },
+      {
+        san: 'bxc6',
+        explanation: {
+          en: 'Black takes. Otherwise cxb7 queens.',
+          es: 'Las negras capturan. Si no, cxb7 corona.',
+        },
+      },
+      {
+        san: 'a6',
+        explanation: {
+          en: 'The a-pawn is now passed, and no black pawn or king can catch it.',
+          es: 'El peón a ya está pasado, y ningún peón ni el rey negro pueden alcanzarlo.',
+        },
+      },
+      {
+        san: 'c5',
+        explanation: {
+          en: "Black's pawns are two moves behind.",
+          es: 'Los peones negros van dos jugadas por detrás.',
+        },
+      },
+      { san: 'a7', explanation: { en: 'One more step.', es: 'Un paso más.' } },
+      { san: 'c4', explanation: { en: 'Too slow.', es: 'Demasiado lento.' } },
+      {
+        san: 'a8=Q+',
+        explanation: {
+          en: 'The pawn promotes with check. White won the race.',
+          es: 'El peón corona con jaque. Las blancas ganan la carrera.',
+        },
+      },
+    ],
+    summary: {
+      en: 'When pawns face each other with the kings out of reach, sacrificing pawns can force a passed pawn through: here two sacrifices open the way for the third pawn. It only works with your pawns far enough up the board, and with your move: with Black to move, 1...b6! stops it.',
+      es: 'Cuando los peones se enfrentan con los reyes lejos, sacrificar peones puede abrir paso a un peón pasado: aquí dos sacrificios abren camino al tercer peón. Solo funciona si tus peones están bastante avanzados y te toca mover: con las negras al turno, 1...b6! lo impide.',
+    },
+    sourceUrl: 'https://en.wikipedia.org/wiki/Glossary_of_chess#breakthrough',
+    primaryColor: 'white',
+    playGoal: 'promotion',
+  },
 ]
 
 export function getPositionLesson(slug: string): Lesson | undefined {

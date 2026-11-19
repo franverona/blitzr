@@ -124,6 +124,13 @@ describe('POSITION_LESSONS content', () => {
     expect(chess.get('b7')).toEqual({ type: 'p', color: 'w' })
   })
 
+  it('the pawn breakthrough promotes, and so does its 1...cxb6 mirror line', () => {
+    expect(playOut('pawn-breakthrough').get('a8')).toEqual({ type: 'q', color: 'w' })
+    const chess = new Chess(getPositionLesson('pawn-breakthrough')!.initialFen)
+    for (const san of ['b6', 'cxb6', 'a6', 'bxa6', 'c6', 'a5', 'c7', 'a4', 'c8=Q+']) chess.move(san)
+    expect(chess.get('c8')).toEqual({ type: 'q', color: 'w' })
+  })
+
   it('Saavedra: promoting to a queen instead falls into the stalemate trap', () => {
     const lesson = getPositionLesson('saavedra-position')!
     const chess = new Chess(lesson.initialFen)
