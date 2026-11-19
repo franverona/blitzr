@@ -56,6 +56,10 @@ describe('POSITION_LESSONS content', () => {
     expect(playOut('wrong-rook-pawn').isStalemate()).toBe(true)
   })
 
+  it('the rook-behind-the-passed-pawn line ends in mate', () => {
+    expect(playOut('rook-behind-passed-pawn').isCheckmate()).toBe(true)
+  })
+
   it('Saavedra: promoting to a queen instead falls into the stalemate trap', () => {
     const lesson = getPositionLesson('saavedra-position')!
     const chess = new Chess(lesson.initialFen)
