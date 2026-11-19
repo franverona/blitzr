@@ -2203,6 +2203,117 @@ export const POSITION_LESSONS: Lesson[] = [
     primaryColor: 'white',
     playGoal: 'promotion',
   },
+  {
+    // rook-behind-passed-pawn with the rooks swapped; every move checked against the tablebase.
+    slug: 'defending-from-behind',
+    name: { en: 'Defending From Behind the Pawn', es: 'Defender desde detrás del peón' },
+    initialFen: '1R6/6k1/6p1/1P6/8/6P1/6K1/1r6 w - - 0 1',
+    moves: [
+      {
+        san: 'b6',
+        explanation: {
+          en: "The rooks of Tarrasch's rule, swapped: White's rook is stuck in front of its pawn, Black's sits behind it. This time Black draws.",
+          es: 'Las torres de la regla de Tarrasch, intercambiadas: la torre blanca está atascada delante de su peón y la negra, detrás. Esta vez las negras hacen tablas.',
+        },
+      },
+      {
+        san: 'Rb2+',
+        explanation: {
+          en: 'Black checks first, pushing the king away.',
+          es: 'Las negras dan jaque primero, alejando al rey.',
+        },
+      },
+      { san: 'Kf3', explanation: { en: 'The king comes forward.', es: 'El rey avanza.' } },
+      {
+        san: 'Rb3+',
+        explanation: {
+          en: 'Another check, back behind the pawn.',
+          es: 'Otro jaque, de vuelta detrás del peón.',
+        },
+      },
+      {
+        san: 'Ke4',
+        explanation: {
+          en: 'White heads for the pawn and leaves g3.',
+          es: 'Las blancas van hacia el peón y abandonan g3.',
+        },
+      },
+      {
+        san: 'Rxg3',
+        explanation: {
+          en: 'Black takes the g-pawn.',
+          es: 'Las negras capturan el peón g.',
+        },
+      },
+      {
+        san: 'b7',
+        explanation: {
+          en: 'The pawn reaches the seventh rank.',
+          es: 'El peón llega a la séptima fila.',
+        },
+      },
+      {
+        san: 'Rb3',
+        explanation: {
+          en: "The only move that draws: the rook gets back behind the pawn. Black's king stays on g7 or h7, out of reach of Ra8 and b8=Q tricks.",
+          es: 'La única jugada que hace tablas: la torre vuelve detrás del peón. El rey negro se queda en g7 o h7, lejos de los trucos de Ta8 y b8=D.',
+        },
+      },
+      {
+        san: 'Kd5',
+        explanation: {
+          en: "White's king walks over to help its pawn.",
+          es: 'El rey blanco se acerca para ayudar a su peón.',
+        },
+      },
+      {
+        san: 'Kh7',
+        explanation: { en: 'Black just waits.', es: 'Las negras simplemente esperan.' },
+      },
+      {
+        san: 'Kc6',
+        explanation: {
+          en: 'White threatens Kc7 and b8=Q.',
+          es: 'Las blancas amenazan Rc7 y b8=D.',
+        },
+      },
+      {
+        san: 'Rc3+',
+        explanation: {
+          en: 'The only draw: check the king away before it can shelter the pawn.',
+          es: 'Las únicas tablas: alejar al rey con jaques antes de que pueda proteger al peón.',
+        },
+      },
+      { san: 'Kd7', explanation: { en: 'The king steps aside.', es: 'El rey se aparta.' } },
+      {
+        san: 'Rb3',
+        explanation: {
+          en: 'And straight back behind the pawn.',
+          es: 'Y de vuelta detrás del peón.',
+        },
+      },
+      {
+        san: 'Kc7',
+        explanation: { en: 'White tries again.', es: 'Las blancas lo intentan otra vez.' },
+      },
+      { san: 'Rc3+', explanation: { en: 'Check.', es: 'Jaque.' } },
+      { san: 'Kd6', explanation: { en: 'The king has to leave.', es: 'El rey tiene que irse.' } },
+      {
+        san: 'Rb3',
+        explanation: {
+          en: "Behind the pawn again. White can't make progress: a draw.",
+          es: 'Otra vez detrás del peón. Las blancas no pueden progresar: tablas.',
+        },
+      },
+    ],
+    summary: {
+      en: 'Against a passed pawn whose rook is stuck in front of it, put your rook behind the pawn. From there it attacks the pawn on every square, never runs out of room, and checks the king away whenever it comes to escort the pawn. Keep your king near the corner on the far side (g7 or h7 here), safe from the skewer, and the pawn never queens.',
+      es: 'Contra un peón pasado con su torre atascada delante, pon tu torre detrás del peón. Desde ahí lo ataca en cada casilla, nunca se queda sin espacio y aleja con jaques al rey cada vez que viene a escoltar al peón. Deja tu rey cerca de la esquina del otro lado (aquí g7 o h7), a salvo de la enfilada, y el peón nunca corona.',
+    },
+    sourceUrl: 'https://en.wikipedia.org/wiki/Tarrasch_rule',
+    primaryColor: 'black',
+    playGoal: 'draw',
+  },
 ]
 
 export function getPositionLesson(slug: string): Lesson | undefined {

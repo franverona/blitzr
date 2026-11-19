@@ -118,6 +118,12 @@ describe('POSITION_LESSONS content', () => {
     expect(chess.get('f8')).toEqual({ type: 'q', color: 'w' })
   })
 
+  it("defending from behind ends with Black's rook back behind the pawn", () => {
+    const chess = playOut('defending-from-behind')
+    expect(chess.get('b3')).toEqual({ type: 'r', color: 'b' })
+    expect(chess.get('b7')).toEqual({ type: 'p', color: 'w' })
+  })
+
   it('Saavedra: promoting to a queen instead falls into the stalemate trap', () => {
     const lesson = getPositionLesson('saavedra-position')!
     const chess = new Chess(lesson.initialFen)
