@@ -13,6 +13,11 @@ describe('getEndgameLesson', () => {
 })
 
 describe('ENDGAME_LESSONS content', () => {
+  it('cites an https source the lesson dialog can name by host', () => {
+    for (const lesson of ENDGAME_LESSONS)
+      expect(new URL(lesson.sourceUrl).protocol, lesson.slug).toBe('https:')
+  })
+
   it('has a distinct, non-empty English and Spanish name/summary for every lesson', () => {
     for (const lesson of ENDGAME_LESSONS) {
       expect(lesson.name.en.length).toBeGreaterThan(0)

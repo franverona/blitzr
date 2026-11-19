@@ -20,6 +20,11 @@ describe('getPositionLesson', () => {
 })
 
 describe('POSITION_LESSONS content', () => {
+  it('cites an https source the lesson dialog can name by host', () => {
+    for (const lesson of POSITION_LESSONS)
+      expect(new URL(lesson.sourceUrl).protocol, lesson.slug).toBe('https:')
+  })
+
   it('has a distinct, non-empty English and Spanish name, summary and explanation', () => {
     for (const lesson of POSITION_LESSONS) {
       expect(lesson.name.es).not.toBe(lesson.name.en)

@@ -35,7 +35,7 @@ export function AboutOpeningButton({
           rel="noopener noreferrer"
           className={`text-sm ${LINK_CLASS}`}
         >
-          {s.aboutOpening.adaptedFrom}
+          {s.aboutOpening.source(new URL(sourceUrl).hostname)}
         </a>
       </Dialog>
     </>

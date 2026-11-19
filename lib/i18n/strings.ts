@@ -681,7 +681,7 @@ const en = {
   },
   aboutOpening: {
     about: (name: string) => `About ${name}`,
-    adaptedFrom: "Adapted from Wikibooks' Chess Opening Theory",
+    source: (host: string) => `Source: ${host}`,
   },
   knightIcon: {
     playingAs: (color: string) => `Playing as ${color}`,
@@ -1570,7 +1570,7 @@ const es: Strings = {
   },
   aboutOpening: {
     about: (name: string) => `Sobre ${name}`,
-    adaptedFrom: 'Adaptado de Chess Opening Theory de Wikibooks',
+    source: (host: string) => `Fuente: ${host}`,
   },
   knightIcon: {
     playingAs: (color: string) => `Jugando con ${color}`,
