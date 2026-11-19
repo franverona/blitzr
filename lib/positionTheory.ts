@@ -1722,6 +1722,144 @@ export const POSITION_LESSONS: Lesson[] = [
     primaryColor: 'white',
     playGoal: 'draw',
   },
+  {
+    // Constructed: cited to the position's tablebase page; every move checked against it.
+    slug: 'two-pawns-vs-one',
+    name: { en: 'Two Pawns vs. One', es: 'Dos peones contra uno' },
+    initialFen: '8/8/6kp/8/6PP/5K2/8/8 w - - 0 1',
+    moves: [
+      {
+        san: 'Ke4',
+        explanation: {
+          en: "Pushing a pawn now (g5 or h5+) only draws. First White's king has to get in front of the pawns.",
+          es: 'Avanzar ahora un peón (g5 o h5+) solo hace tablas. Primero el rey blanco tiene que ponerse delante de los peones.',
+        },
+      },
+      { san: 'Kf6', explanation: { en: 'Black blocks.', es: 'Las negras bloquean.' } },
+      {
+        san: 'Kf4',
+        explanation: {
+          en: 'White takes the opposition.',
+          es: 'Las blancas toman la oposición.',
+        },
+      },
+      {
+        san: 'Kg6',
+        explanation: {
+          en: 'Black has to give way.',
+          es: 'Las negras tienen que ceder.',
+        },
+      },
+      {
+        san: 'Ke5',
+        explanation: {
+          en: 'The king walks forward, keeping the pawns where they are.',
+          es: 'El rey avanza, sin mover los peones.',
+        },
+      },
+      { san: 'Kg7', explanation: { en: 'Black retreats.', es: 'Las negras retroceden.' } },
+      { san: 'Kf5', explanation: { en: 'And again.', es: 'Y otra vez.' } },
+      {
+        san: 'Kh7',
+        explanation: {
+          en: 'Black stays near its pawn.',
+          es: 'Las negras se quedan junto a su peón.',
+        },
+      },
+      {
+        san: 'Kf6',
+        explanation: {
+          en: "White's king reaches the sixth rank, ahead of its pawns.",
+          es: 'El rey blanco llega a la sexta fila, por delante de sus peones.',
+        },
+      },
+      { san: 'Kg8', explanation: { en: 'Black waits.', es: 'Las negras esperan.' } },
+      {
+        san: 'g5',
+        explanation: {
+          en: 'Now the pawn break: White trades one pawn to leave the other passed.',
+          es: 'Ahora la ruptura: las blancas cambian un peón para dejar el otro pasado.',
+        },
+      },
+      { san: 'hxg5', explanation: { en: 'Black takes.', es: 'Las negras capturan.' } },
+      {
+        san: 'hxg5',
+        explanation: {
+          en: 'Take back with the pawn, not the king: after Kxg5 only the h-pawn is left, and with Black in the corner that rook pawn is a draw.',
+          es: 'Se recaptura con el peón, no con el rey: tras Rxg5 solo queda el peón h, y con las negras en la esquina ese peón de torre es tablas.',
+        },
+      },
+      {
+        san: 'Kh7',
+        explanation: { en: 'Black heads for the corner.', es: 'Las negras van a la esquina.' },
+      },
+      {
+        san: 'Kf7',
+        explanation: {
+          en: 'The only winning move: it keeps the black king off g8 and g7.',
+          es: 'La única jugada que gana: aleja al rey negro de g8 y g7.',
+        },
+      },
+      { san: 'Kh8', explanation: { en: 'Into the corner.', es: 'A la esquina.' } },
+      {
+        san: 'Kg6',
+        explanation: {
+          en: 'Careful: g6 here would be stalemate. The king makes room first.',
+          es: 'Cuidado: g6 aquí sería ahogado. Primero el rey deja sitio.',
+        },
+      },
+      {
+        san: 'Kg8',
+        explanation: {
+          en: 'Black comes out of the corner.',
+          es: 'Las negras salen de la esquina.',
+        },
+      },
+      {
+        san: 'Kh6',
+        explanation: {
+          en: 'The king steps beside its pawn, still covering g7.',
+          es: 'El rey se coloca junto a su peón, sin dejar de cubrir g7.',
+        },
+      },
+      { san: 'Kh8', explanation: { en: 'Back to the corner.', es: 'De vuelta a la esquina.' } },
+      {
+        san: 'g6',
+        explanation: {
+          en: 'Now the pawn can advance safely.',
+          es: 'Ahora el peón puede avanzar con seguridad.',
+        },
+      },
+      { san: 'Kg8', explanation: { en: 'Black blocks.', es: 'Las negras bloquean.' } },
+      { san: 'g7', explanation: { en: 'One more step.', es: 'Un paso más.' } },
+      { san: 'Kf7', explanation: { en: 'Black steps aside.', es: 'Las negras se apartan.' } },
+      {
+        san: 'Kh7',
+        explanation: {
+          en: 'The king guards the queening square.',
+          es: 'El rey protege la casilla de coronación.',
+        },
+      },
+      {
+        san: 'Ke7',
+        explanation: { en: "Black can't stop it.", es: 'Las negras no pueden impedirlo.' },
+      },
+      {
+        san: 'g8=Q',
+        explanation: {
+          en: 'The pawn promotes.',
+          es: 'El peón corona.',
+        },
+      },
+    ],
+    summary: {
+      en: 'Two pawns against one on the same side usually win, but not by pushing pawns early. First the king walks ahead of its pawns, using the opposition. Then a pawn break trades one pair of pawns and leaves a passed pawn with the king in front of it, which wins as in king and pawn against king. Recapture with the right piece, and look out for stalemate near the corner.',
+      es: 'Dos peones contra uno en el mismo flanco suelen ganar, pero no adelantando peones pronto. Primero el rey se pone por delante de sus peones, con la oposición. Después una ruptura cambia un par de peones y deja un peón pasado con el rey delante, que gana como en rey y peón contra rey. Hay que recapturar con la pieza correcta y vigilar el ahogado cerca de la esquina.',
+    },
+    sourceUrl: 'https://syzygy-tables.info/?fen=8/8/6kp/8/6PP/5K2/8/8_w_-_-_0_1',
+    primaryColor: 'white',
+    playGoal: 'promotion',
+  },
 ]
 
 export function getPositionLesson(slug: string): Lesson | undefined {

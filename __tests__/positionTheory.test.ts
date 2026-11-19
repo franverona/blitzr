@@ -79,6 +79,10 @@ describe('POSITION_LESSONS content', () => {
     expect(playOut('knight-stops-pawn').isInsufficientMaterial()).toBe(true)
   })
 
+  it('two pawns vs one promotes the pawn left after the break', () => {
+    expect(playOut('two-pawns-vs-one').get('g8')).toEqual({ type: 'q', color: 'w' })
+  })
+
   it('Saavedra: promoting to a queen instead falls into the stalemate trap', () => {
     const lesson = getPositionLesson('saavedra-position')!
     const chess = new Chess(lesson.initialFen)
