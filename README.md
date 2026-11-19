@@ -297,7 +297,7 @@ filter scopes the whole page.
 ### Learn
 
 `/learn` has short lessons on 14 openings (6 for White, 8 defenses for Black, on their own tab), 6 basic endgames (the mates with queen, rook, two
-rooks, two bishops and bishop + knight; king and pawn) and 21 classic positions (Philidor, Lucena,
+rooks, two bishops and bishop + knight; king and pawn) and 22 classic positions (Philidor, Lucena,
 Vančura, Saavedra, key squares, the opposition, triangulation, queen vs rook…), each a line you step through
 with a note per move. **Quiz** mode tests you on one side while the opponent's moves play
 automatically (H shows the move, R restarts). Endgame and position lessons also have **Play it out**: the same

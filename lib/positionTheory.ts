@@ -1665,6 +1665,63 @@ export const POSITION_LESSONS: Lesson[] = [
     primaryColor: 'white',
     playGoal: 'promotion',
   },
+  {
+    // Constructed: cited to the position's tablebase page, which shows which knight moves hold.
+    slug: 'knight-stops-pawn',
+    name: { en: 'Knight Stopping a Pawn', es: 'El caballo detiene al peón' },
+    initialFen: '8/8/8/8/1pk5/8/8/3N3K w - - 0 1',
+    moves: [
+      {
+        san: 'Nb2+',
+        explanation: {
+          en: "White's king is far away, so the knight has to stop the pawn alone. It checks from b2, a square on the pawn's path.",
+          es: 'El rey blanco está lejos, así que el caballo tiene que detener al peón solo. Da jaque desde b2, una casilla en el camino del peón.',
+        },
+      },
+      {
+        san: 'Kb3',
+        explanation: {
+          en: 'Black attacks the knight.',
+          es: 'Las negras atacan al caballo.',
+        },
+      },
+      {
+        san: 'Nd3',
+        explanation: {
+          en: 'Only Nd3 and Nd1 hold. From d3 the knight still guards b2 and attacks the pawn. A king move would lose the knight, and Na4 lets the pawn run.',
+          es: 'Solo Cd3 y Cd1 aguantan. Desde d3 el caballo sigue vigilando b2 y ataca al peón. Una jugada de rey perdería el caballo, y Ca4 deja correr al peón.',
+        },
+      },
+      {
+        san: 'Kc3',
+        explanation: {
+          en: 'Black defends the pawn and attacks the knight again.',
+          es: 'Las negras defienden el peón y vuelven a atacar al caballo.',
+        },
+      },
+      {
+        san: 'Nxb4',
+        explanation: {
+          en: 'The knight gives itself up for the pawn.',
+          es: 'El caballo se entrega a cambio del peón.',
+        },
+      },
+      {
+        san: 'Kxb4',
+        explanation: {
+          en: 'Two bare kings: a draw.',
+          es: 'Dos reyes solos: tablas.',
+        },
+      },
+    ],
+    summary: {
+      en: "A knight can stop a pawn on its own if it can reach a square on the pawn's path, or keep attacking one, in time. It has to stay out of the enemy king's reach, and it can even give itself up for the pawn. Put the knight on g1 instead of d1 and it's a move too slow: the pawn queens.",
+      es: 'Un caballo puede detener a un peón él solo si llega a tiempo a una casilla del camino del peón, o a seguir atacándola. Tiene que mantenerse fuera del alcance del rey rival, y hasta puede entregarse a cambio del peón. Con el caballo en g1 en vez de d1 llega una jugada tarde: el peón corona.',
+    },
+    sourceUrl: 'https://syzygy-tables.info/?fen=8/8/8/8/1pk5/8/8/3N3K_w_-_-_0_1',
+    primaryColor: 'white',
+    playGoal: 'draw',
+  },
 ]
 
 export function getPositionLesson(slug: string): Lesson | undefined {
