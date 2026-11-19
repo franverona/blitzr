@@ -83,6 +83,17 @@ describe('POSITION_LESSONS content', () => {
     expect(playOut('two-pawns-vs-one').get('g8')).toEqual({ type: 'q', color: 'w' })
   })
 
+  it('connected pawns vs rook ends with White queen against bare king', () => {
+    const chess = playOut('connected-pawns-vs-rook')
+    expect(chess.get('f8')).toEqual({ type: 'q', color: 'w' })
+    expect(
+      chess
+        .board()
+        .flat()
+        .filter((sq) => sq?.color === 'b'),
+    ).toHaveLength(1)
+  })
+
   it('Saavedra: promoting to a queen instead falls into the stalemate trap', () => {
     const lesson = getPositionLesson('saavedra-position')!
     const chess = new Chess(lesson.initialFen)

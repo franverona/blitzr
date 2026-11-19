@@ -1860,6 +1860,80 @@ export const POSITION_LESSONS: Lesson[] = [
     primaryColor: 'white',
     playGoal: 'promotion',
   },
+  {
+    // Constructed to show the source's rule; every move checked against the tablebase.
+    slug: 'connected-pawns-vs-rook',
+    name: {
+      en: 'Connected Passed Pawns vs. Rook',
+      es: 'Peones pasados ligados contra torre',
+    },
+    initialFen: '8/1k6/5PP1/8/8/8/7K/r7 b - - 0 1',
+    moves: [
+      {
+        san: 'Ra6',
+        explanation: {
+          en: "Two connected passed pawns on the sixth rank, against a rook with its king far away. Black's rook attacks the front pawn.",
+          es: 'Dos peones pasados ligados en la sexta fila, contra una torre con su rey lejos. La torre negra ataca al peón de delante.',
+        },
+      },
+      {
+        san: 'g7',
+        explanation: {
+          en: 'White pushes instead of defending: a king move here would actually lose. The f-pawn is safe, because Rxf6 is met by g8=Q.',
+          es: 'Las blancas avanzan en vez de defender: una jugada de rey aquí incluso perdería. El peón f está a salvo, porque a Txf6 sigue g8=D.',
+        },
+      },
+      {
+        san: 'Ra8',
+        explanation: {
+          en: 'The rook drops back to guard both queening squares.',
+          es: 'La torre retrocede para vigilar las dos casillas de coronación.',
+        },
+      },
+      {
+        san: 'f7',
+        explanation: {
+          en: 'Both pawns on the seventh rank. One rook cannot stop two promotions.',
+          es: 'Los dos peones en la séptima fila. Una torre no puede impedir dos coronaciones.',
+        },
+      },
+      {
+        san: 'Kc7',
+        explanation: {
+          en: "Black's king is far too slow to help.",
+          es: 'El rey negro llega demasiado tarde para ayudar.',
+        },
+      },
+      {
+        san: 'f8=Q',
+        explanation: {
+          en: 'One pawn promotes, giving the rook something to take.',
+          es: 'Un peón corona, dándole a la torre algo que capturar.',
+        },
+      },
+      {
+        san: 'Rxf8',
+        explanation: {
+          en: 'Black takes the new queen.',
+          es: 'Las negras capturan la nueva dama.',
+        },
+      },
+      {
+        san: 'gxf8=Q',
+        explanation: {
+          en: 'And the other pawn takes back, becoming a queen. Queen against a bare king wins.',
+          es: 'Y el otro peón recaptura, convirtiéndose en dama. Dama contra rey solo gana.',
+        },
+      },
+    ],
+    summary: {
+      en: "Two connected passed pawns that reach their sixth rank are worth as much as a rook. They guard each other, so the rook can't win one without letting the other through, and once both stand on the seventh rank the rook can stop only one. Keep pushing them: here even a king move to help would throw the win away.",
+      es: 'Dos peones pasados ligados que llegan a su sexta fila valen tanto como una torre. Se protegen entre sí, así que la torre no puede ganar uno sin dejar pasar al otro, y cuando los dos están en la séptima fila la torre solo puede detener a uno. Hay que seguir avanzándolos: aquí incluso una jugada de rey para ayudar tiraría la victoria.',
+    },
+    sourceUrl: 'https://en.wikipedia.org/wiki/Chess_endgame',
+    primaryColor: 'white',
+    playGoal: 'promotion',
+  },
 ]
 
 export function getPositionLesson(slug: string): Lesson | undefined {
