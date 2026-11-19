@@ -66,6 +66,10 @@ describe('POSITION_LESSONS content', () => {
     expect(chess.get('c2')).toEqual({ type: 'p', color: 'w' })
   })
 
+  it('shouldering ends with the pawn promoted', () => {
+    expect(playOut('shouldering').get('a8')).toEqual({ type: 'q', color: 'w' })
+  })
+
   it('Saavedra: promoting to a queen instead falls into the stalemate trap', () => {
     const lesson = getPositionLesson('saavedra-position')!
     const chess = new Chess(lesson.initialFen)
