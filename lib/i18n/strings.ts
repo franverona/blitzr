@@ -808,6 +808,7 @@ const en = {
     title: 'Learn',
     intro:
       'Short, plain-language introductions to common openings, endgames and classic positions — not a repertoire, just the ideas behind one natural line, move by move.',
+    defenses: 'Defenses',
     endgames: 'Endgames',
     positions: 'Positions',
     colorFilter: 'Your side',
@@ -1699,6 +1700,7 @@ const es: Strings = {
     title: 'Aprender',
     intro:
       'Introducciones breves y en lenguaje sencillo a aperturas y finales comunes y a posiciones clásicas — no es un repertorio, solo las ideas detrás de una línea natural, jugada por jugada.',
+    defenses: 'Defensas',
     endgames: 'Finales',
     positions: 'Posiciones',
     colorFilter: 'Tu bando',

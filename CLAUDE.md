@@ -162,7 +162,7 @@ Every game has a `site` (`chesscom` | `lichess`). `siteUsername(site)` reads `CH
 - **Polgár puzzles are local only** (copyrighted): `scripts/import-polgar-mates.mjs` writes the
   gitignored `data/polgar-mates.json`.
 - Lesson content is hand-authored (`lib/openingTheory.ts`, `lib/endgameTheory.ts`,
-  `lib/positionTheory.ts`). Play's goal is mate, promotion, or a lesson's `playGoal` (a draw to hold).
+  `lib/positionTheory.ts`); `/learn`'s Defenses tab is the opening lessons framed for Black. Play's goal is mate, promotion, or a lesson's `playGoal` (a draw to hold).
   `lesson_progress` (keyed by slug, so slugs stay stable, like puzzle ids) keeps a finished quiz and the
   strongest Play win; a lesson is done with both (openings: the quiz). Every
   `sourceUrl` must be read live before citing. **Summaries are paraphrased, never copied**
