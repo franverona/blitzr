@@ -1357,6 +1357,143 @@ export const POSITION_LESSONS: Lesson[] = [
     primaryColor: 'white',
     playGoal: 'promotion',
   },
+  {
+    // Constructed: the source's examples have too many pieces for the tablebase. Its main line.
+    slug: 'rook-behind-passed-pawn',
+    name: {
+      en: "Rook Behind the Passed Pawn (Tarrasch's Rule)",
+      es: 'Torre detrás del peón pasado (regla de Tarrasch)',
+    },
+    initialFen: '1r6/6k1/6p1/1P6/8/6P1/6K1/1R6 w - - 0 1',
+    moves: [
+      {
+        san: 'g4',
+        explanation: {
+          en: "White's rook sits behind the pawn, so every step forward gives it more room. Black's rook is stuck in front, only able to blockade. First, White heads for g5 to fix Black's only other pawn.",
+          es: 'La torre blanca está detrás del peón, así que cada paso adelante le da más espacio. La torre negra está atascada delante, y solo puede bloquear. Primero, las blancas van a g5 para fijar el otro peón negro.',
+        },
+      },
+      {
+        san: 'Rb6',
+        explanation: {
+          en: "Black blockades closer to the pawn. The rook can't leave the b-file, or the pawn runs.",
+          es: 'Las negras bloquean más cerca del peón. La torre no puede abandonar la columna b, o el peón avanza.',
+        },
+      },
+      {
+        san: 'g5',
+        explanation: {
+          en: "The g6 pawn is fixed: it can't advance, and it's a target later.",
+          es: 'El peón de g6 queda fijo: no puede avanzar y más adelante será un blanco.',
+        },
+      },
+      {
+        san: 'Kf7',
+        explanation: {
+          en: "Black's king heads for the pawn too.",
+          es: 'El rey negro también se dirige hacia el peón.',
+        },
+      },
+      {
+        san: 'Kf3',
+        explanation: {
+          en: "White's rook does all the guarding, so the king is free to march. That's what the rook behind the pawn buys.",
+          es: 'La torre blanca hace toda la defensa, así que el rey queda libre para marchar. Eso es lo que consigue la torre detrás del peón.',
+        },
+      },
+      { san: 'Ke7', explanation: { en: 'Black races over.', es: 'Las negras corren hacia allí.' } },
+      {
+        san: 'Ke3',
+        explanation: { en: 'The march continues.', es: 'La marcha continúa.' },
+      },
+      { san: 'Ke6', explanation: { en: 'Black keeps pace.', es: 'Las negras siguen el ritmo.' } },
+      {
+        san: 'Ke4',
+        explanation: {
+          en: 'The kings face off, but White wants the queenside, not e5.',
+          es: 'Los reyes se enfrentan, pero las blancas quieren el flanco de dama, no e5.',
+        },
+      },
+      {
+        san: 'Kd6',
+        explanation: {
+          en: "Black's king heads for the queenside to help its rook.",
+          es: 'El rey negro va al flanco de dama para ayudar a su torre.',
+        },
+      },
+      { san: 'Kd4', explanation: { en: 'Still marching.', es: 'Sigue la marcha.' } },
+      {
+        san: 'Kc7',
+        explanation: {
+          en: 'Black guards the rook in advance.',
+          es: 'Las negras protegen la torre de antemano.',
+        },
+      },
+      {
+        san: 'Kc5',
+        explanation: {
+          en: 'The king attacks the blockading rook.',
+          es: 'El rey ataca a la torre que bloquea.',
+        },
+      },
+      {
+        san: 'Kb7',
+        explanation: {
+          en: "The rook is defended, but now Black's king and rook are both tied to b6.",
+          es: 'La torre está defendida, pero ahora el rey y la torre negros están atados a b6.',
+        },
+      },
+      {
+        san: 'Re1',
+        explanation: {
+          en: "With Black's pieces stuck on the queenside, White's rook switches to the open e-file. It's heading for the seventh rank.",
+          es: 'Con las piezas negras atascadas en el flanco de dama, la torre blanca pasa a la columna e abierta. Va hacia la séptima fila.',
+        },
+      },
+      {
+        san: 'Ka7',
+        explanation: {
+          en: 'Black has no useful move.',
+          es: 'Las negras no tienen ninguna jugada útil.',
+        },
+      },
+      {
+        san: 'Re7+',
+        explanation: {
+          en: 'The rook reaches the seventh rank with check.',
+          es: 'La torre llega a la séptima fila con jaque.',
+        },
+      },
+      {
+        san: 'Ka8',
+        explanation: {
+          en: 'The king has to leave the rook.',
+          es: 'El rey tiene que abandonar la torre.',
+        },
+      },
+      {
+        san: 'Kxb6',
+        explanation: {
+          en: 'White wins the rook.',
+          es: 'Las blancas ganan la torre.',
+        },
+      },
+      { san: 'Kb8', explanation: { en: 'The only move.', es: 'La única jugada.' } },
+      {
+        san: 'Re8#',
+        explanation: {
+          en: 'Checkmate along the back rank.',
+          es: 'Jaque mate en la última fila.',
+        },
+      },
+    ],
+    summary: {
+      en: "Rooks belong behind passed pawns: behind your own, every push gives your rook more room, while the enemy rook in front only blockades and loses room. Here White's rook does all the guarding, so White's king is free to walk over and attack Black's rook. Swap the two rooks (White's in front of the pawn, Black's behind it) and the same position is a draw.",
+      es: 'Las torres van detrás de los peones pasados: detrás del propio, cada avance le da más espacio a tu torre, mientras que la torre rival delante solo bloquea y pierde espacio. Aquí la torre blanca hace toda la defensa, así que el rey blanco queda libre para acercarse y atacar a la torre negra. Si se intercambian las torres (la blanca delante del peón, la negra detrás), la misma posición es tablas.',
+    },
+    sourceUrl: 'https://en.wikipedia.org/wiki/Tarrasch_rule',
+    primaryColor: 'white',
+  },
 ]
 
 export function getPositionLesson(slug: string): Lesson | undefined {
