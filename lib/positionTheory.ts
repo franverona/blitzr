@@ -2019,6 +2019,84 @@ export const POSITION_LESSONS: Lesson[] = [
     primaryColor: 'black',
     playGoal: 'draw',
   },
+  {
+    // The source's diagram (Müller & Lamprecht); its line is the tablebase's best play.
+    slug: 'bishop-vs-knight',
+    name: { en: 'Bishop vs. Knight', es: 'Alfil contra caballo' },
+    initialFen: '2k5/8/3P4/3K3n/8/8/7B/8 w - - 0 1',
+    moves: [
+      {
+        san: 'Be5',
+        explanation: {
+          en: 'The only winning move. From e5 the bishop covers f4, g3, f6 and g7, every square the knight could go to. The knight is trapped on the rim.',
+          es: 'La única jugada que gana. Desde e5 el alfil cubre f4, g3, f6 y g7, todas las casillas a las que podría ir el caballo. El caballo queda atrapado en la banda.',
+        },
+      },
+      {
+        san: 'Kd7',
+        explanation: {
+          en: "Black's king blockades the pawn.",
+          es: 'El rey negro bloquea el peón.',
+        },
+      },
+      {
+        san: 'Kc5',
+        explanation: {
+          en: "Again the only win: White's king heads for c6 and c7, around the blockade.",
+          es: 'Otra vez la única que gana: el rey blanco va hacia c6 y c7, rodeando el bloqueo.',
+        },
+      },
+      {
+        san: 'Ke6',
+        explanation: {
+          en: 'Black attacks the bishop.',
+          es: 'Las negras atacan al alfil.',
+        },
+      },
+      {
+        san: 'Kc6',
+        explanation: {
+          en: 'White lets the bishop go. Its job was to keep the knight out of play.',
+          es: 'Las blancas dejan caer el alfil. Su tarea era dejar al caballo fuera de juego.',
+        },
+      },
+      {
+        san: 'Kxe5',
+        explanation: {
+          en: 'Black wins the bishop, but its king has left the pawn.',
+          es: 'Las negras ganan el alfil, pero su rey se ha alejado del peón.',
+        },
+      },
+      {
+        san: 'd7',
+        explanation: {
+          en: 'The pawn runs.',
+          es: 'El peón corre.',
+        },
+      },
+      {
+        san: 'Nf4',
+        explanation: {
+          en: 'Free at last, but the knight needs two more moves to cover d8.',
+          es: 'Por fin libre, pero el caballo necesita dos jugadas más para cubrir d8.',
+        },
+      },
+      {
+        san: 'd8=Q',
+        explanation: {
+          en: 'Too late: the pawn promotes.',
+          es: 'Demasiado tarde: el peón corona.',
+        },
+      },
+    ],
+    summary: {
+      en: 'In an open position a bishop works from a distance, while a knight has to come close. Here the bishop takes away every square the knight has, and a knight on the rim needs several moves to get back. White gives up the bishop to win time, and the pawn promotes before the knight can catch it. With Black to move, the same position is a draw.',
+      es: 'En una posición abierta el alfil actúa a distancia, mientras que el caballo tiene que acercarse. Aquí el alfil le quita al caballo todas sus casillas, y un caballo en la banda necesita varias jugadas para volver. Las blancas entregan el alfil para ganar tiempo y el peón corona antes de que el caballo lo alcance. Con las negras al turno, la misma posición es tablas.',
+    },
+    sourceUrl: 'https://en.wikipedia.org/wiki/Chess_endgame',
+    primaryColor: 'white',
+    playGoal: 'promotion',
+  },
 ]
 
 export function getPositionLesson(slug: string): Lesson | undefined {

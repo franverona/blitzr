@@ -102,6 +102,16 @@ describe('POSITION_LESSONS content', () => {
     expect(chess.isStalemate()).toBe(true)
   })
 
+  it('bishop vs knight: after Be5 every knight move can be captured, and the pawn queens', () => {
+    const lesson = getPositionLesson('bishop-vs-knight')!
+    const chess = new Chess(lesson.initialFen)
+    chess.move('Be5')
+    const bishopCovers = new Set(['f4', 'g3', 'f6', 'g7'])
+    for (const m of chess.moves({ square: 'h5', verbose: true }))
+      expect(bishopCovers.has(m.to)).toBe(true)
+    expect(playOut('bishop-vs-knight').get('d8')).toEqual({ type: 'q', color: 'w' })
+  })
+
   it('Saavedra: promoting to a queen instead falls into the stalemate trap', () => {
     const lesson = getPositionLesson('saavedra-position')!
     const chess = new Chess(lesson.initialFen)
