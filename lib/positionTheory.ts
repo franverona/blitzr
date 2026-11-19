@@ -1494,6 +1494,90 @@ export const POSITION_LESSONS: Lesson[] = [
     sourceUrl: 'https://en.wikipedia.org/wiki/Tarrasch_rule',
     primaryColor: 'white',
   },
+  {
+    slug: 'outflanking',
+    name: { en: 'Outflanking', es: 'Flanquear al rey' },
+    initialFen: '8/8/8/2k5/8/2K5/2P5/8 b - - 0 1',
+    moves: [
+      {
+        san: 'Kb5',
+        explanation: {
+          en: 'The kings stand in opposition and Black has to move, so Black has to give way.',
+          es: 'Los reyes están en oposición y les toca a las negras, así que tienen que ceder el paso.',
+        },
+      },
+      {
+        san: 'Kd4',
+        explanation: {
+          en: "White's king steps forward to d4, a key square: from here the pawn wins. But the king still has to get in front of the pawn.",
+          es: 'El rey blanco avanza a d4, una casilla clave: desde aquí el peón gana. Pero el rey aún tiene que ponerse delante del peón.',
+        },
+      },
+      {
+        san: 'Kc6',
+        explanation: {
+          en: 'Black blocks the c-file, in front of the pawn.',
+          es: 'Las negras bloquean la columna c, delante del peón.',
+        },
+      },
+      {
+        san: 'Kc4',
+        explanation: {
+          en: 'White takes the opposition back.',
+          es: 'Las blancas recuperan la oposición.',
+        },
+      },
+      {
+        san: 'Kb6',
+        explanation: {
+          en: 'Black has to step aside.',
+          es: 'Las negras tienen que apartarse.',
+        },
+      },
+      {
+        san: 'Kd5',
+        explanation: {
+          en: "Outflanking: instead of pushing straight ahead, White's king goes around the black king, to the side it just left.",
+          es: 'El flanqueo: en vez de avanzar en línea recta, el rey blanco rodea al rey negro, por el lado que este acaba de dejar.',
+        },
+      },
+      {
+        san: 'Kc7',
+        explanation: {
+          en: 'Black returns to the c-file to block.',
+          es: 'Las negras vuelven a la columna c para bloquear.',
+        },
+      },
+      {
+        san: 'Kc5',
+        explanation: {
+          en: 'Opposition again, one rank higher.',
+          es: 'Otra vez la oposición, una fila más arriba.',
+        },
+      },
+      {
+        san: 'Kd7',
+        explanation: {
+          en: 'Black steps aside to the other side this time.',
+          es: 'Esta vez las negras se apartan hacia el otro lado.',
+        },
+      },
+      {
+        san: 'Kb6',
+        explanation: {
+          en: "White outflanks on the other side. The king reaches the sixth rank, ahead of its pawn, and the pawn will promote with the king's help.",
+          es: 'Las blancas flanquean por el otro lado. El rey llega a la sexta fila, por delante de su peón, y el peón coronará con la ayuda del rey.',
+        },
+      },
+    ],
+    summary: {
+      en: "When the kings face each other and the defending king steps aside, the attacking king doesn't push straight ahead: it goes around, onto the side the defender just left. Repeated rank by rank, this outflanking brings the king ahead of its pawn, even when the pawn is still far back.",
+      es: 'Cuando los reyes se enfrentan y el rey defensor se aparta, el rey atacante no avanza en línea recta: lo rodea, por el lado que el defensor acaba de dejar. Repetido fila a fila, este flanqueo lleva al rey por delante de su peón, aunque el peón siga muy atrás.',
+    },
+    sourceUrl: 'https://en.wikipedia.org/wiki/King_and_pawn_versus_king_endgame',
+    primaryColor: 'white',
+    playGoal: 'promotion',
+  },
 ]
 
 export function getPositionLesson(slug: string): Lesson | undefined {

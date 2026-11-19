@@ -60,6 +60,12 @@ describe('POSITION_LESSONS content', () => {
     expect(playOut('rook-behind-passed-pawn').isCheckmate()).toBe(true)
   })
 
+  it("outflanking ends with White's king ahead of its pawn on the sixth rank", () => {
+    const chess = playOut('outflanking')
+    expect(chess.get('b6')).toEqual({ type: 'k', color: 'w' })
+    expect(chess.get('c2')).toEqual({ type: 'p', color: 'w' })
+  })
+
   it('Saavedra: promoting to a queen instead falls into the stalemate trap', () => {
     const lesson = getPositionLesson('saavedra-position')!
     const chess = new Chess(lesson.initialFen)
