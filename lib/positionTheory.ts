@@ -1578,6 +1578,93 @@ export const POSITION_LESSONS: Lesson[] = [
     primaryColor: 'white',
     playGoal: 'promotion',
   },
+  {
+    // Constructed: no article covers it; cited to the position's tablebase page, line from it.
+    slug: 'shouldering',
+    name: { en: 'Shouldering', es: 'Apartar al rey (el codazo)' },
+    initialFen: '8/8/5k2/8/4K3/P7/8/8 w - - 0 1',
+    moves: [
+      {
+        san: 'Kd5',
+        explanation: {
+          en: "Black's king can step into the pawn's square, so racing the pawn alone would fail. Instead White's king stands in the way, between the black king and the pawn's path. It's the only winning move.",
+          es: 'El rey negro puede entrar en el cuadrado del peón, así que avanzar el peón solo no bastaría. En su lugar, el rey blanco se interpone entre el rey negro y el camino del peón. Es la única jugada que gana.',
+        },
+      },
+      {
+        san: 'Ke7',
+        explanation: {
+          en: 'The direct route is blocked, so Black tries to go around along the seventh rank.',
+          es: 'El camino directo está bloqueado, así que las negras intentan rodear por la séptima fila.',
+        },
+      },
+      {
+        san: 'Kc6',
+        explanation: {
+          en: 'White keeps shouldering, taking d7 away from the black king.',
+          es: 'Las blancas siguen apartándolo, quitándole d7 al rey negro.',
+        },
+      },
+      {
+        san: 'Kd8',
+        explanation: {
+          en: 'Black tries the eighth rank instead.',
+          es: 'Las negras lo intentan por la octava fila.',
+        },
+      },
+      {
+        san: 'Kb7',
+        explanation: {
+          en: "Now c7 and c8 are covered too. White's king has walled off the whole queenside.",
+          es: 'Ahora también están cubiertas c7 y c8. El rey blanco ha cerrado todo el flanco de dama.',
+        },
+      },
+      {
+        san: 'Kd7',
+        explanation: {
+          en: 'Black has nowhere useful to go.',
+          es: 'Las negras no tienen adónde ir.',
+        },
+      },
+      {
+        san: 'a4',
+        explanation: {
+          en: 'Only now does the pawn run. The black king can no longer get in front of it.',
+          es: 'Solo ahora avanza el peón. El rey negro ya no puede ponerse delante.',
+        },
+      },
+      { san: 'Kd6', explanation: { en: 'Black chases.', es: 'Las negras persiguen.' } },
+      { san: 'a5', explanation: { en: 'The pawn keeps going.', es: 'El peón sigue.' } },
+      {
+        san: 'Kc5',
+        explanation: { en: 'Still a step behind.', es: 'Todavía un paso por detrás.' },
+      },
+      { san: 'a6', explanation: { en: 'Nearly there.', es: 'Casi ha llegado.' } },
+      {
+        san: 'Kb4',
+        explanation: { en: 'Too late to catch it.', es: 'Demasiado tarde para alcanzarlo.' },
+      },
+      { san: 'a7', explanation: { en: 'One step from queening.', es: 'A un paso de coronar.' } },
+      {
+        san: 'Ka3',
+        explanation: { en: 'Black gives up.', es: 'Las negras se rinden a la evidencia.' },
+      },
+      {
+        san: 'a8=Q+',
+        explanation: {
+          en: 'The pawn promotes with check, guarded by its king.',
+          es: 'El peón corona con jaque, protegido por su rey.',
+        },
+      },
+    ],
+    summary: {
+      en: "Shouldering (or the body check) is using your king to block the enemy king's path. A king can't step next to the other king, so it can wall off a whole group of squares. Here Black's king could catch the pawn in a straight race, but after Kd5 it has to go the long way around, and arrives too late.",
+      es: 'Apartar al rey (el codazo) es usar tu rey para cortarle el paso al rey rival. Un rey no puede ponerse junto al otro, así que puede cerrar todo un grupo de casillas. Aquí el rey negro alcanzaría el peón en una carrera directa, pero tras Kd5 tiene que dar un largo rodeo y llega tarde.',
+    },
+    sourceUrl: 'https://syzygy-tables.info/?fen=8/8/5k2/8/4K3/P7/8/8_w_-_-_0_1',
+    primaryColor: 'white',
+    playGoal: 'promotion',
+  },
 ]
 
 export function getPositionLesson(slug: string): Lesson | undefined {
