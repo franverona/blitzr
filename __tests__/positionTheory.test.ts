@@ -94,6 +94,14 @@ describe('POSITION_LESSONS content', () => {
     ).toHaveLength(1)
   })
 
+  it('rook vs bishop: a rook move along the back rank after Bb8 is stalemate', () => {
+    const lesson = getPositionLesson('rook-vs-bishop')!
+    const chess = new Chess(lesson.initialFen)
+    for (const move of lesson.moves.slice(0, 2)) chess.move(move.san)
+    chess.move('Rg8')
+    expect(chess.isStalemate()).toBe(true)
+  })
+
   it('Saavedra: promoting to a queen instead falls into the stalemate trap', () => {
     const lesson = getPositionLesson('saavedra-position')!
     const chess = new Chess(lesson.initialFen)
