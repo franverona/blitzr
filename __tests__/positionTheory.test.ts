@@ -112,6 +112,12 @@ describe('POSITION_LESSONS content', () => {
     expect(playOut('bishop-vs-knight').get('d8')).toEqual({ type: 'q', color: 'w' })
   })
 
+  it('queen and pawn vs queen ends with the pawn promoted to a second queen', () => {
+    const chess = playOut('queen-and-pawn-vs-queen')
+    expect(chess.get('h8')).toEqual({ type: 'q', color: 'w' })
+    expect(chess.get('f8')).toEqual({ type: 'q', color: 'w' })
+  })
+
   it('Saavedra: promoting to a queen instead falls into the stalemate trap', () => {
     const lesson = getPositionLesson('saavedra-position')!
     const chess = new Chess(lesson.initialFen)

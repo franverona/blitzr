@@ -2097,6 +2097,112 @@ export const POSITION_LESSONS: Lesson[] = [
     primaryColor: 'white',
     playGoal: 'promotion',
   },
+  {
+    // The source's opening diagram; its line is the tablebase's best play up to the promotion.
+    slug: 'queen-and-pawn-vs-queen',
+    name: { en: 'Queen and Pawn vs. Queen', es: 'Dama y peón contra dama' },
+    initialFen: '8/5QK1/2k5/7P/8/8/4q3/8 w - - 0 1',
+    moves: [
+      {
+        san: 'h6',
+        explanation: {
+          en: "Black's king is far from the pawn, so White can push. Only h6, Qf5 and Kf8 win here.",
+          es: 'El rey negro está lejos del peón, así que las blancas pueden avanzar. Aquí solo ganan h6, Df5 y Rf8.',
+        },
+      },
+      {
+        san: 'Kc5',
+        explanation: {
+          en: "Black's king can't get back in time. Its hope is perpetual check.",
+          es: 'El rey negro no puede volver a tiempo. Su esperanza es el jaque continuo.',
+        },
+      },
+      {
+        san: 'h7',
+        explanation: {
+          en: 'The pawn reaches the seventh rank.',
+          es: 'El peón llega a la séptima fila.',
+        },
+      },
+      {
+        san: 'Qg2+',
+        explanation: {
+          en: 'The checks begin.',
+          es: 'Empiezan los jaques.',
+        },
+      },
+      {
+        san: 'Qg6',
+        explanation: {
+          en: "White blocks the check with its queen. Blocking checks this way is the attacker's main weapon.",
+          es: 'Las blancas tapan el jaque con su dama. Tapar así los jaques es el arma principal del atacante.',
+        },
+      },
+      {
+        san: 'Qb7+',
+        explanation: {
+          en: 'Black checks from the other side.',
+          es: 'Las negras dan jaque desde el otro lado.',
+        },
+      },
+      {
+        san: 'Kh6',
+        explanation: {
+          en: 'The king shelters beside its pawn, where the queens leave few checks.',
+          es: 'El rey se refugia junto a su peón, donde las damas dejan pocos jaques.',
+        },
+      },
+      {
+        san: 'Qb2',
+        explanation: {
+          en: 'Out of good checks, Black guards h8 along the long diagonal.',
+          es: 'Sin buenos jaques, las negras vigilan h8 por la gran diagonal.',
+        },
+      },
+      {
+        san: 'Qf5+',
+        explanation: {
+          en: 'White checks too, to gain time.',
+          es: 'Las blancas también dan jaque, para ganar tiempo.',
+        },
+      },
+      {
+        san: 'Kb4',
+        explanation: {
+          en: 'The king steps away.',
+          es: 'El rey se aparta.',
+        },
+      },
+      {
+        san: 'Qf8+',
+        explanation: {
+          en: 'Another check, and now the queen guards h8 as well.',
+          es: 'Otro jaque, y ahora la dama también protege h8.',
+        },
+      },
+      {
+        san: 'Kc4',
+        explanation: {
+          en: 'Black has to answer the check.',
+          es: 'Las negras tienen que responder al jaque.',
+        },
+      },
+      {
+        san: 'h8=Q',
+        explanation: {
+          en: 'The pawn promotes. Two queens against one win, though Black still has checks to give.',
+          es: 'El peón corona. Dos damas contra una ganan, aunque a las negras aún les quedan jaques.',
+        },
+      },
+    ],
+    summary: {
+      en: 'Queen and pawn against queen is one of the hardest endings: the defender tries to check forever, the attacker tries to escape the checks. The attacking king hides near its pawn, its queen blocks checks (best of all, by giving check back), and the pawn moves when the checks stop. A defending king in front of the pawn almost always draws.',
+      es: 'Dama y peón contra dama es uno de los finales más difíciles: el defensor intenta dar jaque para siempre y el atacante, escapar de los jaques. El rey atacante se esconde cerca de su peón, su dama tapa los jaques (mejor aún, dando jaque a su vez) y el peón avanza cuando paran los jaques. Un rey defensor delante del peón casi siempre hace tablas.',
+    },
+    sourceUrl: 'https://en.wikipedia.org/wiki/Queen_and_pawn_versus_queen_endgame',
+    primaryColor: 'white',
+    playGoal: 'promotion',
+  },
 ]
 
 export function getPositionLesson(slug: string): Lesson | undefined {
