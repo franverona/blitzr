@@ -1934,6 +1934,91 @@ export const POSITION_LESSONS: Lesson[] = [
     primaryColor: 'white',
     playGoal: 'promotion',
   },
+  {
+    // Constructed to show the source's safe-corner rule; every move checked against the tablebase.
+    slug: 'rook-vs-bishop',
+    name: { en: 'Rook vs. Bishop', es: 'Torre contra alfil' },
+    initialFen: 'k7/7R/1K6/8/5b2/8/8/8 w - - 0 1',
+    moves: [
+      {
+        san: 'Rh8+',
+        explanation: {
+          en: "Black's king is in a8, a light corner the dark-squared bishop never has to guard: the safe corner.",
+          es: 'El rey negro está en a8, una esquina clara que el alfil de casillas oscuras nunca tiene que vigilar: la esquina segura.',
+        },
+      },
+      {
+        san: 'Bb8',
+        explanation: {
+          en: 'The bishop blocks the check.',
+          es: 'El alfil tapa el jaque.',
+        },
+      },
+      {
+        san: 'Rh7',
+        explanation: {
+          en: 'Any rook move along the eighth rank would be stalemate: the bishop is pinned and the king has no squares. So the rook has to leave.',
+          es: 'Cualquier jugada de torre por la octava fila sería ahogado: el alfil está clavado y el rey no tiene casillas. Así que la torre tiene que salir.',
+        },
+      },
+      {
+        san: 'Bf4',
+        explanation: {
+          en: 'The bishop steps off but stays on the b8–h2 diagonal, ready to block again. Bd6? or Ba7+? would lose.',
+          es: 'El alfil se aparta pero sigue en la diagonal b8–h2, listo para volver a tapar. Ad6? o Aa7+? perderían.',
+        },
+      },
+      {
+        san: 'Rf7',
+        explanation: {
+          en: 'White attacks the bishop.',
+          es: 'Las blancas atacan al alfil.',
+        },
+      },
+      {
+        san: 'Bg3',
+        explanation: {
+          en: 'It just slides along the same diagonal.',
+          es: 'Simplemente se desliza por la misma diagonal.',
+        },
+      },
+      {
+        san: 'Kc6',
+        explanation: {
+          en: 'White tries the king instead.',
+          es: 'Las blancas lo intentan con el rey.',
+        },
+      },
+      {
+        san: 'Bh2',
+        explanation: {
+          en: 'Black keeps waiting.',
+          es: 'Las negras siguen esperando.',
+        },
+      },
+      {
+        san: 'Kb6',
+        explanation: {
+          en: 'There is nothing better.',
+          es: 'No hay nada mejor.',
+        },
+      },
+      {
+        san: 'Bg3',
+        explanation: {
+          en: 'Black shuffles the bishop and White makes no progress: a draw.',
+          es: 'Las negras mueven el alfil de un lado a otro y las blancas no progresan: tablas.',
+        },
+      },
+    ],
+    summary: {
+      en: "Rook against bishop is usually a draw, if the defending king goes to the right corner: the one of the color the bishop doesn't move on. There, back-rank checks are blocked by the bishop, and pinning it on the back rank is stalemate. In a corner of the bishop's color, the bishop can't block the mating check, and the rook wins.",
+      es: 'Torre contra alfil suele ser tablas, si el rey defensor va a la esquina correcta: la del color por el que no se mueve el alfil. Allí el alfil tapa los jaques en la última fila, y clavarlo en ella es ahogado. En una esquina del color del alfil, este no puede tapar el jaque de mate y la torre gana.',
+    },
+    sourceUrl: 'https://en.wikipedia.org/wiki/Pawnless_chess_endgame',
+    primaryColor: 'black',
+    playGoal: 'draw',
+  },
 ]
 
 export function getPositionLesson(slug: string): Lesson | undefined {
