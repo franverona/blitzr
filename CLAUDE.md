@@ -34,8 +34,8 @@ major, so tsc rejects APIs Node 22 lacks; Dependabot ignores its majors. Bump al
 - `components/` — `styles.ts` holds shared class helpers (no `'use client'`, so Server Components
   can import it).
 - `proxy.ts` — 403 unless `Host` is loopback; per-request CSP nonce.
-- `scripts/` — postinstall, `pnpm backup`, the puzzle importers, `check-defenses.mjs`, and
-  `stockfish.mjs` (native Stockfish, for the defence importer and checker).
+- `scripts/` — postinstall, `pnpm backup`, the puzzle importers, `check-defenses.mjs`,
+  `check-lessons.mjs` (Lichess tablebase), and `stockfish.mjs` (native Stockfish, for the defence importer and checker).
 
 `data/` (database, backups, `polgar-mates.json`) and `public/stockfish/` are created at
 install/runtime and gitignored. `BLITZR_DATA_DIR` moves `data/` (`lib/dataDir.ts`). Scripts load
@@ -166,7 +166,8 @@ Every game has a `site` (`chesscom` | `lichess`). `siteUsername(site)` reads `CH
   `lesson_progress` (keyed by slug, so slugs stay stable, like puzzle ids) keeps a finished quiz and the
   strongest Play win; a lesson is done with both (openings: the quiz). Every
   `sourceUrl` must be read live before citing. **Summaries are paraphrased, never copied**
-  (Wikibooks is CC BY-SA, this repo is MIT).
+  (Wikibooks is CC BY-SA, this repo is MIT). A new endgame or position line passes
+  `node scripts/check-lessons.mjs <slug>` (tablebase, ≤ 7 pieces; network, so not in CI).
 
 ## i18n
 

@@ -288,10 +288,24 @@ export const ENDGAME_LESSONS: Lesson[] = [
         },
       },
       {
-        san: 'e8=Q+',
+        san: 'Kf7',
         explanation: {
-          en: "The pawn promotes to a new queen, with check — this is the payoff of getting the king in front of the pawn early: the defending king simply can't stop the promotion.",
-          es: 'El peón corona en una nueva dama, con jaque — esta es la recompensa de adelantar el rey delante del peón desde el principio: el rey defensor simplemente no puede impedir la coronación.',
+          en: "Not e8=Q+ at once: the black king would just take the new queen, since White's king on f6 doesn't guard e8. From f7 it covers both the pawn and its promotion square.",
+          es: 'No e8=D+ enseguida: el rey negro simplemente capturaría la nueva dama, ya que el rey blanco en f6 no defiende e8. Desde f7 cubre tanto el peón como su casilla de coronación.',
+        },
+      },
+      {
+        san: 'Kd6',
+        explanation: {
+          en: 'Black has nothing left to do — the king can no longer reach the pawn or the queening square.',
+          es: 'A las negras no les queda nada que hacer — el rey ya no puede alcanzar el peón ni la casilla de coronación.',
+        },
+      },
+      {
+        san: 'e8=Q',
+        explanation: {
+          en: "The pawn promotes to a new queen, safely defended — this is the payoff of getting the king in front of the pawn early: the defending king simply can't stop the promotion.",
+          es: 'El peón corona en una nueva dama, bien defendida — esta es la recompensa de adelantar el rey delante del peón desde el principio: el rey defensor simplemente no puede impedir la coronación.',
         },
       },
     ],

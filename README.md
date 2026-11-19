@@ -313,6 +313,9 @@ have. Content is
 adapted, in original wording, from Wikibooks'
 [Chess Opening Theory](https://en.wikibooks.org/wiki/Chess_Opening_Theory/1._e4) and
 [Chess/The Endgame](https://en.wikibooks.org/wiki/Chess/The_Endgame) (CC BY-SA).
+`node scripts/check-lessons.mjs [slug…]` checks every endgame and position line with up to 7
+pieces against the [Lichess tablebase](https://tablebase.lichess.ovh): it reports any move that
+changes the result for the side playing it.
 
 ### Today
 
