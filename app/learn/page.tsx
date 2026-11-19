@@ -15,13 +15,15 @@ import type { Lesson, LessonProgress } from '@/lib/types'
 import { PageHeader } from '@/components/PageHeader'
 import { chipClass } from '@/components/styles'
 
-type Category = 'openings' | 'endgames' | 'positions'
+type Category = 'openings' | 'defenses' | 'endgames' | 'positions'
 type ColorFilter = 'all' | 'white' | 'black'
 type GoalFilter = 'all' | 'win' | 'draw'
 type StatusFilter = 'all' | 'pending' | 'done'
 
+// A defense is an opening lesson framed for Black.
 const LESSONS: Record<Category, Lesson[]> = {
-  openings: OPENING_LESSONS,
+  openings: OPENING_LESSONS.filter((lesson) => lesson.primaryColor === 'white'),
+  defenses: OPENING_LESSONS.filter((lesson) => lesson.primaryColor === 'black'),
   endgames: ENDGAME_LESSONS,
   positions: POSITION_LESSONS,
 }
@@ -124,14 +126,17 @@ export default async function LearnPage({
   const s = getStrings()
   const params = await searchParams
   const category: Category =
-    params.category === 'endgames' || params.category === 'positions' ? params.category : 'openings'
+    params.category === 'defenses' ||
+    params.category === 'endgames' ||
+    params.category === 'positions'
+      ? params.category
+      : 'openings'
+  // Openings and defenses are one color each and have nothing to play for: no color or goal.
+  const isOpening = category === 'openings' || category === 'defenses'
   const color: ColorFilter =
-    params.color === 'white' || params.color === 'black' ? params.color : 'all'
-  // Openings have nothing to play for, so no goal.
+    !isOpening && (params.color === 'white' || params.color === 'black') ? params.color : 'all'
   const goal: GoalFilter =
-    category !== 'openings' && (params.goal === 'win' || params.goal === 'draw')
-      ? params.goal
-      : 'all'
+    !isOpening && (params.goal === 'win' || params.goal === 'draw') ? params.goal : 'all'
 
   const status: StatusFilter =
     params.status === 'pending' || params.status === 'done' ? params.status : 'all'
@@ -141,8 +146,7 @@ export default async function LearnPage({
     (lesson) =>
       (color === 'all' || lesson.primaryColor === color) &&
       (goal === 'all' || (lesson.playGoal === 'draw') === (goal === 'draw')) &&
-      (status === 'all' ||
-        isLessonDone(progress[lesson.slug], category !== 'openings') === (status === 'done')),
+      (status === 'all' || isLessonDone(progress[lesson.slug], !isOpening) === (status === 'done')),
   )
 
   function hrefFor(next: {
@@ -152,10 +156,11 @@ export default async function LearnPage({
     status?: StatusFilter
   }) {
     const merged = { category, color, goal, status, ...next }
+    const mergedIsOpening = merged.category === 'openings' || merged.category === 'defenses'
     const query = new URLSearchParams()
     if (merged.category !== 'openings') query.set('category', merged.category)
-    if (merged.color !== 'all') query.set('color', merged.color)
-    if (merged.category !== 'openings' && merged.goal !== 'all') query.set('goal', merged.goal)
+    if (!mergedIsOpening && merged.color !== 'all') query.set('color', merged.color)
+    if (!mergedIsOpening && merged.goal !== 'all') query.set('goal', merged.goal)
     if (merged.status !== 'all') query.set('status', merged.status)
     const qs = query.toString()
     return qs ? `/learn?${qs}` : '/learn'
@@ -173,21 +178,24 @@ export default async function LearnPage({
           current={category}
           options={[
             { value: 'openings', label: s.nav.openings },
+            { value: 'defenses', label: s.learnPage.defenses },
             { value: 'endgames', label: s.learnPage.endgames },
             { value: 'positions', label: s.learnPage.positions },
           ]}
           hrefFor={(value) => hrefFor({ category: value })}
         />
-        <NavSelect
-          label={s.learnPage.colorFilter}
-          value={color}
-          options={(['all', 'white', 'black'] as const).map((value) => ({
-            value,
-            label: value === 'all' ? s.puzzlesPage.filters.allColors : s.common.color[value],
-            href: hrefFor({ color: value }),
-          }))}
-        />
-        {category !== 'openings' && (
+        {!isOpening && (
+          <NavSelect
+            label={s.learnPage.colorFilter}
+            value={color}
+            options={(['all', 'white', 'black'] as const).map((value) => ({
+              value,
+              label: value === 'all' ? s.puzzlesPage.filters.allColors : s.common.color[value],
+              href: hrefFor({ color: value }),
+            }))}
+          />
+        )}
+        {!isOpening && (
           <NavSelect
             label={s.learnPage.goalFilter}
             value={goal}

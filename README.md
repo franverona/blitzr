@@ -296,7 +296,7 @@ filter scopes the whole page.
 
 ### Learn
 
-`/learn` has short lessons on 14 openings, 6 basic endgames (the mates with queen, rook, two
+`/learn` has short lessons on 14 openings (6 for White, 8 defenses for Black, on their own tab), 6 basic endgames (the mates with queen, rook, two
 rooks, two bishops and bishop + knight; king and pawn) and 18 classic positions (Philidor, Lucena,
 Vančura, Saavedra, key squares, the opposition, triangulation, queen vs rook…), each a line you step through
 with a note per move. **Quiz** mode tests you on one side while the opponent's moves play
@@ -304,7 +304,7 @@ automatically (H shows the move, R restarts). Endgame and position lessons also 
 position against Stockfish, at full strength or a chosen Elo, until you mate, promote or (for a
 defense like Philidor's) hold the draw. Study mode has the game
 page's shortcuts. Finishing a quiz, or winning (or holding) in Play, marks the lesson on its card,
-with the strongest bot you beat. The list filters by category, your side, (outside openings)
+with the strongest bot you beat. The list filters by category and, for endgames and positions, your side and
 whether the goal is to win or to draw, and progress (pending or done), all in the URL (`/learn?category=positions&color=black&goal=draw`). Opening lessons show how many of your own games reached that line; endgame and position
 lessons, how many reached the same pieces (pawns aside, so rook vs rook for Philidor), with links
 to the most recent at that move. On an opening lesson, **Add to
