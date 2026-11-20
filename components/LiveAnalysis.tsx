@@ -66,7 +66,11 @@ export function LiveAnalysisProvider({ children }: { children: React.ReactNode }
     // ponytail: at most one search in flight; only the latest requested FEN
     // runs next, intermediate positions are dropped.
     let pendingFen: string | null = null
+    let latestFen: string | null = null
     let busy = false
+    // Timed searches aren't reproducible, so a revisited position reuses its first result.
+    // shortcut: unbounded, fine for one game's positions; cap it if exploring grows it large.
+    const cache = new Map<string, { lines: EngineLine[]; terminal: PositionEval | null }>()
 
     async function drain() {
       busy = true
@@ -79,8 +83,9 @@ export function LiveAnalysisProvider({ children }: { children: React.ReactNode }
           const lines = terminal
             ? []
             : await engine.evaluateLines(fen, LIVE_MULTI_PV, LIVE_MOVETIME_MS)
+          cache.set(fen, { lines, terminal })
           // Skip a result that a newer request has already superseded.
-          if (!cancelled && !pendingFen) setState({ lines, fen, terminal, thinking: false })
+          if (!cancelled && fen === latestFen) setState({ lines, fen, terminal, thinking: false })
         }
       } catch {
         // Worker died — clear the spinner.
@@ -92,6 +97,13 @@ export function LiveAnalysisProvider({ children }: { children: React.ReactNode }
     }
 
     requestRef.current = (fen) => {
+      latestFen = fen
+      const cached = cache.get(fen)
+      if (cached) {
+        pendingFen = null
+        setState({ ...cached, fen, thinking: false })
+        return
+      }
       pendingFen = fen
       setState((prev) => ({ ...prev, thinking: true }))
       if (!busy) drain()
