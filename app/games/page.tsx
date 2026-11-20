@@ -105,7 +105,7 @@ export default async function GamesPage({
         title={s.gamesPage.title}
         actions={
           <div className="flex flex-wrap items-center gap-2">
-            <BulkAnalyzeButton hasUnanalyzedGames={unanalyzedGames.length > 0} />
+            <BulkAnalyzeButton unanalyzedGames={unanalyzedGames.length} />
             <SyncButton />
             <AddPgnButton />
           </div>
