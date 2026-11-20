@@ -199,6 +199,10 @@ async function runMigrations(db: Kysely<DbSchema>): Promise<void> {
       revealed_at TEXT NOT NULL
     )
   `.execute(db)
+
+  // Variants stopped being supported; ones synced before go, their analysis and cards cascading.
+  const variants = await sql`SELECT 1 FROM games WHERE rules <> 'chess' LIMIT 1`.execute(db)
+  if (variants.rows.length > 0) await alter(sql`DELETE FROM games WHERE rules <> 'chess'`)
 }
 
 /** Copies the database to `backups/pre-migration-<time>.db` next to it; no-op in memory. */

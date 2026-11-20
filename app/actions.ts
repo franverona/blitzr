@@ -289,6 +289,7 @@ export async function addManualGame(
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : '' }
   }
+  if (!isStandardChess(game)) return { ok: false, error: getStrings().manualGame.variant }
   if (findDuplicateGame(game, await cachedListAllGames())) {
     return { ok: false, error: getStrings().manualGame.duplicate }
   }
@@ -321,7 +322,8 @@ export async function importPgnInbox(): Promise<
     let games: Game[]
     try {
       const pgns = splitPgnGames(await fs.readFile(file, 'utf8'))
-      games = pgns.map((pgn) => parseManualGame(pgn, username))
+      // Variants aren't supported, as in sync.
+      games = pgns.map((pgn) => parseManualGame(pgn, username)).filter(isStandardChess)
     } catch (err) {
       error = s.inboxBadFile(basename(file), err instanceof Error ? err.message : '')
       continue

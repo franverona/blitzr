@@ -108,10 +108,10 @@ Every game has a `site` (`chesscom` | `lichess`). `siteUsername(site)` reads `CH
   games (only reachable logged in, which we don't automate), so the site's archive downloads
   (`chess_com_games_*.pgn`) in `BLITZR_PGN_INBOX` are imported as pasted games, deduped by
   `findDuplicateGame()` (they have no `Link`), and each file is deleted once imported.
-- Ingestion keeps daily games and variants: Chess.com stores one chess.js can't replay with
-  `movesSan: null`, while Lichess skips it (Horde, Crazyhouse…) since its parser needs the moves.
-  Filtering happens in `app/actions.ts`:
-  engine features need `isStandardChess()`; opening features also need `startsFromStandardPosition()`.
+- **Variants aren't supported:** `syncArchive()` drops any game that isn't `isStandardChess()`
+  (Chess960 included), "Add game by PGN" refuses one, and `ensureSchema()` deletes any left from
+  before. Daily games are kept. Opening features also need `startsFromStandardPosition()` (a
+  Lichess "From Position" game is standard rules from a FEN).
 - **Chess.com** (`https://api.chess.com/pub`): always send a descriptive `User-Agent`. Avatars are
   fetched live, never stored, failing soft to a letter badge. Quirks: "Play vs Coach" games link to
   an unrelated game (link hidden); "Play Bots" games never appear in the API (add by PGN); "Play vs
