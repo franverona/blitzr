@@ -561,6 +561,11 @@ const en = {
     synced: (archives: number, games: number) =>
       `Synced ${archives} archive${archives === 1 ? '' : 's'}, ${games} game${games === 1 ? '' : 's'} added.`,
     analyzeNew: 'Analyze them',
+    imported: (added: number, skipped: number) =>
+      `Imported ${added} game${added === 1 ? '' : 's'} from Chess.com exports, ${skipped} already in Blitzr.`,
+    inboxUnreadable: "Can't read the BLITZR_PGN_INBOX folder — check the path in .env.local.",
+    inboxBadFile: (file: string, reason: string) =>
+      `Couldn't import ${file}, so it was kept: ${reason}`,
   },
   addPgn: {
     button: 'Add game by PGN',
@@ -1447,6 +1452,11 @@ const es: Strings = {
     synced: (archives: number, games: number) =>
       `${archives} ${archives === 1 ? 'archivo sincronizado' : 'archivos sincronizados'}, ${games} ${games === 1 ? 'partida añadida' : 'partidas añadidas'}.`,
     analyzeNew: 'Analizarlas',
+    imported: (added: number, skipped: number) =>
+      `${added} ${added === 1 ? 'partida importada' : 'partidas importadas'} de exportaciones de Chess.com, ${skipped} ya en Blitzr.`,
+    inboxUnreadable: 'No se puede leer la carpeta BLITZR_PGN_INBOX — revisa la ruta en .env.local.',
+    inboxBadFile: (file: string, reason: string) =>
+      `No se pudo importar ${file}, así que se ha conservado: ${reason}`,
   },
   addPgn: {
     button: 'Añadir partida por PGN',

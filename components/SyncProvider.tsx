@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useRef, useState, useTransition } from 'react'
 import { toast } from 'react-hot-toast'
-import { listArchivesToSync, syncArchiveMonth } from '@/app/actions'
+import { importPgnInbox, listArchivesToSync, syncArchiveMonth } from '@/app/actions'
 import { getStrings } from '@/lib/i18n/strings'
 import { useBulkAnalysis } from './BulkAnalysisProvider'
 import { buttonClass } from './styles'
@@ -22,6 +22,7 @@ const SyncContext = createContext<SyncContextValue | null>(null)
 const TOAST_ID = 'sync'
 // Its own toast, so the other site's result still shows.
 const SITE_ERROR_TOAST_ID = 'sync-site-error'
+const INBOX_TOAST_ID = 'sync-inbox'
 
 /**
  * Root-layout sync state, so a sync started on open (`autoSync`, set by the
@@ -41,15 +42,22 @@ export function SyncProvider({
   function sync({ quiet = false } = {}) {
     toast.dismiss(TOAST_ID)
     toast.dismiss(SITE_ERROR_TOAST_ID)
+    toast.dismiss(INBOX_TOAST_ID)
     startTransition(async () => {
       try {
+        // First, as it needs no network.
+        const inbox = await importPgnInbox()
+        if (inbox.error) toast.error(inbox.error, { id: INBOX_TOAST_ID })
+        else if (inbox.ok && inbox.added + inbox.skipped > 0)
+          toast(s.sync.imported(inbox.added, inbox.skipped), { id: INBOX_TOAST_ID })
         const pending = await listArchivesToSync()
         if (!pending.ok) {
           toast.error(pending.error, { id: TOAST_ID })
           return
         }
         if (pending.error) toast.error(pending.error, { id: SITE_ERROR_TOAST_ID })
-        let gamesUpserted = 0
+        // Counted in, so imported games get the "Analyze them" offer too.
+        let gamesUpserted = inbox.ok ? inbox.added : 0
         for (const [i, archiveYm] of pending.archives.entries()) {
           setProgress({ done: i, total: pending.archives.length })
           const month = await syncArchiveMonth(archiveYm)

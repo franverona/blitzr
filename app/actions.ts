@@ -1,5 +1,7 @@
 'use server'
 
+import fs from 'node:fs/promises'
+import { basename } from 'node:path'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { cache } from 'react'
@@ -33,6 +35,7 @@ import type { DrillCandidate, LearnedCounts } from '@/lib/drill'
 import { isBotElo, type BotElo } from '@/lib/botStrength'
 import { findDuplicateGame, parseManualGame, pgnSite, type ManualGameSide } from '@/lib/manualGame'
 import { summarizeMoveQuality } from '@/lib/moveQuality'
+import { listInboxFiles, splitPgnGames } from '@/lib/pgnInbox'
 import { buildOpeningFamilies, openingFamilyLabel, openingFamilyLabels } from '@/lib/openings'
 import { nextPuzzleByRating } from '@/lib/mateProblems'
 import { allMateProblems, getMateProblem } from '@/lib/puzzleSet'
@@ -292,6 +295,52 @@ export async function addManualGame(
   await getRepository().upsertGames([game])
   revalidatePath('/games')
   return { ok: true, gameId: game.id }
+}
+
+/**
+ * Imports `BLITZR_PGN_INBOX`'s Chess.com exports (games the API leaves out, like Coach ones) as
+ * pasted games, deleting each file once imported. A file with a game that won't parse is kept.
+ */
+export async function importPgnInbox(): Promise<
+  // `error`: a file that failed, while the others still import.
+  { ok: true; added: number; skipped: number; error?: string } | { ok: false; error: string }
+> {
+  const s = getStrings().sync
+  let files: string[]
+  try {
+    files = await listInboxFiles()
+  } catch {
+    return { ok: false, error: s.inboxUnreadable }
+  }
+  const username = siteUsername('chesscom') ?? ''
+  const existing = [...(await cachedListAllGames())]
+  let added = 0
+  let skipped = 0
+  let error: string | undefined
+  for (const file of files) {
+    let games: Game[]
+    try {
+      const pgns = splitPgnGames(await fs.readFile(file, 'utf8'))
+      games = pgns.map((pgn) => parseManualGame(pgn, username))
+    } catch (err) {
+      error = s.inboxBadFile(basename(file), err instanceof Error ? err.message : '')
+      continue
+    }
+    const fresh: Game[] = []
+    for (const game of games) {
+      if (findDuplicateGame(game, existing)) {
+        skipped++
+      } else {
+        fresh.push(game)
+        existing.push(game)
+      }
+    }
+    await getRepository().upsertGames(fresh)
+    added += fresh.length
+    await fs.rm(file, { force: true })
+  }
+  if (added) revalidatePath('/games')
+  return { ok: true, added, skipped, ...(error ? { error } : {}) }
 }
 
 /** Synced games aren't deletable: the next sync would bring them back. Practice games are. */
