@@ -411,6 +411,16 @@ export function GameStoryPanel({
 
   return (
     <div ref={scrollRef} className={panelClass}>
+      <EvalGraph
+        evals={analysis!.evals}
+        movesSan={movesSan}
+        initialFen={initialFen}
+        currentPly={exploring ? null : currentPly}
+        onSelect={(ply) => {
+          exitExploring()
+          setPly(ply)
+        }}
+      />
       <p>
         {story.afterOpening
           ? t.opening(
