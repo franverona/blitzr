@@ -6,14 +6,20 @@ import { CpuIcon } from './NavIcons'
 import { Spinner } from './Spinner'
 import { buttonClass } from './styles'
 
-export function BulkAnalyzeButton({ hasUnanalyzedGames }: { hasUnanalyzedGames: boolean }) {
+export function BulkAnalyzeButton({ unanalyzedGames }: { unanalyzedGames: number }) {
   const { progress, start, cancel } = useBulkAnalysis()
   const s = getStrings()
-  // hasUnanalyzedGames is a page-load snapshot; start() still re-checks.
+  // A page-load snapshot; start() still re-checks.
+  const hasUnanalyzedGames = unanalyzedGames > 0
   const disabled = progress !== null || !hasUnanalyzedGames
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex flex-wrap items-center gap-3">
+      {hasUnanalyzedGames && progress === null && (
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          {s.bulkAnalyze.unanalyzed(unanalyzedGames)}
+        </p>
+      )}
       <button
         onClick={start}
         disabled={disabled}

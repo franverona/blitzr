@@ -104,6 +104,10 @@ Every game has a `site` (`chesscom` | `lichess`). `siteUsername(site)` reads `CH
   `syncArchiveMonth()`), so a failed month leaves earlier ones saved. `sync_state` marks months
   `complete`/`partial`; the current month (and the previous, for a day) is always re-fetched.
   Auto-sync on open is `SyncProvider` (`BLITZR_AUTO_SYNC_MINUTES`, `0` turns it off).
+- A sync first runs `importPgnInbox()`: since Nov 2026 Chess.com's API leaves out "Play vs Coach"
+  games (only reachable logged in, which we don't automate), so the site's archive downloads
+  (`chess_com_games_*.pgn`) in `BLITZR_PGN_INBOX` are imported as pasted games, deduped by
+  `findDuplicateGame()` (they have no `Link`), and each file is deleted once imported.
 - **Variants aren't supported:** `syncArchive()` drops any game that isn't `isStandardChess()`
   (Chess960 included), "Add game by PGN" refuses one, and `ensureSchema()` deletes any left from
   before. Daily games are kept. Opening features also need `startsFromStandardPosition()` (a

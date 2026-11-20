@@ -43,7 +43,6 @@ const en = {
   },
   today: {
     title: 'Today',
-    unanalyzed: (n: number) => `${n} game${n === 1 ? '' : 's'} not analyzed yet`,
     noGames: 'No games yet — sync your Chess.com or Lichess history to fill this page.',
     goToGames: 'Go to Games',
     drillTitle: 'Drill',
@@ -515,6 +514,7 @@ const en = {
     finalStanding: (standing: string) => `The final position was ${standing}.`,
   },
   bulkAnalyze: {
+    unanalyzed: (n: number) => `${n} game${n === 1 ? '' : 's'} not analyzed yet`,
     button: 'Analyze all',
     cancel: 'Cancel',
     nothingToAnalyze: 'Nothing to analyze — every game already has one.',
@@ -562,6 +562,13 @@ const en = {
     synced: (archives: number, games: number) =>
       `Synced ${archives} archive${archives === 1 ? '' : 's'}, ${games} game${games === 1 ? '' : 's'} added.`,
     analyzeNew: 'Analyze them',
+    imported: (added: number, skipped: number) =>
+      `Imported ${added} game${added === 1 ? '' : 's'} from Chess.com exports, ${skipped} already in Blitzr.`,
+    showImported: 'Show them',
+    importedTitle: 'Games imported from Chess.com exports',
+    inboxUnreadable: "Can't read the BLITZR_PGN_INBOX folder — check the path in .env.local.",
+    inboxBadFile: (file: string, reason: string) =>
+      `Couldn't import ${file}, so it was kept: ${reason}`,
   },
   addPgn: {
     button: 'Add game by PGN',
@@ -914,7 +921,6 @@ const es: Strings = {
   },
   today: {
     title: 'Hoy',
-    unanalyzed: (n: number) => `${n} ${n === 1 ? 'partida sin analizar' : 'partidas sin analizar'}`,
     noGames:
       'Aún no hay partidas — sincroniza tu historial de Chess.com o Lichess para llenar esta página.',
     goToGames: 'Ir a Partidas',
@@ -1400,6 +1406,7 @@ const es: Strings = {
     finalStanding: (standing: string) => `La posición final era ${standing}.`,
   },
   bulkAnalyze: {
+    unanalyzed: (n: number) => `${n} ${n === 1 ? 'partida sin analizar' : 'partidas sin analizar'}`,
     button: 'Analizar todas',
     cancel: 'Cancelar',
     nothingToAnalyze: 'Nada que analizar — todas las partidas ya tienen análisis.',
@@ -1449,6 +1456,13 @@ const es: Strings = {
     synced: (archives: number, games: number) =>
       `${archives} ${archives === 1 ? 'archivo sincronizado' : 'archivos sincronizados'}, ${games} ${games === 1 ? 'partida añadida' : 'partidas añadidas'}.`,
     analyzeNew: 'Analizarlas',
+    imported: (added: number, skipped: number) =>
+      `${added} ${added === 1 ? 'partida importada' : 'partidas importadas'} de exportaciones de Chess.com, ${skipped} ya en Blitzr.`,
+    showImported: 'Verlas',
+    importedTitle: 'Partidas importadas de exportaciones de Chess.com',
+    inboxUnreadable: 'No se puede leer la carpeta BLITZR_PGN_INBOX — revisa la ruta en .env.local.',
+    inboxBadFile: (file: string, reason: string) =>
+      `No se pudo importar ${file}, así que se ha conservado: ${reason}`,
   },
   addPgn: {
     button: 'Añadir partida por PGN',
