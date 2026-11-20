@@ -536,6 +536,7 @@ const en = {
     badMovetext: 'Could not parse this PGN — check the move text is valid.',
     noMoves: 'PGN has no moves — paste the full game, not just its headers.',
     duplicate: 'This game is already in Blitzr.',
+    variant: 'Only standard chess games are supported, not variants.',
     notInGame: (username: string) =>
       `Neither player is ${username} — pick the side you played, or "Not me" to keep it out of your stats.`,
   },
@@ -1420,6 +1421,7 @@ const es: Strings = {
     badMovetext: 'No se pudo interpretar este PGN — revisa que las jugadas sean válidas.',
     noMoves: 'El PGN no tiene jugadas — pega la partida completa, no solo sus cabeceras.',
     duplicate: 'Esta partida ya está en Blitzr.',
+    variant: 'Solo se admiten partidas de ajedrez estándar, no variantes.',
     notInGame: (username: string) =>
       `Ninguno de los jugadores es ${username} — elige con qué color jugaste, o "No soy yo" para dejarla fuera de tus estadísticas.`,
   },

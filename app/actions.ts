@@ -286,6 +286,7 @@ export async function addManualGame(
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : '' }
   }
+  if (!isStandardChess(game)) return { ok: false, error: getStrings().manualGame.variant }
   if (findDuplicateGame(game, await cachedListAllGames())) {
     return { ok: false, error: getStrings().manualGame.duplicate }
   }

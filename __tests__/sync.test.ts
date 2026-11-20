@@ -46,17 +46,23 @@ vi.mock('@/lib/lichess/normalize', () => ({
           whiteUsername: 'me',
           blackUsername: 'them',
           movesSan: [raw.id],
+          rules: 'chess',
         },
 }))
 vi.mock('@/lib/chesscom/client', () => ({ fetchArchives: vi.fn(), fetchArchiveMonth: vi.fn() }))
 vi.mock('@/lib/chesscom/normalize', () => ({
-  normalizeGame: (raw: { uuid: string; url?: string }, _username: string, archiveYm: string) => ({
+  normalizeGame: (
+    raw: { uuid: string; url?: string; rules?: string },
+    _username: string,
+    archiveYm: string,
+  ) => ({
     id: raw.uuid,
     archiveYm,
     url: raw.url ?? '',
     whiteUsername: 'me',
     blackUsername: 'them',
     movesSan: [raw.uuid],
+    rules: raw.rules ?? 'chess',
   }),
 }))
 
@@ -173,6 +179,16 @@ describe('syncArchive', () => {
     ])
     await syncArchive('2026-08')
     expect(repo.upsertGames).toHaveBeenCalledWith([expect.objectContaining({ id: 'a' })])
+  })
+
+  it('skips variants, still counting them as fetched', async () => {
+    vi.mocked(fetchArchiveMonth).mockResolvedValue([
+      { uuid: 'a' },
+      { uuid: 'b', rules: 'kingofthehill' },
+    ] as never)
+    await syncArchive('2026-08')
+    expect(repo.upsertGames).toHaveBeenCalledWith([expect.objectContaining({ id: 'a' })])
+    expect(repo.markArchiveSynced).toHaveBeenCalledWith('2026-08', 'complete', 2)
   })
 
   it('marks a still-open month partial', async () => {

@@ -23,7 +23,7 @@ describe('ensureSchema', { timeout: 60_000 }, () => {
     // A games table from before is_mine (only the columns the indexes and updates need).
     raw.exec(`
       CREATE TABLE games (id TEXT PRIMARY KEY, end_time INTEGER, eco_code TEXT, archive_ym TEXT,
-        time_control TEXT, time_class TEXT);
+        time_control TEXT, time_class TEXT, rules TEXT NOT NULL DEFAULT 'chess');
       INSERT INTO games (id) VALUES ('g1');
     `)
     const ensureSchema = await freshEnsureSchema()
@@ -65,7 +65,8 @@ describe('ensureSchema', { timeout: 60_000 }, () => {
     const raw = new Database(':memory:')
     raw.exec(`
       CREATE TABLE games (id TEXT PRIMARY KEY, end_time INTEGER, eco_code TEXT, archive_ym TEXT,
-        time_control TEXT, time_class TEXT, site TEXT NOT NULL DEFAULT 'chesscom');
+        time_control TEXT, time_class TEXT, site TEXT NOT NULL DEFAULT 'chesscom',
+        rules TEXT NOT NULL DEFAULT 'chess');
       INSERT INTO games (id, time_control, time_class, site) VALUES
         ('lichess:ultra', '15+0', 'bullet', 'lichess'),
         ('pasted-ultra', '15+0', 'bullet', 'lichess'),
@@ -83,13 +84,31 @@ describe('ensureSchema', { timeout: 60_000 }, () => {
     raw.close()
   })
 
+  it('deletes variant games, their analysis cascading', async () => {
+    const raw = new Database(':memory:')
+    raw.pragma('foreign_keys = ON')
+    raw.exec(`
+      CREATE TABLE games (id TEXT PRIMARY KEY, end_time INTEGER, eco_code TEXT, archive_ym TEXT,
+        time_control TEXT, time_class TEXT, rules TEXT NOT NULL);
+      CREATE TABLE game_analysis (game_id TEXT PRIMARY KEY REFERENCES games(id) ON DELETE CASCADE,
+        evals TEXT NOT NULL, analyzed_at TEXT NOT NULL);
+      INSERT INTO games (id, rules) VALUES ('std', 'chess'), ('koth', 'kingofthehill');
+      INSERT INTO game_analysis VALUES ('std', '[]', 'x'), ('koth', '[]', 'x');
+    `)
+    const ensureSchema = await freshEnsureSchema()
+    await ensureSchema(new Kysely<DbSchema>({ dialect: new SqliteDialect({ database: raw }) }))
+    expect(raw.prepare('SELECT id FROM games').all()).toEqual([{ id: 'std' }])
+    expect(raw.prepare('SELECT game_id FROM game_analysis').all()).toEqual([{ game_id: 'std' }])
+    raw.close()
+  })
+
   it('copies only once when a migration keeps failing', async () => {
     const dir2 = fs.mkdtempSync(path.join(dir, 'failing-'))
     const raw = new Database(path.join(dir2, 'blitzr.db'))
     // A view can't take ADD COLUMN, so the movetime_ms step fails on every run.
     raw.exec(`
       CREATE TABLE games (id TEXT PRIMARY KEY, end_time INTEGER, eco_code TEXT, archive_ym TEXT,
-        time_control TEXT, time_class TEXT);
+        time_control TEXT, time_class TEXT, rules TEXT NOT NULL DEFAULT 'chess');
       CREATE VIEW game_analysis AS SELECT id AS game_id FROM games;
     `)
     const db = new Kysely<DbSchema>({ dialect: new SqliteDialect({ database: raw }) })

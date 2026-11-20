@@ -4,6 +4,7 @@ import { siteUsername } from './config'
 import { getRepository } from './db'
 import { fetchLichessCreatedAt, fetchLichessGames } from './lichess/client'
 import { isOngoing, normalizeLichessGame } from './lichess/normalize'
+import { isStandardChess } from './positions'
 import { findDuplicateGame } from './manualGame'
 import type { Game, GameSite } from './types'
 
@@ -155,6 +156,9 @@ export async function syncArchive(key: string): Promise<number> {
     games = rawGames.map((raw) => normalizeGame(raw, username, archiveYm))
     fetched = rawGames.length
   }
+
+  // Variants aren't supported: Stockfish and every opening feature assume standard chess.
+  games = games.filter(isStandardChess)
 
   // A game already pasted in keeps that copy, with its analysis and drill cards.
   const manual = await repo.listManualGames()
