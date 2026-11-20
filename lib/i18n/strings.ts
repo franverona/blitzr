@@ -43,7 +43,6 @@ const en = {
   },
   today: {
     title: 'Today',
-    unanalyzed: (n: number) => `${n} game${n === 1 ? '' : 's'} not analyzed yet`,
     noGames: 'No games yet — sync your Chess.com or Lichess history to fill this page.',
     goToGames: 'Go to Games',
     drillTitle: 'Drill',
@@ -515,6 +514,7 @@ const en = {
     finalStanding: (standing: string) => `The final position was ${standing}.`,
   },
   bulkAnalyze: {
+    unanalyzed: (n: number) => `${n} game${n === 1 ? '' : 's'} not analyzed yet`,
     button: 'Analyze all',
     cancel: 'Cancel',
     nothingToAnalyze: 'Nothing to analyze — every game already has one.',
@@ -920,7 +920,6 @@ const es: Strings = {
   },
   today: {
     title: 'Hoy',
-    unanalyzed: (n: number) => `${n} ${n === 1 ? 'partida sin analizar' : 'partidas sin analizar'}`,
     noGames:
       'Aún no hay partidas — sincroniza tu historial de Chess.com o Lichess para llenar esta página.',
     goToGames: 'Ir a Partidas',
@@ -1406,6 +1405,7 @@ const es: Strings = {
     finalStanding: (standing: string) => `La posición final era ${standing}.`,
   },
   bulkAnalyze: {
+    unanalyzed: (n: number) => `${n} ${n === 1 ? 'partida sin analizar' : 'partidas sin analizar'}`,
     button: 'Analizar todas',
     cancel: 'Cancelar',
     nothingToAnalyze: 'Nada que analizar — todas las partidas ya tienen análisis.',

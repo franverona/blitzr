@@ -50,10 +50,7 @@ export default async function TodayPage() {
         actions={
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
             {today.unanalyzedGames > 0 && (
-              <>
-                <p className={mutedClassName}>{s.today.unanalyzed(today.unanalyzedGames)}</p>
-                <BulkAnalyzeButton hasUnanalyzedGames />
-              </>
+              <BulkAnalyzeButton unanalyzedGames={today.unanalyzedGames} />
             )}
             {today.lastSyncedAt && (
               <SyncBadge syncedAt={today.lastSyncedAt} fresh={today.syncIsFresh} />
