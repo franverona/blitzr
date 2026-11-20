@@ -303,7 +303,7 @@ export async function addManualGame(
  */
 export async function importPgnInbox(): Promise<
   // `error`: a file that failed, while the others still import.
-  { ok: true; added: number; skipped: number; error?: string } | { ok: false; error: string }
+  { ok: true; imported: Game[]; skipped: number; error?: string } | { ok: false; error: string }
 > {
   const s = getStrings().sync
   let files: string[]
@@ -314,7 +314,7 @@ export async function importPgnInbox(): Promise<
   }
   const username = siteUsername('chesscom') ?? ''
   const existing = [...(await cachedListAllGames())]
-  let added = 0
+  const imported: Game[] = []
   let skipped = 0
   let error: string | undefined
   for (const file of files) {
@@ -336,11 +336,13 @@ export async function importPgnInbox(): Promise<
       }
     }
     await getRepository().upsertGames(fresh)
-    added += fresh.length
+    imported.push(...fresh)
     await fs.rm(file, { force: true })
   }
-  if (added) revalidatePath('/games')
-  return { ok: true, added, skipped, ...(error ? { error } : {}) }
+  if (imported.length) revalidatePath('/games')
+  // Newest first, like the games list.
+  imported.sort((a, b) => b.endTime - a.endTime)
+  return { ok: true, imported, skipped, ...(error ? { error } : {}) }
 }
 
 /** Synced games aren't deletable: the next sync would bring them back. Practice games are. */

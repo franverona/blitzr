@@ -4,7 +4,10 @@ import { createContext, useContext, useEffect, useRef, useState, useTransition }
 import { toast } from 'react-hot-toast'
 import { importPgnInbox, listArchivesToSync, syncArchiveMonth } from '@/app/actions'
 import { getStrings } from '@/lib/i18n/strings'
+import type { Game } from '@/lib/types'
 import { useBulkAnalysis } from './BulkAnalysisProvider'
+import { Dialog } from './Dialog'
+import { GameList } from './GameList'
 import { buttonClass } from './styles'
 
 // Long enough to reach the "Analyze them" button.
@@ -23,6 +26,7 @@ const TOAST_ID = 'sync'
 // Its own toast, so the other site's result still shows.
 const SITE_ERROR_TOAST_ID = 'sync-site-error'
 const INBOX_TOAST_ID = 'sync-inbox'
+const INBOX_ERROR_TOAST_ID = 'sync-inbox-error'
 
 /**
  * Root-layout sync state, so a sync started on open (`autoSync`, set by the
@@ -37,19 +41,38 @@ export function SyncProvider({
 }) {
   const [isPending, startTransition] = useTransition()
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null)
+  // The last sync's games from BLITZR_PGN_INBOX: their import time sorts them among the rest.
+  const [imported, setImported] = useState<Game[]>([])
+  const importedRef = useRef<HTMLDialogElement>(null)
   const s = getStrings()
 
   function sync({ quiet = false } = {}) {
     toast.dismiss(TOAST_ID)
     toast.dismiss(SITE_ERROR_TOAST_ID)
     toast.dismiss(INBOX_TOAST_ID)
+    toast.dismiss(INBOX_ERROR_TOAST_ID)
     startTransition(async () => {
       try {
         // First, as it needs no network.
         const inbox = await importPgnInbox()
-        if (inbox.error) toast.error(inbox.error, { id: INBOX_TOAST_ID })
-        else if (inbox.ok && inbox.added + inbox.skipped > 0)
-          toast(s.sync.imported(inbox.added, inbox.skipped), { id: INBOX_TOAST_ID })
+        if (inbox.error) toast.error(inbox.error, { id: INBOX_ERROR_TOAST_ID })
+        if (inbox.ok && inbox.imported.length > 0) {
+          setImported(inbox.imported)
+          toast(
+            <>
+              {s.sync.imported(inbox.imported.length, inbox.skipped)}
+              <button
+                onClick={() => importedRef.current?.showModal()}
+                className={buttonClass({ size: 'sm' })}
+              >
+                {s.sync.showImported}
+              </button>
+            </>,
+            { id: INBOX_TOAST_ID, duration: ACTION_TOAST_DURATION_MS },
+          )
+        } else if (inbox.ok && inbox.skipped > 0) {
+          toast(s.sync.imported(0, inbox.skipped), { id: INBOX_TOAST_ID })
+        }
         const pending = await listArchivesToSync()
         if (!pending.ok) {
           toast.error(pending.error, { id: TOAST_ID })
@@ -57,7 +80,7 @@ export function SyncProvider({
         }
         if (pending.error) toast.error(pending.error, { id: SITE_ERROR_TOAST_ID })
         // Counted in, so imported games get the "Analyze them" offer too.
-        let gamesUpserted = inbox.ok ? inbox.added : 0
+        let gamesUpserted = inbox.ok ? inbox.imported.length : 0
         for (const [i, archiveYm] of pending.archives.entries()) {
           setProgress({ done: i, total: pending.archives.length })
           const month = await syncArchiveMonth(archiveYm)
@@ -102,6 +125,17 @@ export function SyncProvider({
   return (
     <SyncContext.Provider value={{ isPending, progress, sync: () => sync() }}>
       {children}
+      <Dialog ref={importedRef} title={s.sync.importedTitle} className="w-full max-w-3xl">
+        {/* The provider outlives navigation, so following a game's link must close the dialog. */}
+        <div onClick={(e) => (e.target as Element).closest('a') && importedRef.current?.close()}>
+          <GameList
+            games={imported}
+            accuracyByGameId={{}}
+            filtered={false}
+            headClassName="bg-zinc-100 dark:bg-zinc-950"
+          />
+        </div>
+      </Dialog>
     </SyncContext.Provider>
   )
 }

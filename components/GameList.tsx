@@ -18,6 +18,7 @@ export function GameList({
   filtered,
   selectable = false,
   emptyText,
+  headClassName,
 }: {
   games: Game[]
   /** Any filter is active, so an empty list means "no matches", not "no games". */
@@ -27,6 +28,8 @@ export function GameList({
   /** Checkboxes and "Delete selected": only practice games are deletable in bulk. */
   selectable?: boolean
   emptyText?: string
+  /** Passed to `TableShell`, for a list inside a dialog. */
+  headClassName?: string
 }) {
   const s = getStrings()
   const router = useRouter()
@@ -66,6 +69,7 @@ export function GameList({
 
   return (
     <TableShell
+      headClassName={headClassName}
       head={
         <>
           {selectable && (

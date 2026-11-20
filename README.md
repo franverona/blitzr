@@ -193,7 +193,7 @@ folder (absolute, no `~`), then download them from the Coach tab of your games a
 chess.com (select a page, then the download button). Each sync imports any
 `chess_com_games_*.pgn` there the same way, skipping games already in Blitzr, and deletes the file.
 Exporting the first page (50 games) is enough if you do it at least every 50 coach games. The
-export has dates but no times, so these games get the time of day they were imported. A PGN exported
+export has dates but no times, so these games get the time of day they were imported; the sync's toast lists the ones it added. A PGN exported
 from lichess.org (its `Site` header) becomes a Lichess game, with its link and opening name, and
 `LICHESS_USERNAME` picks your side in it. One from neither site (an over-the-board game, say) is
 matched against whichever username is set, and shows no profile pictures. A game that's
