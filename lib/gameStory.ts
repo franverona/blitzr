@@ -1,5 +1,5 @@
 import { EVAL_BANDS_CP, evalBarPercent, moveWinDrop, whiteToMove } from './analysis'
-import { gameEndBadges, type GameEndReason } from './gameEnd'
+import { gameEndReason, type GameEndReason } from './gameEnd'
 import { gamePhase, type GamePhase } from './material'
 import { classifyMoveQuality, summarizeMoveQuality } from './moveQuality'
 import { detectBlunderReason } from './tactics'
@@ -133,8 +133,7 @@ export function buildGameStory(
   const them = myColor === 'white' ? summary.black : summary.white
 
   const finalFen = positions[movesSan.length]
-  const badges = finalFen ? gameEndBadges(finalFen, finalResults) : []
-  const endReason = (badges.find((b) => b.variant !== 'win') ?? null)?.reason ?? null
+  const endReason = finalFen ? gameEndReason(finalFen, finalResults) : null
 
   return {
     afterOpening,

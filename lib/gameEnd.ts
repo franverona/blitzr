@@ -63,6 +63,14 @@ export function gameEndBadges(
   return []
 }
 
+/** How the game ended: the loser's reason, or the draw's; null if unknown. */
+export function gameEndReason(
+  finalFen: string,
+  finalResults?: { white: string; black: string },
+): GameEndReason | null {
+  return gameEndBadges(finalFen, finalResults).find((b) => b.variant !== 'win')?.reason ?? null
+}
+
 function decisive(
   loser: 'white' | 'black',
   variant: 'loss' | 'flag',

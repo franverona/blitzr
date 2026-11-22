@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { gameEndBadges } from '@/lib/gameEnd'
+import { gameEndBadges, gameEndReason } from '@/lib/gameEnd'
 
 const MIDGAME = 'r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3'
 // Fool's mate: White is mated.
@@ -48,5 +48,17 @@ describe('gameEndBadges', () => {
 
   it('shows nothing for a result it does not understand', () => {
     expect(gameEndBadges(MIDGAME, { white: 'abandoned', black: 'abandoned' })).toEqual([])
+  })
+})
+
+describe('gameEndReason', () => {
+  it("names the loser's reason, not the winner's", () => {
+    expect(gameEndReason(MIDGAME, { white: 'win', black: 'timeout' })).toBe('timeout')
+    expect(gameEndReason(MATED, { white: 'checkmated', black: 'win' })).toBe('checkmate')
+  })
+
+  it('names a draw, and is null when nothing is known', () => {
+    expect(gameEndReason(MIDGAME, { white: 'repetition', black: 'repetition' })).toBe('repetition')
+    expect(gameEndReason(MIDGAME)).toBeNull()
   })
 })
