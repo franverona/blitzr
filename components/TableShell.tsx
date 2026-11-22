@@ -18,14 +18,15 @@ export function TableShell({
 }) {
   return (
     <div
-      className={`overflow-x-auto ${stickyHead ? 'lg:overflow-x-visible' : ''} rounded-lg border border-zinc-300 bg-white shadow-sm dark:border-zinc-800 dark:bg-transparent dark:shadow-none`}
+      // clip (unlike auto) isn't a scroll container, so sticky still works and the corners stay round.
+      className={`overflow-x-auto ${stickyHead ? 'lg:overflow-clip' : ''} rounded-lg border border-zinc-300 bg-white shadow-sm dark:border-zinc-800 dark:bg-transparent dark:shadow-none`}
     >
       <table className="w-full text-sm">
         <thead
           className={`text-left text-xs tracking-wide text-zinc-600 uppercase dark:text-zinc-400 ${headClassName} ${
-            // Unclipped, the head's square corners would show past the rounded border.
+            // Sticky offsets start inside <main>'s pt-6, so -top-6 meets its top edge with no gap.
             stickyHead
-              ? 'sticky top-0 z-10 [&_th:first-child]:rounded-tl-lg [&_th:last-child]:rounded-tr-lg'
+              ? 'sticky -top-6 z-10 [&_th]:shadow-[inset_0_-1px_0_var(--color-zinc-300)] dark:[&_th]:shadow-[inset_0_-1px_0_var(--color-zinc-800)]'
               : ''
           }`}
         >
