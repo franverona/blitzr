@@ -26,6 +26,17 @@ const TIME_CLASS_ICONS: Record<string, typeof ZapIcon | undefined> = {
   correspondence: SunIcon,
 }
 
+// Off the row's result/accuracy hues (emerald, rose, amber).
+const TIME_CLASS_COLORS: Record<string, string> = {
+  ultraBullet: 'text-orange-600 dark:text-orange-400',
+  bullet: 'text-orange-600 dark:text-orange-400',
+  blitz: 'text-yellow-600 dark:text-yellow-400',
+  rapid: 'text-teal-600 dark:text-teal-400',
+  classical: 'text-sky-600 dark:text-sky-400',
+  daily: 'text-violet-600 dark:text-violet-400',
+  correspondence: 'text-violet-600 dark:text-violet-400',
+}
+
 export function GameRow({
   game,
   accuracy,
@@ -133,7 +144,11 @@ export function GameRow({
           <span className="text-zinc-300 dark:text-zinc-700">—</span>
         ) : (
           <>
-            {TimeClassIcon && <TimeClassIcon className="mr-1.5 size-3.5 shrink-0" />}
+            {TimeClassIcon && (
+              <TimeClassIcon
+                className={`mr-1.5 size-3.5 shrink-0 ${TIME_CLASS_COLORS[game.timeClass]}`}
+              />
+            )}
             {timeClassLabel}
             {timeControl && <span className="ml-1.5 tabular-nums">({timeControl})</span>}
           </>
