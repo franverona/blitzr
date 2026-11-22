@@ -92,15 +92,17 @@ export function GameRow({
       <Cell href={href}>{game.practiceOf ? '—' : <SiteIcon site={game.site} />}</Cell>
       <Cell href={href}>
         {game.isMine ? (
-          <span className="flex flex-col gap-0.5 leading-none">
+          // min-h-7 = both lines (text-sm + gap + text-xs, leading-none), so rows match heights.
+          <span className="flex min-h-7 flex-col justify-center gap-0.5 leading-none">
             {opponent}
-            {/* Always rendered, so rows without a rating keep the same height. */}
-            <span
-              className="text-xs text-zinc-500 tabular-nums dark:text-zinc-400"
-              title={opponentRating != null ? s.gameRow.opponentRating : undefined}
-            >
-              {opponentRating != null ? `(${opponentRating})` : '\u00a0'}
-            </span>
+            {opponentRating != null && (
+              <span
+                className="text-xs text-zinc-500 tabular-nums dark:text-zinc-400"
+                title={s.gameRow.opponentRating}
+              >
+                ({opponentRating})
+              </span>
+            )}
           </span>
         ) : (
           `${game.whiteUsername} ${s.common.vs} ${game.blackUsername}`
