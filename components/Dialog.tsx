@@ -26,7 +26,9 @@ export function Dialog({
 }) {
   const titleId = useId()
   const s = getStrings()
-  const bodyClass = `flex flex-col ${bodyClassName}`
+  // The panel's body fills its height: a click on empty space below it would hit the dialog
+  // itself, which the backdrop check below reads as outside.
+  const bodyClass = `flex flex-col ${placement === 'right' ? 'min-h-full' : ''} ${bodyClassName}`
   const content = (
     <>
       <div className="flex items-center justify-between gap-4">
