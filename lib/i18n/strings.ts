@@ -165,6 +165,7 @@ const en = {
   },
   gameRow: {
     notMine: 'Not you',
+    opponentRating: 'Opponent rating',
     addFavorite: 'Add to favorites',
     removeFavorite: 'Remove from favorites',
     days: (n: number) => `${n} day${n === 1 ? '' : 's'}`,
@@ -233,7 +234,7 @@ const en = {
       site: 'Site',
       opponent: 'Opponent',
       result: 'Result',
-      rating: 'Rating',
+      rating: 'My rating',
       accuracy: 'Accuracy',
       errors: 'Errors',
       timeClass: 'Time class',
@@ -1038,6 +1039,7 @@ const es: Strings = {
   },
   gameRow: {
     notMine: 'No eres tú',
+    opponentRating: 'Puntuación del rival',
     addFavorite: 'Añadir a favoritas',
     removeFavorite: 'Quitar de favoritas',
     days: (n: number) => `${n} ${n === 1 ? 'día' : 'días'}`,
@@ -1108,7 +1110,7 @@ const es: Strings = {
       site: 'Sitio',
       opponent: 'Rival',
       result: 'Resultado',
-      rating: 'Puntuación',
+      rating: 'Mi puntuación',
       accuracy: 'Precisión',
       errors: 'Errores',
       timeClass: 'Ritmo',

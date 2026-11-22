@@ -51,8 +51,12 @@ export function GameRow({
   const { progress } = useBulkAnalysis()
   const analyzing = progress?.gameId === game.id
   const coachElo = coachRating(game)
-  const opponent = `${game.myColor === 'white' ? game.blackUsername : game.whiteUsername}${coachElo != null ? ` (${coachElo})` : ''}`
+  const opponent = game.myColor === 'white' ? game.blackUsername : game.whiteUsername
   const myRating = game.myColor === 'white' ? game.whiteRating : game.blackRating
+  // An unrated game's rating isn't meaningful, except the coach's elo.
+  const opponentRating =
+    coachElo ??
+    (game.rated ? (game.myColor === 'white' ? game.blackRating : game.whiteRating) : null)
   const date = formatDate(game.endTime)
   const timeClassLabel =
     s.common.timeClass[game.timeClass as keyof typeof s.common.timeClass] ?? game.timeClass
@@ -87,7 +91,23 @@ export function GameRow({
       {/* A practice game was played here, on neither site. */}
       <Cell href={href}>{game.practiceOf ? '—' : <SiteIcon site={game.site} />}</Cell>
       <Cell href={href}>
-        {game.isMine ? opponent : `${game.whiteUsername} ${s.common.vs} ${game.blackUsername}`}
+        {game.isMine ? (
+          // min-h-7 = both lines (text-sm + gap + text-xs, leading-none), so rows match heights.
+          <span className="flex min-h-7 flex-col justify-center gap-0.5 leading-none">
+            {opponent}
+            {opponentRating != null && (
+              // leading-none here too: text-xs sets its own line-height, overriding the parent's.
+              <span
+                className="text-xs leading-none text-zinc-500 tabular-nums dark:text-zinc-400"
+                title={s.gameRow.opponentRating}
+              >
+                ({opponentRating})
+              </span>
+            )}
+          </span>
+        ) : (
+          `${game.whiteUsername} ${s.common.vs} ${game.blackUsername}`
+        )}
       </Cell>
       <Cell href={href}>
         {game.isMine ? (
