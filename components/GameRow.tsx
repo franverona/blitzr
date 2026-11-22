@@ -10,10 +10,21 @@ import { SiteIcon } from './SiteIcon'
 import { Badge } from './Badge'
 import { FavoriteButton } from './FavoriteButton'
 import { KnightIcon } from './KnightIcon'
+import { BulletIcon, HourglassIcon, SunIcon, TimerIcon, ZapIcon } from './NavIcons'
 import { ResultBadge } from './ResultBadge'
 import { Spinner } from './Spinner'
 import { useBulkAnalysis } from './BulkAnalysisProvider'
 import { accuracyTone } from './styles'
+
+const TIME_CLASS_ICONS: Record<string, typeof ZapIcon | undefined> = {
+  ultraBullet: BulletIcon,
+  bullet: BulletIcon,
+  blitz: ZapIcon,
+  rapid: TimerIcon,
+  classical: HourglassIcon,
+  daily: SunIcon,
+  correspondence: SunIcon,
+}
 
 export function GameRow({
   game,
@@ -35,6 +46,7 @@ export function GameRow({
   const timeClassLabel =
     s.common.timeClass[game.timeClass as keyof typeof s.common.timeClass] ?? game.timeClass
   const timeControl = formatTimeControl(game.timeControl, s.gameRow.days)
+  const TimeClassIcon = TIME_CLASS_ICONS[game.timeClass]
 
   const href = `/games/${game.id}`
 
@@ -121,8 +133,9 @@ export function GameRow({
           <span className="text-zinc-300 dark:text-zinc-700">—</span>
         ) : (
           <>
+            {TimeClassIcon && <TimeClassIcon className="mr-1.5 size-3.5 shrink-0" />}
             {timeClassLabel}
-            {timeControl && <span className="ml-1.5 tabular-nums">{timeControl}</span>}
+            {timeControl && <span className="ml-1.5 tabular-nums">({timeControl})</span>}
           </>
         )}
       </Cell>
