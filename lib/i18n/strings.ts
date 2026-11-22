@@ -167,23 +167,7 @@ const en = {
     notMine: 'Not you',
     addFavorite: 'Add to favorites',
     removeFavorite: 'Remove from favorites',
-    // Per site: Lichess classes by estimated duration (base time + 40 × increment).
-    timeClassTooltips: {
-      chesscom: {
-        bullet: 'Bullet — under 3 minutes per player',
-        blitz: 'Blitz — 3 to 10 minutes per player',
-        rapid: 'Rapid — 10 to 30 minutes per player',
-        daily: 'Daily — correspondence chess, days per move rather than a running clock',
-      } as Record<string, string>,
-      lichess: {
-        ultraBullet: 'UltraBullet — under 30 seconds, counting 40 moves of increment',
-        bullet: 'Bullet — 30 seconds to 3 minutes, counting 40 moves of increment',
-        blitz: 'Blitz — 3 to 8 minutes, counting 40 moves of increment',
-        rapid: 'Rapid — 8 to 25 minutes, counting 40 moves of increment',
-        classical: 'Classical — 25 minutes or more, counting 40 moves of increment',
-        correspondence: 'Correspondence — days per move rather than a running clock',
-      } as Record<string, string>,
-    },
+    days: (n: number) => `${n} day${n === 1 ? '' : 's'}`,
   },
   blunderBadge: {
     labels: { serious: 'Serious', severe: 'Severe' },
@@ -1056,23 +1040,7 @@ const es: Strings = {
     notMine: 'No eres tú',
     addFavorite: 'Añadir a favoritas',
     removeFavorite: 'Quitar de favoritas',
-    timeClassTooltips: {
-      chesscom: {
-        bullet: 'Bala — menos de 3 minutos por jugador',
-        blitz: 'Blitz — de 3 a 10 minutos por jugador',
-        rapid: 'Rápidas — de 10 a 30 minutos por jugador',
-        daily:
-          'Por correspondencia — ajedrez por correo, días por jugada en vez de un reloj corriendo',
-      } as Record<string, string>,
-      lichess: {
-        ultraBullet: 'UltraBullet — menos de 30 segundos, contando 40 jugadas de incremento',
-        bullet: 'Bala — de 30 segundos a 3 minutos, contando 40 jugadas de incremento',
-        blitz: 'Blitz — de 3 a 8 minutos, contando 40 jugadas de incremento',
-        rapid: 'Rápidas — de 8 a 25 minutos, contando 40 jugadas de incremento',
-        classical: 'Clásicas — 25 minutos o más, contando 40 jugadas de incremento',
-        correspondence: 'Por correspondencia — días por jugada en vez de un reloj corriendo',
-      } as Record<string, string>,
-    },
+    days: (n: number) => `${n} ${n === 1 ? 'día' : 'días'}`,
   },
   blunderBadge: {
     labels: { serious: 'Grave', severe: 'Muy grave' },

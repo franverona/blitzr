@@ -4,6 +4,7 @@ import {
   clockShareBeforePly,
   formatClock,
   formatThinkTime,
+  formatTimeControl,
   initialClockSeconds,
   moveClocks,
   plyClocks,
@@ -17,6 +18,20 @@ describe('initialClockSeconds', () => {
     expect(initialClockSeconds('-')).toBeNull()
     expect(initialClockSeconds('1/86400')).toBeNull()
     expect(initialClockSeconds('')).toBeNull()
+  })
+})
+
+describe('formatTimeControl', () => {
+  const days = (n: number) => `${n}d`
+  it('shows minutes+increment, days for daily, and nothing when unknown', () => {
+    expect(formatTimeControl('180+2', days)).toBe('3+2')
+    expect(formatTimeControl('600', days)).toBe('10+0')
+    expect(formatTimeControl('15+0', days)).toBe('¼+0')
+    expect(formatTimeControl('90+1', days)).toBe('1.5+1')
+    expect(formatTimeControl('1/86400', days)).toBe('1d')
+    expect(formatTimeControl('1/259200', days)).toBe('3d')
+    expect(formatTimeControl('-', days)).toBeNull()
+    expect(formatTimeControl('', days)).toBeNull()
   })
 })
 

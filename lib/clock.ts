@@ -4,6 +4,18 @@ export function initialClockSeconds(timeControl: string): number | null {
   return timeControl && Number.isFinite(base) && base > 0 ? base : null
 }
 
+const FRACTIONS: Record<number, string> = { 15: '¼', 30: '½', 45: '¾' }
+
+/** "180+2" → "3+2", daily "1/172800" → days(2); null when there's no control to show. */
+export function formatTimeControl(timeControl: string, days: (n: number) => string): string | null {
+  const daily = timeControl.match(/^1\/(\d+)$/)
+  if (daily) return days(Math.max(1, Math.round(Number(daily[1]) / 86400)))
+  const base = initialClockSeconds(timeControl)
+  if (base == null) return null
+  const minutes = FRACTIONS[base] ?? String(Number((base / 60).toFixed(1)))
+  return `${minutes}+${clockIncrementSeconds(timeControl)}`
+}
+
 const CLK = /\[%clk\s+(\d+):(\d{1,2}):(\d{1,2}(?:\.\d+)?)\]/g
 
 /** Seconds left after each ply, from the PGN's `[%clk h:mm:ss]` comments; null unless every ply has one. */

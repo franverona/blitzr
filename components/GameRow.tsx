@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { formatTimeControl } from '@/lib/clock'
 import { coachRating } from '@/lib/chesscom/normalize'
 import { formatDate, formatDateTime } from '@/lib/dates'
 import { getStrings } from '@/lib/i18n/strings'
@@ -31,9 +32,9 @@ export function GameRow({
   const opponent = `${game.myColor === 'white' ? game.blackUsername : game.whiteUsername}${coachElo != null ? ` (${coachElo})` : ''}`
   const myRating = game.myColor === 'white' ? game.whiteRating : game.blackRating
   const date = formatDate(game.endTime)
-  const timeClassTooltip = s.gameRow.timeClassTooltips[game.site][game.timeClass]
   const timeClassLabel =
     s.common.timeClass[game.timeClass as keyof typeof s.common.timeClass] ?? game.timeClass
+  const timeControl = formatTimeControl(game.timeControl, s.gameRow.days)
 
   const href = `/games/${game.id}`
 
@@ -115,8 +116,15 @@ export function GameRow({
           <span className="text-zinc-300 dark:text-zinc-700">—</span>
         )}
       </Cell>
-      <Cell href={href} className="text-zinc-500 dark:text-zinc-400">
-        {timeClassTooltip ? <abbr title={timeClassTooltip}>{timeClassLabel}</abbr> : timeClassLabel}
+      <Cell href={href} className="whitespace-nowrap text-zinc-500 dark:text-zinc-400">
+        {game.timeClass === 'unknown' ? (
+          <span className="text-zinc-300 dark:text-zinc-700">—</span>
+        ) : (
+          <>
+            {timeClassLabel}
+            {timeControl && <span className="ml-1.5 tabular-nums">{timeControl}</span>}
+          </>
+        )}
       </Cell>
     </tr>
   )
