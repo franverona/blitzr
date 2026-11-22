@@ -22,7 +22,7 @@ import { fetchBotAvatar, fetchPlayerAvatar } from '@/lib/chesscom/client'
 import { coachRating, isBareBotNameEvent, parsePgnHeaders } from '@/lib/chesscom/normalize'
 import { moveClocks } from '@/lib/clock'
 import { formatDateTime } from '@/lib/dates'
-import { chesscomUrl } from '@/lib/manualGame'
+import { pgnSite } from '@/lib/manualGame'
 import { getStrings } from '@/lib/i18n/strings'
 import { isStandardChess } from '@/lib/positions'
 import type { Game, MyColor, MyResult } from '@/lib/types'
@@ -73,9 +73,9 @@ export default async function GamePage({
       : 'white'
     : null
   // Lichess has no profile pictures, so its players keep the initial-letter badge. So does a game
-  // pasted from elsewhere (no chess.com link): its names would match strangers' accounts.
+  // pasted from elsewhere (no chess.com Site or Link header): its names would match strangers'.
   const fromChesscom =
-    game.site === 'chesscom' && (game.archiveYm !== 'manual' || chesscomUrl(game.url) !== null)
+    game.site === 'chesscom' && (game.archiveYm !== 'manual' || pgnSite(game.pgn) === 'chesscom')
   const avatar = (color: MyColor, username: string) =>
     practiceBot === color || !fromChesscom
       ? null
