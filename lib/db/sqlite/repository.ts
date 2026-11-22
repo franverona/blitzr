@@ -162,6 +162,7 @@ export interface ListGamesParams {
   color?: MyColor
   rated?: boolean
   site?: GameSite
+  timeClass?: string
   gameIds?: string[]
   /** Only practice games instead of none (`/games?practice=1`). */
   practice?: boolean
@@ -201,6 +202,7 @@ function gameFilter(params: ListGamesParams) {
     if (params.color) conditions.push(eb('my_color', '=', params.color))
     if (params.rated !== undefined) conditions.push(eb('rated', '=', params.rated ? 1 : 0))
     if (params.site) conditions.push(eb('site', '=', params.site))
+    if (params.timeClass) conditions.push(eb('time_class', '=', params.timeClass))
     if (params.favorite) conditions.push(eb('favorite', '=', 1))
     if (params.gameIds) conditions.push(eb('id', 'in', params.gameIds))
     return eb.and(conditions)

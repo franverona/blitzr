@@ -308,6 +308,18 @@ describe('SqliteGameRepository.listGames site filter', () => {
   })
 })
 
+describe('SqliteGameRepository.listGames time class filter', () => {
+  it('lists only the asked time class', async () => {
+    await repo.upsertGames([{ ...game('rapid-1', 'fverona', 'zed', 'white'), timeClass: 'rapid' }])
+    const { games, total } = await repo.listGames({ timeClass: 'rapid' })
+    expect(games.map((g) => g.id)).toEqual(['rapid-1'])
+    expect(total).toBe(1)
+    expect((await repo.listGames({ timeClass: 'blitz' })).games.map((g) => g.id)).not.toContain(
+      'rapid-1',
+    )
+  })
+})
+
 describe('SqliteGameRepository.upsertGames on an existing id', () => {
   it("refreshes a Lichess game's PGN and opening, and counts only new games", async () => {
     const stale = { ...game('lichess:abc', 'fverona', 'yan', 'white'), site: 'lichess' as const }

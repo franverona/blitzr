@@ -5,6 +5,7 @@ import {
   getPracticeAccuracyById,
   getUnanalyzedGames,
   getGameSites,
+  getGameTimeClasses,
   listGameIds,
   listGames,
 } from '../actions'
@@ -34,6 +35,7 @@ type GamesSearchParams = {
   color?: string
   rated?: string
   site?: string
+  tc?: string
   accOp?: string
   accValue?: string
   practice?: string
@@ -55,6 +57,7 @@ export default async function GamesPage({
     color,
     rated,
     site: siteParam,
+    tc: tcParam,
     accOp,
     accValue,
     practice,
@@ -72,11 +75,14 @@ export default async function GamesPage({
   const opponent = q?.trim() || undefined
 
   // Accuracy isn't a column, so the filter narrows to an id set first.
-  const [accuracyByGameId, unanalyzedGames, sites] = await Promise.all([
+  const [accuracyByGameId, unanalyzedGames, sites, timeClasses] = await Promise.all([
     getGameAccuracyById(),
     getUnanalyzedGames(),
     getGameSites(),
+    getGameTimeClasses(),
   ])
+  // Only a class some game has; practice games are all `practice`, so it doesn't apply to them.
+  const tc = !practiceOnly && tcParam && timeClasses.includes(tcParam) ? tcParam : undefined
   // `Number('')` is 0, and a malformed value is NaN, which would match no game.
   const accuracyThreshold = accValue ? Number(accValue) : NaN
   const gameIds =
@@ -96,6 +102,7 @@ export default async function GamesPage({
     color: color as MyColor | undefined,
     rated: rated ? rated === 'true' : undefined,
     site: practiceOnly ? undefined : site,
+    timeClass: tc,
     gameIds,
     practice: practiceOnly,
     favorite: favoritesOnly,
@@ -128,7 +135,7 @@ export default async function GamesPage({
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
   const filters = practiceOnly
     ? { q, result, color, practice }
-    : { q, result, color, rated, site, accOp, accValue, fav: favoritesOnly ? '1' : undefined }
+    : { q, result, color, rated, site, tc, accOp, accValue, fav: favoritesOnly ? '1' : undefined }
   const filtered = Object.values(filters).some((v) => v !== undefined && v !== '')
   // The default sort stays out of the URL.
   const sortQuery = (col: GameSort, d: SortDir) =>
@@ -177,6 +184,8 @@ export default async function GamesPage({
         site={site}
         // A set filter stays visible so it can be cleared.
         showSite={sites.length > 1 || site !== undefined}
+        tc={tc}
+        timeClasses={timeClasses}
         accOp={accOp}
         accValue={accValue}
         practice={practiceOnly ? '1' : undefined}
