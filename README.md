@@ -26,7 +26,8 @@ implies endorsement.
 
 - Incremental sync of your Chess.com and Lichess games into SQLite (either or both), plus adding
   any game by pasted PGN
-- Game list with opponent search and result/color/rated/site/accuracy filters
+- Game list with opponent search, result/color/rated/site/accuracy filters, and sorting by date,
+  rating, accuracy or errors (click a column header)
 - Board replay, openings aggregated by ECO (results per color and your average accuracy in each), and a user-defined repertoire with deviation detection
   and the most-played spots where your games run past it
 - In-browser Stockfish analysis: blunders, plain-English tactical explanations, move-quality and

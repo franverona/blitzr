@@ -5,6 +5,7 @@ import {
   getPracticeAccuracyById,
   getUnanalyzedGames,
   getGameSites,
+  listGameIds,
   listGames,
 } from '../actions'
 import { AddPgnButton } from '@/components/AddPgnButton'
@@ -12,8 +13,16 @@ import { BulkAnalyzeButton } from '@/components/BulkAnalyzeButton'
 import { GameList } from '@/components/GameList'
 import { GameSearchForm } from '@/components/GameSearchForm'
 import { SyncButton } from '@/components/SyncButton'
+import {
+  GAME_SORTS,
+  parseGameSort,
+  sortIdsByAccuracy,
+  type GameSort,
+  type SortDir,
+} from '@/lib/gameSort'
+import type { ListGamesParams } from '@/lib/db/sqlite/repository'
 import { getStrings } from '@/lib/i18n/strings'
-import type { MyColor, MyResult } from '@/lib/types'
+import type { Game, GameAccuracy, MyColor, MyResult } from '@/lib/types'
 import { PageHeader } from '@/components/PageHeader'
 
 const PAGE_SIZE = 50
@@ -29,6 +38,8 @@ type GamesSearchParams = {
   accValue?: string
   practice?: string
   fav?: string
+  sort?: string
+  dir?: string
 }
 
 export default async function GamesPage({
@@ -48,6 +59,8 @@ export default async function GamesPage({
     accValue,
     practice,
     fav,
+    sort: sortParam,
+    dir: dirParam,
   }: GamesSearchParams = Object.fromEntries(
     Object.entries(await searchParams).filter(([, v]) => typeof v === 'string'),
   )
@@ -75,9 +88,9 @@ export default async function GamesPage({
           .map(([id]) => id)
       : undefined
 
-  const { games, total } = await listGames({
-    limit: PAGE_SIZE,
-    offset: (page - 1) * PAGE_SIZE,
+  const { sort, dir } = parseGameSort(sortParam, dirParam)
+  const offset = (page - 1) * PAGE_SIZE
+  const filterParams: ListGamesParams = {
     opponent,
     result: result as MyResult | undefined,
     color: color as MyColor | undefined,
@@ -86,17 +99,51 @@ export default async function GamesPage({
     gameIds,
     practice: practiceOnly,
     favorite: favoritesOnly,
-  })
-  const accuracies = practiceOnly
-    ? await getPracticeAccuracyById(games.map((g) => g.id))
-    : accuracyByGameId
+  }
+  let games: Game[]
+  let total: number
+  let accuracies: Record<string, GameAccuracy>
+  if (sort === 'accuracy' || sort === 'errors') {
+    // Not columns: every match is ordered here, then one page of them fetched.
+    const ids = await listGameIds(filterParams)
+    accuracies = practiceOnly ? await getPracticeAccuracyById(ids) : accuracyByGameId
+    const pageIds = sortIdsByAccuracy(ids, accuracies, sort, dir).slice(offset, offset + PAGE_SIZE)
+    const byId = new Map(
+      (await listGames({ ...filterParams, gameIds: pageIds })).games.map((g) => [g.id, g]),
+    )
+    games = pageIds.flatMap((id) => byId.get(id) ?? [])
+    total = ids.length
+  } else {
+    ;({ games, total } = await listGames({
+      ...filterParams,
+      limit: PAGE_SIZE,
+      offset,
+      sort,
+      dir,
+    }))
+    accuracies = practiceOnly
+      ? await getPracticeAccuracyById(games.map((g) => g.id))
+      : accuracyByGameId
+  }
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
   const filters = practiceOnly
     ? { q, result, color, practice }
     : { q, result, color, rated, site, accOp, accValue, fav: favoritesOnly ? '1' : undefined }
   const filtered = Object.values(filters).some((v) => v !== undefined && v !== '')
+  // The default sort stays out of the URL.
+  const sortQuery = (col: GameSort, d: SortDir) =>
+    col === 'date' && d === 'desc' ? {} : { sort: col, dir: d }
+  const linkParams = { ...filters, ...sortQuery(sort, dir) }
+  // The active column flips; another starts descending (newest, highest, most errors), which is
+  // what sorting by it is usually for. Page 1, as the old page means nothing in the new order.
+  const sortHrefs = Object.fromEntries(
+    GAME_SORTS.map((col) => {
+      const d = col === sort && dir === 'desc' ? 'asc' : 'desc'
+      return [col, pageHref(1, { ...filters, ...sortQuery(col, d) })]
+    }),
+  ) as Record<GameSort, string>
   // A stale or hand-typed page past the end would otherwise show "no games".
-  if (page > totalPages) redirect(pageHref(totalPages, filters))
+  if (page > totalPages) redirect(pageHref(totalPages, linkParams))
   const s = getStrings()
 
   return (
@@ -134,6 +181,7 @@ export default async function GamesPage({
         accValue={accValue}
         practice={practiceOnly ? '1' : undefined}
         fav={favoritesOnly ? '1' : undefined}
+        sort={sortQuery(sort, dir)}
       />
 
       <GameList
@@ -141,6 +189,7 @@ export default async function GamesPage({
         accuracyByGameId={accuracies}
         filtered={filtered}
         selectable={practiceOnly}
+        sort={{ sort, dir, hrefs: sortHrefs }}
         emptyText={
           practiceOnly && !opponent && !result && !color && !rated
             ? s.gameList.noPractice
@@ -150,13 +199,13 @@ export default async function GamesPage({
 
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-4 text-sm">
-          <PageLink page={page - 1} filters={filters} disabled={page <= 1}>
+          <PageLink page={page - 1} filters={linkParams} disabled={page <= 1}>
             {s.gamesPage.previous}
           </PageLink>
           <span className="text-zinc-600 dark:text-zinc-400">
             {s.gamesPage.pageOf(page, totalPages)}
           </span>
-          <PageLink page={page + 1} filters={filters} disabled={page >= totalPages}>
+          <PageLink page={page + 1} filters={linkParams} disabled={page >= totalPages}>
             {s.gamesPage.next}
           </PageLink>
         </div>
