@@ -92,13 +92,15 @@ export function GameRow({
       <Cell href={href}>{game.practiceOf ? '—' : <SiteIcon site={game.site} />}</Cell>
       <Cell href={href}>
         {game.isMine ? (
-          <span className="flex flex-col leading-tight">
+          <span className="flex flex-col gap-0.5 leading-none">
             {opponent}
-            {opponentRating != null && (
-              <span className="text-xs text-zinc-500 tabular-nums dark:text-zinc-400">
-                {opponentRating}
-              </span>
-            )}
+            {/* Always rendered, so rows without a rating keep the same height. */}
+            <span
+              className="text-xs text-zinc-500 tabular-nums dark:text-zinc-400"
+              title={opponentRating != null ? s.gameRow.opponentRating : undefined}
+            >
+              {opponentRating != null ? `(${opponentRating})` : '\u00a0'}
+            </span>
           </span>
         ) : (
           `${game.whiteUsername} ${s.common.vs} ${game.blackUsername}`
