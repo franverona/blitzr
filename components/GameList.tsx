@@ -73,10 +73,17 @@ export function GameList({
       <Link
         href={sort.hrefs[key as GameSort]}
         prefetch={false}
-        className="inline-flex items-center gap-1 hover:text-zinc-900 dark:hover:text-zinc-100"
+        className="group inline-flex items-center gap-1 hover:text-zinc-900 dark:hover:text-zinc-100"
       >
         {label}
-        {active && <span aria-hidden>{sort.dir === 'asc' ? '↑' : '↓'}</span>}
+        {active ? (
+          <span aria-hidden>{sort.dir === 'asc' ? '↑' : '↓'}</span>
+        ) : (
+          // Faint until hovered: marks the header as sortable without competing with the active arrow.
+          <span aria-hidden className="opacity-40 group-hover:opacity-100">
+            ↕
+          </span>
+        )}
       </Link>
     )
   }
