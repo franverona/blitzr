@@ -182,17 +182,16 @@ export default async function GamesPage({
         practice={practiceOnly ? '1' : undefined}
         fav={favoritesOnly ? '1' : undefined}
         sort={sortQuery(sort, dir)}
+        count={
+          total > 0
+            ? s.gamesPage.gameCount(
+                total,
+                (page - 1) * PAGE_SIZE + 1,
+                (page - 1) * PAGE_SIZE + games.length,
+              )
+            : undefined
+        }
       />
-
-      {total > 0 && (
-        <p className="-mb-2 text-sm text-zinc-600 dark:text-zinc-400">
-          {s.gamesPage.gameCount(
-            total,
-            (page - 1) * PAGE_SIZE + 1,
-            (page - 1) * PAGE_SIZE + games.length,
-          )}
-        </p>
-      )}
 
       <GameList
         stickyHead

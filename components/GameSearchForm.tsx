@@ -48,6 +48,7 @@ export function GameSearchForm({
   practice,
   fav,
   sort,
+  count,
 }: {
   defaultValue: string
   result?: string
@@ -63,6 +64,8 @@ export function GameSearchForm({
   fav?: string
   /** The list's sort, kept across filter changes, which go back to page 1. */
   sort?: { sort?: string; dir?: string }
+  /** "612 games · 1–50", shown beside the Filters button. */
+  count?: string
 }) {
   const [value, setValue] = useState(defaultValue)
   const [accuracy, setAccuracy] = useState(sliderAccuracy(accValue))
@@ -154,11 +157,15 @@ export function GameSearchForm({
         className={`w-full max-w-xs ${INPUT_CLASS}`}
       />
 
+      {count && (
+        <span className="text-sm text-zinc-600 sm:ml-auto dark:text-zinc-400">{count}</span>
+      )}
+
       <button
         type="button"
         onClick={() => panelRef.current?.showModal()}
         aria-label={active > 0 ? s.gamesPage.filtersActive(active) : undefined}
-        className={`flex items-center gap-1.5 sm:ml-auto ${buttonClass({ size: 'sm' })}`}
+        className={`flex items-center gap-1.5 ${count ? '' : 'sm:ml-auto'} ${buttonClass({ size: 'sm' })}`}
       >
         <FunnelIcon className="size-4 shrink-0" />
         {s.gamesPage.filters}
