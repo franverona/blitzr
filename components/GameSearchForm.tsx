@@ -20,6 +20,7 @@ type Filters = {
   color?: string
   rated?: string
   site?: string
+  tc?: string
   accOp?: string
   accValue?: string
   practice?: string
@@ -43,6 +44,8 @@ export function GameSearchForm({
   rated,
   site,
   showSite,
+  tc,
+  timeClasses,
   accOp,
   accValue,
   practice,
@@ -57,6 +60,9 @@ export function GameSearchForm({
   site?: string
   /** Only once games come from more than one site. */
   showSite: boolean
+  tc?: string
+  /** The games' time classes, most played first. */
+  timeClasses: string[]
   accOp?: string
   accValue?: string
   /** `'1'`: practice games only, which have no accuracy filter (it reads stats data). */
@@ -108,6 +114,7 @@ export function GameSearchForm({
       color,
       rated,
       site,
+      tc,
       accOp,
       accValue,
       practice,
@@ -128,7 +135,7 @@ export function GameSearchForm({
     debounceRef.current = setTimeout(() => navigate(next), SEARCH_DEBOUNCE_MS)
   }
 
-  const active = [result, color, rated, site, accOp, practice, fav].filter(Boolean).length
+  const active = [result, color, rated, site, tc, accOp, practice, fav].filter(Boolean).length
 
   return (
     <form
@@ -243,6 +250,23 @@ export function GameSearchForm({
           </FilterField>
         )}
 
+        {!practice && (timeClasses.length > 1 || tc) && (
+          <FilterField label={s.gameList.headers.timeClass}>
+            <Select
+              value={tc ?? ''}
+              onChange={(e) => navigate({ tc: e.target.value })}
+              className={`w-full ${INPUT_CLASS}`}
+            >
+              <option value="">{s.gamesPage.allTimeClasses}</option>
+              {timeClasses.map((option) => (
+                <option key={option} value={option}>
+                  {s.common.timeClass[option as keyof typeof s.common.timeClass] ?? option}
+                </option>
+              ))}
+            </Select>
+          </FilterField>
+        )}
+
         {!practice && (
           <FilterField label={s.gameList.headers.accuracy}>
             <AccuracyFilter
@@ -274,7 +298,15 @@ export function GameSearchForm({
               navigate(
                 practice
                   ? { practice: '' }
-                  : { practice: '1', accOp: '', accValue: '', rated: '', site: '', fav: '' },
+                  : {
+                      practice: '1',
+                      accOp: '',
+                      accValue: '',
+                      rated: '',
+                      site: '',
+                      tc: '',
+                      fav: '',
+                    },
               )
             }
             className={chipClass(Boolean(practice))}
@@ -292,6 +324,7 @@ export function GameSearchForm({
                 color: '',
                 rated: '',
                 site: '',
+                tc: '',
                 accOp: '',
                 accValue: '',
                 practice: '',

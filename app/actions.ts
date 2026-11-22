@@ -156,6 +156,14 @@ export async function getGameSites(): Promise<GameSite[]> {
   return [...new Set((await cachedListAllGames()).map((g) => g.site))]
 }
 
+/** The time classes the user's games have, most played first, for the games list's filter. */
+export async function getGameTimeClasses(): Promise<string[]> {
+  const counts = new Map<string, number>()
+  for (const g of await cachedListAllGames())
+    counts.set(g.timeClass, (counts.get(g.timeClass) ?? 0) + 1)
+  return [...counts.keys()].sort((a, b) => counts.get(b)! - counts.get(a)!)
+}
+
 export async function getGame(id: string): Promise<Game | undefined> {
   return getRepository().getGame(id)
 }
