@@ -249,3 +249,30 @@ export function HourglassIcon({ className }: IconProps) {
     </svg>
   )
 }
+
+export function ArrowUpIcon({ className }: IconProps) {
+  return (
+    <svg {...svgProps} className={className}>
+      <path d="m5 12 7-7 7 7" />
+      <path d="M12 19V5" />
+    </svg>
+  )
+}
+
+export function ArrowDownIcon({ className }: IconProps) {
+  return (
+    <svg {...svgProps} className={className}>
+      <path d="M12 5v14" />
+      <path d="m19 12-7 7-7-7" />
+    </svg>
+  )
+}
+
+export function ChevronsUpDownIcon({ className }: IconProps) {
+  return (
+    <svg {...svgProps} className={className}>
+      <path d="m7 15 5 5 5-5" />
+      <path d="m7 9 5-5 5 5" />
+    </svg>
+  )
+}

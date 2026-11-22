@@ -9,6 +9,7 @@ import type { GameSort, SortDir } from '@/lib/gameSort'
 import { getStrings } from '@/lib/i18n/strings'
 import type { Game, GameAccuracy } from '@/lib/types'
 import { GameRow } from './GameRow'
+import { ArrowDownIcon, ArrowUpIcon, ChevronsUpDownIcon } from './NavIcons'
 import { buttonClass } from './styles'
 import { TableShell } from './TableShell'
 
@@ -77,12 +78,14 @@ export function GameList({
       >
         {label}
         {active ? (
-          <span aria-hidden>{sort.dir === 'asc' ? '↑' : '↓'}</span>
+          sort.dir === 'asc' ? (
+            <ArrowUpIcon className="size-3.5 shrink-0" />
+          ) : (
+            <ArrowDownIcon className="size-3.5 shrink-0" />
+          )
         ) : (
           // Faint until hovered: marks the header as sortable without competing with the active arrow.
-          <span aria-hidden className="opacity-40 group-hover:opacity-100">
-            ↕
-          </span>
+          <ChevronsUpDownIcon className="size-3.5 shrink-0 opacity-40 group-hover:opacity-100" />
         )}
       </Link>
     )
