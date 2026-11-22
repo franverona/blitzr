@@ -184,7 +184,18 @@ export default async function GamesPage({
         sort={sortQuery(sort, dir)}
       />
 
+      {total > 0 && (
+        <p className="-mb-2 text-sm text-zinc-600 dark:text-zinc-400">
+          {s.gamesPage.gameCount(
+            total,
+            (page - 1) * PAGE_SIZE + 1,
+            (page - 1) * PAGE_SIZE + games.length,
+          )}
+        </p>
+      )}
+
       <GameList
+        stickyHead
         games={games}
         accuracyByGameId={accuracies}
         filtered={filtered}

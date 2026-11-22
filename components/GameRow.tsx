@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { coachRating } from '@/lib/chesscom/normalize'
-import { formatDate } from '@/lib/dates'
+import { formatDate, formatDateTime } from '@/lib/dates'
 import { getStrings } from '@/lib/i18n/strings'
 import type { Game, GameAccuracy } from '@/lib/types'
 import { SiteIcon } from './SiteIcon'
@@ -57,7 +57,7 @@ export function GameRow({
         </td>
       )}
       <Cell href={href} className="whitespace-nowrap" tabbable>
-        {date}
+        <span title={formatDateTime(game.endTime)}>{date}</span>
       </Cell>
       <Cell href={href}>{game.isMine ? <KnightIcon color={game.myColor} /> : '—'}</Cell>
       {/* A practice game was played here, on neither site. */}

@@ -724,6 +724,9 @@ const en = {
     previous: 'Previous',
     next: 'Next',
     pageOf: (page: number, total: number) => `Page ${page} of ${total}`,
+    // The range only when it isn't every game.
+    gameCount: (total: number, from: number, to: number) =>
+      `${total} ${total === 1 ? 'game' : 'games'}${from > 1 || to < total ? ` · ${from}–${to}` : ''}`,
     allResults: 'All results',
     allColors: 'All colors',
     allRated: 'Rated & unrated',
@@ -1623,6 +1626,8 @@ const es: Strings = {
     previous: 'Anterior',
     next: 'Siguiente',
     pageOf: (page: number, total: number) => `Página ${page} de ${total}`,
+    gameCount: (total: number, from: number, to: number) =>
+      `${total} ${total === 1 ? 'partida' : 'partidas'}${from > 1 || to < total ? ` · ${from}–${to}` : ''}`,
     allResults: 'Todos los resultados',
     allColors: 'Todos los colores',
     allRated: 'Clasificadas y no clasificadas',

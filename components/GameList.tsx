@@ -22,6 +22,7 @@ export function GameList({
   emptyText,
   headClassName,
   sort,
+  stickyHead,
 }: {
   /** Sortable headers: the active sort, and where clicking each column's header goes. */
   sort?: { sort: GameSort; dir: SortDir; hrefs: Record<GameSort, string> }
@@ -35,6 +36,7 @@ export function GameList({
   emptyText?: string
   /** Passed to `TableShell`, for a list inside a dialog. */
   headClassName?: string
+  stickyHead?: boolean
 }) {
   const s = getStrings()
   const router = useRouter()
@@ -97,6 +99,7 @@ export function GameList({
   return (
     <TableShell
       headClassName={headClassName}
+      stickyHead={stickyHead}
       head={
         <>
           {selectable && (
