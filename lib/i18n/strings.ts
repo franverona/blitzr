@@ -166,6 +166,16 @@ const en = {
   gameRow: {
     notMine: 'Not you',
     opponentRating: 'Opponent rating',
+    // Short and neutral (the result badge says who won); generic reasons show nothing.
+    endReasons: {
+      checkmate: 'checkmate',
+      resigned: 'resignation',
+      timeout: 'time',
+      abandoned: 'abandoned',
+      agreed: 'agreement',
+      repetition: 'repetition',
+      timevsinsufficient: 'no material',
+    } as Partial<Record<GameEndReason, string>>,
     addFavorite: 'Add to favorites',
     removeFavorite: 'Remove from favorites',
     days: (n: number) => `${n} day${n === 1 ? '' : 's'}`,
@@ -1040,6 +1050,15 @@ const es: Strings = {
   gameRow: {
     notMine: 'No eres tú',
     opponentRating: 'Puntuación del rival',
+    endReasons: {
+      checkmate: 'jaque mate',
+      resigned: 'abandono',
+      timeout: 'tiempo',
+      abandoned: 'abandonada',
+      agreed: 'acuerdo',
+      repetition: 'repetición',
+      timevsinsufficient: 'sin material',
+    } as Partial<Record<GameEndReason, string>>,
     addFavorite: 'Añadir a favoritas',
     removeFavorite: 'Quitar de favoritas',
     days: (n: number) => `${n} ${n === 1 ? 'día' : 'días'}`,

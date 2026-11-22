@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { formatTimeControl } from '@/lib/clock'
 import { coachRating } from '@/lib/chesscom/normalize'
 import { formatDate, formatDateTime } from '@/lib/dates'
+import { gameEndReason } from '@/lib/gameEnd'
 import { getStrings } from '@/lib/i18n/strings'
 import type { Game, GameAccuracy } from '@/lib/types'
 import { SiteIcon } from './SiteIcon'
@@ -63,6 +64,11 @@ export function GameRow({
   const timeControl = formatTimeControl(game.timeControl, s.gameRow.days)
   const TimeClassIcon = TIME_CLASS_ICONS[game.timeClass]
 
+  const endReason = game.finalFen
+    ? gameEndReason(game.finalFen, { white: game.whiteResult, black: game.blackResult })
+    : null
+  const endLabel = endReason && s.gameRow.endReasons[endReason]
+
   const href = `/games/${game.id}`
 
   return (
@@ -109,12 +115,22 @@ export function GameRow({
           `${game.whiteUsername} ${s.common.vs} ${game.blackUsername}`
         )}
       </Cell>
-      <Cell href={href}>
-        {game.isMine ? (
-          <ResultBadge result={game.myResult} />
-        ) : (
-          <Badge tone="zinc">{s.gameRow.notMine}</Badge>
-        )}
+      <Cell href={href} className="whitespace-nowrap">
+        {/* Fixed widths (longest en/es label) so the tag sits flush under the badge. */}
+        <div className="flex flex-col items-start gap-0.5">
+          {game.isMine ? (
+            <ResultBadge result={game.myResult} className="w-26 justify-center" />
+          ) : (
+            <Badge tone="zinc" className="w-26 justify-center">
+              {s.gameRow.notMine}
+            </Badge>
+          )}
+          {endLabel && (
+            <Badge tone="zinc" shape="tag" className="w-26 text-center leading-none">
+              {endLabel}
+            </Badge>
+          )}
+        </div>
       </Cell>
       <Cell href={href} className="justify-end text-zinc-500 tabular-nums dark:text-zinc-400">
         {/* An unrated game's rating isn't meaningful. */}
