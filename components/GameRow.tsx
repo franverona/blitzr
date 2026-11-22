@@ -51,8 +51,12 @@ export function GameRow({
   const { progress } = useBulkAnalysis()
   const analyzing = progress?.gameId === game.id
   const coachElo = coachRating(game)
-  const opponent = `${game.myColor === 'white' ? game.blackUsername : game.whiteUsername}${coachElo != null ? ` (${coachElo})` : ''}`
+  const opponent = game.myColor === 'white' ? game.blackUsername : game.whiteUsername
   const myRating = game.myColor === 'white' ? game.whiteRating : game.blackRating
+  // An unrated game's rating isn't meaningful, except the coach's elo.
+  const opponentRating =
+    coachElo ??
+    (game.rated ? (game.myColor === 'white' ? game.blackRating : game.whiteRating) : null)
   const date = formatDate(game.endTime)
   const timeClassLabel =
     s.common.timeClass[game.timeClass as keyof typeof s.common.timeClass] ?? game.timeClass
@@ -87,7 +91,18 @@ export function GameRow({
       {/* A practice game was played here, on neither site. */}
       <Cell href={href}>{game.practiceOf ? '—' : <SiteIcon site={game.site} />}</Cell>
       <Cell href={href}>
-        {game.isMine ? opponent : `${game.whiteUsername} ${s.common.vs} ${game.blackUsername}`}
+        {game.isMine ? (
+          <span className="flex flex-col leading-tight">
+            {opponent}
+            {opponentRating != null && (
+              <span className="text-xs text-zinc-500 tabular-nums dark:text-zinc-400">
+                {opponentRating}
+              </span>
+            )}
+          </span>
+        ) : (
+          `${game.whiteUsername} ${s.common.vs} ${game.blackUsername}`
+        )}
       </Cell>
       <Cell href={href}>
         {game.isMine ? (
