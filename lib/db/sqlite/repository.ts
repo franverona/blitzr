@@ -24,6 +24,7 @@ import type {
   RepertoireColor,
   RepertoireNode,
 } from '../../types'
+import type { SortDir } from '../../gameSort'
 import { ensureSchema } from './migrate'
 
 function rowToGame(row: GamesTable): Game {
@@ -165,6 +166,45 @@ export interface ListGamesParams {
   /** Only practice games instead of none (`/games?practice=1`). */
   practice?: boolean
   favorite?: boolean
+  /** Default `date`, newest first; the list's other sorts aren't columns (see listGameIds()). */
+  sort?: 'date' | 'rating'
+  dir?: SortDir
+}
+
+function gameFilter(params: ListGamesParams) {
+  const opponent = params.opponent?.trim()
+  // instr(), not LIKE, so `%`/`_` aren't wildcards.
+  const needle = opponent?.toLowerCase()
+  const contains = (column: 'white_username' | 'black_username') =>
+    sql<boolean>`instr(lower(${sql.ref(column)}), ${needle}) > 0`
+
+  return (eb: ExpressionBuilder<DbSchema, 'games'>) => {
+    // Practice games only show up when asked for; see listAllGames().
+    const conditions = [eb('archive_ym', params.practice ? '=' : '!=', 'practice')]
+    if (opponent) {
+      // Opponent side only; matching both also matched the user's own name.
+      // A "not me" game has no user side, so either player matches.
+      conditions.push(
+        eb.or([
+          eb.and([
+            eb('is_mine', '=', 0),
+            eb.or([contains('white_username'), contains('black_username')]),
+          ]),
+          eb.and([eb('my_color', '=', 'black'), contains('white_username')]),
+          eb.and([eb('my_color', '=', 'white'), contains('black_username')]),
+        ]),
+      )
+    }
+    // A "not me" game's color and result are placeholders.
+    if (params.result || params.color) conditions.push(eb('is_mine', '=', 1))
+    if (params.result) conditions.push(eb('my_result', '=', params.result))
+    if (params.color) conditions.push(eb('my_color', '=', params.color))
+    if (params.rated !== undefined) conditions.push(eb('rated', '=', params.rated ? 1 : 0))
+    if (params.site) conditions.push(eb('site', '=', params.site))
+    if (params.favorite) conditions.push(eb('favorite', '=', 1))
+    if (params.gameIds) conditions.push(eb('id', 'in', params.gameIds))
+    return eb.and(conditions)
+  }
 }
 
 export class SqliteGameRepository {
@@ -226,71 +266,40 @@ export class SqliteGameRepository {
     const db = await this.ready()
     const limit = params.limit ?? 50
     const offset = params.offset ?? 0
-    const opponent = params.opponent?.trim()
-    // instr(), not LIKE, so `%`/`_` aren't wildcards.
-    const needle = opponent?.toLowerCase()
-    const contains = (column: 'white_username' | 'black_username') =>
-      sql<boolean>`instr(lower(${sql.ref(column)}), ${needle}) > 0`
-    // Opponent side only; matching both also matched the user's own name.
-    // A "not me" game has no user side, so either player matches.
-    const opponentFilter = (eb: ExpressionBuilder<DbSchema, 'games'>) =>
-      eb.or([
-        eb.and([
-          eb('is_mine', '=', 0),
-          eb.or([contains('white_username'), contains('black_username')]),
-        ]),
-        eb.and([eb('my_color', '=', 'black'), contains('white_username')]),
-        eb.and([eb('my_color', '=', 'white'), contains('black_username')]),
-      ])
-
-    // Practice games only show up when asked for; see listAllGames().
-    const archiveOp = params.practice ? '=' : '!='
-    let rowsQuery = db.selectFrom('games').selectAll().where('archive_ym', archiveOp, 'practice')
-    let countQuery = db
-      .selectFrom('games')
-      .select(({ fn }) => fn.countAll<number>().as('count'))
-      .where('archive_ym', archiveOp, 'practice')
-    if (opponent) {
-      rowsQuery = rowsQuery.where(opponentFilter)
-      countQuery = countQuery.where(opponentFilter)
+    const where = gameFilter(params)
+    const dir = params.dir ?? 'desc'
+    let rowsQuery = db.selectFrom('games').selectAll().where(where)
+    if (params.sort === 'rating') {
+      // Only the user's rated games show a rating; the rest go last either way, newest first.
+      const rating = sql<number | null>`case when is_mine = 1 and rated = 1
+        then (case my_color when 'white' then white_rating else black_rating end) end`
+      rowsQuery = rowsQuery.orderBy(sql`${rating} is null`).orderBy(rating, dir)
     }
-    // A "not me" game's color and result are placeholders.
-    if (params.result || params.color) {
-      rowsQuery = rowsQuery.where('is_mine', '=', 1)
-      countQuery = countQuery.where('is_mine', '=', 1)
-    }
-    if (params.result) {
-      rowsQuery = rowsQuery.where('my_result', '=', params.result)
-      countQuery = countQuery.where('my_result', '=', params.result)
-    }
-    if (params.color) {
-      rowsQuery = rowsQuery.where('my_color', '=', params.color)
-      countQuery = countQuery.where('my_color', '=', params.color)
-    }
-    if (params.rated !== undefined) {
-      const rated = params.rated ? 1 : 0
-      rowsQuery = rowsQuery.where('rated', '=', rated)
-      countQuery = countQuery.where('rated', '=', rated)
-    }
-    if (params.site) {
-      rowsQuery = rowsQuery.where('site', '=', params.site)
-      countQuery = countQuery.where('site', '=', params.site)
-    }
-    if (params.favorite) {
-      rowsQuery = rowsQuery.where('favorite', '=', 1)
-      countQuery = countQuery.where('favorite', '=', 1)
-    }
-    if (params.gameIds) {
-      rowsQuery = rowsQuery.where('id', 'in', params.gameIds)
-      countQuery = countQuery.where('id', 'in', params.gameIds)
-    }
+    const dateDir = params.sort === 'rating' ? 'desc' : dir
 
     const [rows, countRow] = await Promise.all([
-      rowsQuery.orderBy('end_time', 'desc').limit(limit).offset(offset).execute(),
-      countQuery.executeTakeFirstOrThrow(),
+      rowsQuery.orderBy('end_time', dateDir).limit(limit).offset(offset).execute(),
+      db
+        .selectFrom('games')
+        .select(({ fn }) => fn.countAll<number>().as('count'))
+        .where(where)
+        .executeTakeFirstOrThrow(),
     ])
 
     return { games: rows.map(rowToGame), total: Number(countRow.count) }
+  }
+
+  /** Every id listGames() would match, newest first, for the sorts that aren't columns. */
+  async listGameIds(params: ListGamesParams = {}): Promise<string[]> {
+    if (params.gameIds && params.gameIds.length === 0) return []
+    const db = await this.ready()
+    const rows = await db
+      .selectFrom('games')
+      .select('id')
+      .where(gameFilter(params))
+      .orderBy('end_time', 'desc')
+      .execute()
+    return rows.map((r) => r.id)
   }
 
   /** Every game but practice ones: every stat, the drill deck and sync read through here, so

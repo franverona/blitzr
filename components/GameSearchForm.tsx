@@ -24,6 +24,8 @@ type Filters = {
   accValue?: string
   practice?: string
   fav?: string
+  sort?: string
+  dir?: string
 }
 
 /** The URL's accuracy, or the default when unset; 0 is a value, not unset. */
@@ -45,6 +47,7 @@ export function GameSearchForm({
   accValue,
   practice,
   fav,
+  sort,
 }: {
   defaultValue: string
   result?: string
@@ -58,6 +61,8 @@ export function GameSearchForm({
   /** `'1'`: practice games only, which have no accuracy filter (it reads stats data). */
   practice?: string
   fav?: string
+  /** The list's sort, kept across filter changes, which go back to page 1. */
+  sort?: { sort?: string; dir?: string }
 }) {
   const [value, setValue] = useState(defaultValue)
   const [accuracy, setAccuracy] = useState(sliderAccuracy(accValue))
@@ -104,6 +109,7 @@ export function GameSearchForm({
       accValue,
       practice,
       fav,
+      ...sort,
       ...next,
     }
     for (const [key, val] of Object.entries(merged)) {

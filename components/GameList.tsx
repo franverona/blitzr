@@ -1,9 +1,11 @@
 'use client'
 
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import toast from 'react-hot-toast'
 import { deletePracticeGames } from '@/app/actions'
+import type { GameSort, SortDir } from '@/lib/gameSort'
 import { getStrings } from '@/lib/i18n/strings'
 import type { Game, GameAccuracy } from '@/lib/types'
 import { GameRow } from './GameRow'
@@ -19,7 +21,10 @@ export function GameList({
   selectable = false,
   emptyText,
   headClassName,
+  sort,
 }: {
+  /** Sortable headers: the active sort, and where clicking each column's header goes. */
+  sort?: { sort: GameSort; dir: SortDir; hrefs: Record<GameSort, string> }
   games: Game[]
   /** Any filter is active, so an empty list means "no matches", not "no games". */
   filtered: boolean
@@ -57,6 +62,28 @@ export function GameList({
     })
   }
 
+  // Plain text while selecting, since the labels are hidden then.
+  function header(key: keyof typeof s.gameList.headers) {
+    const label = s.gameList.headers[key]
+    if (!sort || selecting || !(key in sort.hrefs)) return label
+    const active = sort.sort === key
+    return (
+      <Link
+        href={sort.hrefs[key as GameSort]}
+        prefetch={false}
+        className="inline-flex items-center gap-1 hover:text-zinc-900 dark:hover:text-zinc-100"
+      >
+        {label}
+        {active && <span aria-hidden>{sort.dir === 'asc' ? '↑' : '↓'}</span>}
+      </Link>
+    )
+  }
+
+  function ariaSort(key: string) {
+    if (sort?.sort !== key) return undefined
+    return sort.dir === 'asc' ? 'ascending' : 'descending'
+  }
+
   function handleDelete() {
     if (!window.confirm(s.gameList.deleteSelectedConfirm(selected.length))) return
     startTransition(async () => {
@@ -92,8 +119,11 @@ export function GameList({
           )}
           {/* With a selection, the labels turn transparent (keeping the column widths) and the
               button sits over them, so neither the table nor its columns move. */}
-          <th className={`relative px-3 py-2 ${selecting ? 'text-transparent' : ''}`}>
-            {s.gameList.headers.date}
+          <th
+            aria-sort={ariaSort('date')}
+            className={`relative px-3 py-2 ${selecting ? 'text-transparent' : ''}`}
+          >
+            {header('date')}
             {selecting && (
               <button
                 onClick={handleDelete}
@@ -116,8 +146,12 @@ export function GameList({
               ['timeClass', ''],
             ] as const
           ).map(([key, align]) => (
-            <th key={key} className={`px-3 py-2 ${align} ${selecting ? 'text-transparent' : ''}`}>
-              {s.gameList.headers[key]}
+            <th
+              key={key}
+              aria-sort={ariaSort(key)}
+              className={`px-3 py-2 ${align} ${selecting ? 'text-transparent' : ''}`}
+            >
+              {header(key)}
             </th>
           ))}
         </>

@@ -147,6 +147,10 @@ export async function listGames(
   return getRepository().listGames(params)
 }
 
+export async function listGameIds(params: ListGamesParams = {}): Promise<string[]> {
+  return getRepository().listGameIds(params)
+}
+
 /** The sites the user's games come from, for the games list's site filter. */
 export async function getGameSites(): Promise<GameSite[]> {
   return [...new Set((await cachedListAllGames()).map((g) => g.site))]

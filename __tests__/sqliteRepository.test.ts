@@ -329,6 +329,55 @@ describe('SqliteGameRepository.upsertGames on an existing id', () => {
   })
 })
 
+describe('SqliteGameRepository.listGames sort', () => {
+  const sortGame = (
+    id: string,
+    endTime: number,
+    rating: number | null,
+    extra: Partial<Game> = {},
+  ) => ({ ...game(id, 'fverona', `sorter-${id}`, 'white'), endTime, whiteRating: rating, ...extra })
+
+  beforeAll(async () => {
+    await repo.upsertGames([
+      sortGame('s1', 10, 1500),
+      sortGame('s2', 20, 1700),
+      sortGame('s3', 30, null),
+      // Black, so its rating is blackRating; and an unrated game, whose rating isn't shown.
+      sortGame('s4', 40, 9999, {
+        whiteUsername: 'sorter-s4',
+        blackUsername: 'fverona',
+        myColor: 'black',
+        blackRating: 1600,
+      }),
+      sortGame('s5', 50, 2000, { rated: false }),
+    ])
+  })
+
+  const ids = async (params: Parameters<typeof repo.listGames>[0]) =>
+    (await repo.listGames({ opponent: 'sorter', ...params })).games.map((g) => g.id)
+
+  it('sorts by date, newest first by default', async () => {
+    expect(await ids({})).toEqual(['s5', 's4', 's3', 's2', 's1'])
+    expect(await ids({ sort: 'date', dir: 'asc' })).toEqual(['s1', 's2', 's3', 's4', 's5'])
+  })
+
+  it('sorts by my rating, games without one last both ways', async () => {
+    expect(await ids({ sort: 'rating', dir: 'desc' })).toEqual(['s2', 's4', 's1', 's5', 's3'])
+    expect(await ids({ sort: 'rating', dir: 'asc' })).toEqual(['s1', 's4', 's2', 's5', 's3'])
+  })
+
+  it('pages the sorted order and keeps the total', async () => {
+    const page = await repo.listGames({ opponent: 'sorter', sort: 'rating', limit: 2, offset: 2 })
+    expect(page.games.map((g) => g.id)).toEqual(['s1', 's5'])
+    expect(page.total).toBe(5)
+  })
+
+  it('lists every matching id, newest first', async () => {
+    expect(await repo.listGameIds({ opponent: 'sorter' })).toEqual(['s5', 's4', 's3', 's2', 's1'])
+    expect(await repo.listGameIds({ gameIds: [] })).toEqual([])
+  })
+})
+
 describe('SqliteGameRepository lesson progress', () => {
   it('records a quiz completion once', async () => {
     await repo.markLessonQuizCompleted('quiz-lesson')
