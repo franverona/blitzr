@@ -96,8 +96,9 @@ export function GameRow({
           <span className="flex min-h-7 flex-col justify-center gap-0.5 leading-none">
             {opponent}
             {opponentRating != null && (
+              // leading-none here too: text-xs sets its own line-height, overriding the parent's.
               <span
-                className="text-xs text-zinc-500 tabular-nums dark:text-zinc-400"
+                className="text-xs leading-none text-zinc-500 tabular-nums dark:text-zinc-400"
                 title={s.gameRow.opponentRating}
               >
                 ({opponentRating})
