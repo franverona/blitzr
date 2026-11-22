@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { formatTimeControl } from '@/lib/clock'
 import { coachRating } from '@/lib/chesscom/normalize'
 import { formatDate, formatDateTime } from '@/lib/dates'
 import { getStrings } from '@/lib/i18n/strings'
@@ -9,10 +10,32 @@ import { SiteIcon } from './SiteIcon'
 import { Badge } from './Badge'
 import { FavoriteButton } from './FavoriteButton'
 import { KnightIcon } from './KnightIcon'
+import { BulletIcon, HourglassIcon, SunIcon, TimerIcon, ZapIcon } from './NavIcons'
 import { ResultBadge } from './ResultBadge'
 import { Spinner } from './Spinner'
 import { useBulkAnalysis } from './BulkAnalysisProvider'
 import { accuracyTone } from './styles'
+
+const TIME_CLASS_ICONS: Record<string, typeof ZapIcon | undefined> = {
+  ultraBullet: BulletIcon,
+  bullet: BulletIcon,
+  blitz: ZapIcon,
+  rapid: TimerIcon,
+  classical: HourglassIcon,
+  daily: SunIcon,
+  correspondence: SunIcon,
+}
+
+// Off the row's result/accuracy hues (emerald, rose, amber).
+const TIME_CLASS_COLORS: Record<string, string> = {
+  ultraBullet: 'text-orange-600 dark:text-orange-400',
+  bullet: 'text-orange-600 dark:text-orange-400',
+  blitz: 'text-yellow-600 dark:text-yellow-400',
+  rapid: 'text-teal-600 dark:text-teal-400',
+  classical: 'text-sky-600 dark:text-sky-400',
+  daily: 'text-violet-600 dark:text-violet-400',
+  correspondence: 'text-violet-600 dark:text-violet-400',
+}
 
 export function GameRow({
   game,
@@ -31,9 +54,10 @@ export function GameRow({
   const opponent = `${game.myColor === 'white' ? game.blackUsername : game.whiteUsername}${coachElo != null ? ` (${coachElo})` : ''}`
   const myRating = game.myColor === 'white' ? game.whiteRating : game.blackRating
   const date = formatDate(game.endTime)
-  const timeClassTooltip = s.gameRow.timeClassTooltips[game.site][game.timeClass]
   const timeClassLabel =
     s.common.timeClass[game.timeClass as keyof typeof s.common.timeClass] ?? game.timeClass
+  const timeControl = formatTimeControl(game.timeControl, s.gameRow.days)
+  const TimeClassIcon = TIME_CLASS_ICONS[game.timeClass]
 
   const href = `/games/${game.id}`
 
@@ -115,8 +139,20 @@ export function GameRow({
           <span className="text-zinc-300 dark:text-zinc-700">—</span>
         )}
       </Cell>
-      <Cell href={href} className="text-zinc-500 dark:text-zinc-400">
-        {timeClassTooltip ? <abbr title={timeClassTooltip}>{timeClassLabel}</abbr> : timeClassLabel}
+      <Cell href={href} className="whitespace-nowrap text-zinc-500 dark:text-zinc-400">
+        {game.timeClass === 'unknown' ? (
+          <span className="text-zinc-300 dark:text-zinc-700">—</span>
+        ) : (
+          <>
+            {TimeClassIcon && (
+              <TimeClassIcon
+                className={`mr-1.5 size-3.5 shrink-0 ${TIME_CLASS_COLORS[game.timeClass]}`}
+              />
+            )}
+            {timeClassLabel}
+            {timeControl && <span className="ml-1.5 tabular-nums">({timeControl})</span>}
+          </>
+        )}
       </Cell>
     </tr>
   )

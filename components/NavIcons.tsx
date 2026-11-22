@@ -218,3 +218,34 @@ export function StarIcon({ className }: IconProps) {
     </svg>
   )
 }
+
+// Not Lucide: a simple upright cartridge.
+export function BulletIcon({ className }: IconProps) {
+  return (
+    <svg {...svgProps} className={className}>
+      <path d="M9 21V9c0-3 1.5-5 3-6 1.5 1 3 3 3 6v12Z" />
+      <path d="M9 15h6" />
+    </svg>
+  )
+}
+
+export function TimerIcon({ className }: IconProps) {
+  return (
+    <svg {...svgProps} className={className}>
+      <line x1="10" x2="14" y1="2" y2="2" />
+      <line x1="12" x2="15" y1="14" y2="11" />
+      <circle cx="12" cy="14" r="8" />
+    </svg>
+  )
+}
+
+export function HourglassIcon({ className }: IconProps) {
+  return (
+    <svg {...svgProps} className={className}>
+      <path d="M5 22h14" />
+      <path d="M5 2h14" />
+      <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22" />
+      <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2" />
+    </svg>
+  )
+}
