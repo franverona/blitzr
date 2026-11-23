@@ -69,7 +69,7 @@ function TreeNode({
         }`}
       >
         <span className="mr-1 text-zinc-600 dark:text-zinc-500">{plyLabel(node.ply)}</span>
-        <PieceMoveLabel san={node.moveSan} color={node.ply % 2 === 1 ? 'white' : 'black'} />
+        <PieceMoveLabel san={node.moveSan} />
       </button>
       {children.map((child) => (
         <TreeNode

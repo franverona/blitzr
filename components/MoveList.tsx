@@ -2,7 +2,6 @@
 
 import { Fragment, useEffect, useMemo, useRef } from 'react'
 import { findBlunders, formatEval, formatSwing } from '@/lib/analysis'
-import { formatClock, formatThinkTime, type MoveClock } from '@/lib/clock'
 import { whiteToMove } from '@/lib/drill'
 import { getStrings } from '@/lib/i18n/strings'
 import { summarizeMoveQuality } from '@/lib/moveQuality'
@@ -109,19 +108,16 @@ export function MoveList({
   evals,
   positions,
   myColor,
-  clocks,
 }: {
   movesSan: string[]
   ply: number
   onSelect: (ply: number) => void
   result?: string
-  /** Saved analysis; drives the inline blunder badges. */
+  /** Saved analysis; drives the inline blunder badges and per-move evals. */
   evals?: PositionEval[]
   /** FEN before each ply. */
   positions: string[]
   myColor: MyColor
-  /** Per ply (index `ply - 1`), for a game clocked on every move. */
-  clocks?: MoveClock[]
 }) {
   const pairs = useMemo(() => buildMovePairs(movesSan, positions[0]), [movesSan, positions])
   const activeRef = useRef<HTMLButtonElement>(null)
@@ -182,7 +178,7 @@ export function MoveList({
                   }
                   const isActive = move.ply === ply
                   const tier = tierByPly.get(move.ply)
-                  const clock = clocks?.[move.ply - 1]
+                  const evaluation = evals?.[move.ply]
                   return (
                     <button
                       key={side}
@@ -194,17 +190,11 @@ export function MoveList({
                           : 'text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800/60'
                       }`}
                     >
-                      <PieceMoveLabel san={move.san} color={side} />
+                      <PieceMoveLabel san={move.san} />
                       {tier && <MoveQualityBadge tier={tier} />}
-                      {clock && (
-                        <span
-                          title={s.board.moveClock(
-                            formatThinkTime(clock.spent),
-                            formatClock(clock.left),
-                          )}
-                          className="ml-auto text-xs font-normal text-zinc-600 tabular-nums dark:text-zinc-400"
-                        >
-                          {formatThinkTime(clock.spent)}
+                      {evaluation && (
+                        <span className="ml-auto text-xs font-normal text-zinc-600 tabular-nums dark:text-zinc-400">
+                          {formatEval(evaluation)}
                         </span>
                       )}
                     </button>

@@ -1,22 +1,17 @@
-'use client'
-
 import { splitSanPiece } from '@/lib/san'
-import { useSettings } from './SettingsProvider'
 import { PieceGlyph } from './PieceGlyph'
 
-export function PieceMoveLabel({ san, color }: { san: string; color: 'white' | 'black' }) {
+// One outlined glyph for both sides, recolored to the text color so it reads on any background.
+const OUTLINE =
+  "h-4 w-4 shrink-0 [&_[fill='#000']]:fill-current [&_[fill='#fff']]:fill-none [&_[stroke='#000']]:stroke-current"
+
+export function PieceMoveLabel({ san }: { san: string }) {
   const { piece, rest } = splitSanPiece(san)
-  const boardColors = useSettings()
   if (!piece) return san
 
   return (
-    <span className="inline-flex items-center gap-1">
-      <span
-        className="inline-flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-sm"
-        style={{ backgroundColor: color === 'black' ? boardColors.light : boardColors.dark }}
-      >
-        <PieceGlyph piece={piece} color={color} className="h-3.5 w-3.5" />
-      </span>
+    <span className="inline-flex items-center gap-0.5">
+      <PieceGlyph piece={piece} color="white" className={OUTLINE} />
       {rest}
     </span>
   )

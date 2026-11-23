@@ -6,7 +6,6 @@ import { Chessboard } from 'react-chessboard'
 import { BoardCoordinates } from './BoardCoordinates'
 import { describeEval, formatEval } from '@/lib/analysis'
 import { buildPositionChecklist, findingMarks } from '@/lib/checklist'
-import type { MoveClock } from '@/lib/clock'
 import { whiteToMove } from '@/lib/drill'
 import { gameEndBadges } from '@/lib/gameEnd'
 import { getStrings } from '@/lib/i18n/strings'
@@ -37,7 +36,6 @@ export function BoardView({
   sidebarTop,
   sidebarAltTab,
   autoExplore = false,
-  moveClocks,
 }: {
   boardMaxWidthClassName?: string
   /** Moving a piece on the recorded game enters explore mode. */
@@ -51,8 +49,6 @@ export function BoardView({
   sidebarTop?: React.ReactNode
   /** A second sidebar tab, shown in place of `sidebarTop` and the move list. */
   sidebarAltTab?: { label: string; content: React.ReactNode; initiallyOpen?: boolean }
-  /** Think time and clock per ply, shown in the move list. */
-  moveClocks?: MoveClock[]
 } = {}) {
   const {
     ply,
@@ -274,7 +270,6 @@ export function BoardView({
         evals={evals}
         positions={positions}
         myColor={myColor}
-        clocks={moveClocks}
       />
     </>
   )

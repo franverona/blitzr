@@ -42,7 +42,7 @@ export function MoveSequence({
               className={`inline-flex items-center gap-1 ${isCurrent ? 'font-semibold text-zinc-900 dark:text-white' : 'text-zinc-600 dark:text-zinc-400'}`}
             >
               {numberLabel}
-              <PieceMoveLabel san={move.san} color={move.color} />
+              <PieceMoveLabel san={move.san} />
             </span>
           )
         }
@@ -57,7 +57,7 @@ export function MoveSequence({
             }`}
           >
             {numberLabel}
-            <PieceMoveLabel san={move.san} color={move.color} />
+            <PieceMoveLabel san={move.san} />
           </button>
         )
       })}

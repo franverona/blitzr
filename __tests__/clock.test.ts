@@ -2,11 +2,8 @@ import { describe, expect, it } from 'vitest'
 import {
   clockIncrementSeconds,
   clockShareBeforePly,
-  formatClock,
-  formatThinkTime,
   formatTimeControl,
   initialClockSeconds,
-  moveClocks,
   plyClocks,
   thinkSecondsForPly,
 } from '@/lib/clock'
@@ -91,27 +88,5 @@ describe('thinkSecondsForPly', () => {
     const clocks = [182, 90, 170, 80]
     expect(thinkSecondsForPly(clocks, 2, 180, 2)).toBe(0)
     expect(thinkSecondsForPly(clocks, 4, 180, 2)).toBe(10)
-  })
-})
-
-describe('formatClock and formatThinkTime', () => {
-  it('reads like a clock', () => {
-    expect(formatClock(125.7)).toBe('2:05')
-    expect(formatClock(3725)).toBe('1:02:05')
-    expect(formatThinkTime(0.42)).toBe('0.4s')
-    expect(formatThinkTime(12.4)).toBe('12s')
-    expect(formatThinkTime(65)).toBe('1:05')
-  })
-})
-
-describe('moveClocks', () => {
-  it("gives every ply's think time and clock, only in a game clocked on every ply", () => {
-    const pgn = '1. e4 {[%clk 0:02:57]} 1... e5 {[%clk 0:02:59]} *'
-    expect(moveClocks(pgn, 2, '180+2')).toEqual([
-      { spent: 5, left: 177 },
-      { spent: 3, left: 179 },
-    ])
-    expect(moveClocks(pgn, 3, '180+2')).toBeUndefined()
-    expect(moveClocks(pgn, 2, '1/86400')).toBeUndefined()
   })
 })
