@@ -13,15 +13,12 @@ import { describeBlunderReason } from '@/lib/tactics'
 import type { GameAnalysis, MyColor, MyResult } from '@/lib/types'
 import { useBoardContext } from './BoardContext'
 import type { BadMoveTier } from './MoveQualityBadge'
-import { ErrorText } from './ErrorText'
 import { EvalGraph } from './EvalGraph'
 import { Badge } from './Badge'
 import { FocusRow } from './FocusRow'
 import { FlagIcon, TargetIcon } from './NavIcons'
 import { RESULT_TONES } from './ResultBadge'
 import { PieceMoveLabel } from './PieceMoveLabel'
-import { Select } from './Select'
-import { useSettings } from './SettingsProvider'
 import { accuracyTone, chipClass, LINK_CLASS, TONE_TEXT_CLASS } from './styles'
 import { TableShell } from './TableShell'
 
@@ -38,7 +35,7 @@ interface AnalysisContextValue {
 
 const AnalysisContext = createContext<AnalysisContextValue | null>(null)
 
-function useAnalysisContext(): AnalysisContextValue {
+export function useAnalysisContext(): AnalysisContextValue {
   const ctx = useContext(AnalysisContext)
   if (!ctx) throw new Error('Must be used within <GameAnalysisProvider>')
   return ctx
@@ -104,54 +101,6 @@ export function GameAnalysisProvider({
 
 /** The strength picker defaults to the saved analysis's strength, else the
  *  Settings value; changing it here doesn't change the setting. */
-export function AnalyzeButton() {
-  const { analysis, progress, error, handleAnalyze } = useAnalysisContext()
-  const { analysisStrength } = useSettings()
-  const s = getStrings()
-  const savedStrength = (Object.keys(ANALYSIS_STRENGTHS) as AnalysisStrength[]).find(
-    (k) => ANALYSIS_STRENGTHS[k] === analysis?.movetimeMs,
-  )
-  const [strength, setStrength] = useState<AnalysisStrength>(savedStrength ?? analysisStrength)
-
-  return (
-    <div className="flex flex-col items-end gap-1">
-      <div className="flex items-stretch divide-x divide-zinc-300 rounded-md border border-zinc-300 text-sm dark:divide-zinc-700 dark:border-zinc-700">
-        <Select
-          value={strength}
-          onChange={(e) => setStrength(e.target.value as AnalysisStrength)}
-          disabled={progress !== null}
-          aria-label={s.settings.analysisStrength}
-          title={s.settings.analysisStrengthHint}
-          className="rounded-l-md bg-transparent py-1.5 pl-3 text-zinc-600 hover:bg-zinc-100 disabled:opacity-50 dark:text-zinc-300 dark:hover:bg-zinc-800"
-        >
-          {(Object.keys(ANALYSIS_STRENGTHS) as AnalysisStrength[]).map((k) => (
-            <option key={k} value={k} className="bg-white dark:bg-zinc-900">
-              {s.settings.analysisStrengths[k]}
-              {k === savedStrength && ' ✓'}
-            </option>
-          ))}
-        </Select>
-        <button
-          onClick={() => handleAnalyze(strength)}
-          disabled={progress !== null}
-          title={
-            savedStrength &&
-            s.analysisPanel.savedAtStrength(s.settings.analysisStrengths[savedStrength])
-          }
-          className="rounded-r-md px-3 py-1.5 font-medium whitespace-nowrap hover:bg-zinc-100 disabled:opacity-50 dark:hover:bg-zinc-800"
-        >
-          {progress
-            ? `${analysis ? s.analysisPanel.reanalyzing : s.analysisPanel.analyzing}… (${progress.done}/${progress.total})`
-            : analysis
-              ? s.analysisPanel.reanalyze
-              : s.analysisPanel.analyzeWithStockfish}
-        </button>
-      </div>
-      {error && <ErrorText>{error}</ErrorText>}
-    </div>
-  )
-}
-
 /** Inline " · Accuracy 87" for the game header; toggles the move-quality panel. */
 export function MoveQualityLink() {
   const { analysis, movesSan, myColor, positions } = useAnalysisContext()

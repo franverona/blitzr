@@ -218,9 +218,9 @@ your games actually reach.
 
 ### Engine analysis
 
-**Analyze with Stockfish** on a game page evaluates every position in your browser and saves the
-result. **Analyze all** on the games page does this for every unanalyzed game, newest first,
-saving as it goes, and keeps running while you browse other pages.
+**Analyze with Stockfish** (in a game page's ⋯ menu, then pick a strength) evaluates every position
+in your browser and saves the result. **Analyze all** on the games page does this for every
+unanalyzed game, newest first, saving as it goes, and keeps running while you browse other pages.
 
 A blunder is a move that drops the mover's winning chances as much as a 200+ centipawn loss from
 an equal position would, tagged **Serious** (200–399 equivalent) or **Severe** (400+) on the
@@ -236,7 +236,9 @@ A game page also has:
 
 - **Play** (or Space), which auto-advances and pauses on your blunders. ←/→ step, Home/↑/`0` jump
   to the start, End/↓ to the end, and `F` flips the board.
-- Your **accuracy** in the header; click it for a **Move quality** side panel: accuracy (Lichess's
+- **Player strips** above and below the board, as on Chess.com: each side's avatar, name and (in a
+  clocked game) the clock at the current move. They swap when you flip the board.
+- Your **accuracy** beside the board; click it for a **Move quality** side panel: accuracy (Lichess's
   formula, from each move's drop in winning chances), split by opening, middlegame and endgame, and
   move tiers for both sides, a graph of the eval bar across the game (click it to jump to a move),
   then your inaccuracies, mistakes and blunders. Click one to see it on the board; the panel stays open

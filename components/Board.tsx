@@ -35,6 +35,9 @@ export function BoardView({
   sidebarExtra,
   sidebarTop,
   sidebarAltTab,
+  sidebarHeader,
+  boardTop,
+  boardBottom,
   autoExplore = false,
 }: {
   boardMaxWidthClassName?: string
@@ -49,6 +52,12 @@ export function BoardView({
   sidebarTop?: React.ReactNode
   /** A second sidebar tab, shown in place of `sidebarTop` and the move list. */
   sidebarAltTab?: { label: string; content: React.ReactNode; initiallyOpen?: boolean }
+  /** Content above the sidebar's tabs. */
+  sidebarHeader?: React.ReactNode
+  /** A row above the board (the game page's player strips). */
+  boardTop?: React.ReactNode
+  /** Shares the material line's row below the board. */
+  boardBottom?: React.ReactNode
 } = {}) {
   const {
     ply,
@@ -256,7 +265,8 @@ export function BoardView({
   }, [])
 
   const mainSidebar = (
-    <>
+    // Joins the engine lines and the move list into one box; the move list keeps its own scroll.
+    <div className="flex min-h-0 flex-col lg:flex-1 [&>*:not(:first-child)]:rounded-t-none [&>*:not(:first-child)]:border-t-0 [&>*:not(:last-child)]:rounded-b-none">
       {sidebarTop}
       <MoveList
         movesSan={movesSan}
@@ -271,7 +281,7 @@ export function BoardView({
         positions={positions}
         myColor={myColor}
       />
-    </>
+    </div>
   )
 
   return (
@@ -280,6 +290,7 @@ export function BoardView({
         ref={boardColumnRef}
         className={`flex w-full shrink-0 flex-col gap-3 ${boardMaxWidthClassName}`}
       >
+        {boardTop && <div className="flex min-h-8 items-center gap-2">{boardTop}</div>}
         <div className="flex items-stretch gap-2">
           {barEval && !hideHints && (
             <EvalBar
@@ -347,8 +358,13 @@ export function BoardView({
             </div>
           </BoardCoordinates>
         </div>
-        <div className="flex flex-wrap items-center justify-between gap-x-3 text-xs text-zinc-500 dark:text-zinc-400">
-          <p>
+        {/* With strips: one line, so exploring can't grow the column (it sets the sidebar's height);
+            the material line truncates instead, and the clock's `ml-auto` right-aligns. */}
+        <div
+          className={`flex items-center gap-x-3 gap-y-1 text-xs text-zinc-500 dark:text-zinc-400 ${boardBottom ? '' : 'flex-wrap justify-between'}`}
+        >
+          {boardBottom}
+          <p className={boardBottom ? 'min-w-0 truncate' : undefined}>
             {s.board.material} {formatMaterialDiff(materialDiff(displayFen))}
             {barEval && (
               <>
@@ -358,7 +374,7 @@ export function BoardView({
             )}
           </p>
           {exploring && (
-            <p className="flex items-center gap-1.5">
+            <p className="flex shrink-0 items-center gap-1.5 whitespace-nowrap">
               <span className="text-accent font-medium">{s.board.exploring}</span>·
               <button
                 onClick={exitExploring}
@@ -378,6 +394,7 @@ export function BoardView({
         className={`flex min-h-0 w-full flex-col gap-4 lg:flex-1 ${sidebarMaxWidthClassName}`}
         style={sidebarHeight ? { height: sidebarHeight } : undefined}
       >
+        {sidebarHeader}
         {sidebarAltTab ? (
           <Tabs
             tabs={[

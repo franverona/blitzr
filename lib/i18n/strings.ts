@@ -835,6 +835,8 @@ const en = {
     intro: 'Grouped by ECO family. Click a row to see the specific named lines within it.',
   },
   gamePage: {
+    clock: 'Clock',
+    actions: 'Game actions',
     noEco: 'no ECO',
     ecoTooltip:
       'ECO code — a standard reference number for this opening, used to group games by opening regardless of the exact move order',
@@ -1732,6 +1734,8 @@ const es: Strings = {
       'Agrupadas por familia ECO. Haz clic en una fila para ver las líneas específicas dentro de ella.',
   },
   gamePage: {
+    clock: 'Reloj',
+    actions: 'Acciones de la partida',
     noEco: 'sin ECO',
     ecoTooltip:
       'Código ECO — un número de referencia estándar para esta apertura, usado para agrupar partidas por apertura sin importar el orden exacto de jugadas',
