@@ -1,5 +1,5 @@
 import { Chess } from 'chess.js'
-import { ecoNameFromUrl, parsePgnHeaders } from './chesscom/normalize'
+import { COACH_EVENT, ecoNameFromUrl, parsePgnHeaders } from './chesscom/normalize'
 import { getStrings } from './i18n/strings'
 import type { Game, GameSite, MyColor, MyResult } from './types'
 
@@ -175,7 +175,10 @@ export function parseManualGame(
     initialFen: headers.FEN ?? new Chess().fen(),
     finalFen,
     timeControl: headers.TimeControl ?? '',
-    timeClass: timeClassFromControl(headers.TimeControl, lichessLink ? 'lichess' : 'chesscom'),
+    timeClass:
+      headers.Event === COACH_EVENT
+        ? 'coach'
+        : timeClassFromControl(headers.TimeControl, lichessLink ? 'lichess' : 'chesscom'),
     rules: rulesFromVariant(headers.Variant),
     rated: false,
     endTime: endTimeFromPgnDate(headers),

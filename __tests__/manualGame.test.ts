@@ -25,6 +25,11 @@ O-O-O 15. Qe6+ Kc7 16. Qe1 Qxh5+ 17. f3 Ne5 18. Qe4 Bc5 19. Na3 Rhe8 20. d3 Qh1
 Kh3 Rh1+ 34. Kg3 Rxh7 35. Kf2 Qb2+ 36. Kg1 Rh2 37. g5 Qg2# 0-1`
 
 describe('parseManualGame', () => {
+  it('files an inbox "Play vs Coach" export (no TimeControl) as coach', () => {
+    const pgn = BOT_GAME_PGN.replace('Play vs Bot', 'Play vs Coach')
+    expect(parseManualGame(pgn, 'fverona').timeClass).toBe('coach')
+  })
+
   it('parses the issue #62 example end-to-end', () => {
     const game = parseManualGame(BOT_GAME_PGN, 'fverona')
     expect(game.myColor).toBe('black')

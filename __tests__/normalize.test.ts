@@ -141,6 +141,11 @@ describe('normalizeGame', () => {
     )
   })
 
+  it('files "Play vs Coach" games as coach, not the API\'s daily', () => {
+    const raw = makeRawGame({ time_class: 'daily', pgn: '[Event "Play vs Coach"]\n\n1. e4 e5 *' })
+    expect(normalizeGame(raw, 'me', '2023-11').timeClass).toBe('coach')
+  })
+
   it('falls back to null moves/finalFen for PGN chess.js cannot parse, without throwing', () => {
     const raw = makeRawGame({ pgn: '[Event "Bughouse"]\n\n1. e4 P@e5 *' })
     const game = normalizeGame(raw, 'me', '2023-11')

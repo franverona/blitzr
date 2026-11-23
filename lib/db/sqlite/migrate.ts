@@ -128,6 +128,13 @@ async function runMigrations(db: Kysely<DbSchema>): Promise<void> {
         + 40 * CAST(substr(time_control, instr(time_control, '+') + 1) AS INTEGER) < 30
   `.execute(db)
 
+  // Coach games used to be filed as daily (API) or unknown (PGN inbox).
+  await sql`
+    UPDATE games SET time_class = 'coach'
+    WHERE site = 'chesscom' AND time_class != 'coach'
+      AND pgn LIKE '%[Event "Play vs Coach"]%'
+  `.execute(db)
+
   // Practice games (archive_ym 'practice') point at the game they were played from.
   if (!gameColumns.rows.some((c) => c.name === 'source_game_id')) {
     await alter(

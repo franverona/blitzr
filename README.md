@@ -189,7 +189,7 @@ pictures, so its players show their initial. Ratings on Today are kept per site.
 supported: variant games (King of the Hill, Atomic, Chess960…) are skipped by sync and the
 import, refused by **Add game by PGN**, and any synced before are deleted on the next start. Games Chess.com's API never exposes (e.g. "Play Bots" games) can be added with
 **Add game by PGN**; they get their own id, so a later sync never touches them. "Play vs Coach"
-games left the API in November 2026: set `BLITZR_PGN_INBOX` in `.env.local` to your downloads
+games (their own **Coach** time class) left the API in November 2026: set `BLITZR_PGN_INBOX` in `.env.local` to your downloads
 folder (absolute, no `~`), then download them from the Coach tab of your games archive on
 chess.com (select a page, then the download button). Each sync imports any
 `chess_com_games_*.pgn` there the same way, skipping games already in Blitzr, and deletes the file.
