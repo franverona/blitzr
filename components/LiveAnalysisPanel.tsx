@@ -7,7 +7,6 @@ import { useBoardContext } from './BoardContext'
 import { useLiveAnalysisContext } from './LiveAnalysis'
 import { MoveSequence } from './MoveSequence'
 import { useSettings } from './SettingsProvider'
-import { Spinner } from './Spinner'
 
 /**
  * Live top-N engine lines for whatever the board shows (recorded ply or
@@ -43,25 +42,14 @@ export function LiveAnalysisPanel() {
 
   return (
     // Capped so a long explored line can't squeeze out the move list.
-    <div className="flex shrink-0 flex-col gap-1 overflow-y-auto rounded-md border border-zinc-300 bg-white text-sm shadow-sm lg:max-h-[60%] dark:border-zinc-800 dark:bg-zinc-900/50 dark:shadow-none">
-      <div className="flex items-center justify-between px-3 pt-3">
-        <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-500">
-          {s.liveAnalysis.panelTitle}
-        </p>
-        {/* Keeps showing the previous lines while a new search runs. */}
-        {thinking && (
-          <Spinner
-            role="status"
-            aria-label={s.liveAnalysis.thinking}
-            title={s.liveAnalysis.thinking}
-            className="size-3"
-          />
-        )}
-      </div>
+    <div
+      aria-busy={thinking}
+      className="flex shrink-0 flex-col overflow-y-auto rounded-md border border-zinc-300 bg-white text-sm shadow-sm lg:max-h-[60%] dark:border-zinc-800 dark:bg-zinc-900/50 dark:shadow-none"
+    >
       {exploring && explorePath.length > 0 && (
         // Tied to `explorePath`, not to a search, so it stays put while the
         // lines below refresh.
-        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 border-t border-b border-zinc-200 px-3 py-2 text-xs dark:border-zinc-800">
+        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 border-b border-zinc-200 px-3 py-2 text-xs dark:border-zinc-800">
           <span className="shrink-0 font-semibold text-zinc-600 dark:text-zinc-500">
             {s.liveAnalysis.yourLine}
           </span>
@@ -83,9 +71,9 @@ export function LiveAnalysisPanel() {
       )}
       <div className="flex flex-col divide-y divide-zinc-200 dark:divide-zinc-800">
         {lines === null || fen === null ? (
-          <p className="px-3 pb-3 text-zinc-600 dark:text-zinc-500">{s.liveAnalysis.thinking}</p>
+          <p className="px-3 py-1.5 text-zinc-600 dark:text-zinc-500">{s.liveAnalysis.thinking}</p>
         ) : lines.length === 0 ? (
-          <p className="px-3 pb-3 text-zinc-600 dark:text-zinc-500">{s.liveAnalysis.gameOver}</p>
+          <p className="px-3 py-1.5 text-zinc-600 dark:text-zinc-500">{s.liveAnalysis.gameOver}</p>
         ) : (
           lines.map((line, i) => {
             const moves = [line.move.san, ...line.move.bestLine]
@@ -93,7 +81,7 @@ export function LiveAnalysisPanel() {
             return (
               <div
                 key={i}
-                className={`flex items-center gap-2 px-3 py-2 ${isQueued ? 'bg-accent/10' : ''}`}
+                className={`flex items-center gap-2 px-3 py-1 ${isQueued ? 'bg-accent/10' : ''}`}
               >
                 <span className="w-12 shrink-0 font-mono text-zinc-700 tabular-nums dark:text-zinc-200">
                   {formatEval({ cp: line.cp, mate: line.mate, bestMove: null })}

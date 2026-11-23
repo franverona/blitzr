@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
+  clockAtPly,
   clockIncrementSeconds,
   clockShareBeforePly,
+  formatClock,
   formatTimeControl,
   initialClockSeconds,
   plyClocks,
@@ -88,5 +90,39 @@ describe('thinkSecondsForPly', () => {
     const clocks = [182, 90, 170, 80]
     expect(thinkSecondsForPly(clocks, 2, 180, 2)).toBe(0)
     expect(thinkSecondsForPly(clocks, 4, 180, 2)).toBe(10)
+  })
+})
+
+describe('clockAtPly', () => {
+  // White's clock after plies 1, 3; Black's after 2, 4.
+  const clocks = [178, 179, 170, 160]
+
+  it('shows the starting time before a side has moved', () => {
+    expect(clockAtPly(clocks, 0, 180, 'white')).toBe(180)
+    expect(clockAtPly(clocks, 0, 180, 'black')).toBe(180)
+    expect(clockAtPly(clocks, 1, 180, 'black')).toBe(180)
+  })
+
+  it("shows each side's clock after their last move", () => {
+    expect(clockAtPly(clocks, 1, 180, 'white')).toBe(178)
+    expect(clockAtPly(clocks, 2, 180, 'white')).toBe(178)
+    expect(clockAtPly(clocks, 2, 180, 'black')).toBe(179)
+    expect(clockAtPly(clocks, 3, 180, 'white')).toBe(170)
+    expect(clockAtPly(clocks, 4, 180, 'black')).toBe(160)
+  })
+
+  it('handles a position where Black moves first', () => {
+    const fen = '8/8/8/8/8/8/k7/K7 b - - 0 1'
+    expect(clockAtPly(clocks, 1, 180, 'black', fen)).toBe(178)
+    expect(clockAtPly(clocks, 1, 180, 'white', fen)).toBe(180)
+    expect(clockAtPly(clocks, 2, 180, 'white', fen)).toBe(179)
+  })
+})
+
+describe('formatClock', () => {
+  it('formats m:ss and h:mm:ss', () => {
+    expect(formatClock(5)).toBe('0:05')
+    expect(formatClock(185.7)).toBe('3:05')
+    expect(formatClock(3725)).toBe('1:02:05')
   })
 })

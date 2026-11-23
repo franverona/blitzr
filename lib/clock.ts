@@ -1,3 +1,5 @@
+import { whiteToMove } from './analysis'
+
 /** A clocked game's starting time in seconds ("600", "180+2"); null for daily or unknown. */
 export function initialClockSeconds(timeControl: string): number | null {
   const base = Number(timeControl.split('+')[0])
@@ -61,4 +63,23 @@ export function thinkSecondsForPly(
   // Lichess neither runs the clock nor adds the increment on a player's first move.
   if (ply <= 2 && clocks[ply - 1] >= before) return 0
   return Math.max(0, before - clocks[ply - 1] + (berserked ? 0 : increment))
+}
+
+/** What `color`'s clock showed at ply `ply` (0 = start): after their last move so far, or `initial`. */
+export function clockAtPly(
+  clocks: number[],
+  ply: number,
+  initial: number,
+  color: 'white' | 'black',
+  initialFen?: string,
+): number {
+  const last = whiteToMove(ply, initialFen) === (color === 'white') ? ply : ply - 1
+  return last >= 1 ? clocks[last - 1] : initial
+}
+
+/** 185 → "3:05", 3725 → "1:02:05". */
+export function formatClock(seconds: number): string {
+  const s = Math.floor(seconds)
+  const mmss = `${Math.floor((s % 3600) / 60)}:${String(s % 60).padStart(2, '0')}`
+  return s >= 3600 ? `${Math.floor(s / 3600)}:${mmss.padStart(5, '0')}` : mmss
 }

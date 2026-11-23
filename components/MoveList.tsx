@@ -191,7 +191,7 @@ export function MoveList({
                       }`}
                     >
                       <PieceMoveLabel san={move.san} />
-                      {tier && <MoveQualityBadge tier={tier} />}
+                      {tier && <MoveQualityBadge tier={tier} compact />}
                       {evaluation && (
                         <span className="ml-auto text-xs font-normal text-zinc-600 tabular-nums dark:text-zinc-400">
                           {formatEval(evaluation)}

@@ -8,14 +8,16 @@ import { BoardNavControls } from '@/components/BoardNavControls'
 import { LiveAnalysisProvider } from '@/components/LiveAnalysis'
 import { DeleteGameButton } from '@/components/DeleteGameButton'
 import { FavoriteButton } from '@/components/FavoriteButton'
+import { GameActionsMenu } from '@/components/GameActionsMenu'
 import {
-  AnalyzeButton,
   GameAnalysisProvider,
   GameStoryPanel,
   MoveQualityLink,
 } from '@/components/GameAnalysisPanel'
 import { LiveAnalysisPanel } from '@/components/LiveAnalysisPanel'
 import { PlayerAvatar } from '@/components/PlayerAvatar'
+import { PlayerStrip } from '@/components/PlayerStrip'
+import { initialClockSeconds, plyClocks } from '@/lib/clock'
 import { PositionActions } from '@/components/PositionActions'
 import { ResultBadge } from '@/components/ResultBadge'
 import { fetchBotAvatar, fetchPlayerAvatar } from '@/lib/chesscom/client'
@@ -92,34 +94,60 @@ export default async function GamePage({
     game.practiceOf ? [] : getPracticeGames(game.id),
   ])
   const canPractice = isStandardChess(game) && !game.practiceOf
+  const coachElo = coachRating(game)
+  const strip = (color: MyColor) => ({
+    username: color === 'white' ? game.whiteUsername : game.blackUsername,
+    avatarUrl: color === 'white' ? whiteAvatar : blackAvatar,
+    rating: color !== game.myColor ? coachElo : null,
+    result: game.isMine && color === game.myColor ? game.myResult : undefined,
+  })
+  const stripProps = {
+    players: { white: strip('white'), black: strip('black') },
+    clocks: game.movesSan ? plyClocks(game.pgn, game.movesSan.length) : null,
+    initialClock: initialClockSeconds(game.timeControl),
+    initialFen: game.initialFen,
+  }
+  const canAnalyze = !!game.movesSan && isStandardChess(game)
+  // Only manual and practice games can be deleted.
+  const deleteTarget = game.practiceOf
+    ? {
+        gameId: game.id,
+        redirectTo: `/games/${game.practiceOf.gameId}?ply=${game.practiceOf.ply}`,
+        confirmText: getStrings().gamePage.deletePracticeConfirm,
+      }
+    : game.archiveYm === 'manual'
+      ? { gameId: game.id }
+      : undefined
 
   const body = (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-zinc-200 pb-4 dark:border-zinc-800">
-        <GameHeader
-          game={game}
-          isCoachGame={isCoachGame}
-          whiteAvatar={whiteAvatar}
-          blackAvatar={blackAvatar}
-        />
-        <div className="flex flex-wrap items-center justify-end gap-4">
-          {game.movesSan && isStandardChess(game) && <AnalyzeButton />}
-          {game.archiveYm === 'manual' && <DeleteGameButton gameId={game.id} />}
-          {game.practiceOf && (
-            <DeleteGameButton
-              gameId={game.id}
-              redirectTo={`/games/${game.practiceOf.gameId}?ply=${game.practiceOf.ply}`}
-              confirmText={getStrings().gamePage.deletePracticeConfirm}
-            />
-          )}
+      {!game.movesSan && (
+        <div className="flex flex-wrap items-start justify-between gap-4 border-b border-zinc-200 pb-4 dark:border-zinc-800">
+          <GameHeader
+            game={game}
+            isCoachGame={isCoachGame}
+            whiteAvatar={whiteAvatar}
+            blackAvatar={blackAvatar}
+          />
+          {deleteTarget && <DeleteGameButton {...deleteTarget} />}
         </div>
-      </div>
+      )}
 
       {game.movesSan ? (
-        // lg+: 9.25rem ≈ chrome above/below the board.
+        // lg+: 7.5rem ≈ chrome above/below the board (padding, strips, coordinates).
         <BoardView
-          boardMaxWidthClassName="max-w-160 lg:max-w-[min(40rem,calc(100dvh-9.25rem))] xl:max-w-[min(43rem,calc(100dvh-9.25rem))] 2xl:max-w-[min(46rem,calc(100dvh-9.25rem))]"
+          boardMaxWidthClassName="max-w-160 lg:max-w-[min(52rem,calc(100dvh-7.5rem))] xl:max-w-[min(56rem,calc(100dvh-7.5rem))] 2xl:max-w-[min(60rem,calc(100dvh-7.5rem))]"
           sidebarMaxWidthClassName="lg:max-w-xs xl:max-w-sm"
+          boardTop={<PlayerStrip position="top" {...stripProps} />}
+          boardBottom={<PlayerStrip position="bottom" {...stripProps} />}
+          sidebarHeader={
+            <div className="flex shrink-0 items-start gap-2">
+              <GameHeader game={game} isCoachGame={isCoachGame} compact />
+              {(canAnalyze || deleteTarget) && (
+                <GameActionsMenu canAnalyze={canAnalyze} deleteTarget={deleteTarget} />
+              )}
+            </div>
+          }
           autoExplore
           sidebarTop={<LiveAnalysisPanel />}
           // Told as "you", so not for someone else's game; only standard chess can be analyzed.
@@ -219,13 +247,16 @@ function OpeningLine({ game }: { game: Game }) {
 function GameHeader({
   game,
   isCoachGame,
-  whiteAvatar,
-  blackAvatar,
+  whiteAvatar = null,
+  blackAvatar = null,
+  compact = false,
 }: {
   game: Game
   isCoachGame: boolean
-  whiteAvatar: string | null
-  blackAvatar: string | null
+  whiteAvatar?: string | null
+  blackAvatar?: string | null
+  /** Beside the board, whose player strips already show names, avatars and the result. */
+  compact?: boolean
 }) {
   const s = getStrings()
   const timeClassLabel =
@@ -238,18 +269,36 @@ function GameHeader({
     )
   return (
     // flex-1 + basis: a long opening name wraps here instead of overflowing the button row.
-    <div className="flex flex-1 basis-64 flex-col gap-1.5">
-      <h1 className="flex items-center gap-2 text-xl font-semibold">
-        <PlayerAvatar username={game.whiteUsername} avatarUrl={whiteAvatar} />
-        {game.whiteUsername}
-        {rating('white')}
-        <span className="text-sm font-normal text-zinc-600 dark:text-zinc-500">{s.common.vs}</span>
-        <PlayerAvatar username={game.blackUsername} avatarUrl={blackAvatar} />
-        {game.blackUsername}
-        {rating('black')}
-        {game.isMine && <ResultBadge result={game.myResult} />}
-        {!game.practiceOf && <FavoriteButton gameId={game.id} favorite={game.favorite ?? false} />}
-      </h1>
+    <div
+      className={
+        compact ? 'flex min-w-0 flex-1 items-start gap-2' : 'flex flex-1 basis-64 flex-col gap-1.5'
+      }
+    >
+      {compact && (
+        <h1 className="sr-only">
+          {game.whiteUsername} {s.common.vs} {game.blackUsername}
+        </h1>
+      )}
+      {compact && !game.practiceOf && (
+        <FavoriteButton gameId={game.id} favorite={game.favorite ?? false} />
+      )}
+      {!compact && (
+        <h1 className="flex items-center gap-2 text-xl font-semibold">
+          <PlayerAvatar username={game.whiteUsername} avatarUrl={whiteAvatar} />
+          {game.whiteUsername}
+          {rating('white')}
+          <span className="text-sm font-normal text-zinc-600 dark:text-zinc-500">
+            {s.common.vs}
+          </span>
+          <PlayerAvatar username={game.blackUsername} avatarUrl={blackAvatar} />
+          {game.blackUsername}
+          {rating('black')}
+          {game.isMine && <ResultBadge result={game.myResult} />}
+          {!game.practiceOf && (
+            <FavoriteButton gameId={game.id} favorite={game.favorite ?? false} />
+          )}
+        </h1>
+      )}
       {/* A div, not a <p>: MoveQualityLink renders an <aside>. */}
       <div className="text-xs text-zinc-600 dark:text-zinc-400">
         {formatDateTime(game.endTime)} · {timeClassLabel}
