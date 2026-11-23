@@ -369,7 +369,6 @@ const en = {
       pause: 'Pause',
     },
     startingPositionButton: 'Starting position',
-    moveClock: (spent: string, left: string) => `${spent} on this move, ${left} left on the clock`,
     material: 'Material:',
     exploring: 'Exploring',
     backToGame: 'Back to game',
@@ -1258,8 +1257,6 @@ const es: Strings = {
       pause: 'Pausar',
     },
     startingPositionButton: 'Posición inicial',
-    moveClock: (spent: string, left: string) =>
-      `${spent} en esta jugada, quedaban ${left} en el reloj`,
     material: 'Material:',
     exploring: 'Explorando',
     backToGame: 'Volver a la partida',

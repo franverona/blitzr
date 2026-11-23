@@ -25,7 +25,6 @@ import {
   isBareBotNameEvent,
   parsePgnHeaders,
 } from '@/lib/chesscom/normalize'
-import { moveClocks } from '@/lib/clock'
 import { formatDateTime } from '@/lib/dates'
 import { pgnSite } from '@/lib/manualGame'
 import { getStrings } from '@/lib/i18n/strings'
@@ -122,7 +121,6 @@ export default async function GamePage({
           boardMaxWidthClassName="max-w-160 lg:max-w-[min(40rem,calc(100dvh-9.25rem))] xl:max-w-[min(43rem,calc(100dvh-9.25rem))] 2xl:max-w-[min(46rem,calc(100dvh-9.25rem))]"
           sidebarMaxWidthClassName="lg:max-w-xs xl:max-w-sm"
           autoExplore
-          moveClocks={moveClocks(game.pgn, game.movesSan.length, game.timeControl)}
           sidebarTop={<LiveAnalysisPanel />}
           // Told as "you", so not for someone else's game; only standard chess can be analyzed.
           sidebarAltTab={

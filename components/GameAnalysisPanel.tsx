@@ -3,7 +3,6 @@
 import { createContext, useContext, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { saveGameAnalysis } from '@/app/actions'
 import { getStrings } from '@/lib/i18n/strings'
-import { whiteToMove } from '@/lib/analysis'
 import { buildGameStory } from '@/lib/gameStory'
 import type { GamePhase } from '@/lib/material'
 import { MOVE_QUALITY_TIERS, summarizeMoveQuality } from '@/lib/moveQuality'
@@ -386,11 +385,7 @@ export function GameStoryPanel({
       aria-current={!exploring && ply === currentPly ? 'step' : undefined}
       className={`${chipClass(!exploring && ply === currentPly)} min-w-28 shrink-0 text-center tabular-nums`}
     >
-      {plyLabel(ply, initialFen)}{' '}
-      <PieceMoveLabel
-        san={movesSan[ply - 1]}
-        color={whiteToMove(ply, initialFen) ? 'white' : 'black'}
-      />
+      {plyLabel(ply, initialFen)} <PieceMoveLabel san={movesSan[ply - 1]} />
     </button>
   )
 
