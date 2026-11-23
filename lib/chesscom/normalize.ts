@@ -53,11 +53,13 @@ export function isBareBotNameEvent(event: string | undefined): boolean {
   return event !== undefined && BARE_BOT_NAME_EVENTS.has(event)
 }
 
+export const COACH_EVENT = 'Play vs Coach'
+
 /** A "Play vs Coach" game's coach rating: set per game, and its name ("Coach-David") doesn't show it. */
 export function coachRating(
   game: Pick<Game, 'pgn' | 'myColor' | 'whiteRating' | 'blackRating'>,
 ): number | null {
-  if (parsePgnHeaders(game.pgn).Event !== 'Play vs Coach') return null
+  if (parsePgnHeaders(game.pgn).Event !== COACH_EVENT) return null
   return game.myColor === 'white' ? game.blackRating : game.whiteRating
 }
 
@@ -88,7 +90,8 @@ export function normalizeGame(raw: ChesscomGame, username: string, archiveYm: st
     initialFen: raw.initial_setup,
     finalFen,
     timeControl: raw.time_control,
-    timeClass: raw.time_class,
+    // The API files coach games as daily; Chess.com's own exports give them no time control.
+    timeClass: headers.Event === COACH_EVENT ? 'coach' : raw.time_class,
     rules: raw.rules,
     rated: raw.rated,
     endTime: raw.end_time,

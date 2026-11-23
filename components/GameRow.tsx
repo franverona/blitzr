@@ -11,7 +11,14 @@ import { SiteIcon } from './SiteIcon'
 import { Badge } from './Badge'
 import { FavoriteButton } from './FavoriteButton'
 import { KnightIcon } from './KnightIcon'
-import { BulletIcon, HourglassIcon, SunIcon, TimerIcon, ZapIcon } from './NavIcons'
+import {
+  BulletIcon,
+  GraduationCapIcon,
+  HourglassIcon,
+  SunIcon,
+  TimerIcon,
+  ZapIcon,
+} from './NavIcons'
 import { ResultBadge } from './ResultBadge'
 import { Spinner } from './Spinner'
 import { useBulkAnalysis } from './BulkAnalysisProvider'
@@ -25,6 +32,7 @@ const TIME_CLASS_ICONS: Record<string, typeof ZapIcon | undefined> = {
   classical: HourglassIcon,
   daily: SunIcon,
   correspondence: SunIcon,
+  coach: GraduationCapIcon,
 }
 
 // Off the row's result/accuracy hues (emerald, rose, amber).
@@ -36,6 +44,7 @@ const TIME_CLASS_COLORS: Record<string, string> = {
   classical: 'text-sky-600 dark:text-sky-400',
   daily: 'text-violet-600 dark:text-violet-400',
   correspondence: 'text-violet-600 dark:text-violet-400',
+  coach: 'text-fuchsia-600 dark:text-fuchsia-400',
 }
 
 export function GameRow({

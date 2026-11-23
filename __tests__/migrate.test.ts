@@ -22,7 +22,7 @@ describe('ensureSchema', { timeout: 60_000 }, () => {
     const raw = new Database(path.join(dir, 'blitzr.db'))
     // A games table from before is_mine (only the columns the indexes and updates need).
     raw.exec(`
-      CREATE TABLE games (id TEXT PRIMARY KEY, end_time INTEGER, eco_code TEXT, archive_ym TEXT,
+      CREATE TABLE games (id TEXT PRIMARY KEY, end_time INTEGER, eco_code TEXT, archive_ym TEXT, pgn TEXT,
         time_control TEXT, time_class TEXT, rules TEXT NOT NULL DEFAULT 'chess');
       INSERT INTO games (id) VALUES ('g1');
     `)
@@ -64,7 +64,7 @@ describe('ensureSchema', { timeout: 60_000 }, () => {
   it('files Lichess UltraBullet games stored as bullet, synced or pasted, as UltraBullet', async () => {
     const raw = new Database(':memory:')
     raw.exec(`
-      CREATE TABLE games (id TEXT PRIMARY KEY, end_time INTEGER, eco_code TEXT, archive_ym TEXT,
+      CREATE TABLE games (id TEXT PRIMARY KEY, end_time INTEGER, eco_code TEXT, archive_ym TEXT, pgn TEXT,
         time_control TEXT, time_class TEXT, site TEXT NOT NULL DEFAULT 'chesscom',
         rules TEXT NOT NULL DEFAULT 'chess');
       INSERT INTO games (id, time_control, time_class, site) VALUES
@@ -84,11 +84,32 @@ describe('ensureSchema', { timeout: 60_000 }, () => {
     raw.close()
   })
 
+  it('files Chess.com coach games, synced as daily or pasted as unknown, as coach', async () => {
+    const raw = new Database(':memory:')
+    raw.exec(`
+      CREATE TABLE games (id TEXT PRIMARY KEY, end_time INTEGER, eco_code TEXT, archive_ym TEXT, pgn TEXT,
+        time_control TEXT, time_class TEXT, site TEXT NOT NULL DEFAULT 'chesscom',
+        rules TEXT NOT NULL DEFAULT 'chess');
+      INSERT INTO games (id, pgn, time_class) VALUES
+        ('synced', '[Event "Play vs Coach"]', 'daily'),
+        ('pasted', '[Event "Play vs Coach"]', 'unknown'),
+        ('other', '[Event "Live Chess"]', 'daily');
+    `)
+    const ensureSchema = await freshEnsureSchema()
+    await ensureSchema(new Kysely<DbSchema>({ dialect: new SqliteDialect({ database: raw }) }))
+    expect(raw.prepare('SELECT id, time_class FROM games ORDER BY id').all()).toEqual([
+      { id: 'other', time_class: 'daily' },
+      { id: 'pasted', time_class: 'coach' },
+      { id: 'synced', time_class: 'coach' },
+    ])
+    raw.close()
+  })
+
   it('deletes variant games, their analysis cascading', async () => {
     const raw = new Database(':memory:')
     raw.pragma('foreign_keys = ON')
     raw.exec(`
-      CREATE TABLE games (id TEXT PRIMARY KEY, end_time INTEGER, eco_code TEXT, archive_ym TEXT,
+      CREATE TABLE games (id TEXT PRIMARY KEY, end_time INTEGER, eco_code TEXT, archive_ym TEXT, pgn TEXT,
         time_control TEXT, time_class TEXT, rules TEXT NOT NULL);
       CREATE TABLE game_analysis (game_id TEXT PRIMARY KEY REFERENCES games(id) ON DELETE CASCADE,
         evals TEXT NOT NULL, analyzed_at TEXT NOT NULL);
@@ -107,7 +128,7 @@ describe('ensureSchema', { timeout: 60_000 }, () => {
     const raw = new Database(path.join(dir2, 'blitzr.db'))
     // A view can't take ADD COLUMN, so the movetime_ms step fails on every run.
     raw.exec(`
-      CREATE TABLE games (id TEXT PRIMARY KEY, end_time INTEGER, eco_code TEXT, archive_ym TEXT,
+      CREATE TABLE games (id TEXT PRIMARY KEY, end_time INTEGER, eco_code TEXT, archive_ym TEXT, pgn TEXT,
         time_control TEXT, time_class TEXT, rules TEXT NOT NULL DEFAULT 'chess');
       CREATE VIEW game_analysis AS SELECT id AS game_id FROM games;
     `)

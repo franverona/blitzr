@@ -19,7 +19,12 @@ import { PlayerAvatar } from '@/components/PlayerAvatar'
 import { PositionActions } from '@/components/PositionActions'
 import { ResultBadge } from '@/components/ResultBadge'
 import { fetchBotAvatar, fetchPlayerAvatar } from '@/lib/chesscom/client'
-import { coachRating, isBareBotNameEvent, parsePgnHeaders } from '@/lib/chesscom/normalize'
+import {
+  COACH_EVENT,
+  coachRating,
+  isBareBotNameEvent,
+  parsePgnHeaders,
+} from '@/lib/chesscom/normalize'
 import { moveClocks } from '@/lib/clock'
 import { formatDateTime } from '@/lib/dates'
 import { pgnSite } from '@/lib/manualGame'
@@ -58,7 +63,7 @@ export default async function GamePage({
 
   const event = parsePgnHeaders(game.pgn).Event
   // "Play vs Coach" games get a Link that points to an unrelated game.
-  const isCoachGame = event === 'Play vs Coach'
+  const isCoachGame = event === COACH_EVENT
   // "Play vs Bot" opponents have a bare display name, not a real account.
   const botColor: MyColor | null = isBareBotNameEvent(event)
     ? game.myColor === 'white'
