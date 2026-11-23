@@ -116,7 +116,8 @@ Every game has a `site` (`chesscom` | `lichess`). `siteUsername(site)` reads `CH
   fetched live, never stored, failing soft to a letter badge. Quirks: "Play vs Coach" games link to
   an unrelated game (link hidden) and are filed as time class `coach` (the API says `daily`, the
   PGN export has none; `ensureSchema()` retags old ones); "Play Bots" games never appear in the API
-  (add by PGN); "Play vs Bot" PGNs hold a bare bot name that can collide with a real user (`fetchBotAvatar()`).
+  (add by PGN); "Play vs Bot" PGNs hold a bare bot name that can collide with a real user
+  (`fetchBotAvatar()`).
 - **Lichess** (`https://lichess.org/api`) has no monthly archives, so `listPendingArchives()` makes
   `lichess:YYYY-MM` keys. A month with an unfinished (correspondence) game stays `partial`. A 429
   waits a full minute, as Lichess asks. Re-fetching a Lichess game refreshes its PGN, opening and
