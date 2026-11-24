@@ -118,6 +118,7 @@ function DrillDeck({
   dueCount,
   filtered,
   initialAutoAdvance,
+  header,
 }: {
   resumed: StoredSession | null
   /** The active filters; a stored session only resumes under the same ones. */
@@ -128,6 +129,8 @@ function DrillDeck({
   dueCount: number
   filtered: boolean
   initialAutoAdvance: boolean
+  /** Title and filters, at the top of the sidebar (no header row, so the board gets the room). */
+  header: React.ReactNode
 }) {
   // Snapshotted from the first render: submitDrillAnswer revalidates /drill,
   // and fresh props would reshuffle the active session (or jump to the empty
@@ -261,11 +264,14 @@ function DrillDeck({
 
   if (sessionPrompts.length === 0) {
     return (
-      <p className="mx-auto max-w-140 text-sm text-zinc-600 dark:text-zinc-400">
-        {sessionTotalCards === 0
-          ? s.drill.nothingToDrillYet
-          : s.drill.noCardsDue(filtered, sessionTotalCards)}
-      </p>
+      <div className="mx-auto flex w-full max-w-140 flex-col gap-3">
+        {header}
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          {sessionTotalCards === 0
+            ? s.drill.nothingToDrillYet
+            : s.drill.noCardsDue(filtered, sessionTotalCards)}
+        </p>
+      </div>
     )
   }
 
@@ -273,6 +279,7 @@ function DrillDeck({
     const moreDue = sessionDueCount - cardCount
     return (
       <div className="mx-auto flex w-full max-w-140 flex-col gap-3">
+        {header}
         <p className="text-lg font-medium">{s.drill.sessionComplete}</p>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
           {s.drill.tally(tally.correct, tally.incorrect, cardCount)}
@@ -452,11 +459,11 @@ function DrillDeck({
 
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-center">
-      {/* lg+: 12rem ≈ page chrome above/below the board. */}
+      {/* lg+: 3.5rem ≈ chrome above/below the board (padding, coordinates). */}
       <BoardCoordinates
         show={boardColors.showCoordinates}
         orientation={prompt.color}
-        className="mx-auto w-full max-w-140 shrink-0 lg:mx-0 lg:max-w-[min(42rem,calc(100dvh-12rem))]"
+        className="mx-auto w-full max-w-140 shrink-0 lg:mx-0 lg:max-w-[min(52rem,calc(100dvh-3.5rem))] xl:max-w-[min(56rem,calc(100dvh-3.5rem))] 2xl:max-w-[min(60rem,calc(100dvh-3.5rem))]"
       >
         <div className="relative w-full overflow-hidden rounded shadow-lg">
           <Chessboard
@@ -491,7 +498,8 @@ function DrillDeck({
         </div>
       </BoardCoordinates>
 
-      <div className="mx-auto flex w-full max-w-140 flex-col gap-3 lg:mx-0 lg:max-w-80">
+      <div className="mx-auto flex w-full max-w-140 flex-col gap-3 lg:mx-0 lg:max-w-xs lg:flex-1 xl:max-w-sm">
+        {header}
         <div className="flex flex-col gap-1.5">
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
             {s.drill.cardOf(index + 1, sessionPrompts.length)}

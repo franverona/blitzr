@@ -6,7 +6,6 @@ import { DrillSession } from '@/components/DrillSession'
 import { TroubleCards } from '@/components/TroubleCards'
 import { getStrings } from '@/lib/i18n/strings'
 import type { DrillSourceType } from '@/lib/types'
-import { PageHeader } from '@/components/PageHeader'
 
 export default async function DrillPage({
   searchParams,
@@ -27,8 +26,6 @@ export default async function DrillPage({
 
   return (
     <div className="flex flex-col gap-4">
-      <PageHeader title={getStrings().drillPage.title} />
-      <DrillFilters sourceType={sourceType} opening={opening} />
       <DrillSession
         key={deckKey}
         deckKey={deckKey}
@@ -37,6 +34,12 @@ export default async function DrillPage({
         dueCount={dueCount}
         filtered={Boolean(sourceType || opening)}
         initialAutoAdvance={(await cookies()).get('blitzr-drill-auto-advance')?.value === '1'}
+        header={
+          <div className="flex flex-col gap-2">
+            <h1 className="text-base font-semibold">{getStrings().drillPage.title}</h1>
+            <DrillFilters sourceType={sourceType} opening={opening} />
+          </div>
+        }
       />
       <DrillProgress forecast={forecast} learned={learned} />
       <TroubleCards troubles={troubles} />
