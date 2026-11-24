@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore
 import { Chess, type Move } from 'chess.js'
 import { Chessboard } from 'react-chessboard'
 import { BoardCoordinates } from './BoardCoordinates'
+import { DrillFilters } from './DrillFilters'
 import { submitDrillAnswer, undoDrillAnswer } from '@/app/actions'
 import { isNearBestMove, keepsForcedMate } from '@/lib/drill'
 import { getStrings } from '@/lib/i18n/strings'
@@ -118,7 +119,9 @@ export function DrillSession(props: Omit<Parameters<typeof DrillDeck>[0], 'resum
     return (
       <div className={LAYOUT_CLASS}>
         <div className={`aspect-square ${BOARD_CLASS}`} />
-        <div className={SIDEBAR_CLASS}>{props.header}</div>
+        <div className={SIDEBAR_CLASS}>
+          <DrillFilters sourceType={props.sourceType} opening={props.opening} />
+        </div>
       </div>
     )
   return <DrillDeck {...props} resumed={parseStoredSession(raw, props.deckKey)} />
@@ -132,7 +135,8 @@ function DrillDeck({
   dueCount,
   filtered,
   initialAutoAdvance,
-  header,
+  sourceType,
+  opening,
 }: {
   resumed: StoredSession | null
   /** The active filters; a stored session only resumes under the same ones. */
@@ -143,9 +147,12 @@ function DrillDeck({
   dueCount: number
   filtered: boolean
   initialAutoAdvance: boolean
-  /** Title and filters, at the top of the sidebar (no header row, so the board gets the room). */
-  header: React.ReactNode
+  sourceType?: DrillSourceType
+  opening?: string
 }) {
+  // Built here, not passed from the page: a server-built element rendered in
+  // several branches trips React's key warning.
+  const header = <DrillFilters sourceType={sourceType} opening={opening} />
   // Snapshotted from the first render: submitDrillAnswer revalidates /drill,
   // and fresh props would reshuffle the active session (or jump to the empty
   // state after the last card). The setter is only for "Shuffle and restart".

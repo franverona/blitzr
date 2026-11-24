@@ -1,6 +1,5 @@
 import { cookies } from 'next/headers'
 import { getDrillDeck } from '../actions'
-import { DrillFilters } from '@/components/DrillFilters'
 import { DrillSession } from '@/components/DrillSession'
 import type { DrillSourceType } from '@/lib/types'
 
@@ -31,7 +30,8 @@ export default async function DrillPage({
         dueCount={dueCount}
         filtered={Boolean(sourceType || opening)}
         initialAutoAdvance={(await cookies()).get('blitzr-drill-auto-advance')?.value === '1'}
-        header={<DrillFilters sourceType={sourceType} opening={opening} />}
+        sourceType={sourceType}
+        opening={opening}
       />
     </div>
   )
