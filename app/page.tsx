@@ -289,7 +289,6 @@ export default async function TodayPage() {
                 icon={<RefreshCwIcon className="size-4" />}
                 tone="amber"
                 label={s.today.troubleCardsLabel}
-                action={{ href: '/drill', label: s.today.seeTroubleCards }}
               >
                 <p className="text-sm">{s.today.troubleCardsDetail(today.drill.troubles)}</p>
               </FocusRow>

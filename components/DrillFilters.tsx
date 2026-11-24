@@ -1,13 +1,15 @@
 'use client'
 
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { getStrings } from '@/lib/i18n/strings'
 import type { DrillSourceType } from '@/lib/types'
-import { chipClass } from './styles'
+import { startRouteProgress } from './RouteProgressBar'
+import { Select } from './Select'
+import { chipClass, INPUT_CLASS } from './styles'
 
-/** URL-driven so `DrillSession` (keyed on these values) remounts with a
- *  fresh session. */
+/** The page title with the filters. URL-driven so `DrillSession` (keyed on these values)
+ *  remounts with a fresh session. */
 export function DrillFilters({
   sourceType,
   opening,
@@ -15,9 +17,10 @@ export function DrillFilters({
   sourceType?: DrillSourceType
   opening?: string
 }) {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const s = getStrings()
-  const TYPE_TABS: { value: DrillSourceType | 'all'; label: string; title?: string }[] = [
+  const TYPES: { value: DrillSourceType | 'all'; label: string; title?: string }[] = [
     { value: 'all', label: s.drillFilters.all },
     { value: 'deviation', label: s.drillFilters.deviations, title: s.drillFilters.deviationsTitle },
     { value: 'blunder', label: s.drillFilters.blunders, title: s.drillFilters.blundersTitle },
@@ -36,25 +39,32 @@ export function DrillFilters({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2 text-sm">
-      {TYPE_TABS.map((tab) => {
-        const active = (sourceType ?? 'all') === tab.value
-        return (
-          <Link
-            key={tab.value}
-            href={hrefFor({ type: tab.value === 'all' ? undefined : tab.value })}
-            className={chipClass(active)}
-          >
-            {tab.title ? <abbr title={tab.title}>{tab.label}</abbr> : tab.label}
-          </Link>
-        )
-      })}
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center justify-between gap-2">
+        <h1 className="text-base font-semibold">{s.drillPage.title}</h1>
+        <Select
+          aria-label={s.drillFilters.typeLabel}
+          title={TYPES.find((t) => t.value === (sourceType ?? 'all'))?.title}
+          value={sourceType ?? 'all'}
+          onChange={(e) => {
+            startRouteProgress()
+            router.push(hrefFor({ type: e.target.value === 'all' ? undefined : e.target.value }))
+          }}
+          className={INPUT_CLASS}
+        >
+          {TYPES.map((t) => (
+            <option key={t.value} value={t.value} title={t.title}>
+              {t.label}
+            </option>
+          ))}
+        </Select>
+      </div>
       {/* Only reachable from Today's weak spot link. */}
       {opening && (
         <Link
           href={hrefFor({ opening: undefined })}
           title={s.drillFilters.clearOpening}
-          className={chipClass(true)}
+          className={`w-fit text-sm ${chipClass(true)}`}
         >
           {opening} ✕
         </Link>

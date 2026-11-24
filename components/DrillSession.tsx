@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore
 import { Chess, type Move } from 'chess.js'
 import { Chessboard } from 'react-chessboard'
 import { BoardCoordinates } from './BoardCoordinates'
+import { DrillFilters } from './DrillFilters'
 import { submitDrillAnswer, undoDrillAnswer } from '@/app/actions'
 import { isNearBestMove, keepsForcedMate } from '@/lib/drill'
 import { getStrings } from '@/lib/i18n/strings'
@@ -102,11 +103,27 @@ function parseStoredSession(raw: string | null, deckKey: string): StoredSession 
 
 const noSubscribe = () => () => {}
 
+// lg+: 3.5rem ≈ chrome above/below the board (padding, coordinates).
+const BOARD_CLASS =
+  'mx-auto w-full max-w-140 shrink-0 lg:mx-0 lg:max-w-[min(52rem,calc(100dvh-3.5rem))] xl:max-w-[min(56rem,calc(100dvh-3.5rem))] 2xl:max-w-[min(60rem,calc(100dvh-3.5rem))]'
+const SIDEBAR_CLASS =
+  'mx-auto flex w-full max-w-140 flex-col gap-3 lg:mx-0 lg:max-w-xs lg:flex-1 xl:max-w-sm'
+const LAYOUT_CLASS = 'flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-center'
+
 export function DrillSession(props: Omit<Parameters<typeof DrillDeck>[0], 'resumed'>) {
   // undefined during SSR and hydration (no sessionStorage); rendering nothing
   // until it's read keeps the server's fresh deck from flashing first.
   const raw = useSyncExternalStore(noSubscribe, readStoredSession, () => undefined)
-  if (raw === undefined) return null
+  // A blank board's space keeps the header in place until the session renders.
+  if (raw === undefined)
+    return (
+      <div className={LAYOUT_CLASS}>
+        <div className={`aspect-square ${BOARD_CLASS}`} />
+        <div className={SIDEBAR_CLASS}>
+          <DrillFilters sourceType={props.sourceType} opening={props.opening} />
+        </div>
+      </div>
+    )
   return <DrillDeck {...props} resumed={parseStoredSession(raw, props.deckKey)} />
 }
 
@@ -118,6 +135,8 @@ function DrillDeck({
   dueCount,
   filtered,
   initialAutoAdvance,
+  sourceType,
+  opening,
 }: {
   resumed: StoredSession | null
   /** The active filters; a stored session only resumes under the same ones. */
@@ -128,7 +147,12 @@ function DrillDeck({
   dueCount: number
   filtered: boolean
   initialAutoAdvance: boolean
+  sourceType?: DrillSourceType
+  opening?: string
 }) {
+  // Built here, not passed from the page: a server-built element rendered in
+  // several branches trips React's key warning.
+  const header = <DrillFilters sourceType={sourceType} opening={opening} />
   // Snapshotted from the first render: submitDrillAnswer revalidates /drill,
   // and fresh props would reshuffle the active session (or jump to the empty
   // state after the last card). The setter is only for "Shuffle and restart".
@@ -261,11 +285,14 @@ function DrillDeck({
 
   if (sessionPrompts.length === 0) {
     return (
-      <p className="mx-auto max-w-140 text-sm text-zinc-600 dark:text-zinc-400">
-        {sessionTotalCards === 0
-          ? s.drill.nothingToDrillYet
-          : s.drill.noCardsDue(filtered, sessionTotalCards)}
-      </p>
+      <div className="mx-auto flex w-full max-w-140 flex-col gap-3">
+        {header}
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          {sessionTotalCards === 0
+            ? s.drill.nothingToDrillYet
+            : s.drill.noCardsDue(filtered, sessionTotalCards)}
+        </p>
+      </div>
     )
   }
 
@@ -273,6 +300,7 @@ function DrillDeck({
     const moreDue = sessionDueCount - cardCount
     return (
       <div className="mx-auto flex w-full max-w-140 flex-col gap-3">
+        {header}
         <p className="text-lg font-medium">{s.drill.sessionComplete}</p>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
           {s.drill.tally(tally.correct, tally.incorrect, cardCount)}
@@ -451,12 +479,11 @@ function DrillDeck({
   const hintOriginSquares = new Set(hintLevel >= 2 ? revealed.map((a) => a.startSquare) : [])
 
   return (
-    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-center">
-      {/* lg+: 12rem ≈ page chrome above/below the board. */}
+    <div className={LAYOUT_CLASS}>
       <BoardCoordinates
         show={boardColors.showCoordinates}
         orientation={prompt.color}
-        className="mx-auto w-full max-w-140 shrink-0 lg:mx-0 lg:max-w-[min(42rem,calc(100dvh-12rem))]"
+        className={BOARD_CLASS}
       >
         <div className="relative w-full overflow-hidden rounded shadow-lg">
           <Chessboard
@@ -491,7 +518,8 @@ function DrillDeck({
         </div>
       </BoardCoordinates>
 
-      <div className="mx-auto flex w-full max-w-140 flex-col gap-3 lg:mx-0 lg:max-w-80">
+      <div className={SIDEBAR_CLASS}>
+        {header}
         <div className="flex flex-col gap-1.5">
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
             {s.drill.cardOf(index + 1, sessionPrompts.length)}

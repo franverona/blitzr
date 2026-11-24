@@ -180,8 +180,8 @@ jobs:
           check '/games?practice=1' 'Stockfish 1600'
           check_absent /games 'Stockfish 1600'
           check /games/smoke-practice 'practice vs the bot'
-          # Only analysis data puts these there: the worst blunder, the drill card and its trouble
-          # card (in the page's RSC payload), and Today's last-game accuracy.
+          # Only analysis data puts these there: the worst blunder, the drill card (in the page's RSC
+          # payload), and Today's last-game accuracy and trouble card.
           check /blunders smoke-black
           check /blunders 'By time left'
           check /blunders 'href="/games/smoke-thrown/play?ply=2"'
@@ -189,8 +189,8 @@ jobs:
           check '/games/smoke-thrown/play?ply=2' 'value="1800" selected=""'
           check '/repertoire?mode=quiz' 'Line 1 of 1, from memory'
           check /drill smoke-black
-          check /drill 'Trouble cards'
           check / '% accuracy'
+          check / 'Cards you keep missing'
           check /learn/sicilian-defense 'Sicilian Defense'
           check /learn/king-and-rook-vs-king 'King and Rook vs. King'
           check /learn/king-and-rook-vs-king smoke-endgame-opponent
