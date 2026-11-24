@@ -23,10 +23,13 @@ type Feedback = 'incorrect' | null
 // A defence puzzle is one ply: any of `problem.saves` solves it.
 export function PuzzleBoard({
   problem,
+  header,
   previousId,
   nextId,
 }: {
   problem: MateProblem
+  /** Title and meta, at the top of the sidebar (no header row, so the board gets the room). */
+  header: React.ReactNode
   previousId: number | null
   nextId: number | null
 }) {
@@ -190,8 +193,8 @@ export function PuzzleBoard({
 
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-center">
-      {/* lg+: 12rem ≈ chrome above/below the board. */}
-      <div className="flex w-full max-w-140 shrink-0 flex-col gap-3 lg:max-w-[min(40rem,calc(100dvh-12rem))]">
+      {/* lg+: 5.5rem ≈ chrome above/below the board (padding, ◀/▶ row, coordinates). */}
+      <div className="flex w-full max-w-160 shrink-0 flex-col gap-3 lg:max-w-[min(52rem,calc(100dvh-5.5rem))] xl:max-w-[min(56rem,calc(100dvh-5.5rem))] 2xl:max-w-[min(60rem,calc(100dvh-5.5rem))]">
         <div className="flex items-center justify-between gap-2">
           <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
             {!finished && isLive ? s.puzzles.toMove(turnColor) : ' '}
@@ -248,7 +251,8 @@ export function PuzzleBoard({
         </BoardCoordinates>
       </div>
 
-      <div className="flex w-full flex-col gap-3 lg:max-w-sm lg:flex-1 xl:max-w-md">
+      <div className="flex w-full flex-col gap-3 lg:max-w-xs lg:flex-1 xl:max-w-sm">
+        {header}
         <div className="flex w-full flex-col overflow-hidden rounded border border-zinc-300 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-none">
           <p className="border-b border-zinc-200 px-3 py-1.5 text-sm font-medium text-zinc-600 dark:border-zinc-800 dark:text-zinc-400">
             {s.puzzles.movesLabel}
