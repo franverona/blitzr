@@ -21,7 +21,6 @@ import { RepertoireTree } from './RepertoireTree'
 import { Dialog } from './Dialog'
 import { ErrorText } from './ErrorText'
 import { IconButton } from './IconButton'
-import { PageHeader } from './PageHeader'
 import { ModeTabs } from './RepertoireQuiz'
 import { buttonClass, chipClass } from './styles'
 
@@ -194,132 +193,129 @@ export function RepertoireBoard({
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <PageHeader
-        title={s.repertoire.title}
-        actions={
-          <div className="flex flex-wrap items-center gap-2 text-sm">
-            <button
-              onClick={() => setPath([])}
-              disabled={path.length === 0}
-              className={buttonClass()}
-            >
-              {s.repertoire.start}
-            </button>
-            <button
-              onClick={() => setPath((p) => p.slice(0, -1))}
-              disabled={path.length === 0}
-              className={buttonClass()}
-            >
-              {s.repertoire.back}
-            </button>
-            <span className="mx-1 h-4 w-px bg-zinc-300 dark:bg-zinc-700" />
+    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-center">
+      {/* lg+: 3rem ≈ chrome above/below the board (padding; the cap already counts the coordinates). */}
+      <div className="w-full max-w-160 lg:max-w-[min(52rem,calc(100dvh-3rem))] xl:max-w-[min(56rem,calc(100dvh-3rem))] 2xl:max-w-[min(60rem,calc(100dvh-3rem))]">
+        <BoardCoordinates show={boardColors.showCoordinates} orientation={color}>
+          <div className="overflow-hidden rounded shadow-lg">
+            <Chessboard
+              options={{
+                position: currentFen,
+                boardOrientation: color,
+                allowDragging: !deleting,
+                animationDurationInMs: BOARD_ANIMATION_DURATION_MS,
+                onPieceDrop: handleDrop,
+                onSquareClick: handleSquareClick,
+                squareRenderer: ({ square, children }) => (
+                  <LegalMoveSquare
+                    isSelected={square === selectedSquare}
+                    isLegalMove={legalMoveMap.has(square)}
+                    isCapture={legalMoveMap.get(square) ?? false}
+                  >
+                    {children}
+                  </LegalMoveSquare>
+                ),
+                darkSquareStyle: { backgroundColor: boardColors.dark },
+                lightSquareStyle: { backgroundColor: boardColors.light },
+                showNotation: false,
+              }}
+            />
+          </div>
+        </BoardCoordinates>
+      </div>
+
+      <div className="flex w-full flex-col gap-3 lg:max-w-xs lg:min-w-64 lg:flex-1 xl:max-w-sm">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between gap-2">
+            <h1 className="text-base font-semibold">{s.repertoire.title}</h1>
             <HelpButton />
-            <ModeTabs color={color} quiz={false} />
-            <ColorTab color="white" active={color === 'white'} />
-            <ColorTab color="black" active={color === 'black'} />
           </div>
-        }
-      />
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+            <div className="flex gap-2">
+              <ModeTabs color={color} quiz={false} />
+            </div>
+            <div className="flex gap-2">
+              <ColorTab color="white" active={color === 'white'} />
+              <ColorTab color="black" active={color === 'black'} />
+            </div>
+          </div>
+        </div>
 
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
-        <div className="flex shrink-0 flex-col gap-3">
-          <BoardCoordinates
-            show={boardColors.showCoordinates}
-            orientation={color}
-            className="w-full"
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          <button
+            onClick={() => setPath([])}
+            disabled={path.length === 0}
+            className={buttonClass({ size: 'sm' })}
           >
-            {/* lg+: 14rem ≈ chrome above/below the board. */}
-            <div className="w-full max-w-160 overflow-hidden rounded shadow-lg lg:max-w-[min(40rem,calc(100dvh-14rem))]">
-              <Chessboard
-                options={{
-                  position: currentFen,
-                  boardOrientation: color,
-                  allowDragging: !deleting,
-                  animationDurationInMs: BOARD_ANIMATION_DURATION_MS,
-                  onPieceDrop: handleDrop,
-                  onSquareClick: handleSquareClick,
-                  squareRenderer: ({ square, children }) => (
-                    <LegalMoveSquare
-                      isSelected={square === selectedSquare}
-                      isLegalMove={legalMoveMap.has(square)}
-                      isCapture={legalMoveMap.get(square) ?? false}
-                    >
-                      {children}
-                    </LegalMoveSquare>
-                  ),
-                  darkSquareStyle: { backgroundColor: boardColors.dark },
-                  lightSquareStyle: { backgroundColor: boardColors.light },
-                  showNotation: false,
-                }}
-              />
-            </div>
-          </BoardCoordinates>
+            {s.repertoire.start}
+          </button>
+          <button
+            onClick={() => setPath((p) => p.slice(0, -1))}
+            disabled={path.length === 0}
+            className={buttonClass({ size: 'sm' })}
+          >
+            {s.repertoire.back}
+          </button>
+          <button
+            onClick={handleDelete}
+            disabled={!currentNode || deleting}
+            className={buttonClass({ variant: 'danger', size: 'sm' })}
+          >
+            {s.repertoire.deleteLine}
+          </button>
+        </div>
 
+        {error && <ErrorText>{error}</ErrorText>}
+        {hangingReason && (
+          <p className="text-sm text-amber-600 dark:text-amber-400">
+            {describeBlunderReason(hangingReason)}
+          </p>
+        )}
+
+        {siblings.length > 1 && (
           <div className="flex flex-wrap items-center gap-2 text-sm">
-            <button
-              onClick={handleDelete}
-              disabled={!currentNode || deleting}
-              className={buttonClass({ variant: 'danger', size: 'sm' })}
-            >
-              {s.repertoire.deleteLine}
-            </button>
+            <span className="text-zinc-600 dark:text-zinc-500">
+              {s.repertoire.alternativesHere}
+            </span>
+            {siblings.map((sibling) => (
+              <button
+                key={sibling.id}
+                onClick={() => setPath((p) => [...p.slice(0, -1), sibling])}
+                className={`rounded px-2 py-0.5 ${
+                  sibling.id === currentNode?.id
+                    ? 'bg-accent/50 font-medium text-zinc-900 dark:text-white'
+                    : 'bg-zinc-200 text-zinc-700 hover:bg-zinc-300 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700'
+                }`}
+              >
+                {sibling.moveSan}
+              </button>
+            ))}
           </div>
+        )}
 
-          {error && <ErrorText>{error}</ErrorText>}
-          {hangingReason && (
-            <p className="text-sm text-amber-600 dark:text-amber-400">
-              {describeBlunderReason(hangingReason)}
-            </p>
-          )}
-
-          {siblings.length > 1 && (
-            <div className="flex flex-wrap items-center gap-2 text-sm">
-              <span className="text-zinc-600 dark:text-zinc-500">
-                {s.repertoire.alternativesHere}
-              </span>
-              {siblings.map((sibling) => (
-                <button
-                  key={sibling.id}
-                  onClick={() => setPath((p) => [...p.slice(0, -1), sibling])}
-                  className={`rounded px-2 py-0.5 ${
-                    sibling.id === currentNode?.id
-                      ? 'bg-accent/50 font-medium text-zinc-900 dark:text-white'
-                      : 'bg-zinc-200 text-zinc-700 hover:bg-zinc-300 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700'
-                  }`}
-                >
-                  {sibling.moveSan}
-                </button>
+        <RepertoireTree nodes={nodes} currentPath={path} onSelectPath={setPath} />
+        {gaps.length > 0 && (
+          <section className="flex flex-col gap-2">
+            <h2 className="text-xs font-semibold tracking-wide text-zinc-600 uppercase dark:text-zinc-400">
+              <abbr title={s.repertoire.gapsTooltip}>{s.repertoire.gapsTitle}</abbr>
+            </h2>
+            <ul className="flex flex-col gap-1.5 text-sm">
+              {gaps.map((gap) => (
+                <li key={[...gap.line, gap.next].join(' ')}>
+                  <button
+                    onClick={() => setPath(pathFor(gap.line))}
+                    className="flex w-full flex-wrap items-center gap-x-2 gap-y-1 rounded px-2 py-1 text-left hover:bg-zinc-200 dark:hover:bg-zinc-800"
+                  >
+                    <MoveSequence fen={START_FEN} moves={[...gap.line, gap.next]} />
+                    <span className="text-zinc-600 dark:text-zinc-400">
+                      {s.repertoire.gapGames(gap.games)}
+                    </span>
+                  </button>
+                </li>
               ))}
-            </div>
-          )}
-        </div>
-
-        <div className="flex min-w-0 flex-1 flex-col gap-4">
-          <RepertoireTree nodes={nodes} currentPath={path} onSelectPath={setPath} />
-          {gaps.length > 0 && (
-            <section className="flex flex-col gap-2">
-              <h2 className="text-xs font-semibold tracking-wide text-zinc-600 uppercase dark:text-zinc-400">
-                <abbr title={s.repertoire.gapsTooltip}>{s.repertoire.gapsTitle}</abbr>
-              </h2>
-              <ul className="flex flex-col gap-1.5 text-sm">
-                {gaps.map((gap) => (
-                  <li key={[...gap.line, gap.next].join(' ')}>
-                    <button
-                      onClick={() => setPath(pathFor(gap.line))}
-                      className="flex w-full flex-wrap items-center gap-x-2 gap-y-1 rounded px-2 py-1 text-left hover:bg-zinc-200 dark:hover:bg-zinc-800"
-                    >
-                      <MoveSequence fen={START_FEN} moves={[...gap.line, gap.next]} />
-                      <span className="text-zinc-600 dark:text-zinc-400">
-                        {s.repertoire.gapGames(gap.games)}
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-        </div>
+            </ul>
+          </section>
+        )}
       </div>
     </div>
   )

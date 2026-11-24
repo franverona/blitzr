@@ -19,14 +19,14 @@ export function RepertoireTree({
 
   if (roots.length === 0) {
     return (
-      <p className="text-sm text-zinc-600 lg:max-w-xs lg:flex-1 dark:text-zinc-500">
+      <p className="text-sm text-zinc-600 dark:text-zinc-500">
         {getStrings().repertoire.noMovesYet}
       </p>
     )
   }
 
   return (
-    <div className="w-full overflow-y-auto rounded border border-zinc-300 bg-white py-2 text-sm shadow-sm lg:max-h-160 lg:max-w-xs lg:flex-1 dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-none">
+    <div className="w-full overflow-y-auto rounded border border-zinc-300 bg-white py-2 text-sm shadow-sm lg:max-h-160 dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-none">
       {roots.map((node) => (
         <TreeNode
           key={node.id}
