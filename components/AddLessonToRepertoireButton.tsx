@@ -31,7 +31,7 @@ export function AddLessonToRepertoireButton({
   }
 
   return (
-    <button onClick={handleClick} disabled={saving} className={buttonClass({ size: 'sm' })}>
+    <button onClick={handleClick} disabled={saving} className={buttonClass({ size: 'xs' })}>
       {s.lessonPractice.addToRepertoire}
     </button>
   )

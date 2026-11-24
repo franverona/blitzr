@@ -30,9 +30,15 @@ function revealArrow(fen: string, san: string) {
  *  quizzed; the opponent's replies auto-play. Progress is BoardProvider's
  *  `ply`, so MoveExplanation follows along without extra wiring. */
 export function LessonQuiz({
+  boardMaxWidthClassName = 'max-w-140 lg:max-w-[min(35rem,calc(100dvh-17rem))]',
+  header,
   sidebarExtra,
   onComplete,
 }: {
+  /** Default: lg+, 17rem ≈ chrome above/below the board under a page header. */
+  boardMaxWidthClassName?: string
+  /** At the top of the sidebar. */
+  header?: React.ReactNode
   sidebarExtra?: React.ReactNode
   /** Called once each time the line is played to its end. */
   onComplete?: () => void
@@ -172,36 +178,48 @@ export function LessonQuiz({
   const arrows = revealed ? revealArrow(fen, movesSan[ply]) : []
   const colorLabel = s.common.color[myColor]
 
+  // With a header (the lesson page), the status, buttons and hints live in the sidebar instead,
+  // so the board keeps its size across modes. Without one, a fixed height keeps the board still.
+  const statusRow = (
+    <div
+      className={`flex items-center justify-between gap-2 ${header ? 'min-h-9 flex-wrap' : 'h-9'}`}
+    >
+      {isComplete ? (
+        <p className="text-lg font-medium">{s.lessonQuiz.lineComplete}</p>
+      ) : (
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          {isMyTurn
+            ? s.lessonQuiz.playingAs(colorLabel, ply + 1, lastPly)
+            : s.lessonQuiz.opponentsMove}
+        </p>
+      )}
+      <div className="flex shrink-0 items-center gap-2">
+        <button onClick={handleRestart} className={buttonClass()}>
+          {s.lessonQuiz.restart}
+        </button>
+        {!isComplete && (
+          <button onClick={handleHint} disabled={revealed || !isMyTurn} className={buttonClass()}>
+            {s.lessonQuiz.showMove}
+          </button>
+        )}
+      </div>
+    </div>
+  )
+  const result = isComplete ? (
+    <p className="text-sm text-zinc-600 dark:text-zinc-400">
+      {mistakes === 0 && hintsUsed === 0
+        ? s.lessonQuiz.perfect
+        : s.lessonQuiz.summary(mistakes, hintsUsed)}
+    </p>
+  ) : (
+    feedback === 'incorrect' && <ErrorText>{s.lessonQuiz.notQuiteTryAgain}</ErrorText>
+  )
+  const keyboardHint = <p className="text-xs text-zinc-600">{s.lessonQuiz.keyboardHint}</p>
+
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-center">
-      {/* lg+: 17rem ≈ chrome above/below the board. */}
-      <div className="flex w-full max-w-140 shrink-0 flex-col gap-3 lg:max-w-[min(35rem,calc(100dvh-17rem))]">
-        {/* Fixed height so swapping text variants doesn't shift the board. */}
-        <div className="flex h-9 items-center justify-between gap-2">
-          {isComplete ? (
-            <p className="text-lg font-medium">{s.lessonQuiz.lineComplete}</p>
-          ) : (
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
-              {isMyTurn
-                ? s.lessonQuiz.playingAs(colorLabel, ply + 1, lastPly)
-                : s.lessonQuiz.opponentsMove}
-            </p>
-          )}
-          <div className="flex shrink-0 items-center gap-2">
-            <button onClick={handleRestart} className={buttonClass()}>
-              {s.lessonQuiz.restart}
-            </button>
-            {!isComplete && (
-              <button
-                onClick={handleHint}
-                disabled={revealed || !isMyTurn}
-                className={buttonClass()}
-              >
-                {s.lessonQuiz.showMove}
-              </button>
-            )}
-          </div>
-        </div>
+      <div className={`flex w-full shrink-0 flex-col gap-3 ${boardMaxWidthClassName}`}>
+        {!header && statusRow}
 
         <BoardCoordinates
           show={boardColors.showCoordinates}
@@ -235,21 +253,24 @@ export function LessonQuiz({
           </div>
         </BoardCoordinates>
 
-        {isComplete ? (
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            {mistakes === 0 && hintsUsed === 0
-              ? s.lessonQuiz.perfect
-              : s.lessonQuiz.summary(mistakes, hintsUsed)}
-          </p>
-        ) : (
-          feedback === 'incorrect' && <ErrorText>{s.lessonQuiz.notQuiteTryAgain}</ErrorText>
+        {!header && (
+          <>
+            {result}
+            {keyboardHint}
+          </>
         )}
-
-        <p className="text-xs text-zinc-600">{s.lessonQuiz.keyboardHint}</p>
       </div>
 
-      {sidebarExtra && (
-        <div className="flex w-full flex-col gap-4 lg:max-w-sm lg:flex-1 xl:max-w-md">
+      {(header || sidebarExtra) && (
+        <div className="flex w-full flex-col gap-4 lg:max-w-xs lg:flex-1 xl:max-w-sm">
+          {header}
+          {header && (
+            <div className="flex flex-col gap-2">
+              {statusRow}
+              {result}
+              {keyboardHint}
+            </div>
+          )}
           {sidebarExtra}
         </div>
       )}
