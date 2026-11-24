@@ -48,14 +48,13 @@ export default async function GamePage({
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ ply?: string; hints?: string; view?: string }>
+  searchParams: Promise<{ ply?: string; view?: string }>
 }) {
   // Next hands params over percent-encoded, which turns Lichess's `lichess:<id>` into `%3A`.
   const id = decodeGameIdParam((await params).id)
   if (id === null) notFound()
   const query = await searchParams
   // `?ply=` deep-links a position (e.g. from Today's worst blunder); BoardProvider clamps it.
-  // `?hints=0` keeps the engine's answer off that position (trouble cards link to it).
   // `?view=summary` opens the sidebar on the game summary.
   const plyParam = Number(query.ply)
   const initialPly = Number.isInteger(plyParam) && plyParam >= 0 ? plyParam : 1
@@ -203,7 +202,6 @@ export default async function GamePage({
       finalResults={{ white: game.whiteResult, black: game.blackResult }}
       evals={analysis?.evals}
       initialPly={initialPly}
-      hideHintsOnInitialPly={query.hints === '0'}
     >
       <GameAnalysisProvider
         key={game.id}

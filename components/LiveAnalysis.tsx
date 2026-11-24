@@ -44,8 +44,8 @@ const LIVE_MOVETIME_MS = 600
  * Separate from LiveAnalysisPanel.tsx so BoardView reads it without importing the panel.
  */
 export function LiveAnalysisProvider({ children }: { children: React.ReactNode }) {
-  const { displayFen, exploring, hintsHidden } = useBoardContext()
-  const hideEngineHints = useSettings().hideEngineHints || hintsHidden
+  const { displayFen, exploring } = useBoardContext()
+  const hideEngineHints = useSettings().hideEngineHints
   // Hidden hints hide the arrow, eval bar and `LiveAnalysisPanel`, except
   // while exploring, where the panel stays.
   const active = !hideEngineHints || exploring

@@ -77,12 +77,11 @@ export function BoardView({
     displayFen,
     exitExploring,
     attemptExploreMove,
-    hintsHidden,
   } = useBoardContext()
   const s = getStrings()
   const [altTabOpen, setAltTabOpen] = useState(sidebarAltTab?.initiallyOpen ?? false)
   const boardColors = useSettings()
-  const hideHints = boardColors.hideEngineHints || hintsHidden
+  const hideHints = boardColors.hideEngineHints
   const { lines: liveLines, fen: liveFen, terminal: liveTerminal } = useLiveAnalysisContext()
   useMoveSound(displayFen)
   // The eval bar uses the latest completed search even if it's for the
