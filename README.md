@@ -210,7 +210,7 @@ page; **Favorites only** in the list's filters shows just those. A sync never cl
 
 On `/repertoire`, build an opening tree per color by playing moves on the board, branching as
 needed. Each game page then flags the first move where _you_ left your prepared line — an
-opponent's unprepared move doesn't count. Instead, those show up beside the tree as the places
+opponent's unprepared move doesn't count. Instead, those show up below the tree as the places
 where your games most often run past your prep, with how many games reached each. Click one to go
 there and add the next move. **Quiz** plays one of the tree's lines from memory, like a lesson's
 quiz, with the opponent's moves played for you; **Next line** draws another, favoring the lines
