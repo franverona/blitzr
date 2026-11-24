@@ -85,7 +85,6 @@ const en = {
     reviewIt: 'Review',
     troubleCardsLabel: 'Cards you keep missing',
     troubleCardsDetail: (n: number) => `${n} trouble card${n === 1 ? '' : 's'}`,
-    seeTroubleCards: 'See them',
     lossesHeading: (n: number) => `${n} loss${n === 1 ? '' : 'es'} this week`,
     lossReasons: {
       timeout: 'on time',
@@ -204,29 +203,7 @@ const en = {
     matesTitle:
       'Cards for moves where you had a forced mate in 3 or fewer and played something else',
     clearOpening: 'Show all openings',
-  },
-  drillProgress: {
-    title: 'Progress',
-    learned: (learned: number, total: number) => `${learned} of ${total} learned`,
-    learnedTooltip:
-      'A card counts as learned once you have answered it right often enough that it comes back three weeks or more later.',
-    forecast: 'Coming due',
-    forecastTooltip:
-      'Cards that come due on each of the next seven days, on top of the ones due now.',
-    laterToday: 'Later today',
-    tomorrow: 'Tomorrow',
-  },
-  troubleCards: {
-    title: 'Trouble cards',
-    tooltip:
-      'Cards you keep missing (a miss counts double a right answer, so two misses and one right answer is enough), the hardest first. Open the game to study the position; the answer stays hidden so they still drill.',
-    kind: {
-      deviation: 'Deviation',
-      blunder: 'Blunder',
-      punish: 'Missed punishment',
-      mate: 'Missed mate',
-    },
-    playOut: 'Play it out',
+    typeLabel: 'Card type',
   },
   gameList: {
     empty: 'No games synced yet. Click "Sync games" to fetch your Chess.com or Lichess history.',
@@ -965,7 +942,6 @@ const es: Strings = {
     reviewIt: 'Revisar',
     troubleCardsLabel: 'Tarjetas que sigues fallando',
     troubleCardsDetail: (n: number) => `${n} ${n === 1 ? 'tarjeta difícil' : 'tarjetas difíciles'}`,
-    seeTroubleCards: 'Verlas',
     lossesHeading: (n: number) => `${n} ${n === 1 ? 'derrota' : 'derrotas'} esta semana`,
     lossReasons: {
       timeout: 'por tiempo',
@@ -1090,29 +1066,7 @@ const es: Strings = {
     matesTitle:
       'Tarjetas de jugadas en las que tenías un mate forzado en 3 o menos y jugaste otra cosa',
     clearOpening: 'Mostrar todas las aperturas',
-  },
-  drillProgress: {
-    title: 'Progreso',
-    learned: (learned: number, total: number) => `${learned} de ${total} aprendidas`,
-    learnedTooltip:
-      'Una tarjeta cuenta como aprendida cuando la has acertado las veces suficientes para que vuelva dentro de tres semanas o más.',
-    forecast: 'Próximas',
-    forecastTooltip:
-      'Tarjetas que tocan en cada uno de los próximos siete días, además de las que tocan ahora.',
-    laterToday: 'Hoy, más tarde',
-    tomorrow: 'Mañana',
-  },
-  troubleCards: {
-    title: 'Tarjetas difíciles',
-    tooltip:
-      'Tarjetas que sigues fallando (un fallo cuenta el doble que un acierto, así que bastan dos fallos y un acierto), la más difícil primero. Abre la partida para estudiar la posición; la respuesta sigue oculta para que puedas entrenarlas.',
-    kind: {
-      deviation: 'Desviación',
-      blunder: 'Error grave',
-      punish: 'Sin castigar',
-      mate: 'Mate perdido',
-    },
-    playOut: 'Jugarla',
+    typeLabel: 'Tipo de tarjeta',
   },
   gameList: {
     empty:

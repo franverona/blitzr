@@ -1,10 +1,7 @@
 import { cookies } from 'next/headers'
 import { getDrillDeck } from '../actions'
 import { DrillFilters } from '@/components/DrillFilters'
-import { DrillProgress } from '@/components/DrillProgress'
 import { DrillSession } from '@/components/DrillSession'
-import { TroubleCards } from '@/components/TroubleCards'
-import { getStrings } from '@/lib/i18n/strings'
 import type { DrillSourceType } from '@/lib/types'
 
 export default async function DrillPage({
@@ -17,7 +14,7 @@ export default async function DrillPage({
     type === 'deviation' || type === 'blunder' || type === 'punish' || type === 'mate'
       ? type
       : undefined
-  const { prompts, totalCards, dueCount, troubles, forecast, learned } = await getDrillDeck({
+  const { prompts, totalCards, dueCount } = await getDrillDeck({
     sourceType,
     opening,
   })
@@ -34,15 +31,8 @@ export default async function DrillPage({
         dueCount={dueCount}
         filtered={Boolean(sourceType || opening)}
         initialAutoAdvance={(await cookies()).get('blitzr-drill-auto-advance')?.value === '1'}
-        header={
-          <div className="flex flex-col gap-2">
-            <h1 className="text-base font-semibold">{getStrings().drillPage.title}</h1>
-            <DrillFilters sourceType={sourceType} opening={opening} />
-          </div>
-        }
+        header={<DrillFilters sourceType={sourceType} opening={opening} />}
       />
-      <DrillProgress forecast={forecast} learned={learned} />
-      <TroubleCards troubles={troubles} />
     </div>
   )
 }

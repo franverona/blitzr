@@ -19,9 +19,6 @@ import {
   buildDrillPrompt,
   findBlunderCandidates,
   dueDrillCards,
-  dueForecast,
-  learnedCounts,
-  filterDrillCards,
   findDeviationCandidates,
   findMissedMateCandidates,
   findPunishCandidates,
@@ -31,7 +28,7 @@ import {
   getSessionSize,
   selectSessionCards,
 } from '@/lib/drill'
-import type { DrillCandidate, LearnedCounts } from '@/lib/drill'
+import type { DrillCandidate } from '@/lib/drill'
 import { isBotElo, type BotElo } from '@/lib/botStrength'
 import { findDuplicateGame, parseManualGame, pgnSite, type ManualGameSide } from '@/lib/manualGame'
 import { summarizeMoveQuality } from '@/lib/moveQuality'
@@ -681,11 +678,6 @@ export async function getDrillDeck(filters?: {
   prompts: DrillPrompt[]
   totalCards: number
   dueCount: number
-  /** `troubleCards()` under the same filters, due or not. */
-  troubles: DrillPrompt[]
-  /** Under the same filters: cards coming due on each of the next 7 days, and learned per type. */
-  forecast: number[]
-  learned: LearnedCounts
 }> {
   const { liveCards, gamesById, repertoireByColor, analysesByGameId, now } =
     await reconcileDrillCards()
@@ -725,21 +717,10 @@ export async function getDrillDeck(filters?: {
     opponentAvatarUrl: avatarByUsername.get(p.opponentUsername) ?? null,
   }))
 
-  const filteredCards = filterDrillCards(liveCards, filters, openingOf)
-  const troubles = troubleCards(filteredCards)
-    .map((card) => {
-      const game = gamesById.get(card.gameId)
-      return game ? buildDrillPrompt(card, game, repertoireByColor, analysesByGameId) : null
-    })
-    .filter((p): p is DrillPrompt => p !== null)
-
   return {
     prompts,
     totalCards: liveCards.length,
     dueCount: filteredDue.length,
-    troubles,
-    forecast: dueForecast(filteredCards, now),
-    learned: learnedCounts(filteredCards),
   }
 }
 

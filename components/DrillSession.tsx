@@ -102,11 +102,25 @@ function parseStoredSession(raw: string | null, deckKey: string): StoredSession 
 
 const noSubscribe = () => () => {}
 
+// lg+: 3.5rem ≈ chrome above/below the board (padding, coordinates).
+const BOARD_CLASS =
+  'mx-auto w-full max-w-140 shrink-0 lg:mx-0 lg:max-w-[min(52rem,calc(100dvh-3.5rem))] xl:max-w-[min(56rem,calc(100dvh-3.5rem))] 2xl:max-w-[min(60rem,calc(100dvh-3.5rem))]'
+const SIDEBAR_CLASS =
+  'mx-auto flex w-full max-w-140 flex-col gap-3 lg:mx-0 lg:max-w-xs lg:flex-1 xl:max-w-sm'
+const LAYOUT_CLASS = 'flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-center'
+
 export function DrillSession(props: Omit<Parameters<typeof DrillDeck>[0], 'resumed'>) {
   // undefined during SSR and hydration (no sessionStorage); rendering nothing
   // until it's read keeps the server's fresh deck from flashing first.
   const raw = useSyncExternalStore(noSubscribe, readStoredSession, () => undefined)
-  if (raw === undefined) return null
+  // A blank board's space keeps the header in place until the session renders.
+  if (raw === undefined)
+    return (
+      <div className={LAYOUT_CLASS}>
+        <div className={`aspect-square ${BOARD_CLASS}`} />
+        <div className={SIDEBAR_CLASS}>{props.header}</div>
+      </div>
+    )
   return <DrillDeck {...props} resumed={parseStoredSession(raw, props.deckKey)} />
 }
 
@@ -458,12 +472,11 @@ function DrillDeck({
   const hintOriginSquares = new Set(hintLevel >= 2 ? revealed.map((a) => a.startSquare) : [])
 
   return (
-    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-center">
-      {/* lg+: 3.5rem ≈ chrome above/below the board (padding, coordinates). */}
+    <div className={LAYOUT_CLASS}>
       <BoardCoordinates
         show={boardColors.showCoordinates}
         orientation={prompt.color}
-        className="mx-auto w-full max-w-140 shrink-0 lg:mx-0 lg:max-w-[min(52rem,calc(100dvh-3.5rem))] xl:max-w-[min(56rem,calc(100dvh-3.5rem))] 2xl:max-w-[min(60rem,calc(100dvh-3.5rem))]"
+        className={BOARD_CLASS}
       >
         <div className="relative w-full overflow-hidden rounded shadow-lg">
           <Chessboard
@@ -498,7 +511,7 @@ function DrillDeck({
         </div>
       </BoardCoordinates>
 
-      <div className="mx-auto flex w-full max-w-140 flex-col gap-3 lg:mx-0 lg:max-w-xs lg:flex-1 xl:max-w-sm">
+      <div className={SIDEBAR_CLASS}>
         {header}
         <div className="flex flex-col gap-1.5">
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
