@@ -284,16 +284,6 @@ export default async function TodayPage() {
               </FocusRow>
             )}
 
-            {today.drill.troubles > 0 && (
-              <FocusRow
-                icon={<RefreshCwIcon className="size-4" />}
-                tone="amber"
-                label={s.today.troubleCardsLabel}
-              >
-                <p className="text-sm">{s.today.troubleCardsDetail(today.drill.troubles)}</p>
-              </FocusRow>
-            )}
-
             {lossCount > 0 && (
               <FocusRow
                 icon={<FlagIcon className="size-4" />}
