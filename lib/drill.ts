@@ -314,22 +314,6 @@ export function dueDrillCards(
   return filterDrillCards(cards, filters, openingOf).filter((c) => c.dueAt <= nowIso)
 }
 
-// Ease is 2.5 - 0.2·misses + 0.1·hits, so this lists 2·misses - hits >= 3: two misses and
-// a hit (2.2) is in, one miss (2.3) or two misses and two hits (2.3) is out.
-const TROUBLE_EASE_BELOW = 2.25
-
-/** The cards missed again and again, lowest ease first (latest review breaks ties). */
-export function troubleCards(cards: DrillCard[], max = 5): DrillCard[] {
-  return cards
-    .filter((c) => c.easeFactor < TROUBLE_EASE_BELOW)
-    .sort(
-      (a, b) =>
-        a.easeFactor - b.easeFactor ||
-        (b.lastReviewedAt ?? '').localeCompare(a.lastReviewedAt ?? ''),
-    )
-    .slice(0, max)
-}
-
 export function newCardSchedule(
   now: Date,
 ): Pick<DrillCard, 'dueAt' | 'intervalDays' | 'easeFactor' | 'repetitions' | 'lastReviewedAt'> {
