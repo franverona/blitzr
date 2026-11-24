@@ -30,9 +30,15 @@ function revealArrow(fen: string, san: string) {
  *  quizzed; the opponent's replies auto-play. Progress is BoardProvider's
  *  `ply`, so MoveExplanation follows along without extra wiring. */
 export function LessonQuiz({
+  boardMaxWidthClassName = 'max-w-140 lg:max-w-[min(35rem,calc(100dvh-17rem))]',
+  header,
   sidebarExtra,
   onComplete,
 }: {
+  /** Default: lg+, 17rem ≈ chrome above/below the board under a page header. */
+  boardMaxWidthClassName?: string
+  /** At the top of the sidebar. */
+  header?: React.ReactNode
   sidebarExtra?: React.ReactNode
   /** Called once each time the line is played to its end. */
   onComplete?: () => void
@@ -174,8 +180,7 @@ export function LessonQuiz({
 
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-center">
-      {/* lg+: 17rem ≈ chrome above/below the board. */}
-      <div className="flex w-full max-w-140 shrink-0 flex-col gap-3 lg:max-w-[min(35rem,calc(100dvh-17rem))]">
+      <div className={`flex w-full shrink-0 flex-col gap-3 ${boardMaxWidthClassName}`}>
         {/* Fixed height so swapping text variants doesn't shift the board. */}
         <div className="flex h-9 items-center justify-between gap-2">
           {isComplete ? (
@@ -248,8 +253,9 @@ export function LessonQuiz({
         <p className="text-xs text-zinc-600">{s.lessonQuiz.keyboardHint}</p>
       </div>
 
-      {sidebarExtra && (
-        <div className="flex w-full flex-col gap-4 lg:max-w-sm lg:flex-1 xl:max-w-md">
+      {(header || sidebarExtra) && (
+        <div className="flex w-full flex-col gap-4 lg:max-w-xs lg:flex-1 xl:max-w-sm">
+          {header}
           {sidebarExtra}
         </div>
       )}

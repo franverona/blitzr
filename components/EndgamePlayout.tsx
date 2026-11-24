@@ -16,7 +16,14 @@ const FULL_STRENGTH_MOVETIME_MS = 300
  * A lesson's position played out against Stockfish at a chosen strength: the user has the lesson's
  * side. Won per the lesson's goal: mate, promotion (a line ending in one), or `playGoal`.
  */
-export function EndgamePlayout({ lesson }: { lesson: Lesson }) {
+export function EndgamePlayout({
+  lesson,
+  header,
+}: {
+  lesson: Lesson
+  /** At the top of the sidebar. */
+  header: React.ReactNode
+}) {
   const s = getStrings()
   const [elo, setElo] = useState<BotElo | null>(null)
   const goal: PlayoutGoal =
@@ -47,6 +54,7 @@ export function EndgamePlayout({ lesson }: { lesson: Lesson }) {
       sidebar={{
         top: (inProgress) => (
           <div className="flex flex-col gap-2">
+            {header}
             <BotStrengthSelect
               value={elo}
               onChange={setElo}
@@ -64,8 +72,8 @@ export function EndgamePlayout({ lesson }: { lesson: Lesson }) {
         ),
         className: 'lg:max-w-xs xl:max-w-sm',
       }}
-      // lg+: 7rem ≈ the lesson header and the coordinates under the board.
-      boardMaxWidthClassName="max-w-160 lg:max-w-[min(42rem,calc(100dvh-7rem))]"
+      // lg+: 5rem ≈ chrome above/below the board (padding, coordinates).
+      boardMaxWidthClassName="max-w-160 lg:max-w-[min(52rem,calc(100dvh-5rem))] xl:max-w-[min(56rem,calc(100dvh-5rem))] 2xl:max-w-[min(60rem,calc(100dvh-5rem))]"
     />
   )
 }

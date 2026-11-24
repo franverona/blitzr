@@ -66,7 +66,8 @@ install/runtime and gitignored. `BLITZR_DATA_DIR` moves `data/` (`lib/dataDir.ts
   at `lg+` (`max-w-[min(<width>,calc(100dvh-<N>rem))]`, `N` = that page's chrome) so it fits a 13"
   laptop — adding content above/below a board means re-measuring `N`. The game page has no header
   row: `BoardView`'s `boardTop`/`boardBottom` hold the player strips and `sidebarHeader` the meta
-  line. Button rows sharing space with localized labels need `flex-wrap`.
+  line. Lesson and puzzle pages likewise put their title and actions atop the sidebar. Button rows
+  sharing space with localized labels need `flex-wrap`.
 - **Shared UI before new class strings:** `PageHeader`, `Dialog`, `Badge`, `Card` /
   `SectionLabel`, `TableShell`, `IconButton`, `ErrorText`, `Spinner`, `Select`, `Tabs`, `FocusRow`,
   and the helpers in `components/styles.ts`. Toasts: pass an `id` so a newer one from the same source replaces the last.
