@@ -19,10 +19,12 @@ const FULL_STRENGTH_MOVETIME_MS = 300
 export function EndgamePlayout({
   lesson,
   header,
+  boardMaxWidthClassName,
 }: {
   lesson: Lesson
   /** At the top of the sidebar. */
   header: React.ReactNode
+  boardMaxWidthClassName: string
 }) {
   const s = getStrings()
   const [elo, setElo] = useState<BotElo | null>(null)
@@ -72,8 +74,7 @@ export function EndgamePlayout({
         ),
         className: 'lg:max-w-xs xl:max-w-sm',
       }}
-      // lg+: 5rem ≈ chrome above/below the board (padding, coordinates).
-      boardMaxWidthClassName="max-w-160 lg:max-w-[min(52rem,calc(100dvh-5rem))] xl:max-w-[min(56rem,calc(100dvh-5rem))] 2xl:max-w-[min(60rem,calc(100dvh-5rem))]"
+      boardMaxWidthClassName={boardMaxWidthClassName}
     />
   )
 }

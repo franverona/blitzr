@@ -23,9 +23,14 @@ import { FlipBoardButton } from './FlipBoardButton'
 import { LessonQuiz } from './LessonQuiz'
 import { MoveExplanation } from './MoveExplanation'
 import { useSettings } from './SettingsProvider'
-import { chipClass, LINK_CLASS } from './styles'
+import { LINK_CLASS, tabClass } from './styles'
 
 type Mode = 'study' | 'quiz' | 'play'
+
+// Shared by every mode, so switching keeps the board's size. lg+: 3.5rem ≈ chrome above/below the
+// board (padding, coordinates).
+const BOARD_MAX_WIDTH =
+  'max-w-160 lg:max-w-[min(52rem,calc(100dvh-3.5rem))] xl:max-w-[min(56rem,calc(100dvh-3.5rem))] 2xl:max-w-[min(60rem,calc(100dvh-3.5rem))]'
 
 /** Study/Quiz (and, except for openings, Play) toggle. `key={mode}` resets the board on every switch. */
 export function LessonPractice({
@@ -47,9 +52,19 @@ export function LessonPractice({
 
   // Title, modes and actions top the sidebar (no header row, so the board gets the room).
   const header = (
-    <div className="flex shrink-0 flex-col gap-2">
-      <h1 className="text-base font-semibold">{lesson.name[locale]}</h1>
-      <div className="flex flex-wrap items-center gap-2">
+    <div className="flex shrink-0 flex-col gap-3">
+      <div className="flex items-start justify-between gap-2">
+        <h1 className="text-base font-semibold">{lesson.name[locale]}</h1>
+        <div className="flex shrink-0 items-center gap-2">
+          <FlipBoardButton />
+          <AboutOpeningButton
+            name={lesson.name[locale]}
+            summary={lesson.summary[locale]}
+            sourceUrl={lesson.sourceUrl}
+          />
+        </div>
+      </div>
+      <div className="flex border-b border-zinc-200 dark:border-zinc-800">
         <ModeTab
           label={s.lessonPractice.study}
           active={mode === 'study'}
@@ -68,19 +83,14 @@ export function LessonPractice({
             onClick={() => setMode('play')}
           />
         )}
-        <span className="mx-1 h-4 w-px bg-zinc-300 dark:bg-zinc-700" />
-        {/* Opening lessons only (they have game stats); the others start from a FEN. */}
-        {gameStats && (
-          <AddLessonToRepertoireButton slug={lesson.slug} color={lesson.primaryColor} />
-        )}
-        <FlipBoardButton />
-        <AboutOpeningButton
-          name={lesson.name[locale]}
-          summary={lesson.summary[locale]}
-          sourceUrl={lesson.sourceUrl}
-        />
       </div>
-      {gameStats && <LessonGameStats stats={gameStats} />}
+      {gameStats && (
+        <div className="flex flex-col items-start gap-2">
+          <LessonGameStats stats={gameStats} />
+          {/* Opening lessons only (they have game stats); the others start from a FEN. */}
+          <AddLessonToRepertoireButton slug={lesson.slug} color={lesson.primaryColor} />
+        </div>
+      )}
       {endgameGames && <EndgameGames stats={endgameGames} />}
     </div>
   )
@@ -96,9 +106,9 @@ export function LessonPractice({
     >
       {mode === 'study' ? (
         <BoardView
-          // lg+: 5rem ≈ chrome above/below the board (padding, coordinates, material line).
-          boardMaxWidthClassName="max-w-160 lg:max-w-[min(52rem,calc(100dvh-5rem))] xl:max-w-[min(56rem,calc(100dvh-5rem))] 2xl:max-w-[min(60rem,calc(100dvh-5rem))]"
+          boardMaxWidthClassName={BOARD_MAX_WIDTH}
           sidebarMaxWidthClassName="lg:max-w-xs xl:max-w-sm"
+          showMaterial={false}
           sidebarHeader={header}
           sidebarExtra={
             // Splits the column's height with the move list.
@@ -110,8 +120,7 @@ export function LessonPractice({
         />
       ) : mode === 'quiz' ? (
         <LessonQuiz
-          // lg+: 9rem ≈ chrome above/below the board (padding, status row, coordinates, hints).
-          boardMaxWidthClassName="max-w-160 lg:max-w-[min(52rem,calc(100dvh-9rem))] xl:max-w-[min(56rem,calc(100dvh-9rem))] 2xl:max-w-[min(60rem,calc(100dvh-9rem))]"
+          boardMaxWidthClassName={BOARD_MAX_WIDTH}
           header={header}
           sidebarExtra={<MoveExplanation moves={lesson.moves} />}
           onComplete={() =>
@@ -121,7 +130,7 @@ export function LessonPractice({
           }
         />
       ) : (
-        <EndgamePlayout lesson={lesson} header={header} />
+        <EndgamePlayout lesson={lesson} header={header} boardMaxWidthClassName={BOARD_MAX_WIDTH} />
       )}
     </BoardProvider>
   )
@@ -180,7 +189,7 @@ function ModeTab({
   onClick: () => void
 }) {
   return (
-    <button onClick={onClick} className={chipClass(active)}>
+    <button onClick={onClick} aria-pressed={active} className={`flex-1 ${tabClass(active)}`}>
       {label}
     </button>
   )

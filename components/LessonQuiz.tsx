@@ -178,35 +178,48 @@ export function LessonQuiz({
   const arrows = revealed ? revealArrow(fen, movesSan[ply]) : []
   const colorLabel = s.common.color[myColor]
 
+  // With a header (the lesson page), the status, buttons and hints live in the sidebar instead,
+  // so the board keeps its size across modes. Without one, a fixed height keeps the board still.
+  const statusRow = (
+    <div
+      className={`flex items-center justify-between gap-2 ${header ? 'min-h-9 flex-wrap' : 'h-9'}`}
+    >
+      {isComplete ? (
+        <p className="text-lg font-medium">{s.lessonQuiz.lineComplete}</p>
+      ) : (
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          {isMyTurn
+            ? s.lessonQuiz.playingAs(colorLabel, ply + 1, lastPly)
+            : s.lessonQuiz.opponentsMove}
+        </p>
+      )}
+      <div className="flex shrink-0 items-center gap-2">
+        <button onClick={handleRestart} className={buttonClass()}>
+          {s.lessonQuiz.restart}
+        </button>
+        {!isComplete && (
+          <button onClick={handleHint} disabled={revealed || !isMyTurn} className={buttonClass()}>
+            {s.lessonQuiz.showMove}
+          </button>
+        )}
+      </div>
+    </div>
+  )
+  const result = isComplete ? (
+    <p className="text-sm text-zinc-600 dark:text-zinc-400">
+      {mistakes === 0 && hintsUsed === 0
+        ? s.lessonQuiz.perfect
+        : s.lessonQuiz.summary(mistakes, hintsUsed)}
+    </p>
+  ) : (
+    feedback === 'incorrect' && <ErrorText>{s.lessonQuiz.notQuiteTryAgain}</ErrorText>
+  )
+  const keyboardHint = <p className="text-xs text-zinc-600">{s.lessonQuiz.keyboardHint}</p>
+
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-center">
       <div className={`flex w-full shrink-0 flex-col gap-3 ${boardMaxWidthClassName}`}>
-        {/* Fixed height so swapping text variants doesn't shift the board. */}
-        <div className="flex h-9 items-center justify-between gap-2">
-          {isComplete ? (
-            <p className="text-lg font-medium">{s.lessonQuiz.lineComplete}</p>
-          ) : (
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
-              {isMyTurn
-                ? s.lessonQuiz.playingAs(colorLabel, ply + 1, lastPly)
-                : s.lessonQuiz.opponentsMove}
-            </p>
-          )}
-          <div className="flex shrink-0 items-center gap-2">
-            <button onClick={handleRestart} className={buttonClass()}>
-              {s.lessonQuiz.restart}
-            </button>
-            {!isComplete && (
-              <button
-                onClick={handleHint}
-                disabled={revealed || !isMyTurn}
-                className={buttonClass()}
-              >
-                {s.lessonQuiz.showMove}
-              </button>
-            )}
-          </div>
-        </div>
+        {!header && statusRow}
 
         <BoardCoordinates
           show={boardColors.showCoordinates}
@@ -240,22 +253,24 @@ export function LessonQuiz({
           </div>
         </BoardCoordinates>
 
-        {isComplete ? (
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            {mistakes === 0 && hintsUsed === 0
-              ? s.lessonQuiz.perfect
-              : s.lessonQuiz.summary(mistakes, hintsUsed)}
-          </p>
-        ) : (
-          feedback === 'incorrect' && <ErrorText>{s.lessonQuiz.notQuiteTryAgain}</ErrorText>
+        {!header && (
+          <>
+            {result}
+            {keyboardHint}
+          </>
         )}
-
-        <p className="text-xs text-zinc-600">{s.lessonQuiz.keyboardHint}</p>
       </div>
 
       {(header || sidebarExtra) && (
         <div className="flex w-full flex-col gap-4 lg:max-w-xs lg:flex-1 xl:max-w-sm">
           {header}
+          {header && (
+            <div className="flex flex-col gap-2">
+              {statusRow}
+              {result}
+              {keyboardHint}
+            </div>
+          )}
           {sidebarExtra}
         </div>
       )}

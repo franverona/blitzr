@@ -38,6 +38,7 @@ export function BoardView({
   sidebarHeader,
   boardTop,
   boardBottom,
+  showMaterial = true,
   autoExplore = false,
 }: {
   boardMaxWidthClassName?: string
@@ -58,6 +59,8 @@ export function BoardView({
   boardTop?: React.ReactNode
   /** Shares the material line's row below the board. */
   boardBottom?: React.ReactNode
+  /** The material (and eval) line under the board. */
+  showMaterial?: boolean
 } = {}) {
   const {
     ply,
@@ -360,34 +363,38 @@ export function BoardView({
         </div>
         {/* With strips: one line, so exploring can't grow the column (it sets the sidebar's height);
             the material line truncates instead, and the clock's `ml-auto` right-aligns. */}
-        <div
-          className={`flex items-center gap-x-3 gap-y-1 text-xs text-zinc-500 dark:text-zinc-400 ${boardBottom ? '' : 'flex-wrap justify-between'}`}
-        >
-          {boardBottom}
-          <p className={boardBottom ? 'min-w-0 truncate' : undefined}>
-            {s.board.material} {formatMaterialDiff(materialDiff(displayFen))}
-            {barEval && (
-              <>
-                {' '}
-                · {describeEval(barEval)} ({formatEval(barEval)})
-              </>
+        {(showMaterial || boardBottom || exploring) && (
+          <div
+            className={`flex items-center gap-x-3 gap-y-1 text-xs text-zinc-500 dark:text-zinc-400 ${boardBottom ? '' : 'flex-wrap justify-between'}`}
+          >
+            {boardBottom}
+            {showMaterial && (
+              <p className={boardBottom ? 'min-w-0 truncate' : undefined}>
+                {s.board.material} {formatMaterialDiff(materialDiff(displayFen))}
+                {barEval && (
+                  <>
+                    {' '}
+                    · {describeEval(barEval)} ({formatEval(barEval)})
+                  </>
+                )}
+              </p>
             )}
-          </p>
-          {exploring && (
-            <p className="flex shrink-0 items-center gap-1.5 whitespace-nowrap">
-              <span className="text-accent font-medium">{s.board.exploring}</span>·
-              <button
-                onClick={exitExploring}
-                className="underline hover:text-zinc-900 dark:hover:text-white"
-              >
-                {s.board.backToGame}
-              </button>
-              <kbd className="rounded border border-zinc-300 px-1 font-sans dark:border-zinc-700">
-                Esc
-              </kbd>
-            </p>
-          )}
-        </div>
+            {exploring && (
+              <p className="flex shrink-0 items-center gap-1.5 whitespace-nowrap">
+                <span className="text-accent font-medium">{s.board.exploring}</span>·
+                <button
+                  onClick={exitExploring}
+                  className="underline hover:text-zinc-900 dark:hover:text-white"
+                >
+                  {s.board.backToGame}
+                </button>
+                <kbd className="rounded border border-zinc-300 px-1 font-sans dark:border-zinc-700">
+                  Esc
+                </kbd>
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       <div

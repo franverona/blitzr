@@ -67,6 +67,15 @@ export function chipClass(active: boolean): string {
   }`
 }
 
+/** One tab of a `Tabs` bar (or a bar like it). */
+export function tabClass(active: boolean): string {
+  return `-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
+    active
+      ? 'border-accent text-zinc-900 dark:text-white'
+      : 'border-transparent text-zinc-600 hover:border-zinc-300 hover:text-zinc-800 dark:text-zinc-400 dark:hover:border-zinc-700 dark:hover:text-zinc-200'
+  }`
+}
+
 export const LINK_CLASS = 'text-blue-600 hover:underline dark:text-blue-400'
 
 export const INPUT_CLASS =
