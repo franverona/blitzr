@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { fetchArchives, fetchPlayerAvatar } from '@/lib/chesscom/client'
+import { fetchArchives, fetchBotAvatar, fetchPlayerAvatar } from '@/lib/chesscom/client'
 
 afterEach(() => {
   vi.unstubAllGlobals()
@@ -47,6 +47,41 @@ describe('fetchPlayerAvatar', () => {
     )
 
     expect(await fetchPlayerAvatar('slow-user')).toBeNull()
+  })
+
+  it('keeps the last known avatar when a refresh fails', async () => {
+    vi.useFakeTimers()
+    try {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () => Response.json({ avatar: 'https://img/k.png' })),
+      )
+      await fetchPlayerAvatar('kept-user')
+      vi.advanceTimersByTime(2 * 60 * 60 * 1000)
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () => new Response(null, { status: 429 })),
+      )
+      expect(await fetchPlayerAvatar('kept-user')).toBe('https://img/k.png')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+})
+
+describe('fetchBotAvatar', () => {
+  it('adds -bot to a bare name, not to one that already has it', async () => {
+    const fetchMock = vi.fn<typeof fetch>(async () =>
+      Response.json({ avatar: 'https://img/b.png' }),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    await fetchBotAvatar('Hans')
+    await fetchBotAvatar('Faye-Webster-BOT')
+    expect(fetchMock.mock.calls.map(([url]) => String(url).split('/').pop())).toEqual([
+      'hans-bot',
+      'faye-webster-bot',
+    ])
   })
 })
 
