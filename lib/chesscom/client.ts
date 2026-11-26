@@ -105,7 +105,8 @@ export async function fetchPlayerAvatar(username: string): Promise<string | null
   let url: string | null = null
   let ok = false
   try {
-    const res = await fetch(`${BASE_URL}/player/${encodeURIComponent(username)}`, {
+    // Lowercase: Chess.com 301-redirects any other case, a round trip eating into the timeout.
+    const res = await fetch(`${BASE_URL}/player/${encodeURIComponent(key)}`, {
       headers: { 'User-Agent': USER_AGENT },
       signal: AbortSignal.timeout(AVATAR_TIMEOUT_MS),
     })
@@ -114,6 +115,8 @@ export async function fetchPlayerAvatar(username: string): Promise<string | null
   } catch {
     ok = false
   }
+  // A blip (timeout, 429) keeps the last known avatar rather than blanking it for the failure TTL.
+  if (!ok && cached) url = cached.url
   // Map keeps insertion order, so delete-then-set makes the first key the oldest.
   avatarCache.delete(key)
   avatarCache.set(key, {
@@ -125,7 +128,8 @@ export async function fetchPlayerAvatar(username: string): Promise<string | null
 }
 
 /** Bot display names (e.g. "Hans") can match unrelated real users, so try
- *  Chess.com's observed, undocumented "<Name>-BOT" account instead. */
+ *  Chess.com's observed, undocumented "<Name>-BOT" account instead. The site's archive
+ *  downloads already name that account ("Faye-Webster-BOT"). */
 export async function fetchBotAvatar(displayName: string): Promise<string | null> {
-  return fetchPlayerAvatar(`${displayName}-bot`)
+  return fetchPlayerAvatar(/-bot$/i.test(displayName) ? displayName : `${displayName}-bot`)
 }
