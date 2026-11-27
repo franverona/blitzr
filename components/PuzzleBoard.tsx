@@ -243,6 +243,7 @@ export function PuzzleBoard({
                 ),
                 darkSquareStyle: { backgroundColor: boardColors.dark },
                 lightSquareStyle: { backgroundColor: boardColors.light },
+                pieces: boardColors.pieces,
                 showNotation: false,
               }}
             />

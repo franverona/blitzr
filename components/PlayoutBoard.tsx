@@ -369,6 +369,7 @@ export function PlayoutBoard({
               ),
               darkSquareStyle: { backgroundColor: boardColors.dark },
               lightSquareStyle: { backgroundColor: boardColors.light },
+              pieces: boardColors.pieces,
               showNotation: false,
             }}
           />

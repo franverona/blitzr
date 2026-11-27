@@ -505,6 +505,7 @@ function DrillDeck({
               ),
               darkSquareStyle: { backgroundColor: boardColors.dark },
               lightSquareStyle: { backgroundColor: boardColors.light },
+              pieces: boardColors.pieces,
               showNotation: false,
               arrows,
             }}

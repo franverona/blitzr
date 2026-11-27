@@ -22,6 +22,7 @@ export function MiniBoard({
           showNotation: false,
           darkSquareStyle: { backgroundColor: boardColors.dark },
           lightSquareStyle: { backgroundColor: boardColors.light },
+          pieces: boardColors.pieces,
         }}
       />
     </div>

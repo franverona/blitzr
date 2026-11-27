@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import {
   BOARD_ANIMATION_DURATION_MS,
+  getPieceSet,
   getPlaySpeed,
   getTrainingOrientation,
+  pieceImageUrl,
   PLAY_SPEEDS,
   resolveOrientation,
 } from '@/lib/theme'
@@ -29,5 +31,17 @@ describe('play speed', () => {
 
   it('never steps faster than a move animates', () => {
     expect(Math.min(...Object.values(PLAY_SPEEDS))).toBeGreaterThan(BOARD_ANIMATION_DURATION_MS)
+  })
+})
+
+describe('piece sets', () => {
+  it('parses the cookie, defaulting to the built-in set', () => {
+    expect(getPieceSet('merida')).toBe('merida')
+    expect(getPieceSet(undefined)).toBe('default')
+    expect(getPieceSet('comic-sans')).toBe('default')
+  })
+
+  it('builds the Lichess image URL from the board piece key', () => {
+    expect(pieceImageUrl('alpha', 'bQ')).toBe('https://lichess1.org/assets/piece/alpha/bQ.svg')
   })
 })
