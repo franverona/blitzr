@@ -51,6 +51,7 @@ export function PlanBoard({
               animationDurationInMs: BOARD_ANIMATION_DURATION_MS,
               darkSquareStyle: { backgroundColor: boardColors.dark },
               lightSquareStyle: { backgroundColor: boardColors.light },
+              pieces: boardColors.pieces,
             }}
           />
         </div>

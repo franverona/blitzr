@@ -333,6 +333,7 @@ export function BoardView({
                     animationDurationInMs: BOARD_ANIMATION_DURATION_MS,
                     darkSquareStyle: { backgroundColor: boardColors.dark },
                     lightSquareStyle: { backgroundColor: boardColors.light },
+                    pieces: boardColors.pieces,
                     showNotation: false,
                     squareStyles: showLegalMoves ? undefined : boardSquareStyles,
                     arrows: boardArrows,

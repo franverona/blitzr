@@ -18,6 +18,7 @@ import { getStrings } from '@/lib/i18n/strings'
 import { autoSyncMinutes, isSyncStale } from '@/lib/sync'
 import {
   getBoardColorPreset,
+  getPieceSet,
   getMoveNotation,
   getPlaySpeed,
   getTrainingOrientation,
@@ -97,6 +98,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             <SettingsProvider
               initialTheme={theme}
               initialPresetId={boardColorPreset.id}
+              initialPieceSet={getPieceSet((await cookies()).get('blitzr-piece-set')?.value)}
               initialAnalysisStrength={(await cookies()).get('blitzr-analysis-strength')?.value}
               initialHideEngineHints={
                 (await cookies()).get('blitzr-hide-engine-hints')?.value === '1'

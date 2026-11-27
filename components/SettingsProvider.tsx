@@ -1,16 +1,19 @@
 'use client'
 
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
+import type { PieceRenderObject } from 'react-chessboard'
 import {
   ANALYSIS_STRENGTHS,
   type AnalysisStrength,
   DEFAULT_ANALYSIS_STRENGTH,
 } from '@/lib/stockfish/analyze'
 import { type MoveSound, moveSoundFor } from '@/lib/moveSound'
+import { piecesFor } from './pieceSets'
 import type { SessionSize } from '@/lib/drill'
 import {
   getBoardColorPreset,
   type MoveNotation,
+  type PieceSet,
   type PlaySpeed,
   type TrainingOrientation,
 } from '@/lib/theme'
@@ -27,6 +30,7 @@ const MOVE_NOTATION_COOKIE = 'blitzr-move-notation'
 const TRAINING_ORIENTATION_COOKIE = 'blitzr-training-orientation'
 const PLAY_SPEED_COOKIE = 'blitzr-play-speed'
 const DRILL_SESSION_SIZE_COOKIE = 'blitzr-drill-session-size'
+const PIECE_SET_COOKIE = 'blitzr-piece-set'
 
 function setCookie(name: string, value: string) {
   document.cookie = `${name}=${value}; path=/; max-age=31536000; samesite=lax`
@@ -39,6 +43,10 @@ interface SettingsContextValue {
   dark: string
   light: string
   setBoardColorPreset: (id: string) => void
+  pieceSet: PieceSet
+  setPieceSet: (set: PieceSet) => void
+  /** For react-chessboard's `pieces` option; `undefined` is its built-in set. */
+  pieces: PieceRenderObject | undefined
   analysisStrength: AnalysisStrength
   setAnalysisStrength: (strength: AnalysisStrength) => void
   /** Spoiler-free review: hides the eval bar and engine best-move arrows. */
@@ -71,6 +79,7 @@ export function useSettings(): SettingsContextValue {
 export function SettingsProvider({
   initialTheme,
   initialPresetId,
+  initialPieceSet,
   initialAnalysisStrength,
   initialHideEngineHints,
   initialShowCoordinates,
@@ -83,6 +92,7 @@ export function SettingsProvider({
 }: {
   initialTheme: 'light' | 'dark'
   initialPresetId: string
+  initialPieceSet: PieceSet
   initialAnalysisStrength: string | undefined
   initialHideEngineHints: boolean
   initialShowCoordinates: boolean
@@ -102,6 +112,7 @@ export function SettingsProvider({
   const [showCoordinates, setShowCoordinatesState] = useState(initialShowCoordinates)
   const [hideEngineHints, setHideEngineHintsState] = useState(initialHideEngineHints)
   const [presetId, setPresetId] = useState(initialPresetId)
+  const [pieceSet, setPieceSetState] = useState(initialPieceSet)
   const [analysisStrength, setAnalysisStrengthState] = useState<AnalysisStrength>(
     initialAnalysisStrength && initialAnalysisStrength in ANALYSIS_STRENGTHS
       ? (initialAnalysisStrength as AnalysisStrength)
@@ -121,6 +132,11 @@ export function SettingsProvider({
     setCookie(BOARD_COLOR_COOKIE, id)
     // --color-accent is used via Tailwind classes, so set it on <html> directly.
     document.documentElement.style.setProperty('--color-accent', getBoardColorPreset(id).dark)
+  }
+
+  function setPieceSet(set: PieceSet) {
+    setPieceSetState(set)
+    setCookie(PIECE_SET_COOKIE, set)
   }
 
   function setAnalysisStrength(strength: AnalysisStrength) {
@@ -173,6 +189,9 @@ export function SettingsProvider({
         dark: preset.dark,
         light: preset.light,
         setBoardColorPreset,
+        pieceSet,
+        setPieceSet,
+        pieces: piecesFor(pieceSet),
         analysisStrength,
         setAnalysisStrength,
         hideEngineHints,

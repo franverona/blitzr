@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Chessboard } from 'react-chessboard'
+import { Chessboard, defaultPieces } from 'react-chessboard'
 import { BackupButton } from './BackupButton'
 import { BoardCoordinates } from './BoardCoordinates'
 import { SESSION_SIZES, type SessionSize } from '@/lib/drill'
@@ -10,6 +10,7 @@ import { ANALYSIS_STRENGTHS, type AnalysisStrength } from '@/lib/stockfish/analy
 import {
   BOARD_COLOR_PRESETS,
   MOVE_NOTATIONS,
+  PIECE_SETS,
   PLAY_SPEEDS,
   type PlaySpeed,
   REVEAL_ARROW_COLOR,
@@ -18,6 +19,7 @@ import {
 import { EvalBar } from './EvalBar'
 import { playMoveSound, useSettings } from './SettingsProvider'
 import { Card, SectionLabel } from './Card'
+import { piecesFor } from './pieceSets'
 import { Tabs } from './Tabs'
 
 // Static preview with an obvious engine move (Ng5) for the hide-hints toggle.
@@ -95,6 +97,50 @@ export function SettingsForm({ initialSection }: { initialSection?: string }) {
                       </button>
                     ))}
                   </div>
+                </div>
+                <div className={ROW_CLASS}>
+                  <span>{s.settings.pieceSet}</span>
+                  <div className="flex flex-wrap gap-2">
+                    {PIECE_SETS.map((set) => {
+                      const pieces = piecesFor(set) ?? defaultPieces
+                      const WhiteKnight = pieces.wN
+                      const BlackKnight = pieces.bN
+                      return (
+                        <button
+                          key={set}
+                          type="button"
+                          onClick={() => settings.setPieceSet(set)}
+                          aria-pressed={settings.pieceSet === set}
+                          className="flex w-14 flex-col items-center gap-1 text-center text-xs"
+                        >
+                          <span
+                            className={`grid size-14 grid-cols-2 items-center overflow-hidden rounded-md border-2 ${
+                              settings.pieceSet === set
+                                ? 'border-accent'
+                                : 'border-transparent hover:border-zinc-300 dark:hover:border-zinc-700'
+                            }`}
+                          >
+                            <span
+                              className="flex h-full items-center"
+                              style={{ backgroundColor: settings.dark }}
+                            >
+                              <WhiteKnight />
+                            </span>
+                            <span
+                              className="flex h-full items-center"
+                              style={{ backgroundColor: settings.light }}
+                            >
+                              <BlackKnight />
+                            </span>
+                          </span>
+                          {set === 'default'
+                            ? s.settings.pieceSetDefault
+                            : set[0].toUpperCase() + set.slice(1)}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  <p className={HINT_CLASS}>{s.settings.pieceSetCredit}</p>
                 </div>
                 <Toggle
                   label={s.settings.showCoordinates}
@@ -215,6 +261,7 @@ export function SettingsForm({ initialSection }: { initialSection?: string }) {
                       showNotation: false,
                       darkSquareStyle: { backgroundColor: settings.dark },
                       lightSquareStyle: { backgroundColor: settings.light },
+                      pieces: settings.pieces,
                       arrows: settings.hideEngineHints
                         ? []
                         : [{ startSquare: 'f3', endSquare: 'g5', color: REVEAL_ARROW_COLOR }],

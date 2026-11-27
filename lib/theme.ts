@@ -51,6 +51,27 @@ export function getMoveNotation(raw: string | undefined): MoveNotation {
   return raw === 'letters' ? raw : 'figurine'
 }
 
+/** Board piece sets: react-chessboard's built-in one, or one hotlinked from Lichess's CDN. */
+export const PIECE_SETS = [
+  'default',
+  'merida',
+  'alpha',
+  'chessnut',
+  'california',
+  'fantasy',
+  'staunty',
+] as const
+export type PieceSet = (typeof PIECE_SETS)[number]
+
+export function getPieceSet(raw: string | undefined): PieceSet {
+  return PIECE_SETS.find((set) => set === raw) ?? 'default'
+}
+
+/** `piece` is react-chessboard's key, e.g. `wN`, which is also Lichess's file name. */
+export function pieceImageUrl(set: Exclude<PieceSet, 'default'>, piece: string): string {
+  return `https://lichess1.org/assets/piece/${set}/${piece}.svg`
+}
+
 export function getTrainingOrientation(raw: string | undefined): TrainingOrientation {
   return raw === 'white' || raw === 'black' ? raw : 'auto'
 }

@@ -93,7 +93,10 @@ install/runtime and gitignored. `BLITZR_DATA_DIR` moves `data/` (`lib/dataDir.ts
   keyed by start/end square only, so dedupe them. `showNotation` is always `false`
   (`BoardCoordinates` draws them outside; a sibling like `EvalBar` then needs `mb-7`).
 - **`BoardNavControls`** binds its keys globally, ignoring form fields and `<dialog>`s.
-- **Move sounds and site favicons** are hotlinked from the sites' CDNs (not redistributed).
+- **Move sounds, site favicons and piece sets** are hotlinked from the sites' CDNs (not
+  redistributed; most Lichess piece sets aren't MIT-compatible). A piece image that fails falls
+  back to react-chessboard's built-in piece (`components/pieceSets.tsx`), checked on mount too,
+  since a server-rendered `<img>` can fail before hydration attaches `onError`.
 - **Beginner jargon is explained in place** (`<abbr title>` tooltips, `EvalHelp`), not removed.
 - **Docs:** update README.md alongside this file.
 
