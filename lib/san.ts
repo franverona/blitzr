@@ -42,6 +42,19 @@ export function pieceName(piece: PieceSymbol, locale: Locale = getLocale()): str
   return PIECE_NAMES_BY_LOCALE[locale][piece]
 }
 
+const PIECE_LETTERS_BY_LOCALE: Record<Locale, Record<SanPiece, string>> = {
+  en: { K: 'K', Q: 'Q', R: 'R', B: 'B', N: 'N' },
+  es: { K: 'R', Q: 'D', R: 'T', B: 'A', N: 'C' },
+}
+
+/** "Nf3" -> "Cf3", "e8=Q+" -> "e8=D+" in Spanish. Display only: chess.js and stored moves need English SAN. */
+export function localizeSan(san: string, locale: Locale = getLocale()): string {
+  const letters = PIECE_LETTERS_BY_LOCALE[locale]
+  return san
+    .replace(/^[KQRBN]/, (p) => letters[p as SanPiece])
+    .replace(/=([QRBN])/, (_, p: SanPiece) => `=${letters[p]}`)
+}
+
 const FEMININE_PIECES_ES: ReadonlySet<PieceSymbol> = new Set(['r', 'q'])
 
 /** e.g. `n` -> "the knight" / "el caballo", `r` -> "the rook" / "la torre". */

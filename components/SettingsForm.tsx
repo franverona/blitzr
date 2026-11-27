@@ -8,6 +8,7 @@ import { getStrings } from '@/lib/i18n/strings'
 import { ANALYSIS_STRENGTHS, type AnalysisStrength } from '@/lib/stockfish/analyze'
 import {
   BOARD_COLOR_PRESETS,
+  MOVE_NOTATIONS,
   PLAY_SPEEDS,
   type PlaySpeed,
   REVEAL_ARROW_COLOR,
@@ -66,6 +67,15 @@ export function SettingsForm() {
             checked={settings.showCoordinates}
             onChange={() => settings.setShowCoordinates(!settings.showCoordinates)}
           />
+          <div className="flex flex-col gap-2 text-sm">
+            <span>{s.settings.moveNotation}</span>
+            <Segmented
+              options={MOVE_NOTATIONS}
+              value={settings.moveNotation}
+              onChange={settings.setMoveNotation}
+              label={(notation) => s.settings.moveNotations[notation]}
+            />
+          </div>
           <div className="flex flex-col gap-1">
             <Toggle
               label={s.settings.moveSounds}

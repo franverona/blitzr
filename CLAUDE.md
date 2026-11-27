@@ -180,7 +180,9 @@ Every game has a `site` (`chesscom` | `lichess`). `siteUsername(site)` reads `CH
 ## i18n
 
 English and Spanish via `NEXT_PUBLIC_LOCALE` (rebuild to change). `es` is typed against
-`typeof en`, so missing keys fail `tsc`. SAN, square names and `ecoName` are never translated.
+`typeof en`, so missing keys fail `tsc`. SAN, square names and `ecoName` are never translated in
+data; only `PieceMoveLabel` shows localized piece letters (`localizeSan()`), when the "Letters"
+notation setting is on.
 User-facing errors come from the dictionary, and Server Actions **return** them
 (`{ ok: false, error }`) rather than throw, since Next redacts thrown messages in production.
 
