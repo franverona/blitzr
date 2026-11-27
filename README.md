@@ -42,7 +42,7 @@ implies endorsement.
 - Play any position from your games against Stockfish, at about 800 to 2500 Elo
 - Mate-in-N puzzles you solve move by move, and defence puzzles where you stop a mate
 - A Today page: cards due, games left to analyze, last week's accuracy and the next puzzle
-- Settings: light/dark theme, board colors, analysis strength, hide engine hints, coordinates,
+- Settings, in tabs (appearance, sound & playback, analysis, training, data; `?tab=analysis` opens one): light/dark theme, board colors, analysis strength, hide engine hints, coordinates,
   move notation (piece icons or letters, Spanish letters in Spanish), move sounds, lesson/puzzle board orientation, auto-play speed, drill session size, and a
   database backup download
 - English and Spanish UI

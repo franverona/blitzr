@@ -2,7 +2,7 @@
 // classes. `--color-accent` in app/globals.css is the class-side equivalent.
 
 export interface BoardColorPreset {
-  id: 'green' | 'brown' | 'blue' | 'purple'
+  id: 'green' | 'brown' | 'blue' | 'purple' | 'teal' | 'slate' | 'grey'
   dark: string
   light: string
 }
@@ -12,6 +12,9 @@ export const BOARD_COLOR_PRESETS: BoardColorPreset[] = [
   { id: 'brown', dark: '#b58863', light: '#f0d9b5' },
   { id: 'blue', dark: '#80a1b5', light: '#d5e0e6' },
   { id: 'purple', dark: '#8877b3', light: '#e6e1f5' },
+  { id: 'teal', dark: '#4f8a8b', light: '#dbe9e6' },
+  { id: 'slate', dark: '#5f6d82', light: '#ccd4df' },
+  { id: 'grey', dark: '#8f8f8f', light: '#dedede' },
 ]
 
 /** Falls back to green for a missing or invalid cookie value. */
