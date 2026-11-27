@@ -3,6 +3,7 @@ import {
   describeMove,
   formatMoveSequence,
   hintPieceName,
+  localizeSan,
   moveNumberOfPly,
   plyLabel,
   splitSanPiece,
@@ -160,5 +161,26 @@ describe('formatMoveSequence', () => {
   it('returns an empty array for an empty sequence', () => {
     const fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
     expect(formatMoveSequence(fen, [])).toEqual([])
+  })
+})
+
+describe('localizeSan', () => {
+  it.each([
+    ['Nf3', 'Cf3'],
+    ['Kxe2', 'Rxe2'],
+    ['Rd1', 'Td1'],
+    ['Qh5+', 'Dh5+'],
+    ['Bb5#', 'Ab5#'],
+    ['e8=Q+', 'e8=D+'],
+    ['exd8=N', 'exd8=C'],
+    ['O-O', 'O-O'],
+    ['exd5', 'exd5'],
+  ])('%s -> %s in Spanish', (san, expected) => {
+    expect(localizeSan(san, 'es')).toBe(expected)
+  })
+
+  it('keeps English letters', () => {
+    expect(localizeSan('Nbd7', 'en')).toBe('Nbd7')
+    expect(localizeSan('e8=Q', 'en')).toBe('e8=Q')
   })
 })

@@ -40,6 +40,14 @@ export const GAME_END_SQUARE_COLORS = {
 export type TrainingOrientation = 'auto' | 'white' | 'black'
 export const TRAINING_ORIENTATIONS: TrainingOrientation[] = ['auto', 'white', 'black']
 
+/** How move lists show pieces: glyphs, or the UI language's letters. */
+export type MoveNotation = 'figurine' | 'letters'
+export const MOVE_NOTATIONS: MoveNotation[] = ['figurine', 'letters']
+
+export function getMoveNotation(raw: string | undefined): MoveNotation {
+  return raw === 'letters' ? raw : 'figurine'
+}
+
 export function getTrainingOrientation(raw: string | undefined): TrainingOrientation {
   return raw === 'white' || raw === 'black' ? raw : 'auto'
 }

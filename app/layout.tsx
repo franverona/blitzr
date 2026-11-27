@@ -16,7 +16,12 @@ import { getSessionSize } from '@/lib/drill'
 import { getLocale } from '@/lib/i18n/locale'
 import { getStrings } from '@/lib/i18n/strings'
 import { autoSyncMinutes, isSyncStale } from '@/lib/sync'
-import { getBoardColorPreset, getPlaySpeed, getTrainingOrientation } from '@/lib/theme'
+import {
+  getBoardColorPreset,
+  getMoveNotation,
+  getPlaySpeed,
+  getTrainingOrientation,
+} from '@/lib/theme'
 import './globals.css'
 
 const geistSans = Geist({
@@ -100,6 +105,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
                 (await cookies()).get('blitzr-show-coordinates')?.value !== '0'
               }
               initialMoveSounds={(await cookies()).get('blitzr-move-sounds')?.value !== '0'}
+              initialMoveNotation={getMoveNotation(
+                (await cookies()).get('blitzr-move-notation')?.value,
+              )}
               initialTrainingOrientation={getTrainingOrientation(
                 (await cookies()).get('blitzr-training-orientation')?.value,
               )}

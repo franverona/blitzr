@@ -160,7 +160,7 @@ export function MoveList({
       >
         {s.board.startingPositionButton}
       </button>
-      <ol className="max-h-70 overflow-y-auto text-base lg:max-h-none lg:min-h-0 lg:flex-1">
+      <ol className="max-h-70 overflow-y-auto text-sm lg:max-h-none lg:min-h-0 lg:flex-1">
         {pairs.map((pair, i) => {
           const activeBlunder = blunderByPly.get(ply)
           const showDetailForPair =

@@ -43,7 +43,7 @@ implies endorsement.
 - Mate-in-N puzzles you solve move by move, and defence puzzles where you stop a mate
 - A Today page: cards due, games left to analyze, last week's accuracy and the next puzzle
 - Settings: light/dark theme, board colors, analysis strength, hide engine hints, coordinates,
-  move sounds, lesson/puzzle board orientation, auto-play speed, drill session size, and a
+  move notation (piece icons or letters, Spanish letters in Spanish), move sounds, lesson/puzzle board orientation, auto-play speed, drill session size, and a
   database backup download
 - English and Spanish UI
 
