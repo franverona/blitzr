@@ -10,88 +10,66 @@ Train on your own blunders, not generic puzzles — a local chess trainer built 
 
 ## What this is
 
-Blitzr is a **personal side project**, not a product: it runs on one machine, for one person,
-against that person's Chess.com and/or Lichess history. No hosted version, no accounts, no multi-user support.
+A **personal side project**, not a product: it runs on one machine, for one person, against that
+person's Chess.com and/or Lichess history. No hosted version, no accounts, no multi-user support.
 
-It syncs your games via Chess.com's public [Published-Data
-API](https://www.chess.com/news/view/published-data-api) and [Lichess's API](https://lichess.org/api)
-(either or both), shows which openings you play, flags
-where you leave a repertoire you define, runs Stockfish in your browser to find your blunders,
-drills you on those positions with spaced repetition, and aggregates what keeps going wrong.
-
-**Blitzr is unaffiliated with Chess.com and Lichess** and doesn't use their names, logos or marks in any way that
-implies endorsement.
+**Blitzr is unaffiliated with Chess.com and Lichess** and doesn't use their names, logos or marks in
+any way that implies endorsement.
 
 ## Features
 
-- Incremental sync of your Chess.com and Lichess games into SQLite (either or both), plus adding
-  any game by pasted PGN
-- Game list with opponent search, result/color/rated/site/time class/accuracy filters, and sorting by date,
-  rating, accuracy or errors (click a column header)
-- Board replay, openings aggregated by ECO (results per color and your average accuracy in each), and a user-defined repertoire with deviation detection
-  and the most-played spots where your games run past it
-- In-browser Stockfish analysis: blunders, plain-English tactical explanations, move-quality and
-  accuracy (split by game phase), an eval graph, live multi-line analysis and free-move exploration
-- Spaced-repetition drilling of your deviations, blunders, missed punishments and missed mates,
-  with the cards you keep missing listed as positions
-- Cross-game blunder stats (by opening, piece, tactic and game phase), how often you punished your
-  opponents' blunders, the winning positions you didn't win, and an accuracy-over-time chart, all
-  over a date range
-- Opening, endgame and classic-position lessons with study and quiz modes, playing them out
-  against Stockfish, and progress tracking
-- Play any position from your games against Stockfish, at about 800 to 2500 Elo
-- Mate-in-N puzzles you solve move by move, and defence puzzles where you stop a mate
-- A Today page: cards due, games left to analyze, last week's accuracy and the next puzzle
-- Settings, in tabs (appearance, sound & playback, analysis, training, data; `?tab=analysis` opens one): light/dark theme, board colors, piece set (hotlinked from Lichess), analysis strength, hide engine hints, coordinates,
-  move notation (piece icons or letters, Spanish letters in Spanish), move sounds, lesson/puzzle board orientation, auto-play speed, drill session size, and a
-  database backup download
-- English and Spanish UI
+- **Sync** from Chess.com's [Published-Data API](https://www.chess.com/news/view/published-data-api)
+  and the [Lichess API](https://lichess.org/api) (either or both), plus adding any game by PGN
+- **Games list** with search, filters (result, color, rated, site, time class, accuracy,
+  favorites) and sorting by date, rating, accuracy or errors
+- **Game page**: replay with player strips and clocks, in-browser Stockfish analysis (blunders with
+  plain-English tactical explanations, move quality, accuracy by phase, eval graph, a written
+  summary), live engine lines, free exploration, and playing any position out against Stockfish
+  (~800–2500 Elo)
+- **Openings** by ECO and a **repertoire** you build, with deviation detection and a quiz
+- **Drill**: spaced-repetition cards from your deviations, blunders, missed punishments and missed
+  mates
+- **Blunders**: cross-game stats (by opening, piece, tactic, phase, clock), won positions you didn't
+  win, and an accuracy trend
+- **Learn**: opening, endgame and classic-position lessons with study, quiz and play-it-out modes
+- **Puzzles**: mate-in-N and defence puzzles
+- **Today**: what's due, what's unanalyzed, and how last week went
+- **Settings**: theme, board colors, piece set, notation, sounds, analysis strength, drill size,
+  backups. English and Spanish UI.
 
-## Stack
+| Game analysis                                           | Today                                         |
+| ------------------------------------------------------- | --------------------------------------------- |
+| ![A game page with analysis](docs/screenshots/game.png) | ![The Today page](docs/screenshots/today.png) |
 
-- **Next.js** (App Router, Server Actions), **TypeScript**, **Tailwind CSS v4**
-- **SQLite** (Kysely + better-sqlite3)
-- **chess.js** and **react-chessboard**
-- **react-hot-toast** (restyled) for toasts
-- **Stockfish** (WASM) in a Web Worker
-- **pnpm**, **Vitest**, ESLint + Prettier, Husky
+![The games list](docs/screenshots/games.png)
 
 ## Getting started
 
-Needs Node 22.18+ (`.nvmrc`), which runs the TypeScript that `pnpm backup` and the puzzle scripts
-import as is; `pnpm install` refuses older versions.
+Needs Node 22.18+ (`.nvmrc`).
 
 ```bash
-npm install -g pnpm          # any recent pnpm runs the version package.json pins
+npm install -g pnpm
 pnpm install
 cp .env.example .env.local   # set CHESSCOM_USERNAME, LICHESS_USERNAME or both
 pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000), go to **Games** and click **Sync games**. Later
-syncs only fetch months that aren't complete yet, and run on their own when you open Blitzr more
-than an hour after the last one (`BLITZR_AUTO_SYNC_MINUTES` in `.env.local` changes that; `0`
-turns it off). A sync that adds games offers to analyze them.
+syncs only fetch incomplete months, and run on their own when you open Blitzr an hour after the last
+one. `.env.example` documents the other settings (`NEXT_PUBLIC_LOCALE=es` for Spanish,
+`BLITZR_DATA_DIR`, `BLITZR_AUTO_SYNC_MINUTES`, `BLITZR_PGN_INBOX`).
 
-The database is created at `./data/blitzr.db` on first run. To reset, delete it and re-sync. To
-keep it elsewhere (say, outside the repo, or shared by several checkouts), set `BLITZR_DATA_DIR` in
-`.env.local`: the database, its backups and `polgar-mates.json` all move there. The `data/` paths
-below assume the default.
+### Backups
 
-Settings → Data → **Download backup** saves a copy of it, and `pnpm backup` writes one to
-`data/backups/`. Your repertoire, drill schedules and puzzle progress can't be rebuilt by
-re-syncing, so take one before updating. A schema change also copies the database to
-`data/backups/pre-migration-<time>.db` before applying itself. To restore, stop
-Blitzr, delete `data/blitzr.db-wal` and `data/blitzr.db-shm` if present, and replace
-`data/blitzr.db` with the backup.
-
-For a Spanish UI, set `NEXT_PUBLIC_LOCALE=es` in `.env.local` and rebuild.
+The database is `data/blitzr.db` (or under `BLITZR_DATA_DIR`). Your repertoire, drill schedules and
+progress can't be rebuilt by re-syncing, so back up before updating: `pnpm backup` (writes to
+`data/backups/`) or Settings → Data → **Download backup**. A schema change also saves
+`data/backups/pre-migration-<time>.db` first. To restore, stop Blitzr, delete `data/blitzr.db-wal`
+and `data/blitzr.db-shm` if present, and replace `data/blitzr.db`.
 
 ## Running as a background service (pm2)
 
-Production runs on port **9877** to avoid clashing with other projects on 3000. `pnpm start` (like
-`pnpm dev`) binds to `127.0.0.1` only: Server Actions edit your data with no auth, so it must not
-be reachable from the local network.
+`pnpm start` and `pnpm dev` bind to `127.0.0.1` only: Server Actions edit your data with no auth.
 
 ```bash
 npm install -g pm2
@@ -101,37 +79,32 @@ pm2 save
 pm2 startup   # follow the printed command to register with launchd
 ```
 
-Open [http://localhost:9877](http://localhost:9877). To update:
+To update:
 
 ```bash
 pnpm backup && git pull --ff-only && pnpm install && pnpm build && pm2 restart blitzr
 ```
 
-If the build fails, the pm2 server is left reading a half-rewritten `.next/` (see below), and
-there's no complete build to restart onto. Go back to the version you had, then `git switch main`
-before the next update:
+`pnpm build` rewrites `.next/`, which a running `pnpm dev` or pm2 server reads from: restart it after
+a build. If the build fails, go back to the version you had (then `git switch main` before the next
+update):
 
 ```bash
 git switch --detach ORIG_HEAD && pnpm install && pnpm build && pm2 restart blitzr
 ```
 
-Other useful commands: `pm2 status`, `pm2 logs blitzr`, `pm2 stop blitzr`, `pm2 delete blitzr`.
-
 ## Scripts
 
 ```bash
-pnpm dev             # dev server
-pnpm build           # production build
-pnpm test            # unit tests (Vitest); pnpm test:watch for watch mode
+pnpm test            # Vitest (pnpm test:watch to watch)
 pnpm lint            # ESLint
-pnpm format          # Prettier (write); pnpm format:check to check
+pnpm format          # Prettier (pnpm format:check to check)
 pnpm backup          # copy the database into data/backups/
 ```
 
 ### Before merging
 
-CI runs these five on every PR (and weekly on `main`, to catch new advisories), after
-`pnpm audit --prod`:
+CI runs these on every PR, after `pnpm audit --prod`, then smoke-tests the built app:
 
 ```bash
 pnpm format:check
@@ -141,30 +114,18 @@ pnpm test
 pnpm build
 ```
 
-Then it starts the built app against an empty database and checks the main pages, then seeds data
-and checks them again: a game with its analysis and clocks (on the blunders, drill and Today pages
-too), a synced Lichess game, the play page for both, a thrown win and its play page (bot level
-from the game's rating), a repertoire quiz line, a practice game, two lessons and a puzzle from each Lichess set, the localhost-only
-check, the security headers (and that every page's scripts carry the CSP nonce), that the engine's
-`.wasm` is served as `application/wasm`, and the setup screen without a username, failing on any
-error in the server's log (which it prints when a check fails). Last, it loads the `lib/` files the scripts import under plain Node and runs
-`pnpm backup`.
+### Puzzle and lesson scripts
 
-`pnpm build` rewrites `.next/`, which a running `pnpm dev` and the pm2 server both read from: the
-dev server then silently serves stale code, and the pm2 one can fail to load its pages. Restart
-whichever is running after a build.
+Not needed to run Blitzr (the Lichess puzzles ship in `lib/`). Re-running them keeps puzzle ids, and
+so solved progress.
 
-### Puzzle data scripts
-
-You don't need these to run Blitzr: the Lichess puzzles ship in `lib/`. They rebuild the puzzle
-files and are safe to re-run, since a puzzle keeps its id (and so its solved state).
-
-| Script                             | Writes                                | Needs                                          |
-| ---------------------------------- | ------------------------------------- | ---------------------------------------------- |
-| `import-lichess-mates.mjs`         | `lib/lichessMates.json`               | the Lichess puzzle CSV on stdin (or as a path) |
-| `import-lichess-defenses.mjs`      | `lib/lichessDefenses.json`            | the same CSV, plus a native Stockfish          |
-| `check-defenses.mjs [movetime-ms]` | nothing; reports problems             | a native Stockfish                             |
-| `import-polgar-mates.mjs`          | `data/polgar-mates.json` (local only) | `polgar.pgn` in the repo root, or `--from-git` |
+| Script                             | Does                                                                     | Needs                                          |
+| ---------------------------------- | ------------------------------------------------------------------------ | ---------------------------------------------- |
+| `import-lichess-mates.mjs`         | writes `lib/lichessMates.json`                                           | the Lichess puzzle CSV on stdin (or as a path) |
+| `import-lichess-defenses.mjs`      | writes `lib/lichessDefenses.json`                                        | the same CSV, plus a native Stockfish          |
+| `check-defenses.mjs [movetime-ms]` | re-checks the defence puzzles                                            | a native Stockfish                             |
+| `import-polgar-mates.mjs`          | writes `data/polgar-mates.json` (local only)                             | `polgar.pgn` in the repo root, or `--from-git` |
+| `check-lessons.mjs [slug…]`        | checks endgame/position lines (≤ 7 pieces) against the Lichess tablebase | network                                        |
 
 ```bash
 brew install stockfish zstd   # macOS; any native stockfish on PATH works
@@ -172,216 +133,41 @@ curl -s https://database.lichess.org/lichess_db_puzzle.csv.zst | zstd -dc |
   node scripts/import-lichess-mates.mjs
 ```
 
-The CSV is the [Lichess puzzle database](https://database.lichess.org/#puzzles) (CC0, a large
-download). See [Puzzles](#puzzles) for what each set contains.
+## Good to know
 
-## How it works
-
-### Sync
-
-**Sync games** fetches from every site with a username set, Chess.com first, then Lichess.
-Requests send a descriptive `User-Agent`, months are fetched serially (the button shows
-month-by-month progress, and games appear as each month lands), and 429s are retried with backoff
-(a full minute for Lichess, as it asks). Lichess months run from your account's creation, and one
-stays open while a game started in it is still being played. Lichess games synced before openings
-and clocks were fetched get them from one more fetch of their months. Lichess has no profile
-pictures, so its players show their initial. Ratings on Today are kept per site. Only standard chess is
-supported: variant games (King of the Hill, Atomic, Chess960…) are skipped by sync and the
-import, refused by **Add game by PGN**, and any synced before are deleted on the next start. Games Chess.com's API never exposes (e.g. "Play Bots" games) can be added with
-**Add game by PGN**; they get their own id, so a later sync never touches them. "Play vs Coach"
-games (their own **Coach** time class) left the API in November 2026: set `BLITZR_PGN_INBOX` in `.env.local` to your downloads
-folder (absolute, no `~`), then download them from the Coach tab of your games archive on
-chess.com (select a page, then the download button). Each sync imports any
-`chess_com_games_*.pgn` there the same way, skipping games already in Blitzr, and deletes the file.
-Exporting the first page (50 games) is enough if you do it at least every 50 coach games. The
-export has dates but no times, so these games get the time of day they were imported; the sync's toast lists the ones it added. A PGN exported
-from lichess.org (its `Site` header) becomes a Lichess game, with its link and opening name, and
-`LICHESS_USERNAME` picks your side in it. One from neither site (an over-the-board game, say) is
-matched against whichever username is set, and shows no profile pictures. A game that's
-already in Blitzr, synced or pasted, can't be added twice. Pick which side
-you played, or **Not me** for a game you only want to study: it can still be replayed and
-analyzed, but stays out of your openings, blunders, accuracy and drills. Pasted games can be
-deleted from their game page.
-
-Star any game (synced or pasted) as a favorite from its row in the games list or from its game
-page; **Favorites only** in the list's filters shows just those. A sync never clears a star.
-
-### Repertoire
-
-On `/repertoire`, build an opening tree per color by playing moves on the board, branching as
-needed. Each game page then flags the first move where _you_ left your prepared line — an
-opponent's unprepared move doesn't count. Instead, those show up below the tree as the places
-where your games most often run past your prep, with how many games reached each. Click one to go
-there and add the next move. **Quiz** plays one of the tree's lines from memory, like a lesson's
-quiz, with the opponent's moves played for you; **Next line** draws another, favoring the lines
-your games actually reach.
-
-### Engine analysis
-
-**Analyze with Stockfish** (in a game page's ⋯ menu, then pick a strength) evaluates every position
-in your browser and saves the result. **Analyze all** on the games page does this for every
-unanalyzed game, newest first, saving as it goes, and keeps running while you browse other pages.
-
-A blunder is a move that drops the mover's winning chances as much as a 200+ centipawn loss from
-an equal position would, tagged **Serious** (200–399 equivalent) or **Severe** (400+) on the
-blunders page. Measuring win chances means a move that stays completely winning (+9 → +6.5) isn't flagged. Where a simple pattern explains it — a hanging piece, a fork, a skewer, or
-a pin to the king — you get a plain-English explanation, along with the engine's better move and
-its follow-up plan on a small step-through board. These checks are intentionally simple, so many
-blunders show only the eval swing.
-
-Evals are in pawns from White's point of view (`+1.4` favors White); `M3` / `-M2` are forced
-mates. See [chessprogramming.org](https://www.chessprogramming.org/Evaluation) for more.
-
-A game page also has:
-
-- **Play** (or Space), which auto-advances and pauses on your blunders. ←/→ step, Home/↑/`0` jump
-  to the start, End/↓ to the end, and `F` flips the board.
-- **Player strips** above and below the board, as on Chess.com: each side's avatar, name and (in a
-  clocked game) the clock at the current move. They swap when you flip the board.
-- Your **accuracy** beside the board; click it for a **Move quality** side panel: accuracy (Lichess's
-  formula, from each move's drop in winning chances), split by opening, middlegame and endgame, and
-  move tiers for both sides, a graph of the eval bar across the game (click it to jump to a move),
-  then your inaccuracies, mistakes and blunders. Click one to see it on the board; the panel stays open
-  until ✕, Esc or a click outside it. The move list badges the same three tiers on your own moves.
-- A **Summary** tab beside the move list: a plain-words account of an analyzed game of yours — how
-  you came out of the opening, every mistake or blunder (yours or your opponent's) that changed who
-  was better and why, a winning position that got away, where you played best and worst, and how it
-  ended. Click any move in it to see it on the board; `?view=summary` opens the page on it. An
-  unanalyzed game asks you to analyze it first.
-- In a game with a clock on every move (all Lichess games, Chess.com's when its PGN has them), the
-  time each move took beside it in the move list; hover it for the clock left after the move.
-- **Engine lines**: the top 3 live lines for the current position. ▶ plays a line onto the board.
-- **Explore moves**: try your own moves from any point (just move a piece), with the engine
-  following along. Esc or "Back to game" returns to the recorded game.
-  Nothing is saved.
-- **Play from here**: play the position on screen out against Stockfish at a strength you pick
-  (~800 to 2500 Elo, starting nearest your rating in that game; under 1320 the rating is a rough
-  guess), with the moves listed beside the
-  board (step back with ◀/▶ or ←/→, Home/End for the start and the latest move) and **Take back**
-  for your last move. The strength is locked
-  once you've moved, until the game ends. A finished game is saved as a **practice game**: it never
-  counts in your stats, shows under **Practice games** on the original game (with your wins, draws and
-  losses from each start position and the strongest bot you beat there) and on the games page
-  (where you can select several to delete), and can be analyzed like any other.
-- Hanging pieces, forks, pins and skewers in the current position, marked on the board.
-
-### Drilling
-
-`/drill` turns every repertoire deviation and every one of your blunders into a card: find the move
-you should have played. **Missed punishments** are cards too: your opponent blundered and your
-reply let it go, so find the move that cashes in. So are **missed mates**: you had a forced mate in
-3 or fewer and played something that stays winning but no longer mates, which the blunder check
-can't see (every mate is already 99% winning). Games that left your repertoire at the same position share one card, and missing the same move several turns in a row is one card. On a
-blunder or missed-punishment card, a move other than the engine's still counts if a quick Stockfish check rates it good
-or better; on a missed-mate card, if it still mates. Scheduling is SM-2: right answers come back later, wrong ones tomorrow. Sessions hold 15 cards by default (10 or 25 in settings), the most overdue first.
-**Hint** reveals progressively more (an answer found once it shows the piece's square is scheduled
-like a wrong one; on a missed-punishment card the first hint also says what your opponent's move
-allowed, when a simple pattern explains it), and cards can be filtered by type (Today's weak spot also
-links to a single opening's cards). A missed card comes back once at the end of the session, as an
-ungraded second try. A checkbox moves on to the next card after a right answer, and reloading the page resumes the
-session where you left it.
-After a miss on a blunder, missed-punishment or missed-mate card, the engine's move is explained,
-with its plan on a step-through board.
-**Undo** (or U) takes back a misclicked answer, restoring the card's schedule, until you move on.
-Shortcuts: Space/Enter for the next card, H for a hint, U to undo. Re-analyzing a game at another strength can change
-which moves count as blunders, so its blunder cards (and their review history) may be replaced.
-
-### Blunders
-
-`/blunders` shows how often you punished your opponents' blunders, and aggregates your own
-blunders across analyzed games by opening family, by piece, by tactic
-(hanging piece, fork, pin, skewer, or no simple pattern), by game phase (opening, middlegame,
-endgame), per game by color and by time class (next to your score in each), and, for games with a clock on every move, by how much of your time was left and by how
-long you spent on the move (under 5 seconds, 5 to 30, over 30), with a top-10 worst list (each opening its game at that move) and an accuracy trend
-(per-game dots plus a 10-game rolling average). **Won positions not won** lists the games you drew
-or lost after your winning chances reached 90%, each linking to your best position and to your own
-move after it that cost the most, and to play the winning position out against the bot. A date range
-filter scopes the whole page.
-
-### Learn
-
-`/learn` has short lessons on 14 openings (6 for White, 8 defenses for Black, on their own tab), 6 basic endgames (the mates with queen, rook, two
-rooks, two bishops and bishop + knight; king and pawn) and 29 classic positions (Philidor, Lucena,
-Vančura, Saavedra, key squares, the opposition, triangulation, queen vs rook…), each a line you step through
-with a note per move. **Quiz** mode tests you on one side while the opponent's moves play
-automatically (H shows the move, R restarts). Endgame and position lessons also have **Play it out**: the same
-position against Stockfish, at full strength or a chosen Elo, until you mate, promote or (for a
-defense like Philidor's) hold the draw. Study mode has the game
-page's shortcuts. Finishing a quiz, or winning (or holding) in Play, marks the lesson on its card,
-with the strongest bot you beat. The list filters by category and, for endgames and positions, your side and
-whether the goal is to win or to draw, and progress (pending or done), all in the URL (`/learn?category=positions&color=black&goal=draw`). Opening lessons show how many of your own games reached that line; endgame and position
-lessons, how many reached the same pieces (pawns aside, so rook vs rook for Philidor), with links
-to the most recent at that move. On an opening lesson, **Add to
-my repertoire** puts the line in your tree for the lesson's color, reusing the moves you already
-have. Content is
-adapted, in original wording, from Wikibooks'
-[Chess Opening Theory](https://en.wikibooks.org/wiki/Chess_Opening_Theory/1._e4) and
-[Chess/The Endgame](https://en.wikibooks.org/wiki/Chess/The_Endgame) (CC BY-SA).
-`node scripts/check-lessons.mjs [slug…]` checks every endgame and position line with up to 7
-pieces against the [Lichess tablebase](https://tablebase.lichess.ovh): it reports any move that
-changes the result for the side playing it.
-
-### Today
-
-The landing page, **Today** (`/`), gathers what's waiting: today's drill session (with the full
-due count split by type, and your streak), games not analyzed yet, the last 7 days' accuracy against
-your average with results and rating change per time control, the opening you blundered most this
-week (with a link to drill it), your worst blunder of the week, how you lost your games (and how many in time trouble, and of those how many while ahead), your score in rated games against
-stronger, similar and weaker opponents (±100 rating, per site), your score in games right after a
-loss against the rest, an unfinished lesson for the opening you played most this week and another
-for the endgame your games reach most (over all your games), how often you left your repertoire
-lately, your last game with its final position, and the next unsolved puzzle.
-
-### Puzzles
-
-`/puzzles` has mate-in-1/2/3 positions from real games and 2,000 from the
-[Lichess puzzle database](https://database.lichess.org/#puzzles) (CC0), sorted from easy to hard,
-each linked back to Lichess. You play the whole line yourself, both sides. Wrong moves can be
-retried, and **Reveal solution** doesn't count as solving (a revealed puzzle comes back first as
-Today's next puzzle until you solve it); ←/→ step through the moves played so
-far. Otherwise Today's next puzzle is the easiest unsolved Lichess puzzle rated above the median
-of your last 10 solves without a reveal, so each one stretches a little (list order until you have
-some). Solved puzzles are tracked, and the
-list filters by status, side to move, type and mate length.
-
-Defence puzzles flip it around: about 500 more Lichess positions, taken one move before a mate in 1
-or 2, where your opponent threatens mate and only one or two moves stop it, and at least one of
-them escapes mate altogether rather than just delaying it. Any of those moves
-solves the puzzle; afterwards you see every saving move and how the game actually went.
-`scripts/import-lichess-defenses.mjs` picks them and `scripts/check-defenses.mjs` re-checks them;
-both need a native Stockfish (`brew install stockfish`).
-
-László Polgár's _5334 Problems, Combinations, and Games_ is copyrighted, so its mates stay out of
-the published puzzle set and live in the gitignored `data/polgar-mates.json` instead, joining the
-list after a restart. To create that file:
-
-- `node scripts/import-polgar-mates.mjs --from-git` restores it from git history, where the
-  puzzles were committed before moving out of the repo. Any clone can do this.
-- `node scripts/import-polgar-mates.mjs` imports it from your own copy of the book's PGN at
-  `polgar.pgn`.
-
-Either way the puzzles keep their ids, so solved progress in a restored database still matches.
-Copying `data/polgar-mates.json` to another machine works too.
-
-## Data hygiene
-
-- Your username lives in `.env.local`, never in code. The API is public, so there's no secret.
-- Blitzr answers only requests addressed to `localhost`, `127.0.0.1` or `[::1]` (`proxy.ts`), so a
-  web page can't reach it through DNS rebinding. Open it by one of those names.
-- A Content-Security-Policy only runs Blitzr's own scripts, and no page can be framed by another site.
-- `data/*.db`, `data/backups/` and `public/stockfish/` (~7MB, copied from `node_modules` on install) are
-  gitignored.
+- **Variants aren't supported.** Sync skips them, **Add game by PGN** refuses them, and any already
+  stored are deleted.
+- **Games the Chess.com API leaves out**: add "Play Bots" games by PGN. For "Play vs Coach" games,
+  set `BLITZR_PGN_INBOX` to your downloads folder and download them from the Coach tab of your
+  chess.com games archive; each sync imports any `chess_com_games_*.pgn` there and deletes it. The
+  first page (50 games) is enough if you export at least every 50 coach games.
+- **Add game by PGN**: pick your side, or **Not me** to study a game without it counting in any
+  stat or drill. Pasted games can be deleted from their game page.
+- **Blunders** are moves that cost as much winning chance as a 200+ centipawn loss from equal
+  (**Serious** 200–399, **Severe** 400+), so a move that stays completely winning isn't one. Evals
+  are in pawns from White's side (`+1.4` favors White; `M3` is a forced mate).
+- **Drill** uses SM-2 scheduling. A non-engine move counts if a quick Stockfish check rates it good
+  (or, on a missed-mate card, if it still mates). Re-analyzing a game at another strength can
+  replace its blunder cards.
+- **Practice games** (played against the bot) never count in your stats.
+- **Polgár mates** (_5334 Problems_) are copyrighted, so they live in the gitignored
+  `data/polgar-mates.json`: `node scripts/import-polgar-mates.mjs --from-git` restores it from git
+  history; without the flag it imports your own `polgar.pgn`. Restart to load it.
+- **Keyboard**: ←/→ step, Home/End jump, Space plays, `F` flips; in the drill H hints and U undoes.
+- **Security**: Blitzr answers only requests to `localhost`, `127.0.0.1` or `[::1]` (against DNS
+  rebinding), runs only its own scripts (CSP), and can't be framed.
 
 ## Contributing
 
-Issues and small fixes are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md) for scope and how to
-send a change.
+Issues and small fixes are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Credits
 
-- Puzzles from the [Lichess puzzle database](https://database.lichess.org/#puzzles), released
-  under CC0.
-
-- Chess piece icons (`components/PieceGlyph.tsx`) are from
-  [Wikimedia Commons' SVG chess piece set](https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces)
-  by [Cburnett](https://commons.wikimedia.org/wiki/User:Cburnett), used under the BSD license.
+- Puzzles from the [Lichess puzzle database](https://database.lichess.org/#puzzles) (CC0).
+- Lessons adapted, in original wording, from Wikibooks'
+  [Chess Opening Theory](https://en.wikibooks.org/wiki/Chess_Opening_Theory/1._e4) and
+  [Chess/The Endgame](https://en.wikibooks.org/wiki/Chess/The_Endgame) (CC BY-SA).
+- Chess piece icons (`components/PieceGlyph.tsx`) from
+  [Wikimedia Commons' SVG chess pieces](https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces)
+  by [Cburnett](https://commons.wikimedia.org/wiki/User:Cburnett) (BSD). Other piece sets, move
+  sounds and site icons are loaded from Lichess and Chess.com, not redistributed.

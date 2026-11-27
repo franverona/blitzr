@@ -173,10 +173,10 @@ Every game has a `site` (`chesscom` | `lichess`). `siteUsername(site)` reads `CH
 - **Polgár puzzles are local only** (copyrighted): `scripts/import-polgar-mates.mjs` writes the
   gitignored `data/polgar-mates.json`.
 - Lesson content is hand-authored (`lib/openingTheory.ts`, `lib/endgameTheory.ts`,
-  `lib/positionTheory.ts`); `/learn`'s Defenses tab is the opening lessons framed for Black. Play's goal is mate, promotion, or a lesson's `playGoal` (a draw to hold).
-  `lesson_progress` (keyed by slug, so slugs stay stable, like puzzle ids) keeps a finished quiz and the
-  strongest Play win; a lesson is done with both (openings: the quiz). Every
-  `sourceUrl` must be read live before citing. **Summaries are paraphrased, never copied**
+  `lib/positionTheory.ts`); `/learn`'s Defenses tab is the opening lessons framed for Black. Play's
+  goal is mate, promotion, or a lesson's `playGoal` (a draw to hold). `lesson_progress` is keyed by
+  slug (keep slugs stable) and stores the quiz and the strongest Play win; a lesson is done with
+  both (openings: the quiz). Read every `sourceUrl` live before citing it. **Summaries are paraphrased, never copied**
   (Wikibooks is CC BY-SA, this repo is MIT). A new endgame or position line passes
   `node scripts/check-lessons.mjs <slug>` (tablebase, ≤ 7 pieces; network, so not in CI).
 
@@ -205,12 +205,10 @@ pnpm test
 pnpm build
 ```
 
-CI (`.github/workflows/ci.yml`) runs these on every PR and weekly, after `pnpm audit --prod`, then
-smoke-tests `pnpm start`. A page that throws still answers 200 (`loading.tsx` streams), so the smoke
-test checks the server log for `⨯` errors; it also checks the Stockfish `.wasm` is served as
-`application/wasm` and every page's scripts carry the CSP nonce. It then loads every `lib/` file a
-script imports under plain Node, whose type stripping rejects enums, parameter properties and
-imports without `.ts` (which tsc allows), and runs `pnpm backup` against the smoke database.
+CI (`.github/workflows/ci.yml`) also smoke-tests `pnpm start`. A page that throws still answers 200
+(`loading.tsx` streams), so it greps the server log for `⨯`. It loads every `lib/` file a script
+imports under plain Node, whose type stripping rejects enums, parameter properties and imports
+without `.ts` (all of which tsc allows).
 
 ## Running
 
