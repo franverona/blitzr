@@ -37,9 +37,11 @@ any way that implies endorsement.
 - **Settings**: theme, board colors, piece set, notation, sounds, analysis strength, drill size,
   backups. English and Spanish UI.
 
-| Game analysis                                           | Today                                         |
-| ------------------------------------------------------- | --------------------------------------------- |
-| ![A game page with analysis](docs/screenshots/game.png) | ![The Today page](docs/screenshots/today.png) |
+## Screenshots
+
+![A game page with analysis](docs/screenshots/game.png)
+
+![The Today page](docs/screenshots/today.png)
 
 ![The games list](docs/screenshots/games.png)
 
