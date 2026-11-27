@@ -13,6 +13,7 @@ export function Tabs<T extends string>({
   onSelect,
   label,
   panelClassName = '',
+  orientation = 'horizontal',
   children,
 }: {
   tabs: readonly { id: T; label: React.ReactNode }[]
@@ -21,6 +22,8 @@ export function Tabs<T extends string>({
   /** Names the tablist for screen readers. */
   label: string
   panelClassName?: string
+  /** `vertical`: a side rail at lg+, a scrolling strip below. */
+  orientation?: 'horizontal' | 'vertical'
   children: React.ReactNode
 }) {
   const baseId = useId()
@@ -30,10 +33,12 @@ export function Tabs<T extends string>({
 
   function onKeyDown(e: React.KeyboardEvent) {
     const index = tabs.findIndex((t) => t.id === selected)
+    // A vertical rail is a horizontal strip below lg, so it takes both axes.
+    const vertical = orientation === 'vertical'
     const next =
-      e.key === 'ArrowRight'
+      e.key === 'ArrowRight' || (vertical && e.key === 'ArrowDown')
         ? (index + 1) % tabs.length
-        : e.key === 'ArrowLeft'
+        : e.key === 'ArrowLeft' || (vertical && e.key === 'ArrowUp')
           ? (index - 1 + tabs.length) % tabs.length
           : e.key === 'Home'
             ? 0
@@ -54,8 +59,13 @@ export function Tabs<T extends string>({
         ref={listRef}
         role="tablist"
         aria-label={label}
+        aria-orientation={orientation}
         onKeyDown={onKeyDown}
-        className="flex shrink-0 border-b border-zinc-200 dark:border-zinc-800"
+        className={
+          orientation === 'vertical'
+            ? 'flex shrink-0 overflow-x-auto border-b border-zinc-200 lg:flex-col lg:overflow-visible lg:border-b-0 lg:border-l dark:border-zinc-800'
+            : 'flex shrink-0 border-b border-zinc-200 dark:border-zinc-800'
+        }
       >
         {tabs.map((tab) => {
           const active = tab.id === selected
@@ -69,7 +79,7 @@ export function Tabs<T extends string>({
               aria-controls={panelId}
               tabIndex={active ? 0 : -1}
               onClick={() => onSelect(tab.id)}
-              className={tabClass(active)}
+              className={tabClass(active, orientation === 'vertical')}
             >
               {tab.label}
             </button>

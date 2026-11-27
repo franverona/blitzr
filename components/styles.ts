@@ -68,8 +68,8 @@ export function chipClass(active: boolean): string {
 }
 
 /** One tab of a `Tabs` bar (or a bar like it). */
-export function tabClass(active: boolean): string {
-  return `-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
+export function tabClass(active: boolean, vertical = false): string {
+  return `${vertical ? '-mb-px border-b-2 whitespace-nowrap lg:mb-0 lg:-ml-px lg:border-b-0 lg:border-l-2 lg:text-left' : '-mb-px border-b-2'} px-4 py-2 text-sm font-medium transition-colors ${
     active
       ? 'border-accent text-zinc-900 dark:text-white'
       : 'border-transparent text-zinc-600 hover:border-zinc-300 hover:text-zinc-800 dark:text-zinc-400 dark:hover:border-zinc-700 dark:hover:text-zinc-200'
